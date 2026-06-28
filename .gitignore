@@ -140,3 +140,9 @@ infra/bootstrap/github-secrets.*
 # Local-only helpdesk documentation (not for the repo)
 /HELPDESK_DOCUMENTATION/
 
+
+# Local-only LocalStack Pro override (contains nothing secret itself; token lives in .env)
+docker-compose.override.yml
+
+# Local-only scratch logs from `nx serve` / dynamodb-admin sessions
+scratch-*.log

@@ -69,6 +69,10 @@ export default [
               onlyDependOnLibsWithTags: ['scope:files', 'scope:shared', 'type:contracts'],
             },
             {
+              sourceTag: 'scope:customer',
+              onlyDependOnLibsWithTags: ['scope:customer', 'scope:shared', 'type:contracts'],
+            },
+            {
               sourceTag: 'scope:e2e',
               onlyDependOnLibsWithTags: ['scope:shared', 'type:e2e-support'],
             },

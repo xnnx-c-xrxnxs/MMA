@@ -28,13 +28,20 @@
       "@mma/design-tokens": ["packages/design-tokens/src/index.ts"],
       "@mma/mobile-ui": ["packages/mobile-ui/src/index.ts"],
       "@mma/client-common": ["packages/client-common/src/index.ts"],
-      "@mma/client-common/infrastructure": ["packages/client-common/src/infrastructure/index.ts"],
+      "@mma/client-common/infrastructure": [
+        "packages/client-common/src/infrastructure/index.ts"
+      ],
       "@mma/client-common/hooks": ["packages/client-common/src/hooks/index.ts"],
       "@mma/telemetry": ["packages/telemetry/src/index.ts"],
       "@mma/monitoring-sdk": ["packages/monitoring-sdk/src/index.ts"],
       "@mma/eslint-plugin": ["packages/eslint-plugin/src/index.js"],
       "@mma/nx-plugin": ["packages/nx-plugin/src/index.ts"],
-      "@mma/e2e-helpers": ["test/e2e/api-helpers.ts"]
+      "@mma/e2e-helpers": ["test/e2e/api-helpers.ts"],
+      "@mma/customer-domain": ["packages/customer-domain/src/index.ts"],
+      "@mma/customer-domain/infrastructure": [
+        "packages/customer-domain/src/infrastructure/index.ts"
+      ],
+      "@mma/contracts/customer": ["packages/contracts/customer/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
