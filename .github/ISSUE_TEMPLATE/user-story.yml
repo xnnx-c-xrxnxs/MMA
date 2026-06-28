@@ -40,12 +40,21 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     id: domain
     attributes:
       label: "Domain"
-      description: "Which bounded context does this touch? See `.github/issue-config.json` for valid values. The AI Issue Creator validates this and applies the matching `domain-*` label. (After running `/sync-notebooklm-output`, this field becomes a dropdown auto-populated from your project's domains.)"
-      placeholder: "e.g. user, order, webapp, cross-domain"
+      description: "Which bounded context does this touch? The AI Issue Creator validates this and applies the matching `domain-*` label. Values mirror `.github/issue-config.json`."
+      options:
+        - "ticket"
+        - "agent"
+        - "customer"
+        - "team"
+        - "auth"
+        - "webapp"
+        - "infra"
+        - "cross-domain"
+        - "new-domain"
     validations:
       required: true
 
