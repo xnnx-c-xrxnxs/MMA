@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Helpdesk — agent domain (DynamoDB OneTable, cursor pagination).
+# ACL target (ticket.assign validates here) + the saga's agent-picker.
+# Derived from domains/domain-agent.md.
+
+domain: agent
+persistence: dynamodb
+
+entity:
+  name: Agent
+  description: "A support agent's helpdesk record: availability, capacity, team. Login identity is owned by auth, linked via userId."
+
+  fields:
+    - { name: id,              type: ulid,    pk: true }
+    - { name: name,            type: string,  min: 1, max: 120 }
+    - { name: email,           type: email,   unique: true, gsi: GSI4, description: "unique via GSI + conditional write" }
+    - { name: userId,          type: ulid,    optional: true, gsi: GSI3, description: "Cognito sub; resolve agent from JWT" }
+    - { name: teamId,          type: ulid,    optional: true, gsi: GSI2, description: "team membership; scopes routing" }
+    - name: status
+      type: enum
+      values: [AVAILABLE, BUSY, OFFLINE]
+      default: OFFLINE
+      gsi: GSI1
+      labels: { AVAILABLE: "Available", BUSY: "Busy", OFFLINE: "Offline" }
+    - { name: openTicketCount, type: integer, min: 0, default: 0, description: "guarded by maxCapacity; maintained by reacting to ticket events" }
+    - { name: maxCapacity,     type: integer, min: 1, default: 5 }
+    - { name: dateCreated,     type: datetime }
+    - { name: updatedAt,       type: datetime }
+
+businessRules:
+  - "status uses AgentStatusEnum, never string literals (Golden Rule #8)."
+  - "hasCapacity is a derived getter (openTicketCount < maxCapacity), not stored."
+  - "An OFFLINE or at-capacity agent is never selected by the picker and is rejected by the ACL (AgentUnavailableError / AgentAtCapacityError)."
+  - "openTicketCount is mutated ONLY by agent-event-handler reacting to ticket events (TICKET_ASSIGNED ++, TICKET_RESOLVED --, reassign both). Floored at 0. Idempotent. The ticket context never writes here."
+  - "email is unique and immutable after creation (it is the auth link)."
+  - "Provisioning: createAgent calls auth admin-create/invite (AGENT role) via getOutboundHeaders() (#24) and stores the returned userId. If the auth call fails, no agent persists."
+
+events:
+  - TICKET_ASSIGNED
+  - NO_AGENT_AVAILABLE
+  - AGENT_AVAILABILITY_CHANGED
+
+indexes:
+  - { name: GSI1, fields: [status, openTicketCount], description: "picker: AVAILABLE agents, lowest load first (cursor)" }
+  - { name: GSI2, fields: [teamId, status],          description: "team-scoped routing (cursor)" }
+  - { name: GSI3, fields: [userId],                  description: "resolve agent from @CurrentUser JWT (unique)" }
+  - { name: GSI4, fields: [email],                   description: "email uniqueness enforcement + lookup (unique)" }
+
+useCases:
+  - { name: createAgent,        type: create,     description: "provisioning: auth invite (AGENT) + persist with userId" }
+  - { name: getAgent,           type: read }
+  - { name: getAgentByUserId,   type: read,       description: "lookup via GSI3 for @CurrentUser resolution" }
+  - { name: listAgents,         type: list,       description: "cursor via GSI1 (by status)" }
+  - { name: listAgentsByTeam,   type: list,       description: "cursor via GSI2" }
+  - { name: setAvailability,    type: transition, description: "self-service AVAILABLE/BUSY/OFFLINE; publish AGENT_AVAILABILITY_CHANGED" }
+  - { name: pickAvailableAgent, type: read,       description: "handler: pick an AVAILABLE agent by routing strategy. Accepts an OPTIONAL teamId (scope to GSI2) and an OPTIONAL strategy; both default to global pool + LOWEST_LOAD when absent. TEAM-ROUTING-SCOPE (team now active) supplies the real teamId + team.routingStrategy; a ticket with no team still routes globally." }
+  - { name: incrementLoad,      type: transition, description: "handler: TICKET_ASSIGNED -> openTicketCount++ (idempotent)" }
+  - { name: decrementLoad,      type: transition, description: "handler: TICKET_RESOLVED -> openTicketCount-- (floored)" }
+  - { name: validateAgent,      type: read,       description: "ACL-facing: return ValidatedAgent { agentId, status, hasCapacity }" }

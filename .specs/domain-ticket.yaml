@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Helpdesk — ticket domain (DynamoDB OneTable, single-table, cursor pagination).
+# The spine: originates the ACL (assign) and the routing saga (create). Owns two
+# entities — Ticket and TicketComment — but a domain spec models ONE entity, so
+# TicketComment is captured as a sibling spec note here and built alongside.
+# Derived from domains/domain-ticket.md.
+
+domain: ticket
+persistence: dynamodb
+
+entity:
+  name: Ticket
+  description: "A customer support request moving through the lifecycle OPEN→ASSIGNED→IN_PROGRESS→RESOLVED→CLOSED (any→ESCALATED)."
+
+  fields:
+    - { name: id,              type: ulid,     pk: true }
+    - { name: customerId,      type: ulid,     gsi: GSI3, description: "requester; list a customer's tickets" }
+    - { name: subject,         type: string,   min: 1, max: 200 }
+    - { name: description,     type: string,   min: 1, max: 5000 }
+    - name: priority
+      type: enum
+      values: [LOW, MEDIUM, HIGH, URGENT]
+      default: MEDIUM
+      labels: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", URGENT: "Urgent" }
+    - name: status
+      type: enum
+      values: [OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, CLOSED, ESCALATED]
+      default: OPEN
+      gsi: GSI1
+      labels:
+        OPEN: "Open"
+        ASSIGNED: "Assigned"
+        IN_PROGRESS: "In Progress"
+        RESOLVED: "Resolved"
+        CLOSED: "Closed"
+        ESCALATED: "Escalated"
+    - { name: assignedAgentId, type: ulid,     optional: true, gsi: GSI2, description: "set by saga/reassign; list an agent's tickets" }
+    - { name: teamId,          type: ulid,     optional: true, description: "optional routing scope" }
+    - { name: slaDueAt,        type: datetime, description: "derived from priority x customer tier at creation; immutable" }
+    - { name: firstResponseAt, type: datetime, optional: true, description: "stamped on ASSIGNED->IN_PROGRESS" }
+    - { name: resolvedAt,      type: datetime, optional: true }
+    - { name: closedAt,        type: datetime, optional: true }
+    - { name: escalationReason, type: string,  optional: true, max: 200, description: "SLA | NO_AGENT | manual" }
+    - { name: dateCreated,     type: datetime }
+    - { name: updatedAt,       type: datetime }
+
+businessRules:
+  - "Lifecycle: OPEN→ASSIGNED (saga) | OPEN→ESCALATED (no agent); ASSIGNED→IN_PROGRESS→RESOLVED→CLOSED; RESOLVED→IN_PROGRESS (reopen); any→ESCALATED (SLA breach / manual)."
+  - "CLOSED is terminal. ESCALATED is re-routable (admin may assign out of it)."
+  - "assignedAgentId is required to enter IN_PROGRESS/RESOLVED and forbidden in OPEN."
+  - "Cannot RESOLVE a ticket that was never IN_PROGRESS (InvalidTicketTransitionError)."
+  - "slaDueAt is immutable after creation; recomputed only via a dedicated change-priority use case."
+  - "assign/reassign go through the IAgentValidator ACL — reject AgentUnavailableError/AgentAtCapacityError unless agent AVAILABLE && openTicketCount < maxCapacity. No assignment persists on failure (Golden Rule #14)."
+  - "openTicketCount on the agent is maintained by the agent context reacting to ticket events — the ticket context never writes the agent table (bounded-context isolation)."
+  - "Status comparisons use TicketStatusEnum, never string literals (Golden Rule #8)."
+
+# Published to the ticket-events SQS FIFO queue. Cross-domain consumers (agent, knowledge-base)
+# subscribe via @mma/contracts/ticket — never @mma/ticket-domain (Golden Rule #15).
+events:
+  - TICKET_CREATED
+  - TICKET_RESOLVED
+  - TICKET_REASSIGNED
+  - TICKET_SLA_BREACHED
+
+# DynamoDB GSIs — referenced by the gsi: attribute on fields above.
+indexes:
+  - { name: GSI1, fields: [status, slaDueAt],        description: "work the queue by status, urgent-soonest first (cursor)" }
+  - { name: GSI2, fields: [assignedAgentId, updatedAt], description: "an agent's tickets (cursor)" }
+  - { name: GSI3, fields: [customerId, dateCreated], description: "a customer's tickets (cursor)" }
+
+useCases:
+  - { name: createTicket,            type: create,     description: "persist OPEN, compute slaDueAt, publish TICKET_CREATED" }
+  - { name: getTicket,               type: read }
+  - { name: listTicketsByStatus,     type: list,       description: "cursor via GSI1" }
+  - { name: listTicketsByAgent,      type: list,       description: "cursor via GSI2" }
+  - { name: listTicketsByCustomer,   type: list,       description: "cursor via GSI3" }
+  - { name: assignTicket,            type: transition, description: "*->ASSIGNED via IAgentValidator ACL" }
+  - { name: reassignTicket,          type: transition, description: "ACL on new agent; publish TICKET_REASSIGNED" }
+  - { name: startTicket,             type: transition, description: "ASSIGNED->IN_PROGRESS; stamp firstResponseAt" }
+  - { name: resolveTicket,           type: transition, description: "IN_PROGRESS->RESOLVED; publish TICKET_RESOLVED" }
+  - { name: closeTicket,             type: transition, description: "RESOLVED->CLOSED" }
+  - { name: reopenTicket,            type: transition, description: "RESOLVED->IN_PROGRESS (owning customer only)" }
+  - { name: escalateTicket,          type: transition, description: "*->ESCALATED (manual)" }
+  - { name: breachSla,               type: transition, description: "handler: TICKET_SLA_BREACHED -> ESCALATED (idempotent)" }
+  - { name: addComment,              type: create,     description: "TicketComment sibling entity (see note)" }
+  - { name: listComments,            type: list,       description: "TicketComment GSI1 by ticketId (cursor)" }
+
+# ── Sibling entity: TicketComment ────────────────────────────────────────────
+# The ticket domain has a SECOND entity, TicketComment, specced separately (one entity
+# per spec file). See: domain-ticket-comment.yaml (same domain: ticket, same package).
+# Scaffold it as a second /new-domain-dynamo pass after this one. Stories: CMT-ADD, CMT-LIST.
