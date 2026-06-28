@@ -37,12 +37,21 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     id: domain
     attributes:
       label: "Domain"
-      description: "Which bounded context is affected? See `.github/issue-config.json` for valid values. (Auto-populated as a dropdown after `/sync-notebooklm-output` runs.)"
-      placeholder: "e.g. user, order, webapp"
+      description: "Which bounded context is affected? Values mirror `.github/issue-config.json`."
+      options:
+        - "ticket"
+        - "agent"
+        - "customer"
+        - "team"
+        - "auth"
+        - "webapp"
+        - "infra"
+        - "cross-domain"
+        - "new-domain"
     validations:
       required: true
 
