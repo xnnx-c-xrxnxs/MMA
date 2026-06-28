@@ -615,6 +615,9 @@ importers:
 
   packages/contracts/customer:
     dependencies:
+      '@mma/contracts-common':
+        specifier: workspace:*
+        version: link:../common
       '@mma/customer-domain':
         specifier: workspace:*
         version: link:../../customer-domain
