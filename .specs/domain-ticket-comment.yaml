@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Helpdesk — TicketComment, the SECOND entity of the `ticket` domain (DynamoDB OneTable).
+# DynamoDB has no relations, so the ticket↔comments "relation" is modelled as a separate
+# keyed item type sharing a GSI partition on ticketId. Same domain (ticket), same package
+# (packages/ticket-domain) — scaffold this with /new-domain-dynamo as a second pass after
+# domain-ticket.yaml (the generator appends the entity to the existing ticket-domain package).
+#
+# Stories: CMT-ADD (create), CMT-LIST (list). Derived from domains/domain-ticket.md §2.
+
+domain: ticket
+persistence: dynamodb
+
+entity:
+  name: TicketComment
+  description: "A comment on a ticket — a discrete note/update, not a chat message. Separate DynamoDB item keyed by ticketId (no relational join)."
+
+  fields:
+    - { name: id,          type: ulid, pk: true }
+    - { name: ticketId,    type: ulid, gsi: GSI1, description: "comments partition — list a ticket's comments, sorted by dateCreated" }
+    - { name: authorId,    type: ulid, description: "from @CurrentUser() — never trusted from the body (#10/#23)" }
+    - name: authorRole
+      type: enum
+      values: [AGENT, CUSTOMER, ADMIN]
+      labels: { AGENT: "Agent", CUSTOMER: "Customer", ADMIN: "Admin" }
+    - { name: body,        type: string, min: 1, max: 5000 }
+    - name: visibility
+      type: enum
+      values: [PUBLIC, INTERNAL]
+      default: PUBLIC
+      labels: { PUBLIC: "Public", INTERNAL: "Internal" }
+    - { name: dateCreated, type: datetime, description: "sort key ordering a ticket's comments" }
+    - { name: updatedAt,   type: datetime }
+
+businessRules:
+  - "A CUSTOMER author may only create PUBLIC comments, and only on a ticket whose customerId matches their identity."
+  - "INTERNAL comments are agent/admin only — never returned to a CUSTOMER caller."
+  - "authorId and authorRole are taken from the JWT via @CurrentUser(), never from the request body (#10/#23)."
+  - "visibility and authorRole use enums, never string literals (Golden Rule #8)."
+  - "Comments are immutable once posted — no edit/delete in the active scope (audit trail)."
+
+events: []
+
+indexes:
+  - { name: GSI1, fields: [ticketId, dateCreated], description: "list a ticket's comments, oldest-first (cursor)" }
+
+useCases:
+  - { name: addComment,         type: create, description: "CMT-ADD — author from @CurrentUser; enforce customer PUBLIC-on-own-ticket rule" }
+  - { name: listCommentsByTicket, type: list, description: "CMT-LIST — cursor via GSI1; customers see PUBLIC only, agents/admins see all" }

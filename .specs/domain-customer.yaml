@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Helpdesk — customer domain (DynamoDB OneTable, cursor pagination).
+# Leaf context: requesters + tier (tier drives SLA). No event-handler.
+# Derived from domains/domain-customer.md.
+
+domain: customer
+persistence: dynamodb
+
+entity:
+  name: Customer
+  description: "A requester who raises tickets. Carries the support tier that feeds SLA computation. Login identity owned by auth, linked via userId."
+
+  fields:
+    - { name: id,          type: ulid,   pk: true }
+    - { name: name,        type: string, min: 1, max: 120 }
+    - { name: email,       type: email,  unique: true, gsi: GSI4, description: "unique via GSI + conditional write" }
+    - { name: userId,      type: ulid,   optional: true, gsi: GSI3, description: "Cognito sub; resolve customer from JWT" }
+    - { name: company,     type: string, optional: true, max: 160 }
+    - name: tier
+      type: enum
+      values: [FREE, PRO, ENTERPRISE]
+      default: FREE
+      gsi: GSI2
+      labels: { FREE: "Free", PRO: "Pro", ENTERPRISE: "Enterprise" }
+    - name: status
+      type: enum
+      values: [ACTIVE, INACTIVE]
+      default: ACTIVE
+      gsi: GSI1
+      labels: { ACTIVE: "Active", INACTIVE: "Inactive" }
+    - { name: dateCreated, type: datetime }
+    - { name: updatedAt,   type: datetime }
+
+businessRules:
+  - "tier uses CustomerTierEnum (#8). Changing tier does NOT retroactively change slaDueAt on existing tickets (SLA is frozen at creation)."
+  - "email is unique and immutable after creation (it is the auth link). name/company/tier are mutable."
+  - "INACTIVE customers cannot raise new tickets; their existing tickets remain queryable."
+  - "Two provisioning paths, both ending in a userId: admin-create (auth invite, CUSTOMER role) or self-sign-up on first ticket."
+
+events: []
+
+indexes:
+  - { name: GSI1, fields: [status, dateCreated], description: "directory list (cursor)" }
+  - { name: GSI2, fields: [tier, dateCreated],   description: "filter directory by tier (cursor)" }
+  - { name: GSI3, fields: [userId],              description: "resolve customer from @CurrentUser JWT (unique)" }
+  - { name: GSI4, fields: [email],               description: "email uniqueness enforcement + lookup (unique)" }
+
+useCases:
+  - { name: createCustomer,        type: create,     description: "admin-create with auth invite (CUSTOMER)" }
+  - { name: getCustomer,           type: read }
+  - { name: getCustomerByUserId,   type: read,       description: "lookup via GSI3" }
+  - { name: listCustomers,         type: list,       description: "cursor via GSI1" }
+  - { name: listCustomersByTier,   type: list,       description: "cursor via GSI2" }
+  - { name: updateCustomer,        type: update }
+  - { name: deactivateCustomer,    type: transition, description: "ACTIVE->INACTIVE" }

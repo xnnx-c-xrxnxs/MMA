@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+#
+# Helpdesk — team domain (DynamoDB OneTable, cursor pagination).
+# Groups agents and scopes the routing saga. Membership lives on agent.teamId,
+# so team stays a small lookup context. Derived from domains/domain-team.md.
+
+domain: team
+persistence: dynamodb
+
+entity:
+  name: Team
+  description: "A group of agents and a routing scope. A ticket's teamId narrows the saga candidate pool to this team's AVAILABLE agents."
+
+  fields:
+    - { name: id,          type: ulid,   pk: true }
+    - { name: name,        type: string, min: 1, max: 80, unique: true, gsi: GSI2, description: "unique via GSI + conditional write" }
+    - { name: description, type: string, optional: true, max: 280 }
+    - name: routingStrategy
+      type: enum
+      values: [LOWEST_LOAD, ROUND_ROBIN]
+      default: LOWEST_LOAD
+      labels: { LOWEST_LOAD: "Lowest Load", ROUND_ROBIN: "Round Robin" }
+    - name: status
+      type: enum
+      values: [ACTIVE, ARCHIVED]
+      default: ACTIVE
+      gsi: GSI1
+      labels: { ACTIVE: "Active", ARCHIVED: "Archived" }
+    - { name: dateCreated, type: datetime }
+    - { name: updatedAt,   type: datetime }
+
+businessRules:
+  - "name unique among non-archived teams; routingStrategy uses an enum (#8)."
+  - "Membership is one team per agent, stored on agent.teamId (not a join item). 'List a team's agents' is an agent GSI query."
+  - "Archiving a team does not delete its agents — they become teamId-orphaned and route via the global pool until reassigned."
+  - "A ticket scoped to a team with no AVAILABLE agents yields NO_AGENT_AVAILABLE -> ESCALATED (no silent global fallback, so gaps are visible)."
+
+events: []
+
+indexes:
+  - { name: GSI1, fields: [status, name], description: "list teams (cursor)" }
+  - { name: GSI2, fields: [name],         description: "name uniqueness enforcement + lookup (unique)" }
+
+useCases:
+  - { name: createTeam,         type: create }
+  - { name: getTeam,            type: read }
+  - { name: listTeams,          type: list,       description: "cursor via GSI1" }
+  - { name: updateTeam,         type: update }
+  - { name: archiveTeam,        type: transition, description: "ACTIVE->ARCHIVED" }
+  - { name: assignAgentToTeam,  type: update,     description: "cross-context command: writes agent.teamId via the agent context" }
