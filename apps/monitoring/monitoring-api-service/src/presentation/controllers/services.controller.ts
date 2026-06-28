@@ -2,7 +2,7 @@ import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MonitoringService } from '../../application/services/monitoring.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import type { MetricQuery } from '@old-st/monitoring-sdk';
+import type { MetricQuery } from '@mma/monitoring-sdk';
 
 /** Lambda pricing constants (us-east-1 / eu-west-2 standard pricing). */
 const PRICE_PER_GB_SECOND = 0.0000166667;

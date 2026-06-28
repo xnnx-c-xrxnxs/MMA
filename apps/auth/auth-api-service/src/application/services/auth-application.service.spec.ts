@@ -1,5 +1,5 @@
 import { AuthApplicationService } from './auth-application.service';
-import type { IAuthProvider } from '@old-st/aws-cognito';
+import type { IAuthProvider } from '@mma/aws-cognito';
 
 function createMockProvider(overrides: Partial<IAuthProvider> = {}): IAuthProvider {
   return {

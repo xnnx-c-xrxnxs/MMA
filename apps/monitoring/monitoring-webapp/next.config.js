@@ -12,7 +12,7 @@ const nextConfig = {
   nx: {},
   // Trace from workspace root so pnpm-hoisted deps (styled-jsx, etc.) are included
   outputFileTracingRoot: path.join(__dirname, '../../../'),
-  transpilePackages: ['@old-st/monitoring-sdk'],
+  transpilePackages: ['@mma/monitoring-sdk'],
   // Environment selector is a URL query param — no server-side env branching needed
 };
 

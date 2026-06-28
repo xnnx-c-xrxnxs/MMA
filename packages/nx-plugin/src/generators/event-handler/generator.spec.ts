@@ -179,7 +179,7 @@ describe('event-handler generator', () => {
       'apps/notification/notification-event-handler-service/src/application/services/notification-event-handler.service.ts',
       'utf-8',
     ) ?? '';
-    expect(dispatcher).toContain("from '@old-st/contracts/notification'");
+    expect(dispatcher).toContain("from '@mma/contracts/notification'");
     expect(dispatcher).toContain('notificationDomainEventSchema');
     expect(dispatcher).toContain('NotificationEventTypeEnum.NOTIFICATION_SENT');
     expect(dispatcher).toContain('class NotificationEventHandlerService');
@@ -189,7 +189,7 @@ describe('event-handler generator', () => {
       'utf-8',
     ) ?? '';
     // Same-domain handler imports payload from the domain package directly.
-    expect(handler).toContain("from '@old-st/notification-domain'");
+    expect(handler).toContain("from '@mma/notification-domain'");
     expect(handler).toContain('NotificationSentPayload');
     expect(handler).toContain('class NotificationSentHandler');
   });
@@ -207,7 +207,7 @@ describe('event-handler generator', () => {
       'apps/order/order-event-handler-service/src/application/services/order-event-handler.service.ts',
       'utf-8',
     ) ?? '';
-    expect(dispatcher).toContain("from '@old-st/contracts/product'");
+    expect(dispatcher).toContain("from '@mma/contracts/product'");
     expect(dispatcher).toContain('productDomainEventSchema');
     expect(dispatcher).toContain('ProductEventTypeEnum.PRODUCT_DEACTIVATED');
     expect(dispatcher).toContain('ProductEventTypeEnum.PRODUCT_PRICE_CHANGED');
@@ -217,8 +217,8 @@ describe('event-handler generator', () => {
       'utf-8',
     ) ?? '';
     // Cross-domain handler must NOT import the source-domain package.
-    expect(handler).not.toContain("'@old-st/product-domain'");
-    expect(handler).toContain("from '@old-st/contracts/product'");
+    expect(handler).not.toContain("'@mma/product-domain'");
+    expect(handler).toContain("from '@mma/contracts/product'");
     expect(handler).toContain('Extract<ProductDomainEvent');
     expect(handler).toContain("eventType: 'PRODUCT_DEACTIVATED'");
   });

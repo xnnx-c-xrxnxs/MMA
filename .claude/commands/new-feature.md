@@ -178,7 +178,7 @@ Update `apps/{domain}/{service}/src/application/services/{entity}-application.se
 - Add method for the new feature
 - Inject the new use case into the constructor
 - Transform entity → DTO using Zod schema parse
-- **(H2)** Verify the file declares a module-level `const logger = createLogger('{service}')` from `@old-st/telemetry` — mandatory and lint-checked (Golden Rule #35 / `app-service-has-logger`). Never use `new Logger()` from `@nestjs/common`.
+- **(H2)** Verify the file declares a module-level `const logger = createLogger('{service}')` from `@mma/telemetry` — mandatory and lint-checked (Golden Rule #35 / `app-service-has-logger`). Never use `new Logger()` from `@nestjs/common`.
 
 ---
 
@@ -287,7 +287,7 @@ Balanced placement flow for 11c (mandatory):
 - **12a.** Update domain list component in `apps/mobile/src/components/{domain}/`
 - **12b.** Update detail screen if action buttons changed
 - **12c.** Update `status-variants.ts` if a new status was added
-- **12d.** No mobile-side action needed for new status labels — mobile imports the same `format{Domain}Status()` helper from `@old-st/client-common` that webapp updated in 11f.
+- **12d.** No mobile-side action needed for new status labels — mobile imports the same `format{Domain}Status()` helper from `@mma/client-common` that webapp updated in 11f.
 
 Steps 11a/11b (API client + hooks) are shared — skip if already done in Phase 11.
 

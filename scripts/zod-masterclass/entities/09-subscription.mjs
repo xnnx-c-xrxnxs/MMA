@@ -7,7 +7,7 @@ export default {
       title: 'Create Schema',
       subtitle: 'createSubscriptionSchema',
       code: `import { z } from 'zod';
-import { SUBSCRIPTION_PLANS } from '@old-st/billing-domain';
+import { SUBSCRIPTION_PLANS } from '@mma/billing-domain';
 
 export const planSchema = z.enum(SUBSCRIPTION_PLANS);  // 'FREE' | 'PRO' | 'ENTERPRISE'
 

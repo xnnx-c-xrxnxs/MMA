@@ -14,7 +14,7 @@
  *
  * Categories:
  *   - markdown-link  → [text](apps/users/...) or [text](packages/user-domain/...)
- *   - import         → import ... from '@old-st/user-domain' or similar
+ *   - import         → import ... from '@mma/user-domain' or similar
  *   - code-fence     → match inside a fenced code block (``` ... ```)
  *   - inline-code    → match inside `backticks`
  *   - plain-text     → bare prose mention
@@ -84,7 +84,7 @@ const SCAN_GLOBS = [
   'apps/files/**/*.ts',
   'apps/monitoring/**/*.{ts,tsx}',
   // VS Code workspace files
-  'old-st-template.code-workspace',
+  'mma.code-workspace',
   '.vscode/*.json',
   '.vscode/init-env.sh',
   // Lint config (will need updating as part of Phase 2.4)
@@ -115,8 +115,8 @@ const PATTERNS = [
   { name: 'package-domain-bare',    regex: /\bpackages\/(user|product|order)-domain\b/g },
   { name: 'contracts-domain-path',  regex: /packages\/contracts\/(user|product|order|payment)\/[A-Za-z0-9_./-]+/g },
   { name: 'contracts-domain-bare',  regex: /\bpackages\/contracts\/(user|product|order|payment)\b/g },
-  { name: 'import-domain-package',  regex: /@old-st\/(user|product|order)-domain(?:\/[A-Za-z0-9_./-]+)?/g },
-  { name: 'import-contracts-domain',regex: /@old-st\/contracts\/(user|product|order|payment)(?:\/[A-Za-z0-9_./-]+)?/g },
+  { name: 'import-domain-package',  regex: /@mma\/(user|product|order)-domain(?:\/[A-Za-z0-9_./-]+)?/g },
+  { name: 'import-contracts-domain',regex: /@mma\/contracts\/(user|product|order|payment)(?:\/[A-Za-z0-9_./-]+)?/g },
 ];
 
 // Matches the allowed exception (docs/decisions/001-examples-frozen-isolated-workspace.md, extended):
@@ -145,7 +145,7 @@ function categorize(line, matchIndex, matchText) {
 
   // import / from: contains `from '...'` or `import '...'` or `require('...)`
   if (/\b(import|from|require)\b/.test(line)) {
-    if (matchText.startsWith('@old-st/') || matchText.startsWith('packages/') || matchText.startsWith('apps/') || matchText.startsWith('examples/')) {
+    if (matchText.startsWith('@mma/') || matchText.startsWith('packages/') || matchText.startsWith('apps/') || matchText.startsWith('examples/')) {
       // Check the match is inside quotes
       const quoteBefore = line.lastIndexOf("'", matchIndex);
       const dquoteBefore = line.lastIndexOf('"', matchIndex);

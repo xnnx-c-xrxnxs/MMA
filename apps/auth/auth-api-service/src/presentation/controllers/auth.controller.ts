@@ -26,7 +26,7 @@ import {
   forgotPasswordRequestSchema,
   confirmForgotPasswordRequestSchema,
   changePasswordRequestSchema,
-} from '@old-st/contracts/auth';
+} from '@mma/contracts/auth';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import { Public } from '../decorators/public.decorator';
 import { AuthApplicationService } from '../../application/services/auth-application.service';

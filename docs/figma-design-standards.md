@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-The Figma design system file is structured so that an AI-powered pipeline can automatically extract components and convert them to production code (`@old-st/ui` for web, `@old-st/mobile-ui` for React Native).
+The Figma design system file is structured so that an AI-powered pipeline can automatically extract components and convert them to production code (`@mma/ui` for web, `@mma/mobile-ui` for React Native).
 
 Every component, variable, and page follows strict conventions. Following these rules ensures designs translate to code accurately and consistently.
 

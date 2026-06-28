@@ -14,7 +14,7 @@ export class AppController {
   envInfo() {
     return {
       environment: process.env.TARGET_ENVIRONMENT ?? 'dev',
-      projectName: process.env.PROJECT_NAME ?? 'old-st',
+      projectName: process.env.PROJECT_NAME ?? 'mma',
       awsAccountId: process.env.AWS_ACCOUNT_ID ?? 'unknown',
     };
   }

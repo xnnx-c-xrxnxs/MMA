@@ -76,7 +76,7 @@ const renderUseCase = (ctx: BuiltContext): string => {
       const createCallBody = ctx.fields
         ? ctx.fields.map((f) => `      ${f.name}: input.${f.name},`).join('\n')
         : '      // TODO: map input → entity creation parameters';
-      return `import { IUseCase } from '@old-st/common';
+      return `import { IUseCase } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 
@@ -99,7 +99,7 @@ ${createCallBody}
     }
 
     case 'get-by-id':
-      return `import { IUseCase } from '@old-st/common';
+      return `import { IUseCase } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 import { InvalidInputError, ${notFound} } from '../../exceptions';
@@ -125,7 +125,7 @@ export class ${useCasePrefix}UseCase implements IUseCase<string, ${entity.pascal
       const updateInputBody = ctx.fields
         ? ctx.fields.map((f) => `  ${f.name}?: ${tsTypeOf(f).replace(' | undefined', '')};`).join('\n')
         : '  // TODO: add updatable fields here (all optional)';
-      return `import { IUseCase } from '@old-st/common';
+      return `import { IUseCase } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 import { InvalidInputError, ${notFound} } from '../../exceptions';
@@ -154,7 +154,7 @@ export class ${useCasePrefix}UseCase implements IUseCase<${useCasePrefix}Input, 
     }
 
     case 'delete':
-      return `import { IUseCase } from '@old-st/common';
+      return `import { IUseCase } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 import { InvalidInputError, ${notFound} } from '../../exceptions';
@@ -178,7 +178,7 @@ export class ${useCasePrefix}UseCase implements IUseCase<string, ${entity.pascal
 `;
 
     case 'action':
-      return `import { IUseCase } from '@old-st/common';
+      return `import { IUseCase } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 import { InvalidInputError, ${notFound} } from '../../exceptions';
@@ -211,7 +211,7 @@ export class ${useCasePrefix}UseCase implements IUseCase<string, ${entity.pascal
         ? `import { ${entity.pascal}Status } from '../../../domain/constants';\n`
         : '';
       const filterType = isStatusFilter ? `${entity.pascal}Status` : 'string';
-      return `import { IUseCase, IPaginatedResponse } from '@old-st/common';
+      return `import { IUseCase, IPaginatedResponse } from '@mma/common';
 import { ${repoIface} } from '../../interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../../domain/entities';
 ${statusImport}import { InvalidInputError } from '../../exceptions';
@@ -283,7 +283,7 @@ export default async function useCaseGenerator(
 
   if (!tree.exists(packagePath)) {
     throw new Error(
-      `use-case generator: domain package '${packagePath}' does not exist. Run \`pnpm nx g @old-st/nx-plugin:domain ${ctx.domain.kebab}\` first to scaffold the domain.`,
+      `use-case generator: domain package '${packagePath}' does not exist. Run \`pnpm nx g @mma/nx-plugin:domain ${ctx.domain.kebab}\` first to scaffold the domain.`,
     );
   }
 
@@ -308,7 +308,7 @@ export default async function useCaseGenerator(
   }
 
   logger.info(
-    `\n[@old-st/nx-plugin:use-case] Generated ${ctx.useCasePrefix}UseCase\n` +
+    `\n[@mma/nx-plugin:use-case] Generated ${ctx.useCasePrefix}UseCase\n` +
       `  → ${useCasePath}\n` +
       `  → ${specPath}\n\n` +
       `Next steps:\n` +

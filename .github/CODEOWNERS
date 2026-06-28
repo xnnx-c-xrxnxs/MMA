@@ -9,36 +9,36 @@
 # ── Default owner for everything not matched below ────────────────────────────
 # This catch-all ensures every file — including any NEW domain added in future —
 # always has at least one required reviewer. No update needed when adding domains.
-*                                   @Old-St-Labs/senior-devs
+*                                   @code-maca/placeholder-owner
 
 # ── Contracts (shared across layers) ─────────────────────────────────────────
-packages/contracts/                 @Old-St-Labs/senior-devs
+packages/contracts/                 @code-maca/placeholder-owner
 
 # ── Frontend shared packages ──────────────────────────────────────────────────
-packages/ui/                        @Old-St-Labs/senior-devs
-packages/mobile-ui/                 @Old-St-Labs/senior-devs
-packages/client-common/             @Old-St-Labs/senior-devs
+packages/ui/                        @code-maca/placeholder-owner
+packages/mobile-ui/                 @code-maca/placeholder-owner
+packages/client-common/             @code-maca/placeholder-owner
 
 # ── Webapp + mobile ────────────────────────────────────────────────────────────
-apps/webapp/                        @Old-St-Labs/senior-devs
-apps/webapp-e2e/                    @Old-St-Labs/senior-devs
-apps/mobile/                        @Old-St-Labs/senior-devs
+apps/webapp/                        @code-maca/placeholder-owner
+apps/webapp-e2e/                    @code-maca/placeholder-owner
+apps/mobile/                        @code-maca/placeholder-owner
 
 # ── CI / Infrastructure ────────────────────────────────────────────────────────
-.github/                            @Old-St-Labs/senior-devs
-.github/workflows/                  @Old-St-Labs/senior-devs
-scripts/                            @Old-St-Labs/senior-devs
-docker-compose.yml                  @Old-St-Labs/senior-devs
-nx.json                             @Old-St-Labs/senior-devs
-tsconfig.base.json                  @Old-St-Labs/senior-devs
+.github/                            @code-maca/placeholder-owner
+.github/workflows/                  @code-maca/placeholder-owner
+scripts/                            @code-maca/placeholder-owner
+docker-compose.yml                  @code-maca/placeholder-owner
+nx.json                             @code-maca/placeholder-owner
+tsconfig.base.json                  @code-maca/placeholder-owner
 
 # ── Optional: per-domain backend ownership ────────────────────────────────────
 # Uncomment and extend these if you want a backend team specifically requested
 # rather than (or in addition to) the catch-all team above.
 #
-# packages/{domain}-domain/         @Old-St-Labs/backend
-# apps/{domain}/                    @Old-St-Labs/backend
+# packages/{domain}-domain/         @xnnx-c-xrxnxs/backend
+# apps/{domain}/                    @xnnx-c-xrxnxs/backend
 #
 # ── For new projects created from this template ─────────────────────────────
 # Run `node scripts/task-helpers/setup-branch-protection.mjs --rename-codeowners`
-# to replace `@Old-St-Labs/senior-devs` with your org/team across this file.
+# to replace `@code-maca/placeholder-owner` with your org/team across this file.

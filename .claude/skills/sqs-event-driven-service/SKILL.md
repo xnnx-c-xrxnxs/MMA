@@ -19,7 +19,7 @@ For Nx workspace registration (project.json, tsconfig, webpack) follow the `nx-m
 
 1. **Domain name** (e.g. `orders`, `notifications`) — determines the `apps/{domain}/` folder.
 2. **Service name** (e.g. `order-event-handler-service`) — the Nx project name and folder.
-3. **Which domain package does this service use?** (e.g. `@old-st/{domain}-domain`)
+3. **Which domain package does this service use?** (e.g. `@mma/{domain}-domain`)
 4. **SQS queue env var name** for the queue URL (e.g. `ORDER_EVENTS_SQS_QUEUE_URL`).
 5. **SQS queue name** — the physical queue name used locally (e.g. `orders-events`). Becomes the default in `SqsLocalService`.
 6. **What events must this service handle?** — list every event type name (e.g. `UPDATE_STATUS`, `ASSIGN_RULES`). These become the `{DOMAIN}_EVENTS` constant array and the discriminated union variants.
@@ -142,8 +142,8 @@ One file per event type. Each handler `implements IEventHandler<{EventType}Paylo
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
 import { IEventHandler } from '../../interfaces/event-handler.interface';
-import { {EventType}Payload } from '@old-st/{domain}-domain';
-// import { SomeUseCase } from '@old-st/{domain}-domain';
+import { {EventType}Payload } from '@mma/{domain}-domain';
+// import { SomeUseCase } from '@mma/{domain}-domain';
 
 /**
  * {EventType}Handler
@@ -191,9 +191,9 @@ export * from './{event-type}.handler';
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import { runWithCorrelationId } from '@old-st/telemetry';
-import { {domain}DomainEventSchema, {Domain}EventTypeEnum } from '@old-st/contracts/{domain}';
+import { createLogger } from '@mma/telemetry';
+import { runWithCorrelationId } from '@mma/telemetry';
+import { {domain}DomainEventSchema, {Domain}EventTypeEnum } from '@mma/contracts/{domain}';
 import { NormalizedSqsRecord } from '../interfaces/normalized-sqs-record.interface';
 import { {EventType}Handler } from './handlers';
 // import { {OtherEventType}Handler } from './handlers';
@@ -262,7 +262,7 @@ export class {Domain}EventHandlerService {
         //   break;
 
         // Exhaustiveness guard — when a new event is added to USER_EVENTS,
-        // add a matching case above. The Zod discriminated union in @old-st/contracts/{domain}
+        // add a matching case above. The Zod discriminated union in @mma/contracts/{domain}
         // will reject payloads for unregistered event types before they reach this switch.
         default: {
           const unhandledEvent = payload as unknown as { eventType: string };
@@ -292,11 +292,11 @@ export class {Domain}EventHandlerService {
 - `processRecord` rethrows caught handler errors so `SqsLocalService.processMessage()` skips `DeleteMessageCommand`.
 - Per-record loop in `handleRecords` — one bad record does not abort the batch.
 - Adding a new event: create a handler file → add it to `handlers/index.ts` → add one `case` here → provide in module.
-- Use `createLogger()` from `@old-st/telemetry`, not `new Logger()` from `@nestjs/common` (Golden Rule #35).
+- Use `createLogger()` from `@mma/telemetry`, not `new Logger()` from `@nestjs/common` (Golden Rule #35).
 - `correlationId` extraction happens in `handleRecords()` BEFORE Zod parsing — wrap each record's `processRecord()` in `runWithCorrelationId()` so all log lines within a record share the same correlation context.
 - Return `void` from `handleRecords` — Lambda success/failure is signalled via the `handler` return value.
 
-**Key import rule:** The dispatcher imports `{domain}DomainEventSchema` and `{Domain}EventTypeEnum` from `@old-st/contracts/{domain}` — never from the bare `@old-st/contracts` root or directly from `@old-st/{domain}-domain`. Contracts subpath is the single import point for both.
+**Key import rule:** The dispatcher imports `{domain}DomainEventSchema` and `{Domain}EventTypeEnum` from `@mma/contracts/{domain}` — never from the bare `@mma/contracts` root or directly from `@mma/{domain}-domain`. Contracts subpath is the single import point for both.
 
 ---
 
@@ -306,7 +306,7 @@ Polls LocalStack for messages and delegates to the event handler service. Delete
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import {
   DeleteMessageCommand,
   Message,
@@ -468,7 +468,7 @@ export const handler = async (
 Add `SecretsConfig.resolve()` before NestJS bootstrap in the Lambda handler:
 
 ```typescript
-import { SecretsConfig } from '@old-st/aws-secrets';
+import { SecretsConfig } from '@mma/aws-secrets';
 
 export const handler = async (
   event: { Records: SQSRecord[] },
@@ -510,9 +510,9 @@ Same provider factory pattern as an HTTP module (DynamoDB table + repository + u
 import { Module } from '@nestjs/common';
 import {
   I{Entity}Repository,
-  // ... import use cases from '@old-st/{domain}-domain'
-} from '@old-st/{domain}-domain';
-import { Dynamo{Entity}Repository, {Entity}Schema } from '@old-st/{domain}-domain/infrastructure';
+  // ... import use cases from '@mma/{domain}-domain'
+} from '@mma/{domain}-domain';
+import { Dynamo{Entity}Repository, {Entity}Schema } from '@mma/{domain}-domain/infrastructure';
 import { Table } from 'dynamodb-onetable';
 import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
 import { {Domain}EventHandlerService } from '../application/services/{domain}-event-handler.service';
@@ -560,8 +560,8 @@ export class {Domain}Module {}
 Replace the DynamoDB table + repository providers with Prisma equivalents:
 
 ```typescript
-import { PrismaClient } from '@old-st/{domain}-domain/infrastructure';
-import { Prisma{Entity}Repository } from '@old-st/{domain}-domain/infrastructure';
+import { PrismaClient } from '@mma/{domain}-domain/infrastructure';
+import { Prisma{Entity}Repository } from '@mma/{domain}-domain/infrastructure';
 import { PrismaConfig } from '../infrastructure/config/prisma.config';
 
 const PRISMA_CLIENT = 'PRISMA_CLIENT';
@@ -673,15 +673,15 @@ export * from './events';
 
 ### Step 3 — Zod discriminated union: `packages/contracts/{domain}/src/event-schemas.ts`
 
-Validation schemas live in `contracts/`, same rule as HTTP request/response schemas. Re-exports the domain constants so consumers only import from `@old-st/contracts/{domain}`.
+Validation schemas live in `contracts/`, same rule as HTTP request/response schemas. Re-exports the domain constants so consumers only import from `@mma/contracts/{domain}`.
 
 ```typescript
 import { z } from 'zod';
-import { {Domain}EventTypeEnum } from '@old-st/{domain}-domain';
+import { {Domain}EventTypeEnum } from '@mma/{domain}-domain';
 
-// Re-export constants so consumers only need to import from @old-st/contracts/{domain}
+// Re-export constants so consumers only need to import from @mma/contracts/{domain}
 export { {Domain}EventTypeEnum };
-export type { {Domain}EventType } from '@old-st/{domain}-domain';
+export type { {Domain}EventType } from '@mma/{domain}-domain';
 
 // ─── Per-variant schemas ──────────────────────────────────────────────────────
 // Each object schema must include `eventType: z.literal(...)` as the discriminant
@@ -727,7 +727,7 @@ Update `{domain}-event-handler.service.ts` imports to bring in the Zod schema, e
 
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
-import { {domain}DomainEventSchema, {Domain}EventTypeEnum } from '@old-st/contracts/{domain}';
+import { {domain}DomainEventSchema, {Domain}EventTypeEnum } from '@mma/contracts/{domain}';
 import { NormalizedSqsRecord } from '../interfaces/normalized-sqs-record.interface';
 import { {EventType}Handler } from './handlers';
 // import { {OtherEventType}Handler } from './handlers';

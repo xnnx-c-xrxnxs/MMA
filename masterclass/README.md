@@ -1,6 +1,6 @@
 # Masterclass Projects
 
-> Training material for the `old-st-template` masterclass. Five self-contained project briefs that
+> Training material for the `mma` masterclass. Five self-contained project briefs that
 > a small team (one **Frontend** dev + one **Backend** dev) can pick from to practice this repo's
 > **architecture**, **structure**, and **AI-native components** (skills, commands, subagents).
 >
@@ -76,7 +76,7 @@ Which repo capability each project exercises, so you can assign by learning obje
 | DynamoDB OneTable + cursor pagination + GSIs | — | ✅ | — | ✅ | — |
 | Idempotent event handler | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Atomic counter / concurrency edge | — | ✅ | — | ✅ | ✅ |
-| Contracts subpath imports (`@old-st/contracts/{domain}`) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Contracts subpath imports (`@mma/contracts/{domain}`) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `@CurrentUser()` actor from JWT | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Webapp thin-orchestrator page + data-table | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Webapp form (react-hook-form + Zod) | ✅ | ✅ | ✅ | ✅ | ✅ |

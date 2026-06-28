@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/aws-secrets",
+  "name": "@mma/aws-secrets",
   "version": "1.0.0",
   "description": "AWS Secrets Manager resolver — reads project-level secret at Lambda cold-start and populates process.env.",
   "main": "src/index.ts",

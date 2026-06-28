@@ -112,17 +112,17 @@ For every unique node found, apply the classification rules:
 
 | Signal | Decision | Weight |
 |---|---|---|
-| Figma type is `COMPONENT_SET` or `COMPONENT` | → Design System (`@old-st/ui`) | High |
+| Figma type is `COMPONENT_SET` or `COMPONENT` | → Design System (`@mma/ui`) | High |
 | Used in 2+ places across the file | → Design System | High |
 | Used in only 1 place AND has clear domain context (name contains "Order", "Project", "Report") | → page-local (`apps/webapp/src/components/{domain}/`) | High |
-| Maps to existing `@old-st/ui` primitive (Button, Input, Avatar) | → SKIP (reuse) in `additive` mode; **drift-check** in `sync` mode | High |
+| Maps to existing `@mma/ui` primitive (Button, Input, Avatar) | → SKIP (reuse) in `additive` mode; **drift-check** in `sync` mode | High |
 | Top-level frame, name suggests a screen ("Dashboard", "Settings") | → Page (`apps/webapp/src/app/(protected)/{route}/page.tsx`) | High |
 | Maps to a Radix primitive (a11y-critical: Dialog, Tooltip, Tabs) | → Design System + Radix wrap | High |
 | Pure layout frame with no styling intent | → SKIP | Medium |
 
 #### A.3.1 — Primitive drift check (`sync` mode only)
 
-For every primitive that maps to an existing component in `@old-st/ui`, do NOT just mark `SKIP (reuse)`. Pull the Figma component's variant set via `mcp__figma__get_design_context({ fileKey, nodeId })` and compare to the existing component's `cva()` variant keys.
+For every primitive that maps to an existing component in `@mma/ui`, do NOT just mark `SKIP (reuse)`. Pull the Figma component's variant set via `mcp__figma__get_design_context({ fileKey, nodeId })` and compare to the existing component's `cva()` variant keys.
 
 | Comparison result | Action in plan |
 |---|---|
@@ -429,7 +429,7 @@ Even if no new tokens are needed, this phase MUST verify the workspace's Tailwin
 1. **Tokens themselves.** Add new tokens to `packages/ui/src/lib/tokens.ts` (single source of truth) — add to BOTH `lightColors` AND `darkColors`. Mobile picks them up automatically via the re-export in `packages/mobile-ui/src/lib/theme.ts`.
 2. **Regenerate `globals.css`.** Run `pnpm tokens:gen`. This rewrites the `@theme { … }` and `.dark { … }` blocks between the AUTO-GENERATED sentinels in `apps/webapp/src/app/globals.css`. **Never hand-edit those blocks.** CI runs `pnpm tokens:check` and fails on drift. The legacy `.light { … }` mirror block has been REMOVED — light/dark switching is runtime via `<ThemeToggle>` and `next-themes`, not via wrapping subtrees in a `.light` className.
 3. **`@source` directives — REQUIRED for any cva() consumer outside the project root.**
-   Tailwind v4 only auto-scans `apps/webapp/src/`. Workspace packages (`@old-st/ui`, etc.) are excluded by default, so utility classes used inside `cva()` strings (`h-4`, `w-7`, `border-[3px]`) are silently dropped from the generated CSS — components have the class names in markup but no rules backing them, rendering as 0×0 boxes.
+   Tailwind v4 only auto-scans `apps/webapp/src/`. Workspace packages (`@mma/ui`, etc.) are excluded by default, so utility classes used inside `cva()` strings (`h-4`, `w-7`, `border-[3px]`) are silently dropped from the generated CSS — components have the class names in markup but no rules backing them, rendering as 0×0 boxes.
    Confirm `globals.css` contains:
    ```css
    @source "../../../../packages/ui/src";
@@ -671,8 +671,8 @@ test('design-preview matches Figma library manifest exactly', async ({ page }) =
 This is Gate 0. It is a real assertion against the live DOM, not an agent counting JSX.
 
 **Step 6 — Theme + import discipline.**
-- Use `<ThemeToggle>` from `@old-st/ui` for dark mode. Never wrap subtrees in `.light` / `.dark` divs.
-- `_library.tsx` may import only: `react`, `next/link`, `@old-st/ui`, `@old-st/ui/lib/tokens`, the local `_shell.tsx`, and `./figma-library-manifest.json`. No domain components, no API calls.
+- Use `<ThemeToggle>` from `@mma/ui` for dark mode. Never wrap subtrees in `.light` / `.dark` divs.
+- `_library.tsx` may import only: `react`, `next/link`, `@mma/ui`, `@mma/ui/lib/tokens`, the local `_shell.tsx`, and `./figma-library-manifest.json`. No domain components, no API calls.
 
 ### B.2.6 — Per-primitive visual checkpoint (MANDATORY — kills the visual-drift back-and-forth)
 
@@ -730,7 +730,7 @@ Verify: `pnpm nx build client-common`.
 For each page-local component:
 
 1. Generate `apps/webapp/src/components/{domain}/{name}.tsx`
-2. Compose using `@old-st/ui` primitives only
+2. Compose using `@mma/ui` primitives only
 3. Use the cn() helper for className merging
 
 ### B.5 — Pages
@@ -885,7 +885,7 @@ Suggest **grouped commits** so the developer can review in passes:
 ## Safety guards (always enforce)
 
 1. **Never overwrite without permission.** Phase A surfaces every conflict; Phase B only overwrites items the user explicitly approved.
-2. **Never write `<button>`, `<input>`, `<table>` directly in pages.** Use `@old-st/ui` primitives.
+2. **Never write `<button>`, `<input>`, `<table>` directly in pages.** Use `@mma/ui` primitives.
 3. **Never inline hex colors.** Always go through tokens / semantic Tailwind utilities.
 4. **Never proceed past Phase A without approval.**
 5. **If Phase B fails halfway,** report what was created up to the failure, do NOT roll back, let the developer decide whether to continue or revert via git.

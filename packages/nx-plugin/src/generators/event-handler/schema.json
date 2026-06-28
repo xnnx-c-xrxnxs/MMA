@@ -22,7 +22,7 @@
     "crossDomain": {
       "type": "boolean",
       "default": false,
-      "description": "If true, this handler consumes events published by a different bounded context. Dispatcher imports schemas from `@old-st/contracts/{sourceDomain}` and handlers must use Extract<...DomainEvent, {eventType:'X'}> for typing."
+      "description": "If true, this handler consumes events published by a different bounded context. Dispatcher imports schemas from `@mma/contracts/{sourceDomain}` and handlers must use Extract<...DomainEvent, {eventType:'X'}> for typing."
     },
     "sourceDomain": {
       "type": "string",

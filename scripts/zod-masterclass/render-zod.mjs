@@ -192,7 +192,7 @@ ${card('Arrays & tuples', `z.array(itemSchema)
 z.array(itemSchema).min(1)   // non-empty
 z.array(itemSchema).max(50)
 z.tuple([z.string(), z.number()])`)}
-${card('Enums (from domain)', `import { USER_STATUSES } from '@old-st/user-domain';
+${card('Enums (from domain)', `import { USER_STATUSES } from '@mma/user-domain';
 
 z.enum(USER_STATUSES)        // 'PENDING' | 'ACTIVE' | ...
 // NOT z.enum(['PENDING','ACTIVE',...])  <- duplicates source of truth`)}

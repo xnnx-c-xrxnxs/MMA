@@ -139,7 +139,7 @@ Use `nestjs-service-layers` skill. Endpoints:
    ```
    Use cases depend on the abstract class. The `ExpoPushDispatcher` implementation lives in `infrastructure/push/`.
 
-3. **Define event subscriptions.** The handler service listens on a single `notification-events` SQS queue. Each publishing domain (order, user, product) gets its own handler file under `application/handlers/`. The dispatcher in `notification-event-handler.service.ts` switches by `event.type` (validated via `safeParse` on the publishing domain's discriminated-union schema imported from `@old-st/contracts/{publishing-domain}`).
+3. **Define event subscriptions.** The handler service listens on a single `notification-events` SQS queue. Each publishing domain (order, user, product) gets its own handler file under `application/handlers/`. The dispatcher in `notification-event-handler.service.ts` switches by `event.type` (validated via `safeParse` on the publishing domain's discriminated-union schema imported from `@mma/contracts/{publishing-domain}`).
 
 4. **Idempotency.** Every handler MUST be idempotent — SQS guarantees at-least-once delivery. Use `(eventId, channel)` as the dedupe key, store recent IDs in the `DeliveryLog`, and skip if already dispatched.
 
@@ -162,7 +162,7 @@ Use `nestjs-service-layers` skill. Endpoints:
 
 ## Architectural Rules
 
-1. **The dispatcher service NEVER reads from another domain's repository.** All input arrives via SQS events from `@old-st/contracts/{publishing-domain}/event-schemas` (Golden Rule #15).
+1. **The dispatcher service NEVER reads from another domain's repository.** All input arrives via SQS events from `@mma/contracts/{publishing-domain}/event-schemas` (Golden Rule #15).
 2. **Device tokens are PII** — always encrypted at rest (DynamoDB encryption-at-rest is on by default), never logged in plaintext, and never returned in API responses to clients other than the owning user.
 3. **Expo Push access token lives in AWS Secrets Manager.** Resolved at Lambda cold-start via `SecretsConfig.resolve(['EXPO_PUSH_TOKEN'])` (see `aws-secrets` package) — never an env var.
 4. **Batching.** Expo Push accepts up to 100 messages per request. Always batch — never one HTTP call per recipient.

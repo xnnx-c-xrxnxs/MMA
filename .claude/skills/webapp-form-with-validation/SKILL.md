@@ -1,15 +1,15 @@
 ---
 name: webapp-form-with-validation
-description: Build forms in the webapp using react-hook-form + Zod resolver, reusing schemas from @old-st/contracts so validation rules live in exactly one place. Use this when adding any create/edit/sign-in form, or when refactoring an existing useState-driven form. Covers field registration, error display, optimistic disabled state, and toast wiring.
+description: Build forms in the webapp using react-hook-form + Zod resolver, reusing schemas from @mma/contracts so validation rules live in exactly one place. Use this when adding any create/edit/sign-in form, or when refactoring an existing useState-driven form. Covers field registration, error display, optimistic disabled state, and toast wiring.
 ---
 
 # Webapp Form with Validation (RHF + Zod)
 
-Canonical form primitives live in `@old-st/ui`:
+Canonical form primitives live in `@mma/ui`:
 - `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`
 - Source: `packages/ui/src/components/form-controls/form/form.tsx`
 
-Source schemas come from `@old-st/contracts/{domain}` — **never duplicate Zod schemas in the webapp**.
+Source schemas come from `@mma/contracts/{domain}` — **never duplicate Zod schemas in the webapp**.
 
 ---
 
@@ -19,7 +19,7 @@ Source schemas come from `@old-st/contracts/{domain}` — **never duplicate Zod 
 2. **Which contract schema** is the form's source of truth? (e.g. `signInSchema`, `createUserSchema`)
 3. **Is it a create or edit form?** (edit needs `defaultValues` from server data)
 4. **Where does it live?** (`apps/webapp/src/components/{domain}/{name}-form.tsx`)
-5. **Which mutation hook does it call?** (e.g. `useCreateUser` from `@old-st/client-common`)
+5. **Which mutation hook does it call?** (e.g. `useCreateUser` from `@mma/client-common`)
 
 ---
 
@@ -50,9 +50,9 @@ import {
   FormMessage,
   Input,
   toast,
-} from '@old-st/ui';
-import { createEntitySchema, type CreateEntityInput } from '@old-st/contracts/{domain}';
-import { useCreateUser } from '@old-st/client-common';
+} from '@mma/ui';
+import { createEntitySchema, type CreateEntityInput } from '@mma/contracts/{domain}';
+import { useCreateUser } from '@mma/client-common';
 
 export function CreateUserForm({ onSuccess }: { onSuccess?: () => void }) {
   const form = useForm<CreateUserInput>({
@@ -121,12 +121,12 @@ export function CreateUserForm({ onSuccess }: { onSuccess?: () => void }) {
 
 ## Rules
 
-1. **The Zod schema MUST come from `@old-st/contracts/{domain}`.** Never define a form-specific schema in the webapp. If the form needs extra UI-only validation (e.g. confirm-password), extend the contract schema with `.extend(...)` inline — but the *core fields* always come from contracts.
+1. **The Zod schema MUST come from `@mma/contracts/{domain}`.** Never define a form-specific schema in the webapp. If the form needs extra UI-only validation (e.g. confirm-password), extend the contract schema with `.extend(...)` inline — but the *core fields* always come from contracts.
 2. **`<Form>` is `FormProvider` from RHF re-exported.** Spread `{...form}` into it so child fields see the form context.
 3. **Wrap every input in `<FormField>` + `<FormItem>` + `<FormControl>` + `<FormMessage>`.** This is what wires `aria-invalid`, `aria-describedby`, and renders the per-field error text automatically.
 4. **`<FormControl>` uses Radix `<Slot>`** — pass exactly one child (the actual input/select/etc.). The Slot forwards the form's id, ARIA attributes, and ref onto it.
 5. **Submit button must reflect mutation state.** Disable while `isPending`; change label to indicate progress.
-6. **Toast on success and on error.** Import `toast` from `@old-st/ui`. Never `alert()`. Never silently swallow.
+6. **Toast on success and on error.** Import `toast` from `@mma/ui`. Never `alert()`. Never silently swallow.
 7. **Reset the form on success** (`form.reset()`) unless the form is a one-shot like sign-in.
 8. **Forms keep `data-testid="..."` on the `<form>` element** for E2E tests (canonical IDs in `apps/webapp-e2e/src/utils/selectors.ts`).
 9. **Edit forms pass `defaultValues` from the server query**, e.g. `defaultValues: existingUser` — don't fetch inside the form, take it as a prop.

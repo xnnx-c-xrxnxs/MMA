@@ -90,9 +90,9 @@ Update `dev/main.tf`, `staging/main.tf`, `prod/main.tf`, and `preview/main.tf`.
 
 ---
 
-## Part 2 — Structured Logging with `@old-st/telemetry`
+## Part 2 — Structured Logging with `@mma/telemetry`
 
-All NestJS services use `createLogger()` from `@old-st/telemetry` — **never** `new Logger()` from `@nestjs/common`. This emits structured JSON to stdout, which Lambda ships to CloudWatch Logs. Every line automatically includes the active `correlationId` (from `correlationMiddleware()` or `runWithCorrelationId()`), plus OTel trace ID and span ID when available. The monitoring dashboard uses `correlationId` to group related logs into end-to-end event chains across services.
+All NestJS services use `createLogger()` from `@mma/telemetry` — **never** `new Logger()` from `@nestjs/common`. This emits structured JSON to stdout, which Lambda ships to CloudWatch Logs. Every line automatically includes the active `correlationId` (from `correlationMiddleware()` or `runWithCorrelationId()`), plus OTel trace ID and span ID when available. The monitoring dashboard uses `correlationId` to group related logs into end-to-end event chains across services.
 
 ### Log Output Format
 
@@ -121,7 +121,7 @@ Errors additionally include `errorType`, `errorMessage`, and `stack`.
 Declare a **module-level singleton** at the top of the file — not a class property:
 
 ```typescript
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('user-api-service');  // matches the Nx project name exactly
 ```
@@ -148,7 +148,7 @@ Log **before** the operation (what + key inputs) and **after** (confirming compl
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('{domain}-api-service');
 
@@ -181,7 +181,7 @@ export class {Domain}ApplicationService {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('{domain}-event-handler-service');
 
@@ -211,7 +211,7 @@ export class {Domain}EventHandlerService {
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('{domain}-event-handler-service');
 
@@ -229,7 +229,7 @@ export class {Entity}DeletedHandler {
 
 ```typescript
 import { Catch, ExceptionFilter, ... } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('{domain}-api-service');
 
@@ -247,7 +247,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
 ### In ACL Clients (`infrastructure/clients/`)
 
 ```typescript
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('{consuming-domain}-api-service');
 
@@ -286,7 +286,7 @@ export class {Upstream}ApiClient extends I{Upstream}Validator {
 Every service's `main.ts` must call `initTelemetry()` **before** `NestFactory.create()`:
 
 ```typescript
-import { initTelemetry } from '@old-st/telemetry';
+import { initTelemetry } from '@mma/telemetry';
 
 initTelemetry('user-api-service');  // matches the logger name exactly
 
@@ -301,9 +301,9 @@ bootstrap();
 
 ### Dependency
 
-**HTTP API services** (no own `package.json`): `@old-st/telemetry` resolves from the workspace root — no action needed.
+**HTTP API services** (no own `package.json`): `@mma/telemetry` resolves from the workspace root — no action needed.
 
-**Event-handler services** (own `package.json`): add `"@old-st/telemetry": "workspace:*"` to `dependencies`.
+**Event-handler services** (own `package.json`): add `"@mma/telemetry": "workspace:*"` to `dependencies`.
 
 ### SQS Queue URL Startup Validation
 

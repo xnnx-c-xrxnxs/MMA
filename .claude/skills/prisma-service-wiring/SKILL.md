@@ -19,7 +19,7 @@ File: `apps/{domain}/{service}/src/infrastructure/config/prisma.config.ts`
 
 ```typescript
 import path from 'path';
-import { PrismaClient } from '@old-st/{domain}-domain/infrastructure';
+import { PrismaClient } from '@mma/{domain}-domain/infrastructure';
 
 /**
  * Provides a singleton PrismaClient for this service.
@@ -51,11 +51,11 @@ export class PrismaConfig {
 ```
 
 **Rules:**
-- Import `PrismaClient` from the domain's infrastructure barrel (`@old-st/{domain}-domain/infrastructure`), not from `@prisma/client`.
+- Import `PrismaClient` from the domain's infrastructure barrel (`@mma/{domain}-domain/infrastructure`), not from `@prisma/client`.
 - `getClient()` is **async** — NestJS `useFactory` handles `Promise`-returning factories transparently.
 - The singleton pattern ensures one connection pool per process.
 - When deployed (`STAGE !== 'local'`), `PRISMA_QUERY_ENGINE_LIBRARY` is set to the absolute path of the Linux engine binary copied to `/var/task` by webpack. No ARN resolution happens here.
-- **ARN resolution is handled by `SecretsConfig.resolve()`** (from `@old-st/aws-secrets`) which must be called at the very start of the Lambda `handler` export in `main.ts`, before NestJS bootstrap. Pass only the env var keys this service needs — e.g. `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])`. This populates only those keys from the project-level `AWS_SECRETS_ARN` secret, keeping each service isolated from secrets it doesn't own.
+- **ARN resolution is handled by `SecretsConfig.resolve()`** (from `@mma/aws-secrets`) which must be called at the very start of the Lambda `handler` export in `main.ts`, before NestJS bootstrap. Pass only the env var keys this service needs — e.g. `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])`. This populates only those keys from the project-level `AWS_SECRETS_ARN` secret, keeping each service isolated from secrets it doesn't own.
 - Locally (`STAGE=local`) the env var is a plain `postgresql://` URL from `.env.local` — `SecretsConfig.resolve()` is a no-op.
 
 ---
@@ -78,8 +78,8 @@ import { Module } from '@nestjs/common';
 import {
   I{Entity}Repository,
   // ... use cases
-} from '@old-st/{domain}-domain';
-import { Prisma{Entity}Repository, PrismaClient } from '@old-st/{domain}-domain/infrastructure';
+} from '@mma/{domain}-domain';
+import { Prisma{Entity}Repository, PrismaClient } from '@mma/{domain}-domain/infrastructure';
 import { PrismaConfig } from '../infrastructure/config/prisma.config';
 import { {Entity}ApplicationService } from '../application/services/{entity}-application.service';
 import { {Entity}Controller } from '../presentation/controllers/{entity}.controller';
@@ -124,7 +124,7 @@ export class {Entity}Module {}
 
 ```typescript
 import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
-import { Dynamo{Entity}Repository, {Entity}Schema } from '@old-st/{domain}-domain/infrastructure';
+import { Dynamo{Entity}Repository, {Entity}Schema } from '@mma/{domain}-domain/infrastructure';
 import { Table } from 'dynamodb-onetable';
 
 const DYNAMO_TABLE = 'DYNAMO_TABLE';
@@ -150,7 +150,7 @@ const {ENTITY}_REPOSITORY = '{ENTITY}_REPOSITORY';
 
 ```typescript
 import { PrismaConfig } from '../infrastructure/config/prisma.config';
-import { Prisma{Entity}Repository, PrismaClient } from '@old-st/{domain}-domain/infrastructure';
+import { Prisma{Entity}Repository, PrismaClient } from '@mma/{domain}-domain/infrastructure';
 
 const PRISMA_CLIENT = 'PRISMA_CLIENT';
 const {ENTITY}_REPOSITORY = '{ENTITY}_REPOSITORY';
@@ -289,15 +289,15 @@ When converting an existing DynamoDB-based service to Prisma:
 - [ ] Replace `DynamoDBConfig.getTable(...)` with `PrismaConfig.getClient()`
 - [ ] Replace `Dynamo{Entity}Repository` with `Prisma{Entity}Repository` in providers
 - [ ] Replace `Table` type injection with `PrismaClient` type
-- [ ] Update imports: remove `dynamodb-onetable`, `@old-st/dynamodb-onetable`, `{Entity}Schema`
-- [ ] Add `PrismaClient` import from `@old-st/{domain}-domain/infrastructure`
+- [ ] Update imports: remove `dynamodb-onetable`, `@mma/dynamodb-onetable`, `{Entity}Schema`
+- [ ] Add `PrismaClient` import from `@mma/{domain}-domain/infrastructure`
 - [ ] Remove `HttpModule` import if it was only needed for DynamoDB (keep if used for ACL clients)
 - [ ] Replace `{DOMAIN}_DYNAMODB_TABLE_NAME` env var with `{DOMAIN}_DATABASE_URL`
 - [ ] Remove DynamoDB table config from `scripts/setup-localstack.ts`
 - [ ] Add `"DB: Migrate {Domain}"` task to `.vscode/tasks.json`
-- [ ] Remove `dynamodb-onetable` and `@old-st/dynamodb-onetable` from domain package.json
+- [ ] Remove `dynamodb-onetable` and `@mma/dynamodb-onetable` from domain package.json
 - [ ] Register domain in `scripts/prisma-migrate-all.ts` → `PRISMA_DOMAINS` array
 - [ ] Add `cp -r packages/{domain}-domain/src/infrastructure/prisma/ /tmp/init-runner/prisma/{domain}/` to the `Package init-runner` step in `.github/workflows/cd-deploy.yml` and `cd-preview-create.yml` — without this, deployed migrations will fail because the Lambda won't have the Prisma schema
 - [ ] Add a `prisma-migrate` entry to `deployTasks[]` in `service-registry.json` — this tells the CD pipeline to run migrations via the Lambda init-runner
 - [ ] Add `ignoreWarnings` + Prisma engine binary + `schema.prisma` to webpack `assets` array (see `nx-microservice-scaffold` skill for the template)
-- [ ] Import `SecretsConfig` from `@old-st/aws-secrets` in the service's `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap
+- [ ] Import `SecretsConfig` from `@mma/aws-secrets` in the service's `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap

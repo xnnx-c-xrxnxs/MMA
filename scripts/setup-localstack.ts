@@ -366,7 +366,7 @@ interface S3BucketConfig {
 const S3_BUCKET_CONFIGS: S3BucketConfig[] = [
   {
     bucketNameEnvVar: 'FILES_S3_BUCKET_NAME',
-    bucketNameDefault: 'old-st-files',
+    bucketNameDefault: 'mma-files',
     description: 'file-api-service — stores uploaded files, served via presigned URLs',
     cors: true,
   },

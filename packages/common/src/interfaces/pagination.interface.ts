@@ -2,7 +2,7 @@
  * Common pagination interface for internal use across domain and infrastructure layers.
  * This is a type-only interface without validation - use for repository implementations.
  * 
- * For API responses, use the Zod schema from @old-st/contracts which provides validation.
+ * For API responses, use the Zod schema from @mma/contracts which provides validation.
  * 
  * Two pagination styles are supported:
  * - Cursor-based (IPaginatedResponse): Used by DynamoDB-backed domains (user, product)

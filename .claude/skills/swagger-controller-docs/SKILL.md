@@ -358,7 +358,7 @@ createUser(...) { ... }
 **Rules:**
 - `type: 'object' as const` is **always required** — omitting `as const` causes a TypeScript error.
 - `required` array must list every Zod non-optional field exactly — derive it from the contract schema.
-- Enum values must match domain constants exactly — derive them from `@old-st/contracts` or the domain package.
+- Enum values must match domain constants exactly — derive them from `@mma/contracts` or the domain package.
 - Add a `description` to enum fields and optional fields to guide developers in Swagger UI.
 - Do NOT reference a DTO class in `type:` — only raw inline schemas or `schema:` consts.
 

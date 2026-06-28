@@ -5,9 +5,9 @@ description: Use sonner-based toasts for user feedback after mutations and other
 
 # Webapp Toast Notifications
 
-The webapp uses [sonner](https://sonner.emilkowal.ski/) wrapped through `@old-st/ui`:
+The webapp uses [sonner](https://sonner.emilkowal.ski/) wrapped through `@mma/ui`:
 - `<Toaster>` — mounted once in `apps/webapp/src/app/layout.tsx`.
-- `toast` — function for emitting toasts. Imported from `@old-st/ui`.
+- `toast` — function for emitting toasts. Imported from `@mma/ui`.
 
 Source: `packages/ui/src/components/feedback/toast/toast.tsx`.
 
@@ -23,7 +23,7 @@ Source: `packages/ui/src/components/feedback/toast/toast.tsx`.
 ## Standard Pattern
 
 ```tsx
-import { toast } from '@old-st/ui';
+import { toast } from '@mma/ui';
 
 async function onSubmit(values) {
   try {
@@ -61,7 +61,7 @@ toast.promise(uploadFile(file), {
 ## Rules
 
 1. **Every mutation handler MUST surface success and error feedback.** Either a toast or an inline `<FormMessage>`. Never silently succeed/fail.
-2. **Always import `toast` from `@old-st/ui`** — never directly from `sonner`. The re-export keeps the option open to swap providers later.
+2. **Always import `toast` from `@mma/ui`** — never directly from `sonner`. The re-export keeps the option open to swap providers later.
 3. **Error toasts use the actual error message** when available — never a generic "Something went wrong" if the backend returned a meaningful one.
 4. **Success toasts use a verb in past tense** — "User created", "Order updated", "File uploaded" — not "Successfully created user".
 5. **Never use `alert()` or `window.confirm()`.** Use toast actions or `<AlertDialog>`.
@@ -75,7 +75,7 @@ toast.promise(uploadFile(file), {
 The `<Toaster>` is mounted exactly once in `apps/webapp/src/app/layout.tsx`:
 
 ```tsx
-import { Toaster } from '@old-st/ui';
+import { Toaster } from '@mma/ui';
 
 export default function RootLayout({ children }) {
   return (
@@ -98,6 +98,6 @@ Do not mount additional `<Toaster>`s elsewhere — sonner is a singleton.
 ## When NOT to Use Toasts
 
 - Field-level validation feedback → use `<FormMessage>` inside the form.
-- Destructive confirmations → use `<AlertDialog>` from `@old-st/ui`.
+- Destructive confirmations → use `<AlertDialog>` from `@mma/ui`.
 - Long forms with multiple errors → use a summary `<Alert>` at the top of the form.
 - Permanent banners (e.g. "Your account is suspended") → use a layout-level banner, not a toast.

@@ -29,9 +29,9 @@ Run each of these checks. For each violation, report file path, line(s), the off
 
 | ID | Rule | Detection |
 |---|---|---|
-| `R11` | No bare `@old-st/contracts` import | grep `from ['"]@old-st/contracts['"]` (must always use subpath) |
+| `R11` | No bare `@mma/contracts` import | grep `from ['"]@mma/contracts['"]` (must always use subpath) |
 | `R5` | Domain layer must not import NestJS | grep `from ['"]@nestjs` inside `packages/{domain}-domain/src/domain/` |
-| `R5b` | Domain layer must not import contracts | grep `from ['"]@old-st/contracts` inside `packages/{domain}-domain/src/domain/` |
+| `R5b` | Domain layer must not import contracts | grep `from ['"]@mma/contracts` inside `packages/{domain}-domain/src/domain/` |
 | `R12` | Entity must not have `createdAt` field | grep `\bcreatedAt\b` inside `packages/*/src/domain/entities/*.entity.ts` |
 | `R13` | Entity must not define `toObject()` | grep `toObject\s*\(` inside `packages/*/src/domain/entities/` |
 | `R18` | Prisma client only in infrastructure | grep `from ['"]@prisma/client` outside `infrastructure/repositories/` |
@@ -69,12 +69,12 @@ If `coding-standards.config.ts` defines a check not in the catalog above, infer 
 
 ## Violations
 
-### R11 — Bare @old-st/contracts import
+### R11 — Bare @mma/contracts import
 - [`apps/{domain}/{domain}-api-service/src/foo.ts:12`](apps/{domain}/{domain}-api-service/src/foo.ts#L12)
   ```ts
-  import { SomeResponse } from '@old-st/contracts';
+  import { SomeResponse } from '@mma/contracts';
   ```
-  **Fix:** import from `@old-st/contracts/{domain}`.
+  **Fix:** import from `@mma/contracts/{domain}`.
 
 ### R5 — Domain layer importing NestJS
 ...

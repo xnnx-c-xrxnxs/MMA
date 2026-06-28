@@ -119,15 +119,15 @@ FE_BASE_URL=http://localhost:4200
 All API services use a **single bootstrap function** that starts a plain NestJS HTTP server. **AWS Lambda Web Adapter** proxies Lambda invocation events to the HTTP server — no `@codegenie/serverless-express` or dual-mode handler export needed. Replace `{SERVICE-NAME}` with the actual service name (e.g. `USER-API-SERVICE`).
 
 ```typescript
-import { initTelemetry } from '@old-st/telemetry';
-import { correlationMiddleware } from '@old-st/telemetry';
+import { initTelemetry } from '@mma/telemetry';
+import { correlationMiddleware } from '@mma/telemetry';
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
 import { DomainExceptionFilter } from './presentation';
 // Prisma services only — remove next line for DynamoDB services:
-import { SecretsConfig } from '@old-st/aws-secrets';
+import { SecretsConfig } from '@mma/aws-secrets';
 
 function createSwaggerConfig() {
   const builder = new DocumentBuilder()
@@ -286,7 +286,7 @@ export class AppModule {}
 ```typescript
 import { Table } from 'dynamodb-onetable';
 import type { Dynamo } from 'dynamodb-onetable/Dynamo';
-import { createDynamoLocalClient, createAWSClient, createTable } from '@old-st/dynamodb-onetable';
+import { createDynamoLocalClient, createAWSClient, createTable } from '@mma/dynamodb-onetable';
 
 export class DynamoDBConfig {
   private static client: Dynamo;
@@ -319,7 +319,7 @@ export class DynamoDBConfig {
 `prisma.config.ts`:
 
 ```typescript
-import { PrismaClient } from '@old-st/{domain}-domain/infrastructure';
+import { PrismaClient } from '@mma/{domain}-domain/infrastructure';
 
 export class PrismaConfig {
   private static client: PrismaClient;
@@ -334,7 +334,7 @@ export class PrismaConfig {
 ```
 
 **Rules:**
-- Import `PrismaClient` from the domain's infrastructure barrel (`@old-st/{domain}-domain/infrastructure`), not from `@prisma/client`.
+- Import `PrismaClient` from the domain's infrastructure barrel (`@mma/{domain}-domain/infrastructure`), not from `@prisma/client`.
 - No `STAGE === 'local'` check needed — Prisma reads `DATABASE_URL` from the env automatically.
 - See the `prisma-service-wiring` skill for the full wiring pattern.
 
@@ -353,8 +353,8 @@ import {
   Create{Entity}UseCase,
   GetEntityByIdUseCase,
   // ... all use cases
-} from '@old-st/{domain}-domain';
-import { Dynamo{Entity}Repository, {Entity}Schema } from '@old-st/{domain}-domain/infrastructure';
+} from '@mma/{domain}-domain';
+import { Dynamo{Entity}Repository, {Entity}Schema } from '@mma/{domain}-domain/infrastructure';
 import { Table } from 'dynamodb-onetable';
 import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
 import { {Entity}ApplicationService } from '../application/services/{entity}-application.service';
@@ -401,8 +401,8 @@ import {
   Create{Entity}UseCase,
   GetEntityByIdUseCase,
   // ... all use cases
-} from '@old-st/{domain}-domain';
-import { Prisma{Entity}Repository, PrismaClient } from '@old-st/{domain}-domain/infrastructure';
+} from '@mma/{domain}-domain';
+import { Prisma{Entity}Repository, PrismaClient } from '@mma/{domain}-domain/infrastructure';
 import { PrismaConfig } from '../infrastructure/config/prisma.config';
 import { {Entity}ApplicationService } from '../application/services/{entity}-application.service';
 import { {Entity}Controller } from '../presentation/controllers/{entity}.controller';
@@ -454,13 +454,13 @@ import {
   Create{Entity}Input,
   {Entity}Response,
   List{Entities}ByStatusInput,
-} from '@old-st/contracts/{domain}';
+} from '@mma/contracts/{domain}';
 import {
   {Entity},
   Create{Entity}UseCase,
   GetEntityByIdUseCase,
   // ... all use cases
-} from '@old-st/{domain}-domain';
+} from '@mma/{domain}-domain';
 
 @Injectable()
 export class {Entity}ApplicationService {
@@ -488,8 +488,8 @@ export class {Entity}ApplicationService {
 ### Pagination: DynamoDB domains (cursor-based)
 
 ```typescript
-import { IPaginatedResponse } from '@old-st/common';
-import { PaginatedResponse } from '@old-st/contracts/common';
+import { IPaginatedResponse } from '@mma/common';
+import { PaginatedResponse } from '@mma/contracts/common';
 
 private toPaginatedDto(result: IPaginatedResponse<{Entity}>): PaginatedResponse<{Entity}Response> {
   return {
@@ -514,8 +514,8 @@ async listByStatus(status: string, limit?: number, direction?: string, cursor?: 
 ### Pagination: Prisma domains (offset-based)
 
 ```typescript
-import { IOffsetPaginatedResponse } from '@old-st/common';
-import { OffsetPaginatedResponse } from '@old-st/contracts/common';
+import { IOffsetPaginatedResponse } from '@mma/common';
+import { OffsetPaginatedResponse } from '@mma/contracts/common';
 
 private toPaginatedDto(result: IOffsetPaginatedResponse<{Entity}>): OffsetPaginatedResponse<{Entity}Response> {
   return {
@@ -534,8 +534,8 @@ async listByStatus(status: string, page?: number, limit?: number) {
 ```
 
 **Rules:**
-- Import input/output types from `@old-st/contracts/{domain}` — never from the bare `@old-st/contracts` root or from `@old-st/{domain}-domain`.
-- Import shared types (`PaginatedResponse`) from `@old-st/contracts/common`.
+- Import input/output types from `@mma/contracts/{domain}` — never from the bare `@mma/contracts` root or from `@mma/{domain}-domain`.
+- Import shared types (`PaginatedResponse`) from `@mma/contracts/common`.
 - `toDto()` uses `{entity}ResponseSchema.parse()` — Zod validates the output shape.
 - Domain entities **never** cross the application service boundary — only DTOs are returned.
 - Pagination: cursor routing (`direction === 'next' ? cursor : undefined`) happens here, not in the use case.
@@ -645,7 +645,7 @@ import {
   update{Entity}Schema,
   Create{Entity}Input,
   Update{Entity}Input,
-} from '@old-st/contracts/{domain}';
+} from '@mma/contracts/{domain}';
 
 // ── Shared response schema consts ──────────────────────────────────────────────
 const {entity}ResponseSchema = {
@@ -781,7 +781,7 @@ See the `current-user-decorator` skill for full usage patterns (single-field ext
 - [ ] `main.ts` has `bootstrapServer()` guarded by `STAGE === 'local'`
 - [ ] `main.ts` has `bootstrapLambda()` with `cachedServer` guard and `ExpressAdapter`
 - [ ] `main.ts` exports `handler` with `/{domain}` prefix stripping and swagger path fix (`/swagger` → `/swagger/`, `swagger-ui` prefix)
-- [ ] **Prisma services only:** `main.ts` `handler` calls `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS boots; imports `SecretsConfig` from `@old-st/aws-secrets`
+- [ ] **Prisma services only:** `main.ts` `handler` calls `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS boots; imports `SecretsConfig` from `@mma/aws-secrets`
 - [ ] **Prisma services only:** Migrations are handled by the ECS init-runner — `main.ts` does **not** contain any migration code (`execSync`, `prisma migrate deploy`, `event.migrate`)
 - [ ] **Prisma services only:** `webpack.config.js` assets copy `libquery_engine-rhel-openssl-3.0.x.so.node` and `schema.prisma` to dist root
 - [ ] `AppModule` imports `{Domain}Module`

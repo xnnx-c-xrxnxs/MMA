@@ -1,4 +1,4 @@
-# @old-st/nx-plugin Package Context
+# @mma/nx-plugin Package Context
 
 This file loads automatically for any file inside `packages/nx-plugin/`. The package contains **custom Nx generators** that scaffold workspace artefacts (domain packages, use cases, etc.) following this template's Clean Architecture conventions.
 
@@ -8,9 +8,9 @@ This file loads automatically for any file inside `packages/nx-plugin/`. The pac
 
 | Generator | Invoked via | Purpose |
 |---|---|---|
-| `domain` | `pnpm nx g @old-st/nx-plugin:domain` | Scaffolds a complete `packages/{domain}-domain/` + `packages/contracts/{domain}/` + `apps/{domain}/{service}/`. Used by `/new-domain`, `/new-domain-dynamo`, `/quick-crud-domain`. |
-| `use-case` | `pnpm nx g @old-st/nx-plugin:use-case` | Adds a single use case to an existing domain (`create`, `get-by-id`, `update`, `delete`, `action`, `list`). Used by `/new-use-case`. |
-| `ui-primitive` | `pnpm nx g @old-st/nx-plugin:ui-primitive` | Scaffolds a new `@old-st/ui` primitive: `{name}.tsx` + `index.ts` + `{name}.stories.tsx` + `{name}.spec.tsx` under the correct category subfolder, and adds the export to `packages/ui/src/index.ts`. Patterns: `simple-variants` (cva + forwardRef), `simple-no-variants` (forwardRef + cn only), `compound` (multiple sub-components). Used by `/new-ui-primitive`. |
+| `domain` | `pnpm nx g @mma/nx-plugin:domain` | Scaffolds a complete `packages/{domain}-domain/` + `packages/contracts/{domain}/` + `apps/{domain}/{service}/`. Used by `/new-domain`, `/new-domain-dynamo`, `/quick-crud-domain`. |
+| `use-case` | `pnpm nx g @mma/nx-plugin:use-case` | Adds a single use case to an existing domain (`create`, `get-by-id`, `update`, `delete`, `action`, `list`). Used by `/new-use-case`. |
+| `ui-primitive` | `pnpm nx g @mma/nx-plugin:ui-primitive` | Scaffolds a new `@mma/ui` primitive: `{name}.tsx` + `index.ts` + `{name}.stories.tsx` + `{name}.spec.tsx` under the correct category subfolder, and adds the export to `packages/ui/src/index.ts`. Patterns: `simple-variants` (cva + forwardRef), `simple-no-variants` (forwardRef + cn only), `compound` (multiple sub-components). Used by `/new-ui-primitive`. |
 
 ---
 

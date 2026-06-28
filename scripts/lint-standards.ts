@@ -377,7 +377,7 @@ const AMBIENT_ENV_VARS = new Set<string>([
   'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN',
   // Local dev infrastructure
   'LOCALSTACK_ENDPOINT', 'DYNAMODB_ENDPOINT', 'DEFAULT_REGION',
-  // Telemetry (handled by @old-st/telemetry initTelemetry())
+  // Telemetry (handled by @mma/telemetry initTelemetry())
   'OTEL_SDK_DISABLED',
   // Swagger toggle (lazy require in main.ts)
   'SWAGGER_ENABLED',
@@ -701,7 +701,7 @@ function checkAppServiceHasLogger(): void {
     const rel = relative(file);
 
     // Check for createLogger import
-    const hasCreateLogger = /import\s+.*createLogger.*from\s+['"]@old-st\/telemetry['"]/.test(content);
+    const hasCreateLogger = /import\s+.*createLogger.*from\s+['"]@mma\/telemetry['"]/.test(content);
 
     // Check for module-level logger declaration
     const hasLoggerDeclaration = /const\s+logger\s*=\s*createLogger\(/.test(content);
@@ -712,7 +712,7 @@ function checkAppServiceHasLogger(): void {
     if (hasNestLogger) {
       errors.push(
         `[app-service-has-logger] ${rel}: Uses 'new Logger()' from @nestjs/common. ` +
-        `Use 'const logger = createLogger(...)' from @old-st/telemetry instead (Golden Rule #35).`
+        `Use 'const logger = createLogger(...)' from @mma/telemetry instead (Golden Rule #35).`
       );
     }
 
@@ -724,7 +724,7 @@ function checkAppServiceHasLogger(): void {
 
       errors.push(
         `[app-service-has-logger] ${rel}: Missing 'const logger = createLogger(...)' ` +
-        `from @old-st/telemetry. Every application service must have a module-level ` +
+        `from @mma/telemetry. Every application service must have a module-level ` +
         `structured logger (Golden Rule #35).`
       );
     }
@@ -1201,7 +1201,7 @@ function checkNoScssFiles(): void {
 // contribute to the 70% coverage target (Golden Rule #23n).
 //
 // BACKFILL_ALLOWLIST contains primitives that pre-date the rule. The list is
-// intentionally empty — every primitive in @old-st/ui now ships the full
+// intentionally empty — every primitive in @mma/ui now ships the full
 // four-file bundle. New primitives MUST NOT be added here; instead, ship
 // the matching .stories.tsx and .spec.tsx files alongside the implementation.
 // ---------------------------------------------------------------------------
@@ -1246,7 +1246,7 @@ function checkUiPrimitiveHasStoryAndSpec(): void {
         // primitives must keep their .tsx and index.ts.
         if (allowlisted && (kind === 'stories' || kind === 'spec')) continue;
         errors.push(
-          `[ui-primitive-has-story-and-spec] ${relative(filePath)}: missing ${kind} file. Every @old-st/ui primitive must ship {name}.tsx + index.ts + {name}.stories.tsx + {name}.spec.tsx (see webapp-ui-primitive skill § Stories / § Tests).`,
+          `[ui-primitive-has-story-and-spec] ${relative(filePath)}: missing ${kind} file. Every @mma/ui primitive must ship {name}.tsx + index.ts + {name}.stories.tsx + {name}.spec.tsx (see webapp-ui-primitive skill § Stories / § Tests).`,
         );
       }
     }

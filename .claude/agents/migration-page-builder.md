@@ -1,7 +1,7 @@
 ---
 name: migration-page-builder
 tools: Read, Glob, Grep, Write, Edit, Bash
-description: 'Scoped-write subagent that builds ONE production webapp page directly in apps/webapp/src/app/(protected)/{route}/ from a page-spec + domain-spec YAML, fed by a swappable _data/{domain}.adapter.ts. Runs in two modes: --mock (pass 1) emits an INTERACTIVE mock adapter (useState-backed: filters narrow rows, form submit appends a row) so the page is verifiable before the backend exists; --wire (pass 2) edits ONLY the adapter to re-export the real @old-st/client-common hooks, leaving page.tsx byte-identical. Write scope restricted to apps/webapp/ (+ packages/ui only if a primitive is unavoidable). Spawned by /migrate-page. Serializes within its route scope.'
+description: 'Scoped-write subagent that builds ONE production webapp page directly in apps/webapp/src/app/(protected)/{route}/ from a page-spec + domain-spec YAML, fed by a swappable _data/{domain}.adapter.ts. Runs in two modes: --mock (pass 1) emits an INTERACTIVE mock adapter (useState-backed: filters narrow rows, form submit appends a row) so the page is verifiable before the backend exists; --wire (pass 2) edits ONLY the adapter to re-export the real @mma/client-common hooks, leaving page.tsx byte-identical. Write scope restricted to apps/webapp/ (+ packages/ui only if a primitive is unavoidable). Spawned by /migrate-page. Serializes within its route scope.'
 ---
 
 # Migration Page Builder Subagent
@@ -42,15 +42,15 @@ You build (or wire) exactly **one** webapp page from its page-spec YAML. Unlike 
    - Export a hook-shaped function matching each page-spec `dataSource` (e.g. `useProjectsList()` returning `{ data, isLoading, isError, ... }`).
    - Back it with `useState` so it is **interactive, not static**: filter/search inputs narrow the visible rows; a create/edit form submit appends/updates a row in local state; status actions mutate a row's status field.
    - Mark the file clearly: `// MOCK ADAPTER — replaced wholesale by /migrate-page --wire. Do not import client-common here.`
-4. **Write `page.tsx`** as a thin orchestrator that imports ONLY from the adapter + `@old-st/ui` + `apps/webapp/src/components/{domain}/`. It must NOT import from `@old-st/client-common` (that import only appears after `--wire`, inside the adapter).
-5. **Write the domain components** (`components/{domain}/`) per the page-spec `components[]` (data-table / detail-card / filter-bar), using `@old-st/ui` primitives + `data-testid` from the spec's `testIds`. Wire status badges via `status-variants.ts` using enum constants from the contract (or, pre-wire, from a local const mirroring the domain spec enum).
+4. **Write `page.tsx`** as a thin orchestrator that imports ONLY from the adapter + `@mma/ui` + `apps/webapp/src/components/{domain}/`. It must NOT import from `@mma/client-common` (that import only appears after `--wire`, inside the adapter).
+5. **Write the domain components** (`components/{domain}/`) per the page-spec `components[]` (data-table / detail-card / filter-bar), using `@mma/ui` primitives + `data-testid` from the spec's `testIds`. Wire status badges via `status-variants.ts` using enum constants from the contract (or, pre-wire, from a local const mirroring the domain spec enum).
 6. **Write `error.tsx` + `loading.tsx`** for the segment (shape-matching skeleton).
 7. **Validate:** `Bash` on all touched files, then `pnpm exec nx build webapp`. The page must compile and render the interactive mock with `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local` (auth bypass — see the protected layout guard).
 
 ## Workflow — `--wire` (pass 2)
 
 1. **Read** `pageSpecPath` + run the **parse-page-spec Mode-A gate**: verify every `dataSource.hook` exists in `packages/client-common/src/index.ts` and every form `schema` exists in `packages/contracts/{domain}/src/`. If anything is missing, return `STATUS: needs_backend` listing the gaps and STOP — do not stub.
-2. **Rewrite ONLY** `apps/webapp/src/app/(protected)/{route}/_data/{domain}.adapter.ts` so each exported hook re-exports / thinly wraps the real `@old-st/client-common` hook with the same return shape the page already consumes. Delete the mock fixtures + useState.
+2. **Rewrite ONLY** `apps/webapp/src/app/(protected)/{route}/_data/{domain}.adapter.ts` so each exported hook re-exports / thinly wraps the real `@mma/client-common` hook with the same return shape the page already consumes. Delete the mock fixtures + useState.
 3. **Do NOT modify `page.tsx` or the domain components** unless a return-shape mismatch forces a minimal change — if so, flag it loudly in the report (the goal is byte-identical page.tsx between passes).
 4. **Validate:** `Bash`, `pnpm exec nx test webapp`, `pnpm exec nx build webapp`.
 
@@ -91,6 +91,6 @@ You build (or wire) exactly **one** webapp page from its page-spec YAML. Unlike 
 - Build the page in its REAL `(protected)/{route}/` location — never `migration-preview/`.
 - The ONLY file that differs between `--mock` and `--wire` is `_data/{domain}.adapter.ts`. Keep `page.tsx` identical.
 - Mock state MUST be interactive (useState), not a frozen array (Rule: interactive-mock-state).
-- In `--mock`, NEVER import `@old-st/client-common`. In `--wire`, the adapter is the ONLY place that imports it.
+- In `--mock`, NEVER import `@mma/client-common`. In `--wire`, the adapter is the ONLY place that imports it.
 - `--wire` runs the parse-page-spec Mode-A gate and stops with `needs_backend` rather than stubbing missing hooks.
-- Honor all webapp golden rules: thin orchestrator, `@old-st/ui` only, `error.tsx`+`loading.tsx`, toasts for mutations, `data-testid` attributes.
+- Honor all webapp golden rules: thin orchestrator, `@mma/ui` only, `error.tsx`+`loading.tsx`, toasts for mutations, `data-testid` attributes.

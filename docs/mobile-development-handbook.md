@@ -13,10 +13,10 @@
 | **Language** | TypeScript (strict mode) | 5.x |
 | **Navigation** | Expo Router (file-based) | v4 |
 | **Data fetching** | React Query (TanStack Query) | v5 |
-| **API clients** | Typed `fetch` + Zod validation | shared `@old-st/client-common` |
-| **UI primitives** | Shared component library | `@old-st/mobile-ui` |
-| **Types/contracts** | Zod schemas (shared with backend + webapp) | `@old-st/contracts/{domain}` |
-| **Auth** | AuthProvider + `expo-secure-store` | `@old-st/client-common` |
+| **API clients** | Typed `fetch` + Zod validation | shared `@mma/client-common` |
+| **UI primitives** | Shared component library | `@mma/mobile-ui` |
+| **Types/contracts** | Zod schemas (shared with backend + webapp) | `@mma/contracts/{domain}` |
+| **Auth** | AuthProvider + `expo-secure-store` | `@mma/client-common` |
 | **Error tracking** | Sentry | `@sentry/react-native` |
 | **Build/deploy** | EAS Build + EAS Update | `eas.json` |
 | **Testing** | Jest + React Native Testing Library | `jest-expo` |
@@ -27,7 +27,7 @@
 | Technology | Reason |
 |---|---|
 | Redux / Zustand / MobX | React Query handles server state. `useState` + Context handles UI state. |
-| Axios | `@old-st/client-common` uses typed `fetch` + Zod. Better runtime safety, smaller bundle. |
+| Axios | `@mma/client-common` uses typed `fetch` + Zod. Better runtime safety, smaller bundle. |
 | React Navigation (standalone) | Expo Router gives file-based routing + type-safe links + deep linking for free. |
 | Styled Components / Emotion | `StyleSheet.create()` + theme tokens. No runtime overhead. |
 | Expo Go | We use dev clients (`npx expo prebuild`) for native module support. |
@@ -96,11 +96,11 @@ apps/mobile/
 
 | Package | Location | Purpose |
 |---|---|---|
-| `@old-st/mobile-ui` | `packages/mobile-ui/` | Shared RN primitives (Badge, Button, Card, Text, Input, etc.) |
-| `@old-st/client-common` | `packages/client-common/` | API clients, React Query hooks, AuthProvider, QueryClient |
-| `@old-st/contracts/{domain}` | `packages/contracts/{domain}/` | Zod schemas, TypeScript types, enum constants |
+| `@mma/mobile-ui` | `packages/mobile-ui/` | Shared RN primitives (Badge, Button, Card, Text, Input, etc.) |
+| `@mma/client-common` | `packages/client-common/` | API clients, React Query hooks, AuthProvider, QueryClient |
+| `@mma/contracts/{domain}` | `packages/contracts/{domain}/` | Zod schemas, TypeScript types, enum constants |
 
-**Rule:** If it's UI-generic (Button, Card, Badge), it goes in `@old-st/mobile-ui`. If it's data-access (API client, hook), it goes in `@old-st/client-common`. If it's domain-specific UI (OrdersList, UserCard), it goes in `apps/mobile/src/components/{domain}/`.
+**Rule:** If it's UI-generic (Button, Card, Badge), it goes in `@mma/mobile-ui`. If it's data-access (API client, hook), it goes in `@mma/client-common`. If it's domain-specific UI (OrdersList, UserCard), it goes in `apps/mobile/src/components/{domain}/`.
 
 ---
 
@@ -242,7 +242,7 @@ src/components/
 
 ```tsx
 import { View, StyleSheet } from 'react-native';
-import { Text, Badge } from '@old-st/mobile-ui';
+import { Text, Badge } from '@mma/mobile-ui';
 
 // 1. Types at the top
 interface UserCardProps {
@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
 
 ## 5. Data Fetching & State Management
 
-### API Communication — Always Through `@old-st/client-common`
+### API Communication — Always Through `@mma/client-common`
 
 Never call `fetch` directly. Use the shared hooks and API clients:
 
 ```tsx
-import { useAuth, useSignIn, useSignOut } from '@old-st/client-common';
+import { useAuth, useSignIn, useSignOut } from '@mma/client-common';
 
 // Read auth state
 const { user, isAuthenticated, isLoading } = useAuth();
@@ -320,7 +320,7 @@ Only for truly global UI state that multiple unrelated components need:
 
 - ✅ Theme preference (light/dark)
 - ✅ Toast/overlay provider
-- ❌ User data (use `useAuth()` from `@old-st/client-common`)
+- ❌ User data (use `useAuth()` from `@mma/client-common`)
 - ❌ API response data (use React Query hooks)
 
 ---
@@ -329,12 +329,12 @@ Only for truly global UI state that multiple unrelated components need:
 
 ### Design Token System
 
-All colors, spacing, radii, and font sizes come from shared tokens defined in `packages/ui/src/lib/tokens.ts` and re-exported by `@old-st/mobile-ui`:
+All colors, spacing, radii, and font sizes come from shared tokens defined in `packages/ui/src/lib/tokens.ts` and re-exported by `@mma/mobile-ui`:
 
 ```tsx
-import { colors, spacing, radii, fontSizes } from '@old-st/mobile-ui';
+import { colors, spacing, radii, fontSizes } from '@mma/mobile-ui';
 // or for dark mode:
-import { lightColors, darkColors } from '@old-st/mobile-ui';
+import { lightColors, darkColors } from '@mma/mobile-ui';
 ```
 
 ### Token Reference
@@ -419,11 +419,11 @@ container: { backgroundColor: '#ffffff' }
 
 **4. Styles go at the bottom of the file**, after the component.
 
-**5. Use `@old-st/mobile-ui` primitives** — never raw `<Text>` or `<TouchableOpacity>`:
+**5. Use `@mma/mobile-ui` primitives** — never raw `<Text>` or `<TouchableOpacity>`:
 
 ```tsx
 // ✅ Good
-import { Text, Button, Card } from '@old-st/mobile-ui';
+import { Text, Button, Card } from '@mma/mobile-ui';
 
 // ❌ Bad
 import { Text, TouchableOpacity } from 'react-native';
@@ -435,7 +435,7 @@ The token system supports dark mode via `lightColors` / `darkColors`:
 
 ```tsx
 import { useColorScheme } from 'react-native';
-import { lightColors, darkColors } from '@old-st/mobile-ui';
+import { lightColors, darkColors } from '@mma/mobile-ui';
 
 function MyScreen() {
   const scheme = useColorScheme();
@@ -445,27 +445,27 @@ function MyScreen() {
 }
 ```
 
-> Note: The existing primitives in `@old-st/mobile-ui` currently use the static `colors` import (= `lightColors`). When you implement dark mode, update primitives to accept a theme-aware palette.
+> Note: The existing primitives in `@mma/mobile-ui` currently use the static `colors` import (= `lightColors`). When you implement dark mode, update primitives to accept a theme-aware palette.
 
 ---
 
-## 7. Available UI Primitives (`@old-st/mobile-ui`)
+## 7. Available UI Primitives (`@mma/mobile-ui`)
 
 These are shared components available out of the box. Always use these instead of building from scratch:
 
 | Component | Import | Purpose |
 |---|---|---|
-| `Text` | `@old-st/mobile-ui` | Styled text with variants: `body`, `caption`, `heading`, `subheading`, `muted` |
-| `Button` | `@old-st/mobile-ui` | Pressable button with variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `brand` + sizes: `default`, `sm`, `lg` + `loading` state |
-| `Card` | `@old-st/mobile-ui` | Card container with `CardHeader`, `CardTitle`, `CardContent` subcomponents |
-| `Badge` | `@old-st/mobile-ui` | Status badge with variants: `default`, `success`, `warning`, `destructive`, `secondary`, `outline`, `brand` |
-| `Input` | `@old-st/mobile-ui` | Text input with label, error, helper text |
-| `Avatar` | `@old-st/mobile-ui` | Circular avatar with sizes: `sm`, `md`, `lg` |
-| `ListRow` | `@old-st/mobile-ui` | List item with leading/trailing slots + selected state |
-| `Spinner` | `@old-st/mobile-ui` | Loading spinner with sizes: `sm`, `md`, `lg` |
-| `EmptyState` | `@old-st/mobile-ui` | Empty list state with message |
-| `Separator` | `@old-st/mobile-ui` | Horizontal line divider |
-| `ErrorBoundary` | `@old-st/mobile-ui` | Class-based error boundary with retry |
+| `Text` | `@mma/mobile-ui` | Styled text with variants: `body`, `caption`, `heading`, `subheading`, `muted` |
+| `Button` | `@mma/mobile-ui` | Pressable button with variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `brand` + sizes: `default`, `sm`, `lg` + `loading` state |
+| `Card` | `@mma/mobile-ui` | Card container with `CardHeader`, `CardTitle`, `CardContent` subcomponents |
+| `Badge` | `@mma/mobile-ui` | Status badge with variants: `default`, `success`, `warning`, `destructive`, `secondary`, `outline`, `brand` |
+| `Input` | `@mma/mobile-ui` | Text input with label, error, helper text |
+| `Avatar` | `@mma/mobile-ui` | Circular avatar with sizes: `sm`, `md`, `lg` |
+| `ListRow` | `@mma/mobile-ui` | List item with leading/trailing slots + selected state |
+| `Spinner` | `@mma/mobile-ui` | Loading spinner with sizes: `sm`, `md`, `lg` |
+| `EmptyState` | `@mma/mobile-ui` | Empty list state with message |
+| `Separator` | `@mma/mobile-ui` | Horizontal line divider |
+| `ErrorBoundary` | `@mma/mobile-ui` | Class-based error boundary with retry |
 
 ### Adding New Primitives
 
@@ -512,7 +512,7 @@ App Launch
 ```tsx
 // src/app/index.tsx — redirect based on auth state
 import { Redirect } from 'expo-router';
-import { useAuth } from '@old-st/client-common';
+import { useAuth } from '@mma/client-common';
 
 export default function Index() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -555,8 +555,8 @@ This keeps tests discoverable and makes it obvious when a file is missing its te
 | Domain components (lists, cards) | **Yes** | Renders items, empty state, loading state, navigation on press |
 | Screen files (thin orchestrators) | **Optional** | Only if they contain conditional logic |
 | `src/lib/` utilities | **Yes** | Pure function behavior (status-variants, formatters) |
-| `@old-st/mobile-ui` primitives | Tested in the package | Don't re-test in the app |
-| `@old-st/client-common` hooks | Tested in the package | Don't re-test in the app |
+| `@mma/mobile-ui` primitives | Tested in the package | Don't re-test in the app |
+| `@mma/client-common` hooks | Tested in the package | Don't re-test in the app |
 
 ### Test Template
 
@@ -664,10 +664,10 @@ Expo Router maps URLs to file-based routes automatically. Configuration is in `a
 
 ### Error Boundaries
 
-Use `<ErrorBoundary>` from `@old-st/mobile-ui` around screen trees:
+Use `<ErrorBoundary>` from `@mma/mobile-ui` around screen trees:
 
 ```tsx
-import { ErrorBoundary } from '@old-st/mobile-ui';
+import { ErrorBoundary } from '@mma/mobile-ui';
 import * as Sentry from '@sentry/react-native';
 
 <ErrorBoundary
@@ -679,10 +679,10 @@ import * as Sentry from '@sentry/react-native';
 
 ### API Error Handling
 
-API errors are typed via `ApiError` from `@old-st/client-common`:
+API errors are typed via `ApiError` from `@mma/client-common`:
 
 ```tsx
-import { ApiError } from '@old-st/client-common';
+import { ApiError } from '@mma/client-common';
 
 const mutation = useCreateUser();
 mutation.mutate(input, {
@@ -701,9 +701,9 @@ mutation.mutate(input, {
 
 ### Do
 
-- ✅ Use `@old-st/mobile-ui` primitives for all interactive/styled elements
-- ✅ Use `@old-st/client-common` hooks for all API communication
-- ✅ Use `@old-st/contracts/{domain}` for types and enum constants
+- ✅ Use `@mma/mobile-ui` primitives for all interactive/styled elements
+- ✅ Use `@mma/client-common` hooks for all API communication
+- ✅ Use `@mma/contracts/{domain}` for types and enum constants
 - ✅ Use `StyleSheet.create()` for all non-trivial styles
 - ✅ Use theme tokens (`colors`, `spacing`, `radii`, `fontSizes`) — never hardcode
 - ✅ Use `FlatList` for lists (not `ScrollView` + `map()`)
@@ -716,8 +716,8 @@ mutation.mutate(input, {
 
 ### Don't
 
-- ❌ Import from `@old-st/contracts` root — use `@old-st/contracts/{domain}`
-- ❌ Create mobile-only API clients — add to `@old-st/client-common` (shared with webapp)
+- ❌ Import from `@mma/contracts` root — use `@mma/contracts/{domain}`
+- ❌ Create mobile-only API clients — add to `@mma/client-common` (shared with webapp)
 - ❌ Call `fetch()` directly in components or screens
 - ❌ Use `TouchableOpacity` / `TouchableHighlight` — use `Pressable` or `Button` from mobile-ui
 - ❌ Use inline style objects for static styles
@@ -737,7 +737,7 @@ mutation.mutate(input, {
 
 1. Create the route file: `src/app/{path}.tsx`
 2. Create domain components: `src/components/{domain}/`
-3. Use existing hooks from `@old-st/client-common` or add new ones
+3. Use existing hooks from `@mma/client-common` or add new ones
 4. If the screen is a tab: register in `src/app/(tabs)/_layout.tsx`
 5. Add tests: `src/components/{domain}/*.spec.tsx`
 
@@ -745,7 +745,7 @@ mutation.mutate(input, {
 
 1. Create `src/components/{domain}/{component-name}.tsx`
 2. Define props interface, component, and `StyleSheet.create()`
-3. Use `@old-st/mobile-ui` primitives + theme tokens
+3. Use `@mma/mobile-ui` primitives + theme tokens
 4. Add test file: `src/components/{domain}/{component-name}.spec.tsx`
 
 ### Adding a New Shared Primitive
@@ -753,11 +753,11 @@ mutation.mutate(input, {
 1. Create `packages/mobile-ui/src/components/{name}.tsx`
 2. Use theme tokens from `../lib/theme`
 3. Export from `packages/mobile-ui/src/index.ts`
-4. Use in the app: `import { Name } from '@old-st/mobile-ui'`
+4. Use in the app: `import { Name } from '@mma/mobile-ui'`
 
 ### Adding a New API Client / Hook
 
 1. Add API client method in `packages/client-common/src/infrastructure/api-clients/`
 2. Add React Query hook in `packages/client-common/src/hooks/`
 3. Export from `packages/client-common/src/index.ts`
-4. Use in mobile AND webapp: `import { useMyHook } from '@old-st/client-common'`
+4. Use in mobile AND webapp: `import { useMyHook } from '@mma/client-common'`

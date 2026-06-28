@@ -4,7 +4,7 @@ import { useMonitoringApi } from '../../../lib/use-monitoring-api';
 import { useEffect, useState, useMemo } from 'react';
 import { use } from 'react';
 import Link from 'next/link';
-import type { CorrelatedLogEntry } from '@old-st/monitoring-sdk';
+import type { CorrelatedLogEntry } from '@mma/monitoring-sdk';
 import { CorrelatedLogPanel } from '../../../components/traces/correlated-log-panel';
 
 interface ChainDetailResponse {

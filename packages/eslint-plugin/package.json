@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/eslint-plugin",
+  "name": "@mma/eslint-plugin",
   "version": "1.0.0",
   "description": "Shared ESLint plugin enforcing Old St Labs coding standards for Clean Architecture monorepos",
   "main": "src/index.js",

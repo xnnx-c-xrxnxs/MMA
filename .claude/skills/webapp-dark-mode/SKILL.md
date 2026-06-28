@@ -36,7 +36,7 @@ Dark mode is implemented via:
 2. **`<html>` MUST have `suppressHydrationWarning`** when using `next-themes` with `attribute="class"`. If the webapp also uses `next/font`, include both attributes: `<html className={inter.variable} suppressHydrationWarning>`. `next-themes` sets `class="dark"` at runtime; `inter.variable` adds the font CSS variable — neither conflicts.
 3. **New colors MUST be added to both `@theme` and `.dark` blocks in `globals.css`.** A token that exists in only one block silently breaks when the user toggles.
 4. **Never gate theme tokens behind JS conditionals (`isDark ? '#fff' : '#000'`)** — write Tailwind utility classes (`bg-background text-foreground`) so the CSS variable system handles it.
-5. **Components in `@old-st/ui` MUST use semantic utility classes** (`bg-card`, `text-muted-foreground`) — never hard-coded colors. This is the primitive's responsibility, not the consumer's.
+5. **Components in `@mma/ui` MUST use semantic utility classes** (`bg-card`, `text-muted-foreground`) — never hard-coded colors. This is the primitive's responsibility, not the consumer's.
 
 ## Adding a new themed surface
 

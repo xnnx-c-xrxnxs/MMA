@@ -10,7 +10,7 @@ File upload/download API. Issues **S3 presigned URLs** so the client uploads dir
 | `GET`  | `/api/files/presigned-download/:key` | 🔒 | Returns `{ downloadUrl, expiresIn }` for a GET from S3 |
 | `GET`  | `/api/health` | ✅ | Liveness probe |
 
-The webapp + mobile use the `useFileUpload` hook from `@old-st/client-common` to consume these endpoints. See the **[webapp-file-upload-ux](../../.claude/skills/webapp-file-upload-ux/SKILL.md)** skill.
+The webapp + mobile use the `useFileUpload` hook from `@mma/client-common` to consume these endpoints. See the **[webapp-file-upload-ux](../../.claude/skills/webapp-file-upload-ux/SKILL.md)** skill.
 
 ## Local dev
 
@@ -25,7 +25,7 @@ Local S3 is provided by **LocalStack** (`docker compose up -d`). The bucket is c
 
 ## Architecture
 
-The service is intentionally a thin wrapper around `S3FileStorage` from `@old-st/aws-s3`. Domain logic (validating file types, recording uploads, etc.) belongs in **the consuming domain**, not here. Store only the `fileKey` returned by `presigned-upload` in your domain entity.
+The service is intentionally a thin wrapper around `S3FileStorage` from `@mma/aws-s3`. Domain logic (validating file types, recording uploads, etc.) belongs in **the consuming domain**, not here. Store only the `fileKey` returned by `presigned-upload` in your domain entity.
 
 ## Environment variables
 

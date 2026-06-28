@@ -5,7 +5,7 @@ export interface EventHandlerGeneratorSchema {
   eventTypes: string;
   /**
    * If true, this handler consumes events from a different bounded context.
-   * Dispatcher imports schemas from `@old-st/contracts/{sourceDomain}`.
+   * Dispatcher imports schemas from `@mma/contracts/{sourceDomain}`.
    * Handler stubs use `Extract<...DomainEvent, {eventType:'X'}>` for payload typing.
    * Default: false.
    */

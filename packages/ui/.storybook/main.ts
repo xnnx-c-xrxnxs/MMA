@@ -3,7 +3,7 @@ import { mergeConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 /**
- * Storybook configuration for @old-st/ui.
+ * Storybook configuration for @mma/ui.
  *
  * Boots a Vite-powered story sandbox that loads the same Tailwind v4 tokens
  * used by `apps/webapp` so primitives render identically to production.

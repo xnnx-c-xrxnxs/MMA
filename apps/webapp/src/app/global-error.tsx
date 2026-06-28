@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@old-st/ui';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@mma/ui';
 
 /**
  * Global error boundary. Catches errors that escape per-segment error.tsx files

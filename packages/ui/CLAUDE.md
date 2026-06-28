@@ -1,4 +1,4 @@
-# @old-st/ui Package Context
+# @mma/ui Package Context
 
 This file loads automatically for any file inside `packages/ui/`. The package is the **single source of truth for webapp UI primitives** — shadcn-style components built on Radix UI + Tailwind v4 CSS variables.
 
@@ -10,13 +10,13 @@ This file loads automatically for any file inside `packages/ui/`. The package is
 |---|---|
 | `src/components/` | shadcn-style primitives (Badge, Button, Card, Table, Input, Select, Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Label, Separator, Command, FormField, Toaster, Skeleton, DataTable, FileDropzone, etc.). One file per component, plus a barrel `index.ts`. |
 | `src/lib/utils.ts` | `cn()` — `clsx` + `tailwind-merge` helper. Always use `cn()` for class composition. |
-| `src/lib/tokens.ts` | **Single source of truth for cross-platform design tokens** (colors, spacing, radii, typography). Webapp `globals.css` `@theme` and `.dark` blocks mirror these. `@old-st/mobile-ui` re-exports `lightColors` / `darkColors`. |
+| `src/lib/tokens.ts` | **Single source of truth for cross-platform design tokens** (colors, spacing, radii, typography). Webapp `globals.css` `@theme` and `.dark` blocks mirror these. `@mma/mobile-ui` re-exports `lightColors` / `darkColors`. |
 
 ---
 
 ## Architectural Rules (Strictly Enforced)
 
-1. **No domain logic.** Primitives never import from `@old-st/contracts/*`, `@old-st/client-common`, or any domain package. They are pure presentation.
+1. **No domain logic.** Primitives never import from `@mma/contracts/*`, `@mma/client-common`, or any domain package. They are pure presentation.
 
 2. **Variants use `class-variance-authority` (cva).** Never hand-roll variant prop → className mapping. See `webapp-ui-primitive` skill for the exact pattern.
 

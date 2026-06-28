@@ -100,6 +100,6 @@ Write-Host ""
 Write-Host "Done. Verify at: https://github.com/$Repo/settings/branches" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
-Write-Host "  1. Edit .github/CODEOWNERS - @Old-St-Labs/senior-devs is already configured."
+Write-Host "  1. Edit .github/CODEOWNERS - @xnnx-c-xrxnxs/senior-devs is already configured."
 Write-Host "  2. Once workflows have run at least once, verify the status check names"
 Write-Host "     appear in Settings -> Branches -> Edit rule -> Required status checks."

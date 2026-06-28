@@ -1,4 +1,4 @@
-﻿# old-st-template
+﻿# mma
 
 > A production-grade, AI-first full-stack TypeScript template — Nx monorepo, NestJS microservices, Next.js webapp, Expo mobile app, Terraform-driven AWS deployment.
 
@@ -11,7 +11,7 @@
 - **Internal monitoring tool** — in-house dashboard for traces, alarms, metrics. [apps/monitoring/](apps/monitoring/)
 - **Webapp shell** — Next.js App Router + auth middleware + design tokens + dark mode. [apps/webapp/](apps/webapp/)
 - **Mobile shell** — Expo Router + secure-storage auth + Sentry + EAS pipeline. [apps/mobile/](apps/mobile/)
-- **Shared packages** — `@old-st/ui`, `@old-st/mobile-ui`, `@old-st/client-common`, `@old-st/contracts`, `@old-st/telemetry`, `@old-st/aws-*`. [packages/](packages/)
+- **Shared packages** — `@mma/ui`, `@mma/mobile-ui`, `@mma/client-common`, `@mma/contracts`, `@mma/telemetry`, `@mma/aws-*`. [packages/](packages/)
 - **Infrastructure** — Terraform modules + bootstrap + preview environments + init-runner. [infra/](infra/)
 - **CI/CD** — 11 GitHub Actions workflows (CI, CD, security, hygiene). [.github/workflows/](.github/workflows/)
 - **AI-native scaffolding** — 50+ task-scoped Claude Code skills + workflow orchestrators. [.claude/skills/](.claude/skills/) + [.claude/commands/](.claude/commands/)

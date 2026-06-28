@@ -1,11 +1,11 @@
 ---
 name: webapp-radix-primitive-wrap
-description: Wrap a Radix UI primitive (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Separator, Label, Command/cmdk) into the @old-st/ui package following the shadcn pattern. Use this when adding a new accessible interactive primitive that needs keyboard/focus management.
+description: Wrap a Radix UI primitive (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Separator, Label, Command/cmdk) into the @mma/ui package following the shadcn pattern. Use this when adding a new accessible interactive primitive that needs keyboard/focus management.
 ---
 
 # Radix Primitive Wrap
 
-The `@old-st/ui` package wraps Radix primitives following the shadcn/ui pattern: each compound is split into individually-exported subcomponents that accept `ref` as a regular prop (React 19), with Tailwind variants applied via `cn()`.
+The `@mma/ui` package wraps Radix primitives following the shadcn/ui pattern: each compound is split into individually-exported subcomponents that accept `ref` as a regular prop (React 19), with Tailwind variants applied via `cn()`.
 
 This skill is a more specialized partner to `webapp-ui-primitive`. Use this when the new primitive **wraps a Radix package**; use `webapp-ui-primitive` when it doesn't (e.g. `<Skeleton>`, `<Input>`, `<Badge>`).
 

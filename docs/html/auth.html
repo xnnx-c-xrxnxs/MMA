@@ -433,10 +433,10 @@ async me(@CurrentUser('userId') userId: string) { /* ... */ }</code></pre>
         When an API service calls another bounded context synchronously (Pattern 1 — Sync ACL),
         the outbound HTTP request must carry BOTH the originating <code>Authorization</code>
         header and the <code>x-correlation-id</code>. This is handled by
-        <code>getOutboundHeaders()</code> from <code>@old-st/telemetry</code>:
+        <code>getOutboundHeaders()</code> from <code>@mma/telemetry</code>:
       </p>
 
-      <pre><code>import { getOutboundHeaders } from '@old-st/telemetry';
+      <pre><code>import { getOutboundHeaders } from '@mma/telemetry';
 
 await fetch(url, {
   headers: {
@@ -548,7 +548,7 @@ app.enableCors({
       <h2>Contracts</h2>
 
       <p>
-        Auth schemas live in <code>@old-st/contracts/auth</code>
+        Auth schemas live in <code>@mma/contracts/auth</code>
         (<code>packages/contracts/auth/src/schemas.ts</code>):
       </p>
 
@@ -564,7 +564,7 @@ app.enableCors({
       </ul>
 
       <div class="callout info">
-        Import from the domain subpath: <code>import { signInSchema } from '@old-st/contracts/auth'</code>
+        Import from the domain subpath: <code>import { signInSchema } from '@mma/contracts/auth'</code>
       </div>
 
     </div>

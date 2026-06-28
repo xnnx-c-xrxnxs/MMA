@@ -10,7 +10,7 @@
 
 | Layer | Mechanism | Blocks PR? | Per-project configurable? |
 |---|---|---|---|
-| **ESLint Plugin** (`@old-st/eslint-plugin`) | Runs during `nx lint` and CI | **Yes** | Override rules in project `eslint.config.mjs` |
+| **ESLint Plugin** (`@mma/eslint-plugin`) | Runs during `nx lint` and CI | **Yes** | Override rules in project `eslint.config.mjs` |
 | **Code Review** (`docs/code-review-guidelines.md`) | Judgment-based review (human or `/code-review`) | No (advisory) | Edit file per project |
 | **CI Structural Checks** (`scripts/lint-standards.ts`) | Runs in CI fast-check | **Yes** | Toggle in `coding-standards.config.ts` |
 | **Spectral API Lint** (`.spectral.yml`) | Runs in CI after build | **Yes** | Extend/override in project `.spectral.yml` |
@@ -23,8 +23,8 @@
 
 ### A1: Controllers Never Call Use Cases Directly
 - **Rule:** Controllers → Application Services → Use Cases. Never skip the Application Service layer.
-- **Enforced by:** ESLint `@old-st/enforce-service-boundary` (error)
-- **Override:** `'@old-st/enforce-service-boundary': 'off'` in project ESLint config
+- **Enforced by:** ESLint `@mma/enforce-service-boundary` (error)
+- **Override:** `'@mma/enforce-service-boundary': 'off'` in project ESLint config
 
 ### A2: Application Services Always Present
 - **Rule:** Even for simple pass-through operations, an Application Service must exist between the controller and use case.
@@ -35,13 +35,13 @@
 - **Enforced by:** Code review (advisory)
 
 ### A4: Application Services Transform via Zod schema.parse()
-- **Rule:** Application Services transform entities to DTOs using `@old-st/contracts` Zod schemas.
+- **Rule:** Application Services transform entities to DTOs using `@mma/contracts` Zod schemas.
 - **Enforced by:** Code review (advisory)
 
 ### A5: Domain Layer Has Zero Framework Dependencies
-- **Rule:** Files in `domain/entities/`, `domain/constants/`, `domain/exceptions/` must not import `@nestjs/*`, `zod`, `express`, `@old-st/contracts/*`.
-- **Enforced by:** ESLint `@old-st/no-domain-framework-imports` (error)
-- **Override:** `'@old-st/no-domain-framework-imports': ['error', { bannedPackages: [...] }]`
+- **Rule:** Files in `domain/entities/`, `domain/constants/`, `domain/exceptions/` must not import `@nestjs/*`, `zod`, `express`, `@mma/contracts/*`.
+- **Enforced by:** ESLint `@mma/no-domain-framework-imports` (error)
+- **Override:** `'@mma/no-domain-framework-imports': ['error', { bannedPackages: [...] }]`
 
 ### A6: Infrastructure Has No Business Logic
 - **Rule:** Repositories implement interfaces. All business decisions live in entities and use cases.
@@ -49,12 +49,12 @@
 
 ### A7: Zod Validation in Presentation Only
 - **Rule:** Zod lives in presentation layer (pipes, filters) and contracts packages only.
-- **Enforced by:** ESLint `@old-st/no-domain-framework-imports` (bans `zod` in domain layer)
+- **Enforced by:** ESLint `@mma/no-domain-framework-imports` (bans `zod` in domain layer)
 
 ### A8: Domain Constants Are Single Source of Truth
 - **Rule:** Never hardcode `'PENDING'`, `'ACTIVE'`, `'USER'`, etc. Use enum constants.
-- **Enforced by:** ESLint `@old-st/no-hardcoded-status-strings` (error)
-- **Override:** `'@old-st/no-hardcoded-status-strings': ['error', { allowed: ['CUSTOM'] }]`
+- **Enforced by:** ESLint `@mma/no-hardcoded-status-strings` (error)
+- **Override:** `'@mma/no-hardcoded-status-strings': ['error', { allowed: ['CUSTOM'] }]`
 
 ### A9: DomainExceptionFilter Required
 - **Rule:** Every HTTP API service must have a `domain-exception.filter.ts`.
@@ -65,8 +65,8 @@
 - **Enforced by:** Code review (advisory)
 
 ### A11: No Bare Contracts Import
-- **Rule:** Always `@old-st/contracts/{domain}`, never bare `@old-st/contracts`.
-- **Enforced by:** ESLint `@old-st/no-bare-contracts-import` (error)
+- **Rule:** Always `@mma/contracts/{domain}`, never bare `@mma/contracts`.
+- **Enforced by:** ESLint `@mma/no-bare-contracts-import` (error)
 
 ### A12: Entity Timestamps — dateCreated + updatedAt Only
 - **Rule:** Never add `createdAt` field to entities.
@@ -81,32 +81,32 @@
 ## Category B — Import & Dependency Rules
 
 ### B1: Domain-Scoped Contract Imports Only
-- **Enforced by:** ESLint `@old-st/no-bare-contracts-import` (same as A11)
+- **Enforced by:** ESLint `@mma/no-bare-contracts-import` (same as A11)
 
 ### B2: Cross-Domain Consumers Import Contracts Only
-- **Rule:** Event consumers import from `@old-st/contracts/{publishing-domain}`, never `@old-st/{domain}-domain`.
+- **Rule:** Event consumers import from `@mma/contracts/{publishing-domain}`, never `@mma/{domain}-domain`.
 - **Enforced by:** Nx module boundaries (`@nx/enforce-module-boundaries`)
 
 ### B3: @prisma/client Banned Outside Infrastructure
-- **Enforced by:** ESLint `@old-st/no-prisma-client-in-domain` (error)
+- **Enforced by:** ESLint `@mma/no-prisma-client-in-domain` (error)
 
 ### B4: Use Cases Have Zero Contract Imports
 - **Rule:** Use case inputs are primitive types only.
-- **Enforced by:** ESLint `@old-st/no-contracts-in-use-cases` (error)
+- **Enforced by:** ESLint `@mma/no-contracts-in-use-cases` (error)
 
 ### B5: ACL — Consuming Domain Never Imports Upstream Domain
 - **Enforced by:** Nx module boundaries
 
 ### B6: No Framework Imports in Domain Entities
-- **Enforced by:** ESLint `@old-st/no-domain-framework-imports` (same as A5)
+- **Enforced by:** ESLint `@mma/no-domain-framework-imports` (same as A5)
 
 ### B7: Prisma Repos Use Generated Client Path
 - **Rule:** Import from `../generated/client`, not `@prisma/client`.
-- **Enforced by:** ESLint `@old-st/no-prisma-client-in-domain` (covers infrastructure too)
+- **Enforced by:** ESLint `@mma/no-prisma-client-in-domain` (covers infrastructure too)
 
 ### B8: STAGE=local for Local Detection
 - **Rule:** Never `NODE_ENV === 'development'`.
-- **Enforced by:** ESLint `@old-st/no-node-env-development` (error) + CI `lint-standards.ts`
+- **Enforced by:** ESLint `@mma/no-node-env-development` (error) + CI `lint-standards.ts`
 
 ---
 
@@ -144,7 +144,7 @@
 - **Enforced by:** Add `@typescript-eslint/no-non-null-assertion: 'error'` to ESLint config
 
 ### D6: No Direct Fetch in Components
-- **Enforced by:** ESLint `@old-st/no-direct-fetch-in-components` (error)
+- **Enforced by:** ESLint `@mma/no-direct-fetch-in-components` (error)
 
 ### D7–D10: UI Primitives / Mobile Patterns
 - **Enforced by:** Code review (advisory)
@@ -199,13 +199,13 @@
 
 ### N1: All Events Handled by Dedicated Event Handler Service
 - **Rule:** SQS/event handling logic must live in `*-event-handler-service` apps, not HTTP API services.
-- **Enforced by:** ESLint `@old-st/require-event-handler-service` (error) + CI `lint-standards.ts`
-- **Override:** `'@old-st/require-event-handler-service': 'off'`
+- **Enforced by:** ESLint `@mma/require-event-handler-service` (error) + CI `lint-standards.ts`
+- **Override:** `'@mma/require-event-handler-service': 'off'`
 
 ### N2: All File Operations via file-api-service
 - **Rule:** S3, multer, and file stream operations must be routed through the file-api-service.
-- **Enforced by:** ESLint `@old-st/require-file-api-service` (off by default, enable when service exists)
-- **Override:** `'@old-st/require-file-api-service': 'error'` to enable
+- **Enforced by:** ESLint `@mma/require-file-api-service` (off by default, enable when service exists)
+- **Override:** `'@mma/require-file-api-service': 'error'` to enable
 
 ---
 
@@ -215,16 +215,16 @@
 
 ```js
 // Project eslint.config.mjs
-import oldStPlugin from '@old-st/eslint-plugin';
+import oldStPlugin from '@mma/eslint-plugin';
 
 export default [
   ...oldStPlugin.configs.recommended,
   {
     rules: {
       // Disable a rule for this project
-      '@old-st/require-file-api-service': 'off',
+      '@mma/require-file-api-service': 'off',
       // Add project-specific allowed values
-      '@old-st/no-hardcoded-status-strings': ['error', {
+      '@mma/no-hardcoded-status-strings': ['error', {
         allowed: ['CUSTOM_STATUS'],
       }],
     },

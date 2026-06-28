@@ -250,7 +250,7 @@ Add buttons to the navigation header from within a screen:
 ```tsx
 import { Stack } from 'expo-router';
 import { Pressable } from 'react-native';
-import { Text } from '@old-st/mobile-ui';
+import { Text } from '@mma/mobile-ui';
 
 export default function UsersScreen() {
   return (

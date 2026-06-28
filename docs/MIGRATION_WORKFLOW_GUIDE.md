@@ -1,6 +1,6 @@
 # Migration Workflow Guide
 
-> How to migrate **any source repository** into the old-st-template Nx Clean-Architecture monorepo, using the orchestrated migration workflow. New-developer onboarding doc — read this start to finish before your first migration.
+> How to migrate **any source repository** into the mma Nx Clean-Architecture monorepo, using the orchestrated migration workflow. New-developer onboarding doc — read this start to finish before your first migration.
 
 ---
 
@@ -11,7 +11,7 @@ It ingests an arbitrary source app (any stack — Vite/React, CRA, Next, etc.) a
 1. **Analysis artifacts** under `{source-slug}-migration/` documenting how the source maps onto this template's architecture (stack, routes, domains, components, tokens, user stories, project context, backend runbook).
 2. **Spec YAML** under `.specs/` (`domain-{name}.yaml` + `page-{slug}.yaml`) translated from those artifacts — the machine-readable contracts the `/new-domain` and `/migrate-page` builders consume. Specs are written first as **draft v0** (`verified: false`), then promoted to **verified v1** (`verified: true`) after the source mock proves them against the live app.
 3. **A runnable source mock + ground-truth captures** — `/mock-source-app` boots the source app on canonical fixtures, captures every route/state/viewport as `{state}.png` + `{state}.dom.json`, and records every gap between the inferred spec and the live app in `SPEC-DELTAS.md`. This is **🚦 Gate #1** (the developer signs off completeness, live-vs-mock).
-4. The **reusable UI layer** — new `@old-st/ui` primitives + prop-driven domain composites under `apps/webapp/src/components/{domain}/`, built to match the captured source crops.
+4. The **reusable UI layer** — new `@mma/ui` primitives + prop-driven domain composites under `apps/webapp/src/components/{domain}/`, built to match the captured source crops.
 5. **Real pages, built once in their final `(protected)/{route}/` location**, each backed by a swappable `_data/{domain}.adapter.ts`: an **interactive mock** seeded from the canonical fixtures first (`--mock`), then **real React Query hooks** after the backend exists (`--wire`). The same `page.tsx` ships to production; only the adapter file changes.
 6. **A formal parity verdict** — `/migrate-verify` boots the rebuilt page on the same fixtures and diffs its DOM/visuals against the source-mock captures (`parity-verifier`). This is **🚦 Gate #2** (the developer signs off final parity).
 7. A **coverage ledger** (`LEDGER.md`) + **two-way parity map** (`PARITY.md`) that prove nothing from the source was silently lost.
@@ -36,11 +36,11 @@ Do **not** use it for adding a feature to an existing template domain (use `/new
 
 ## 3. Prerequisites
 
-- The **source repo is checked out locally** and you know its absolute path (e.g. `d:\old-st-flow`).
+- The **source repo is checked out locally** and you know its absolute path (e.g. `d:\mma-flow`).
 - All orchestrator prompts are available under `.claude/commands/`: `migrate-extract`, `migrate-to-specs`, `mock-source-app`, `migrate-build-ui`, `migrate-page`, and `migrate-verify`.
 - The webapp builds clean (`pnpm exec nx build webapp`) and the design-token pipeline works (`pnpm tokens:gen`).
 - The source app **boots locally** and you know its dev command (e.g. `npx vite --mode mock --port 8081` — note: use `npx`, not `bun`, if bun is not on PATH) and which seed/login gets you to a populated state.
-- You have decided a **source slug** (kebab name, e.g. `old-st-flow`) — it names the output folder.
+- You have decided a **source slug** (kebab name, e.g. `mma-flow`) — it names the output folder.
 
 ---
 
@@ -53,7 +53,7 @@ Do **not** use it for adding a feature to an existing template domain (use `/new
 | `/migrate-to-specs`             | Translation    | `.specs/domain-{name}.yaml` + `page-{slug}.yaml` (**draft v0**)         | No (YAML specs only)       |
 | `/mock-source-app`              | Mock + capture | source mock + `fixtures/`, `screenshots/`, `SPEC-DELTAS.md` → **🚦 Gate #1**    | Yes (into the SOURCE repo) |
 | `/migrate-to-specs --reconcile` | Reconcile      | promotes specs to **verified v1** by folding in approved `SPEC-DELTAS.md`       | No (YAML specs only)       |
-| `/migrate-build-ui`             | UI build       | `@old-st/ui` primitives + prop-driven composites in `components/{domain}/`      | Yes (UI layer)             |
+| `/migrate-build-ui`             | UI build       | `@mma/ui` primitives + prop-driven composites in `components/{domain}/`      | Yes (UI layer)             |
 | `/migrate-page`                 | Page build     | One real page in `(protected)/{route}/` + swappable adapter (`--mock`→`--wire`) | Yes (pages)                |
 | `/migrate-verify`               | Parity         | DOM/visual diff destination vs source-mock → `PARITY-*.md` → **🚦 Gate #2**     | No (parity reports only)   |
 
@@ -77,7 +77,7 @@ Type `/generate-source-stories`. Answer the interview (source path, components f
 
 After writing, it runs `npx tsc --noEmit` to confirm type correctness.
 
-**When to skip this step:** The source already has comprehensive story coverage (≥80% of components have a `.stories.tsx` file with ≥2 exports). `old-st-flow` has 100% coverage — no need to run this step for that migration.
+**When to skip this step:** The source already has comprehensive story coverage (≥80% of components have a `.stories.tsx` file with ≥2 exports). `mma-flow` has 100% coverage — no need to run this step for that migration.
 
 ### Step 1 — Run `/migrate-extract`
 
@@ -135,13 +135,13 @@ Specs become **verified only via this `--reconcile` pass** — never directly fr
 Type `/migrate-build-ui`. Answer the interview (migration root, optional mobile mirror, composite scope, reference-screenshots folder). It:
 
 1. **Phase A (PLAN)** — shows a dependency-ordered build manifest (primitives → composites). Reply `approve`.
-2. **Stage A–B** — optionally applies the token patch + `pnpm tokens:gen`, then builds new `@old-st/ui` primitives, then **prop-driven** domain composites into `apps/webapp/src/components/{domain}/`. Each composite is built to **match the captured source crops** (`{state}.png` + `{state}.dom.json`) — layout, columns, badges, empty-state. Composites receive data via props (no data fetching).
+2. **Stage A–B** — optionally applies the token patch + `pnpm tokens:gen`, then builds new `@mma/ui` primitives, then **prop-driven** domain composites into `apps/webapp/src/components/{domain}/`. Each composite is built to **match the captured source crops** (`{state}.png` + `{state}.dom.json`) — layout, columns, badges, empty-state. Composites receive data via props (no data fetching).
 3. **Stage C (Gates)** — build + typecheck + lint-standards, RTL unit + coverage, axe (critical + serious), then the **story-parity gate**.
-4. **Stage C.4 — Story-parity gate (HARD FAIL)** — spawns `story-parity-auditor`, which diffs each source component's **Story Matrix** (every variant/size/intent/state the source Storybook demonstrated) against the **target** story surface (the ported `@old-st/ui` primitive stories for BUILD items; the existing primitive stories for REUSE items). Every source variant/state must either be demonstrated by a target story OR carry a recorded transform (rename | merge | split | `drop — reason`) in the classifier Story Delta. Any unmapped + unexplained variant is a `parity-gap` and the workflow **STOPS**. It writes `components/STORY_PARITY.md`. `stories=inferred` source components (no source story to compare) are reported, never failed.
+4. **Stage C.4 — Story-parity gate (HARD FAIL)** — spawns `story-parity-auditor`, which diffs each source component's **Story Matrix** (every variant/size/intent/state the source Storybook demonstrated) against the **target** story surface (the ported `@mma/ui` primitive stories for BUILD items; the existing primitive stories for REUSE items). Every source variant/state must either be demonstrated by a target story OR carry a recorded transform (rename | merge | split | `drop — reason`) in the classifier Story Delta. Any unmapped + unexplained variant is a `parity-gap` and the workflow **STOPS**. It writes `components/STORY_PARITY.md`. `stories=inferred` source components (no source story to compare) are reported, never failed.
 5. **Stage D** — component reconciliation (also consumes `STORY_PARITY.md` — an unexplained gap fails reconciliation too).
 
 > **Why semantic story-parity and NOT a cross-Storybook Playwright pixel diff?**
-> The source and target are intentionally **not** a 1:1 visual match — the target is re-themed (source dark → template light-default), re-tokenised (`@old-st/design-tokens`), re-fonted (Mulish vs Inter/Poppins), and variant names are normalised (`danger → destructive`). A pixel diff across the two Storybooks would be **all false-positives**. So the machine gate compares the **variant/state coverage matrix** (does the target still demonstrate every surface the source did, or is each omission recorded?). The **manual side-by-side Storybook review** — a checklist printed in `STORY_PARITY.md` — is the human sign-off for actual appearance.
+> The source and target are intentionally **not** a 1:1 visual match — the target is re-themed (source dark → template light-default), re-tokenised (`@mma/design-tokens`), re-fonted (Mulish vs Inter/Poppins), and variant names are normalised (`danger → destructive`). A pixel diff across the two Storybooks would be **all false-positives**. So the machine gate compares the **variant/state coverage matrix** (does the target still demonstrate every surface the source did, or is each omission recorded?). The **manual side-by-side Storybook review** — a checklist printed in `STORY_PARITY.md` — is the human sign-off for actual appearance.
 
 ### Step 6 — Run `/migrate-page` per page (`--mock`)
 
@@ -150,7 +150,7 @@ For each route, type `/migrate-page` and choose `--mock`. It spawns `migration-p
 - Builds the page **once, in its real `apps/webapp/src/app/(protected)/{route}/` location** (thin orchestrator + `error.tsx` + `loading.tsx`).
 - Writes `_data/{domain}.adapter.ts` — an **interactive** mock adapter (module-level store + listeners) **seeded from the canonical `{source}-migration/fixtures/` produced in Step 3**, so filtering / adding / status changes actually work in the UI and the page runs on the _same_ data `/migrate-verify` will diff against. (Falls back to spec-synthesized rows if a fixture is absent.)
 - Matches the captured `{state}.png` + `{state}.dom.json` for the route as its structural + visual acceptance target.
-- The page imports its data **only** from the adapter (never `@old-st/client-common` yet).
+- The page imports its data **only** from the adapter (never `@mma/client-common` yet).
 
 After building, the prompt runs a fast local self-screenshot check (boot `MOCK_PREVIEW`, capture states, compare against the reference crops) — a preview of Gate #2.
 
@@ -170,7 +170,7 @@ Once a `--mock` page is built, type `/migrate-verify` to get the formal parity v
 Follow `RUNBOOK.md` (dependency-ordered). Per domain: run `/new-domain` using the generated **verified** `domain-{name}.yaml` (with the confirmed DB), then add the API client + React Query hooks (`webapp-api-client-hooks` skill). Once the hooks + contract schemas exist, run `/migrate-page` again and choose `--wire` for that page. It:
 
 - Runs the `parse-page-spec` Mode-A gate. If the hooks/schemas are missing it reports `needs_backend` and **stops** (it never stubs).
-- Rewrites **only** `_data/{domain}.adapter.ts` to re-export the real hooks from `@old-st/client-common` and the types from `@old-st/contracts/{domain}`.
+- Rewrites **only** `_data/{domain}.adapter.ts` to re-export the real hooks from `@mma/client-common` and the types from `@mma/contracts/{domain}`.
 - `page.tsx` stays **byte-identical** — the only file that differs between mock and real is the adapter.
 
 Unset `NEXT_PUBLIC_MOCK_PREVIEW` to restore the real auth gate. Import `issues/user-stories.csv` via `/import-estimate-csv`.
@@ -196,7 +196,7 @@ Unset `NEXT_PUBLIC_MOCK_PREVIEW` to restore the real auth gate. Import `issues/u
     composites/                  # one card per composite component
   tokens/
     _source-tokens.md            # harvested source tokens (verbatim)
-    _mapping.md                  # source → two-tier @old-st/design-tokens mapping
+    _mapping.md                  # source → two-tier @mma/design-tokens mapping
     tokens.patch.ts              # PROPOSED token patch (apply only on approval)
   issues/
     user-stories.csv             # canonical 10-column CSV for /import-estimate-csv
@@ -254,7 +254,7 @@ The **canonical** fixtures live in the **source repo** at `src/mock/fixtures/*.j
 
 | Component | Source path                  | Classification | Status     | Target            | Notes |
 | --------- | ---------------------------- | -------------- | ---------- | ----------------- | ----- |
-| Button    | src/components/ui/button.tsx | reuse          | documented | @old-st/ui Button |       |
+| Button    | src/components/ui/button.tsx | reuse          | documented | @mma/ui Button |       |
 
 ## Domains
 
@@ -343,7 +343,7 @@ There is **no preview surface to promote** in this workflow. Each page is built 
 **Stage 2 — `/migrate-page --wire` (after the backend + hooks exist):**
 
 1. The builder gates on `parse-page-spec` Mode A — if the hooks/contract schemas are missing it returns `needs_backend` and stops. Run `/new-domain` for that domain first.
-2. It rewrites **only** `_data/{domain}.adapter.ts` to re-export the real React Query hooks from `@old-st/client-common` and types from `@old-st/contracts/{domain}`.
+2. It rewrites **only** `_data/{domain}.adapter.ts` to re-export the real React Query hooks from `@mma/client-common` and types from `@mma/contracts/{domain}`.
 3. `page.tsx` is **byte-identical** to the mock version. Unset `NEXT_PUBLIC_MOCK_PREVIEW` to restore the real auth gate.
 
 This eliminates the old double-build (preview page + production page) — you build the page UI exactly once.
@@ -370,17 +370,17 @@ This eliminates the old double-build (preview page + production page) — you bu
 
 ---
 
-## 11. Worked example — `old-st-flow`
+## 11. Worked example — `mma-flow`
 
-`old-st-flow` is a Vite 5 + React 18 + shadcn/ui + Supabase app (20 feature folders, 48 UI primitives, 69 SQL migrations). It already has **48 `.stories.tsx` files** (100% component coverage), so Step 0 is skipped.
+`mma-flow` is a Vite 5 + React 18 + shadcn/ui + Supabase app (20 feature folders, 48 UI primitives, 69 SQL migrations). It already has **48 `.stories.tsx` files** (100% component coverage), so Step 0 is skipped.
 
 1. _(Step 0 skipped — stories already complete)_
-2. `/migrate-extract` → source path `d:\old-st-flow`, slug `old-st-flow`, router hint `react-router-dom v6`, data hint `supabase + sql migrations`. Approve PLAN. Discovery seeds the ledger; the classification gate marks shadcn primitives as **reuse**, confirms `tickets`/`projects` → **Prisma** and `active_timers` → **DynamoDB**. Extraction finishes with token map, `user-stories.csv`, `PROJECT_CONTEXT.md`, `RUNBOOK.md`, reconciliation PASS.
+2. `/migrate-extract` → source path `d:\mma-flow`, slug `mma-flow`, router hint `react-router-dom v6`, data hint `supabase + sql migrations`. Approve PLAN. Discovery seeds the ledger; the classification gate marks shadcn primitives as **reuse**, confirms `tickets`/`projects` → **Prisma** and `active_timers` → **DynamoDB**. Extraction finishes with token map, `user-stories.csv`, `PROJECT_CONTEXT.md`, `RUNBOOK.md`, reconciliation PASS.
 3. `/migrate-to-specs` → translates each domain/route card into **draft v0** `.specs/*.yaml` (`verified: false`), cross-checking that every page field resolves to a domain field.
-4. `/mock-source-app` → writes a Supabase mock seam into `d:\old-st-flow/src/mock/`, seeded from enriched `fixtures/*.json`; boots `npx vite --mode mock --port 8081`; captures every route/state as `{state}.png` + `{state}.dom.json`; records gaps (real enum values, optional fields, computed joins) in `SPEC-DELTAS.md`. **🚦 Gate #1:** review deltas + screenshots vs the live app, sign off.
+4. `/mock-source-app` → writes a Supabase mock seam into `d:\mma-flow/src/mock/`, seeded from enriched `fixtures/*.json`; boots `npx vite --mode mock --port 8081`; captures every route/state as `{state}.png` + `{state}.dom.json`; records gaps (real enum values, optional fields, computed joins) in `SPEC-DELTAS.md`. **🚦 Gate #1:** review deltas + screenshots vs the live app, sign off.
 5. `/migrate-to-specs --reconcile` → folds `SPEC-DELTAS.md` into the specs, approve the YAML edits, specs flip to **verified v1** (`verified: true`).
-6. `/migrate-build-ui` → builds any missing `@old-st/ui` primitives and prop-driven composites (WeeklyHoursBar, TicketCard) matching the captured crops. Gates run (incl. story-parity hard fail).
-7. `/migrate-page --mock` per route → builds e.g. `(protected)/projects/page.tsx` + `_data/project.adapter.ts` seeded from `old-st-flow-migration/fixtures/`. View with `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local`.
+6. `/migrate-build-ui` → builds any missing `@mma/ui` primitives and prop-driven composites (WeeklyHoursBar, TicketCard) matching the captured crops. Gates run (incl. story-parity hard fail).
+7. `/migrate-page --mock` per route → builds e.g. `(protected)/projects/page.tsx` + `_data/project.adapter.ts` seeded from `mma-flow-migration/fixtures/`. View with `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local`.
 8. `/migrate-verify` → boots the destination on the same fixtures, `parity-verifier` diffs each route's DOM against the source-mock captures → `PARITY-SUMMARY.md`. **🚦 Gate #2:** final parity sign-off.
 9. Follow `RUNBOOK.md` to rebuild each backend domain via `/new-domain` (from the verified YAML), add hooks, then `/migrate-page --wire` to swap each page's adapter to the real hooks. `page.tsx` never changes.
 

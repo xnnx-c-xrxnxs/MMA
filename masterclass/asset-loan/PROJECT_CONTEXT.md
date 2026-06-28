@@ -45,8 +45,8 @@ Role enum lives in the auth domain — never hardcode role strings (Golden Rule 
 
 ## 4. Tech Stack
 
-NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIFO (`@old-st/aws-sqs`) ·
-Next.js 15 webapp · Expo mobile (optional) · `@old-st/telemetry` logging + correlation. (Full table:
+NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIFO (`@mma/aws-sqs`) ·
+Next.js 15 webapp · Expo mobile (optional) · `@mma/telemetry` logging + correlation. (Full table:
 [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
 
 ---
@@ -55,10 +55,10 @@ Next.js 15 webapp · Expo mobile (optional) · `@old-st/telemetry` logging + cor
 
 - Clean-Arch layering; application services always present; controllers never call use cases directly.
 - **Prisma → offset pagination** (`data, total, page, limit, totalPages`). Never cursor (Golden Rule #16).
-- Contracts via `@old-st/contracts/{domain}` subpath only (#11).
+- Contracts via `@mma/contracts/{domain}` subpath only (#11).
 - Authenticated actor from `@CurrentUser()` only (#10, #23).
 - **ACL:** `loan` validates `asset` via an abstract port + HTTP adapter (#14).
-- **Cross-domain events:** consumers import `@old-st/contracts/asset` — never `@old-st/asset-domain` (#15).
+- **Cross-domain events:** consumers import `@mma/contracts/asset` — never `@mma/asset-domain` (#15).
 
 ---
 
@@ -79,7 +79,7 @@ Next.js 15 webapp · Expo mobile (optional) · `@old-st/telemetry` logging + cor
 
 REST: plural nouns (`/assets`, `/loans`), state actions as POST sub-resources
 (`POST /loans/:loanId/return`). Status badges via `status-variants.ts`. Forms via react-hook-form +
-Zod resolver from `@old-st/contracts/{domain}`. Toasts via `@old-st/ui`.
+Zod resolver from `@mma/contracts/{domain}`. Toasts via `@mma/ui`.
 
 ---
 
@@ -142,9 +142,9 @@ Port in `packages/loan-domain/src/application/interfaces/`; HTTP adapter in
 `infrastructure/clients/` calling `asset-api-service`. Forward auth + correlation via `getOutboundHeaders()`.
 
 ### Choreography saga (asynchronous)
-1. `loan.checkout` persists loan `REQUESTED` and publishes **`LOAN_REQUESTED`** (`@old-st/contracts/loan`).
+1. `loan.checkout` persists loan `REQUESTED` and publishes **`LOAN_REQUESTED`** (`@mma/contracts/loan`).
 2. `asset-event-handler-service` consumes it, runs `ReserveAssetUseCase`, replies with
-   **`ASSET_RESERVED`** or **`ASSET_UNAVAILABLE`** (`@old-st/contracts/asset`).
+   **`ASSET_RESERVED`** or **`ASSET_UNAVAILABLE`** (`@mma/contracts/asset`).
 3. `loan-event-handler-service` consumes the reply → loan `ACTIVE` (set `checkoutAt`) or `REJECTED`.
 4. On `POST /loans/:id/return` → publish **`LOAN_RETURNED`** → asset handler flips asset back to
    `AVAILABLE`. **Idempotent:** replaying a reply after the loan left `REQUESTED` is a no-op.

@@ -1,4 +1,4 @@
-﻿/* Storybook preview stylesheet for @old-st/ui.
+﻿/* Storybook preview stylesheet for @mma/ui.
  *
  * All @import rules MUST come before other at-rules (CSS spec). */
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;800&display=swap');
@@ -12,7 +12,7 @@
 }
 
 /* Tailwind v4 only auto-scans the project root by default. Opt-in the
- * package's source files so cva() utility classes inside @old-st/ui get
+ * package's source files so cva() utility classes inside @mma/ui get
  * picked up by the candidate scanner. Mirror webapp/globals.css. */
 @source "../src";
 

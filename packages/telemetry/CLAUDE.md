@@ -31,7 +31,7 @@ This file loads automatically for any file inside `packages/telemetry/`. The pac
 
 5. **`logger.error()` accepts an optional third arg `error?: unknown`.** Serialised as `errorType`, `errorMessage`, `stack`. Don't manually stringify exceptions — pass the raw `Error` object.
 
-6. **SQS publishers in `@old-st/aws-sqs` auto-inject `correlationId` and trace context.** Don't add it manually in publisher code. Consumers MUST call `extractTraceContext` and `runWithCorrelationId` — if missing, traces appear disconnected in X-Ray.
+6. **SQS publishers in `@mma/aws-sqs` auto-inject `correlationId` and trace context.** Don't add it manually in publisher code. Consumers MUST call `extractTraceContext` and `runWithCorrelationId` — if missing, traces appear disconnected in X-Ray.
 
 ---
 

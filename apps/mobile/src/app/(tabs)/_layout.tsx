@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
-import { Text } from '@old-st/mobile-ui';
+import { Text } from '@mma/mobile-ui';
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (

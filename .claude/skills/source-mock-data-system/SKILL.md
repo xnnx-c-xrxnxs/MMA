@@ -11,7 +11,7 @@ UI state can be screenshotted and compared against the live app. The screenshots
 fixtures become the visual + structural acceptance references the downstream `/migrate-page` and
 `/migrate-build-ui` builders consume.
 
-> **Where this runs:** in the **SOURCE repo** (e.g. `d:\old-st-flow`), NOT the template repo.
+> **Where this runs:** in the **SOURCE repo** (e.g. `d:\mma-flow`), NOT the template repo.
 > The skill itself lives in the template; the artifacts it produces are written into the source
 > repo's `src/mock/` and copied into `{slug}-migration/` as migration artifacts.
 

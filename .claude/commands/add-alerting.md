@@ -82,7 +82,7 @@ Follow it end-to-end:
 ### Phase B1 — Pre-flight Verification
 
 - Confirm the service is **already deployed** (i.e. `service-registry.json` already lists it). If not, redirect user to `/new-service` first.
-- Confirm the service uses `createLogger()` from `@old-st/telemetry` (Golden Rule #35). If not, alarms will fire but logs will be unsearchable.
+- Confirm the service uses `createLogger()` from `@mma/telemetry` (Golden Rule #35). If not, alarms will fire but logs will be unsearchable.
 
 ### Phase B2 — Implement
 

@@ -1,5 +1,5 @@
 ---
-description: "Generate ONE Next.js page in apps/webapp/ from a Figma frame URL. Composes existing @old-st/ui primitives; recursively invokes /figma-component for any missing primitive. USE WHEN the user pastes a Figma URL pointing to a screen / frame, or says 'port this Figma dashboard', 'build this Figma screen', 'generate page from this Figma URL'."
+description: "Generate ONE Next.js page in apps/webapp/ from a Figma frame URL. Composes existing @mma/ui primitives; recursively invokes /figma-component for any missing primitive. USE WHEN the user pastes a Figma URL pointing to a screen / frame, or says 'port this Figma dashboard', 'build this Figma screen', 'generate page from this Figma URL'."
 ---
 
 # Figma → Next.js Page (single screen)
@@ -115,7 +115,7 @@ Produce a section table for the user:
 For every **unique** primitive used in the inventory, check `packages/ui/src/index.ts`:
 
 ```
-| Primitive       | In @old-st/ui? | Action                        |
+| Primitive       | In @mma/ui? | Action                        |
 |-----------------|----------------|-------------------------------|
 | Button          | ✅              | use existing                  |
 | Card            | ✅              | use existing                  |
@@ -131,7 +131,7 @@ For each "INVOKE /figma-component" row:
 3. Run the `figma-component.md` workflow for it
 4. **Resume here once the primitive ships**
 
-Page-local components (only used by this one screen) DO NOT go into `@old-st/ui` — they live in `apps/webapp/src/components/{domain}/`.
+Page-local components (only used by this one screen) DO NOT go into `@mma/ui` — they live in `apps/webapp/src/components/{domain}/`.
 
 ---
 
@@ -172,8 +172,8 @@ Then:
 1. Create domain components in `apps/webapp/src/components/{domain}/*.tsx`
 2. Create the page in `apps/webapp/src/app/(protected)/{route}/page.tsx` as a thin orchestrator
 3. Wire React Query hooks
-4. Wire forms with `react-hook-form` + Zod resolver from `@old-st/contracts/{domain}`
-5. Status-driven actions: import enum from `@old-st/contracts/{domain}`, never hardcode strings
+4. Wire forms with `react-hook-form` + Zod resolver from `@mma/contracts/{domain}`
+5. Status-driven actions: import enum from `@mma/contracts/{domain}`, never hardcode strings
 6. If sidebar entry needed: update `apps/webapp/src/components/layout/sidebar.tsx`
 
 ---

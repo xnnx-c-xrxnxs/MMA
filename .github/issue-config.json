@@ -18,7 +18,7 @@
     "(hard limit enforced by the GitHub REST API — longer values are rejected with HTTP 422)."
   ],
 
-  "projectName": "old-st-template",
+  "projectName": "mma",
 
   "ticketPrefix": "OST",
 

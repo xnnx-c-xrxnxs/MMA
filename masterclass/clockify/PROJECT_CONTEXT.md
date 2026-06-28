@@ -45,8 +45,8 @@ hours against the project budget and flags overruns.
 
 ## 4. Tech Stack
 
-NestJS 11 · Node 24 · **DynamoDB OneTable v2** · Zod contracts · SQS FIFO (`@old-st/aws-sqs`) ·
-Next.js 15 webapp · Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
+NestJS 11 · Node 24 · **DynamoDB OneTable v2** · Zod contracts · SQS FIFO (`@mma/aws-sqs`) ·
+Next.js 15 webapp · Expo mobile · `@mma/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
 
 ---
 
@@ -55,9 +55,9 @@ Next.js 15 webapp · Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJ
 - Clean-Arch layering; application services always present.
 - **DynamoDB → cursor pagination** (`items, nextCursorPointer, prevCursorPointer`). Never offset (#16).
 - Every repository query passes an explicit **GSI index** param (see `dynamo-repository` skill).
-- Contracts via `@old-st/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
+- Contracts via `@mma/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
 - **ACL:** `timeentry` validates `project` (+ workspace membership) via an abstract port + HTTP adapter (#14).
-- **Cross-domain events:** consumers import `@old-st/contracts/timeentry` — never the domain package (#15).
+- **Cross-domain events:** consumers import `@mma/contracts/timeentry` — never the domain package (#15).
 
 ---
 
@@ -78,7 +78,7 @@ Next.js 15 webapp · Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJ
 
 REST plural nouns (`/projects`, `/time-entries`); actions as POST sub-resources
 (`POST /time-entries/:id/stop`, `POST /timesheets/:id/submit`). Status badges via `status-variants.ts`.
-Forms via react-hook-form + Zod from `@old-st/contracts/{domain}`.
+Forms via react-hook-form + Zod from `@mma/contracts/{domain}`.
 
 ---
 
@@ -145,9 +145,9 @@ membership). Forward auth + correlation via `getOutboundHeaders()`.
 
 ### Choreography saga (asynchronous)
 1. `POST /timesheets/:id/submit` sets entries `SUBMITTED` and publishes **`TIMESHEET_SUBMITTED`**
-   (`@old-st/contracts/timeentry`) with `{ projectId, periodStart, periodEnd, totalHours }`.
+   (`@mma/contracts/timeentry`) with `{ projectId, periodStart, periodEnd, totalHours }`.
 2. `project-event-handler-service` consumes it, aggregates the period's hours vs `budgetHours`,
-   replies **`BUDGET_OK`** or **`BUDGET_EXCEEDED`** (`@old-st/contracts/project`).
+   replies **`BUDGET_OK`** or **`BUDGET_EXCEEDED`** (`@mma/contracts/project`).
 3. `timeentry-event-handler-service` consumes the reply → timesheet `APPROVED` | `FLAGGED`;
    `BUDGET_EXCEEDED` also fans out a manager notification. **Idempotent** on replay.
 

@@ -29,7 +29,7 @@ This is a Clean Architecture template. Before adding code, read:
 Highlights:
 - Use cases never live in controllers — Application Services orchestrate.
 - Domain layer has zero NestJS / framework imports.
-- Contracts use **subpath imports only** (`@old-st/contracts/{domain}` — never the bare root).
+- Contracts use **subpath imports only** (`@mma/contracts/{domain}` — never the bare root).
 - Cross-service calls use the ACL pattern (see `sync-cross-service-call` skill).
 - All HTTP API services expose `GET /api/health` returning `{ status: 'ok', service }` with `@Public()`.
 - Read the actor identity from `@CurrentUser()` — never from request body/query/path.

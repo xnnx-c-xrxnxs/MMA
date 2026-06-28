@@ -11,12 +11,12 @@
 | **Framework** | Next.js 15 (App Router) |
 | **Language** | TypeScript (strict mode) |
 | **Styling** | Tailwind v4 + CSS variables |
-| **UI primitives** | `@old-st/ui` (shadcn-style, Radix-backed) |
-| **Data fetching** | React Query v5 via `@old-st/client-common` |
+| **UI primitives** | `@mma/ui` (shadcn-style, Radix-backed) |
+| **Data fetching** | React Query v5 via `@mma/client-common` |
 | **Forms** | `react-hook-form` + Zod resolver |
-| **Types / validation** | Zod schemas from `@old-st/contracts/{domain}` |
+| **Types / validation** | Zod schemas from `@mma/contracts/{domain}` |
 | **Auth** | `AuthProvider` + httpOnly cookie refresh |
-| **Toasts** | sonner via `@old-st/ui` |
+| **Toasts** | sonner via `@mma/ui` |
 | **Theme** | `next-themes` (dark / light) |
 | **Testing** | Jest + React Testing Library |
 | **E2E** | Playwright |
@@ -27,10 +27,10 @@
 | Technology | Reason |
 |---|---|
 | Redux / Zustand / MobX | React Query handles server state. `useState` handles UI state. |
-| Axios | `@old-st/client-common` uses typed `fetch` + Zod — better safety, smaller bundle. |
+| Axios | `@mma/client-common` uses typed `fetch` + Zod — better safety, smaller bundle. |
 | CSS Modules / styled-components | Tailwind v4 + semantic CSS variables. Single styling system, dark mode for free. |
 | `next/middleware.ts` auth guard | Incompatible with `output: 'export'`. Auth redirect is client-side via `useAuth()` + `useRouter()` in `(protected)/layout.tsx`. |
-| Server Actions | All mutations go through the shared API clients in `@old-st/client-common` so both webapp and mobile share the same layer. |
+| Server Actions | All mutations go through the shared API clients in `@mma/client-common` so both webapp and mobile share the same layer. |
 
 ---
 
@@ -48,9 +48,9 @@ The trade-off is that all data fetching happens client-side (React Query), and a
 
 ### Why separate from the API?
 
-The webapp communicates with backend microservices via HTTP. It never imports backend domain packages directly. All API communication goes through `@old-st/client-common`, which is also shared with the mobile app — meaning hooks and API clients are written once and work on both platforms.
+The webapp communicates with backend microservices via HTTP. It never imports backend domain packages directly. All API communication goes through `@mma/client-common`, which is also shared with the mobile app — meaning hooks and API clients are written once and work on both platforms.
 
-### Why `@old-st/contracts/{domain}` for schemas?
+### Why `@mma/contracts/{domain}` for schemas?
 
 Zod schemas are defined once in the contracts packages and re-used by:
 - **NestJS** — `ZodValidationPipe` validates incoming requests
@@ -128,13 +128,13 @@ export default function UsersPage() {
 }
 ```
 
-### All API calls through `@old-st/client-common`
+### All API calls through `@mma/client-common`
 
 Never call `fetch` directly. Domain hooks are the only entry point to the API.
 
 ```tsx
 // ✅ correct
-import { useUsers, useCreateUser } from '@old-st/client-common';
+import { useUsers, useCreateUser } from '@mma/client-common';
 
 // ❌ wrong
 const res = await fetch('/api/users');
@@ -144,15 +144,15 @@ const res = await fetch('/api/users');
 
 ```tsx
 // ✅ correct
-import { EntityStatusEnum } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum } from '@mma/contracts/{domain}';
 
 // ❌ wrong — bare root import
-import { UserStatusEnum } from '@old-st/contracts';
+import { UserStatusEnum } from '@mma/contracts';
 ```
 
 ### Forms use the Zod error map, not inline messages
 
-Schemas in `@old-st/contracts/{domain}` are **structural only** — no message strings. The global `zod-error-map.ts` (wired once in `layout.tsx`) translates Zod issue codes to human-readable copy. This means all validation wording is in one file.
+Schemas in `@mma/contracts/{domain}` are **structural only** — no message strings. The global `zod-error-map.ts` (wired once in `layout.tsx`) translates Zod issue codes to human-readable copy. This means all validation wording is in one file.
 
 ```ts
 // ✅ correct — contract schema has no messages
@@ -167,7 +167,7 @@ email: z.string().email('Please enter a valid email address')
 The backend returns UTC. Always convert to the display timezone in the frontend using the shared helpers:
 
 ```tsx
-import { formatDate, formatDateTime } from '@old-st/client-common';
+import { formatDate, formatDateTime } from '@mma/client-common';
 
 <span>{formatDateTime(order.createdAt)}</span>  // '13 May 2026, 14:30' (Europe/London)
 ```
@@ -300,12 +300,12 @@ Always use Tailwind semantic utilities (`bg-card`, `text-muted-foreground`, `bor
 
 ## 9. Using Icons
 
-Icons live in `packages/ui/src/icons/` and are exported from `@old-st/ui`. Every icon is a `React.forwardRef` component that accepts the shared `IIcon` interface.
+Icons live in `packages/ui/src/icons/` and are exported from `@mma/ui`. Every icon is a `React.forwardRef` component that accepts the shared `IIcon` interface.
 
 ### Importing an existing icon
 
 ```tsx
-import { ClockIcon, PlusIcon, TrashIcon } from '@old-st/ui';
+import { ClockIcon, PlusIcon, TrashIcon } from '@mma/ui';
 
 // Inherit surrounding text color (recommended)
 <button className="text-brand">
@@ -395,7 +395,7 @@ Then add it to `packages/ui/src/icons/index.ts` alphabetically.
 - **Never hard-code a color** (`fill="#7f56d9"`, `stroke="#000"`) — icons must use `currentColor` so they respect Tailwind text utilities and dark mode.
 - **Never import SVGs directly** (`import Logo from './logo.svg'`) — use the icon component pattern so sizing, accessibility, and color control are consistent.
 - **`aria-hidden="true"` is the default** — the `iconAttrs()` helper sets this automatically. Only pass `aria-label` when the icon is the sole label of an interactive element.
-- Icons are part of `@old-st/ui` — never create ad-hoc icon components inside `apps/webapp/`.
+- Icons are part of `@mma/ui` — never create ad-hoc icon components inside `apps/webapp/`.
 
 ---
 
@@ -405,14 +405,14 @@ All web UI components live in `packages/ui/src/components/{category}/{name}/` an
 
 ### Use the generator
 
-Do not create the four files by hand — use the `@old-st/nx-plugin:ui-primitive` generator:
+Do not create the four files by hand — use the `@mma/nx-plugin:ui-primitive` generator:
 
 ```sh
-pnpm nx g @old-st/nx-plugin:ui-primitive
+pnpm nx g @mma/nx-plugin:ui-primitive
 # Interactive: prompts for name, category, and pattern.
 
 # Or non-interactively:
-pnpm nx g @old-st/nx-plugin:ui-primitive \
+pnpm nx g @mma/nx-plugin:ui-primitive \
   --name=Switch \
   --category=form-controls \
   --pattern=simple-variants
@@ -456,7 +456,7 @@ implement this Figma component: https://www.figma.com/design/FILE_KEY/...?node-i
 
 Claude Code will:
 1. Run `get_design_context` to extract a reference React + Tailwind snapshot and a screenshot.
-2. Map Figma token names → `@old-st/ui` CSS variables (e.g. `var(--color-brand-600)` → `bg-brand-600`).
+2. Map Figma token names → `@mma/ui` CSS variables (e.g. `var(--color-brand-600)` → `bg-brand-600`).
 3. Fill in the `// TODO` stubs in the generated `.tsx` file.
 4. Flag any colors or spacing values that have no token mapping yet.
 

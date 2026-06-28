@@ -1,11 +1,11 @@
 ---
-description: "Add a single use case to an existing domain — create, get-by-id, update, delete, action (state transition), or list. Powered by the @old-st/nx-plugin:use-case generator. USE WHEN user says 'add a use case', 'add an action to', 'cancel use case', 'mark X as Y', 'list X by Y', or any single-operation extension to an existing domain that does not need new fields or contracts."
+description: "Add a single use case to an existing domain — create, get-by-id, update, delete, action (state transition), or list. Powered by the @mma/nx-plugin:use-case generator. USE WHEN user says 'add a use case', 'add an action to', 'cancel use case', 'mark X as Y', 'list X by Y', or any single-operation extension to an existing domain that does not need new fields or contracts."
 ---
 
 # New Use Case — Guided Workflow
 
 You are adding a single use case to an **existing** domain. Use the
-`@old-st/nx-plugin:use-case` generator to scaffold the file + spec, then hand
+`@mma/nx-plugin:use-case` generator to scaffold the file + spec, then hand
 off to the user (or yourself) to wire the use case into the application
 service.
 
@@ -53,7 +53,7 @@ Ask in a single message:
 ## Phase 1 — Generate
 
 ```bash
-pnpm nx g @old-st/nx-plugin:use-case \
+pnpm nx g @mma/nx-plugin:use-case \
   --domain={domain} \
   --entity={entity} \
   --verb={verb} \
@@ -63,7 +63,7 @@ pnpm nx g @old-st/nx-plugin:use-case \
 For `--type=list` with non-default filter:
 
 ```bash
-pnpm nx g @old-st/nx-plugin:use-case \
+pnpm nx g @mma/nx-plugin:use-case \
   --domain={domain} \
   --entity={entity} \
   --verb=list-by-customer \
@@ -74,7 +74,7 @@ pnpm nx g @old-st/nx-plugin:use-case \
 For `--type=action` with method override:
 
 ```bash
-pnpm nx g @old-st/nx-plugin:use-case \
+pnpm nx g @mma/nx-plugin:use-case \
   --domain={domain} \
   --entity={entity} \
   --verb=mark-failed \

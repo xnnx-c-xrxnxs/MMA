@@ -37,7 +37,7 @@ npm install -g pnpm
 
 ```sh
 git clone <repository-url>
-cd old-st-template
+cd mma
 nvm use
 pnpm install
 ```

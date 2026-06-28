@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import type { CorrelatedLogEntry } from '@old-st/monitoring-sdk';
+import type { CorrelatedLogEntry } from '@mma/monitoring-sdk';
 
 interface CorrelatedLogPanelProps {
   logs: CorrelatedLogEntry[];
@@ -20,7 +20,7 @@ function getServiceColor(serviceName: string): string {
 }
 
 function shortName(name: string): string {
-  // Strip environment prefix: {project}-{env}- (e.g. old-st-dev-)
+  // Strip environment prefix: {project}-{env}- (e.g. mma-dev-)
   return name.replace(/^.*?-(dev|staging|prod|preview)-/, '');
 }
 

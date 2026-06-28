@@ -1,6 +1,6 @@
-import { useAuth } from '@old-st/client-common';
-import type { SignInResponse } from '@old-st/contracts/auth';
-import { toast } from '@old-st/ui';
+import { useAuth } from '@mma/client-common';
+import type { SignInResponse } from '@mma/contracts/auth';
+import { toast } from '@mma/ui';
 import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -11,12 +11,12 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock('@old-st/ui', () => ({
-  ...jest.requireActual('@old-st/ui'),
+jest.mock('@mma/ui', () => ({
+  ...jest.requireActual('@mma/ui'),
   toast: {
     success: jest.fn(),
     error: jest.fn(),

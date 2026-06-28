@@ -32,7 +32,7 @@ When reviewing a PR, check for violations in this order (highest priority first)
 
 - **Use Cases return domain entities**, not DTOs. The Application Service transforms entities to DTOs using `schema.parse()`.
 
-- **Domain layer has zero framework dependencies.** Files in `domain/entities/`, `domain/constants/`, `domain/exceptions/` must not import from `@nestjs/*`, `zod`, `express`, `@prisma/client`, or `@old-st/contracts/*`.
+- **Domain layer has zero framework dependencies.** Files in `domain/entities/`, `domain/constants/`, `domain/exceptions/` must not import from `@nestjs/*`, `zod`, `express`, `@prisma/client`, or `@mma/contracts/*`.
 
 - **Infrastructure layer has no business logic.** Repositories implement interfaces — all business decisions live in entities and use cases.
 
@@ -62,15 +62,15 @@ When reviewing a PR, check for violations in this order (highest priority first)
 
 ## Import Rules (Flag as "must fix")
 
-- **Never import from bare `@old-st/contracts`** — always use domain-scoped subpaths: `@old-st/contracts/{domain}` (or `@old-st/contracts/common`).
+- **Never import from bare `@mma/contracts`** — always use domain-scoped subpaths: `@mma/contracts/{domain}` (or `@mma/contracts/common`).
 
-- **Use cases must not import from `@old-st/contracts/*`.** Use case inputs are primitive types only.
+- **Use cases must not import from `@mma/contracts/*`.** Use case inputs are primitive types only.
 
-- **Cross-domain event consumers import from contracts only** (`@old-st/contracts/{publishing-domain}`), never from the publishing domain's package (`@old-st/{domain}-domain`).
+- **Cross-domain event consumers import from contracts only** (`@mma/contracts/{publishing-domain}`), never from the publishing domain's package (`@mma/{domain}-domain`).
 
 - **`@prisma/client` is banned outside `infrastructure/repositories/`.** Domain and application layers never touch it.
 
-- **Frontend components must not call `fetch()` or import `axios` directly.** Use `@old-st/client-common` hooks and API clients.
+- **Frontend components must not call `fetch()` or import `axios` directly.** Use `@mma/client-common` hooks and API clients.
 
 ---
 
@@ -154,19 +154,19 @@ All error responses must use this exact shape — no `timestamp` field:
 
 - **Pages are thin orchestrators** — they wire hooks, state, and child components. No table or form markup in page files.
 - **Domain components live in `components/{domain}/`**, not in the page file.
-- **UI primitives come from `@old-st/ui`** — never use raw HTML `<table>`, `<button>`, `<input>`.
-- **Status badge mapping uses enum constants** from `@old-st/contracts/{domain}`, not hardcoded strings.
+- **UI primitives come from `@mma/ui`** — never use raw HTML `<table>`, `<button>`, `<input>`.
+- **Status badge mapping uses enum constants** from `@mma/contracts/{domain}`, not hardcoded strings.
 
 ### Mobile (Expo)
 
 - **Screens are thin orchestrators** — same principle as webapp pages.
 - **Use `FlatList` for lists**, never `ScrollView` + `.map()`.
 - **Use `StyleSheet.create()`** for all non-trivial styles — no inline style objects.
-- **UI primitives come from `@old-st/mobile-ui`** — never raw `View`/`Text` for interactive elements.
+- **UI primitives come from `@mma/mobile-ui`** — never raw `View`/`Text` for interactive elements.
 
 ### Shared Data Layer
 
-- **Webapp and mobile share the same hooks and API clients** from `@old-st/client-common`. Never create mobile-only or webapp-only API clients.
+- **Webapp and mobile share the same hooks and API clients** from `@mma/client-common`. Never create mobile-only or webapp-only API clients.
 - **API client responses must be Zod-parsed** — every `apiRequest()` call passes a `schema` option.
 
 ---
@@ -254,7 +254,7 @@ These are enforced by `scripts/lint-standards.ts` (runs in CI via `ci-fast-check
 |---|---|
 | `entity-no-toObject` | Entities must not have `toObject()` methods |
 | `entity-uses-enum-constants` | Entity methods must not hardcode status/role strings |
-| `no-bare-contracts-import` | Imports must use subpath (`@old-st/contracts/{domain}`) |
+| `no-bare-contracts-import` | Imports must use subpath (`@mma/contracts/{domain}`) |
 | `no-createdAt-in-entities` | Entities use `dateCreated`, not `createdAt` |
 | `no-node-env-development` | Code must check `STAGE`, not `NODE_ENV`, for local mode |
 | `controller-no-direct-usecase` | Controllers must call application services, not use cases |

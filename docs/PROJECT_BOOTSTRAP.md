@@ -55,7 +55,7 @@ The bootstrap script (Step 2) will hard-fail with a clear error if any of these 
 
 ```powershell
 gh repo create your-org/your-new-project `
-  --template Old-St-Labs/old-st-template `
+  --template xnnx-c-xrxnxs/mma `
   --private `
   --clone
 
@@ -79,8 +79,8 @@ This is the whole rename + GitHub-wiring phase in a single VS Code task.
 
 | Prompt | Example | Notes |
 |---|---|---|
-| `New npm scope` | `@acme` | Must start with `@`, lowercase. Rewrites `@old-st/` across all files. |
-| `New project name` | `acme-platform` | Lowercase kebab-case. Replaces `old-st-template` everywhere. |
+| `New npm scope` | `@acme` | Must start with `@`, lowercase. Rewrites `@mma/` across all files. |
+| `New project name` | `acme-platform` | Lowercase kebab-case. Replaces `mma` everywhere. |
 | `CODEOWNERS team` | `@acme/platform` | The GitHub team that owns reviews. Must exist with write access. |
 | `GitHub org/user` | *(blank)* | Leave blank → auto-detected from origin. Override only if URLs should point elsewhere. |
 | `Display name` | *(blank)* | Leave blank → titleized from project name (`acme-platform` → `Acme Platform`). |
@@ -95,7 +95,7 @@ The task shows the summary and prompts `Proceed? [y/N]` in the terminal — type
 | Phase | Action |
 |---|---|
 | 1. Validate | Node 24, `gh` authed with admin, on `main`, origin exists, working tree clean. |
-| 2. Rename | `@old-st/` → your scope, `old-st-template` → your name, `Old-St-Labs` → your org, CODEOWNERS team, display strings — across every text file. |
+| 2. Rename | `@mma/` → your scope, `mma` → your name, `xnnx-c-xrxnxs` → your org, CODEOWNERS team, display strings — across every text file. |
 | 2. Delete `examples/` | Unless `--keep-examples`. Also strips `paths-ignore: examples/**` from CI workflows. |
 | 3. Commit + push | One commit `chore: bootstrap project from template` → `git push origin main`. |
 | 4. Create `develop` | `git branch develop main && git push -u origin develop`. The CD pipeline expects this branch. |

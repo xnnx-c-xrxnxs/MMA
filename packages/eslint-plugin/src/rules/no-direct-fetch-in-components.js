@@ -1,7 +1,7 @@
 /**
  * @fileoverview Bans direct fetch() and axios calls in webapp/mobile component files.
  *
- * Standard: D6 — All API via @old-st/client-common, never direct fetch/axios.
+ * Standard: D6 — All API via @mma/client-common, never direct fetch/axios.
  * @type {import('eslint').Rule.RuleModule}
  */
 
@@ -32,7 +32,7 @@ module.exports = {
     type: 'problem',
     docs: {
       description:
-        'Disallow direct fetch/axios calls in frontend components. Use @old-st/client-common hooks instead.',
+        'Disallow direct fetch/axios calls in frontend components. Use @mma/client-common hooks instead.',
     },
     schema: [
       {
@@ -50,9 +50,9 @@ module.exports = {
     ],
     messages: {
       noDirectFetch:
-        "Do not call fetch() directly in frontend components. Use React Query hooks from '@old-st/client-common' instead.",
+        "Do not call fetch() directly in frontend components. Use React Query hooks from '@mma/client-common' instead.",
       noAxiosImport:
-        "Do not import axios in frontend components. Use API clients from '@old-st/client-common' instead.",
+        "Do not import axios in frontend components. Use API clients from '@mma/client-common' instead.",
     },
   },
   create(context) {

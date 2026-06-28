@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { configureApi, AuthProvider } from '@old-st/client-common';
+import { configureApi, AuthProvider } from '@mma/client-common';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Sentry from '@sentry/react-native';

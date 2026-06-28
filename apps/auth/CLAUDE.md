@@ -91,7 +91,7 @@ Methods:
 
 ## Contracts
 
-**Import path:** `@old-st/contracts/auth` — never bare `@old-st/contracts`
+**Import path:** `@mma/contracts/auth` — never bare `@mma/contracts`
 
 **File:** `packages/contracts/auth/src/schemas.ts`
 
@@ -120,7 +120,7 @@ apps/auth/auth-api-service/src/
 
 24. **Refresh tokens must be httpOnly cookies — never localStorage or JS memory.** Set-Cookie uses `httpOnly`, `path: '/'`, and env-specific `Secure`/`SameSite` (see Cookie Strategy table above). Frontend code cannot read the refresh token.
 25. **Access tokens are memory-only — lost on page refresh, restored via silent refresh.** `AuthProvider` in `client-common` calls `POST /auth/refresh-session` on mount with `credentials: 'include'` to restore the session from the httpOnly cookie.
-26. **All API calls must include `credentials: 'include'`** so the browser sends the httpOnly refresh cookie. The base API client in `@old-st/client-common` sets this automatically — do not strip it.
+26. **All API calls must include `credentials: 'include'`** so the browser sends the httpOnly refresh cookie. The base API client in `@mma/client-common` sets this automatically — do not strip it.
 27. **CORS must allow credentials when using cookie-based refresh.** All backend services use `app.enableCors({ origin: process.env.FE_BASE_URL, credentials: true })`. Never use `origin: '*'` with `credentials: true`.
 28. **Every API service has its own JWT auth guard — provider-agnostic.** Guards are per-service copies reading `JWT_JWKS_URI`, `JWT_ISSUER`, and `JWT_USER_ID_CLAIM`. Locally bypassed when `STAGE=local` (unsigned mock tokens from `LocalAuthProvider`). Use `@Public()` to exempt auth-free endpoints. Wire `APP_GUARD` → `JwtAuthGuard`.
 29. **Local auth uses `LocalAuthProvider` — no Cognito dependency in development or CI.** Accepts `admin@test.com` / `Password123!` and issues mock JWTs. E2E tests authenticate via `POST /auth/sign-in` before protected calls.

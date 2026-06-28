@@ -1,7 +1,7 @@
 /**
  * Shared icon contract.
  *
- * Every icon in `@old-st/ui/icons` accepts these props. The icon SVG itself
+ * Every icon in `@mma/ui/icons` accepts these props. The icon SVG itself
  * always uses `currentColor` for strokes / fills so the icon inherits the
  * surrounding text color via Tailwind utilities (`text-primary`,
  * `text-muted-foreground`, etc.) — dark mode is automatic.

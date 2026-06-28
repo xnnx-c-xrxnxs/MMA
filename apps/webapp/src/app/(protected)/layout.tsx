@@ -1,7 +1,7 @@
 'use client';
 
 import { Sidebar } from '@/components/layout/sidebar';
-import { useAuth } from '@old-st/client-common';
+import { useAuth } from '@mma/client-common';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

@@ -11,7 +11,7 @@ screenshots become the acceptance references that `/migrate-build-ui` and `/migr
 and the discovered gaps (`SPEC-DELTAS.md`) feed `/migrate-to-specs --reconcile` to promote the
 draft spec (v0) to a verified spec (v1).
 
-> **You write into the SOURCE repo** (e.g. `d:\old-st-flow`), not the template. The only template
+> **You write into the SOURCE repo** (e.g. `d:\mma-flow`), not the template. The only template
 > artifact you touch is copying fixtures + screenshots into `{slug}-migration/`.
 
 **Read `.claude/skills/source-mock-data-system/SKILL.md` before Phase B — it is the authoritative
@@ -26,8 +26,8 @@ detail standard, and the capture/verify procedure.**
 
 Ask in a single structured message and wait for answers.
 
-1. **Source repo absolute path?** e.g. `d:\old-st-flow`. **Required.**
-2. **Source slug / migration folder?** e.g. `old-st-flow` → `old-st-flow-migration/`. Default: auto-detect the single `*-migration/` folder; if none, derive from the source folder name.
+1. **Source repo absolute path?** e.g. `d:\mma-flow`. **Required.**
+2. **Source slug / migration folder?** e.g. `mma-flow` → `mma-flow-migration/`. Default: auto-detect the single `*-migration/` folder; if none, derive from the source folder name.
 3. **Data layer?** `supabase` | `rest` | `graphql` | `firebase`. Default: **auto-detect** from the source `package.json` + `src/integrations/**` imports; confirm the detection with the developer.
 4. **Build tool / dev command?** Default: auto-detect (Vite → `vite --mode mock --port 8081`, Next → `next dev`, CRA → `react-scripts start`). Note: **use `npx`, not bun**, if the package manager binary is not on PATH.
 5. **Router?** Default: auto-detect (`react-router-dom`, Next pages/app, etc.) — used to enumerate routes for the manifest.

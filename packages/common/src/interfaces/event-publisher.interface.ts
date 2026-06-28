@@ -58,7 +58,7 @@ export interface EventPublishOptions {
  * - Uniform mock shape in tests: { publish: jest.fn() }
  *
  * Concrete implementations live in platform packages:
- *   @old-st/aws-sqs → SqsStandardEventPublisher, SqsFifoEventPublisher
+ *   @mma/aws-sqs → SqsStandardEventPublisher, SqsFifoEventPublisher
  */
 export interface IEventPublisher<T> {
   publish(event: T, options?: EventPublishOptions): Promise<void>;

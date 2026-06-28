@@ -12,9 +12,9 @@ interface EnvInfo {
 
 const DEFAULT: EnvInfo = {
   environment: 'dev',
-  projectName: 'old-st',
+  projectName: 'mma',
   awsAccountId: 'unknown',
-  namePrefix: 'old-st-dev',
+  namePrefix: 'mma-dev',
 };
 
 let cached: EnvInfo | null = null;

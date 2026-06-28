@@ -80,7 +80,7 @@ Paste this once per chat session:
 ```
 Please read docs/AI_ISSUE_CREATOR_PROMPT.md and docs/PROJECT_CONTEXT.md.
 
-Repository: Old-St-Labs/<your-repo>
+Repository: xnnx-c-xrxnxs/<your-repo>
 Ticket prefix: OST
 
 Then tell me you're ready to help create GitHub issues.
@@ -140,7 +140,7 @@ See [docs/AI_ISSUE_CREATOR_PROMPT.md](AI_ISSUE_CREATOR_PROMPT.md) — section "M
 Please read docs/AI_ISSUE_CREATOR_PROMPT.md and docs/PROJECT_CONTEXT.md.
 
 I'm in Batch CSV Mode.
-Repository: Old-St-Labs/<your-repo>
+Repository: xnnx-c-xrxnxs/<your-repo>
 Ticket prefix: OST
 
 Here is my CSV:

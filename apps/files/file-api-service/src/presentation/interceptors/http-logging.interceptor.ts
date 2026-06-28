@@ -15,7 +15,7 @@
 //   ERROR for 5xx (server faults)
 //
 // Placed in presentation/interceptors/ as a per-service copy (same convention
-// as JwtAuthGuard and @CurrentUser) — no framework import in @old-st/telemetry.
+// as JwtAuthGuard and @CurrentUser) — no framework import in @mma/telemetry.
 //
 // Registration (main.ts):
 //   app.useGlobalInterceptors(new HttpLoggingInterceptor());
@@ -29,7 +29,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import type { Request, Response } from 'express';
 import type { AuthenticatedUser } from '../decorators/current-user.decorator';
 

@@ -33,7 +33,7 @@ export default {
         <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);font-weight:700;font-size:.75rem;flex-shrink:0">2</span>
         <div>
           <strong>Convert SVG → Typed Icon Components</strong>
-          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Run SVGR · define <code>IIcon</code> interface · barrel-export from <code>@old-st/ui</code></p>
+          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Run SVGR · define <code>IIcon</code> interface · barrel-export from <code>@mma/ui</code></p>
         </div>
         <code style="white-space:nowrap;background:rgba(99,102,241,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/svg-to-icons</code>
 
@@ -62,7 +62,7 @@ export default {
       <li><strong>Export tokens from Figma</strong> — use the Figma Tokens / Variables plugin to export a JSON of all colour, spacing, radius, and typography values. Save as <code>packages/design-tokens/src/lib/tokens.ts</code>.</li>
       <li><strong>Define <code>lightColors</code> and <code>darkColors</code></strong> — two typed maps (see code panel). Mobile imports them directly; web consumes them via CSS variables.</li>
       <li><strong>Generate <code>tokens.css</code></strong> — run <code>pnpm tokens:gen</code>. This script writes <code>:root { --color-primary: ... }</code> and <code>.dark { --color-primary: ... }</code> blocks from the TypeScript maps.</li>
-      <li><strong>Import in <code>globals.css</code></strong> — add <code>@import "@old-st/design-tokens/tokens.css"</code> above the <code>@theme {}</code> block. Tailwind v4 reads the CSS variables and exposes them as utilities (<code>bg-primary</code>, <code>text-foreground</code>, etc.).</li>
+      <li><strong>Import in <code>globals.css</code></strong> — add <code>@import "@mma/design-tokens/tokens.css"</code> above the <code>@theme {}</code> block. Tailwind v4 reads the CSS variables and exposes them as utilities (<code>bg-primary</code>, <code>text-foreground</code>, etc.).</li>
       <li><strong>Verify</strong> — open any page; all <code>bg-*</code> and <code>text-*</code> utilities resolve without warnings. Toggle dark mode — colours swap without any JavaScript.</li>
     </ol>
     <p style="margin-top:8px"><strong>Rule:</strong> no raw hex or <code>rgb()</code> values anywhere in component files. If a colour is not in the token map, add it to the token map first — then use the utility class.</p>
@@ -73,7 +73,7 @@ export default {
       <li><strong>Export SVGs from Figma</strong> — select all icons on the icon frame, export at 1× as SVG (no effects, no extra wrappers). Name files in <code>kebab-case</code>: <code>arrow-right.svg</code>, <code>check-circle.svg</code>.</li>
       <li><strong>Run SVGR</strong> — <code>pnpm svgr --icon --typescript --out-dir packages/ui/src/components/icons/generated src/assets/icons/</code>. Each SVG becomes a <code>ArrowRightIcon.tsx</code> exporting a standard React component that accepts <code>className</code> and <code>size</code>.</li>
       <li><strong>Define the <code>IIcon</code> interface</strong> — a shared prop contract for all icon components (see code panel). This makes every icon interchangeable — a component that accepts <code>icon: IIcon</code> works with any icon from the set.</li>
-      <li><strong>Barrel-export from <code>packages/ui/src/components/icons/index.ts</code></strong> — one export per icon so consumers import precisely what they use: <code>import { ArrowRightIcon } from '@old-st/ui'</code>.</li>
+      <li><strong>Barrel-export from <code>packages/ui/src/components/icons/index.ts</code></strong> — one export per icon so consumers import precisely what they use: <code>import { ArrowRightIcon } from '@mma/ui'</code>.</li>
       <li><strong>Theme icons with <code>currentColor</code></strong> — SVGR replaces hard-coded fills with <code>fill="currentColor"</code> automatically. Set colour via <code>className="text-primary"</code> on the icon element — it inherits from the parent.</li>
     </ol>
     <p style="margin-top:8px"><strong>Rule:</strong> never copy SVG markup into a component. Never use <code>&lt;img src="icon.svg"&gt;</code> for UI icons — images are not themeable and not accessible without extra aria attributes.</p>
@@ -170,7 +170,7 @@ export type ColorToken = keyof typeof lightColors;
 
 // ── 3. apps/webapp/src/app/globals.css ───────────────────────────
 //
-// @import "@old-st/design-tokens/tokens.css";  // ← generated CSS vars
+// @import "@mma/design-tokens/tokens.css";  // ← generated CSS vars
 // @import "tailwindcss";
 //
 // @theme {
@@ -260,8 +260,8 @@ export { CheckCircleIcon } from './generated/CheckCircleIcon';
 // ... one line per icon — tree-shaken automatically
 
 // 4. Usage in a component — themed, typed, tree-shaken
-import type { IIcon } from '@old-st/ui';
-import { UserIcon } from '@old-st/ui';
+import type { IIcon } from '@mma/ui';
+import { UserIcon } from '@mma/ui';
 
 // Accept any icon from the set via the shared interface
 interface AvatarProps { icon?: IIcon; name: string }
@@ -282,7 +282,7 @@ function Avatar({ icon: Icon = UserIcon, name }: AvatarProps) {
     pitfalls: [
         "<strong>Don't write components before the token pipeline is live.</strong> The first component that uses <code>bg-[#4f46e5]</code> creates a precedent — every component after it will do the same. Tokens first, always.",
         "<strong>Don't regenerate tokens by hand.</strong> Run <code>pnpm tokens:gen</code> after any change to <code>tokens.ts</code>. The CSS file is generated output — it should never be edited directly.",
-        "<strong>Don't import <code>darkColors</code> in webapp components.</strong> Web components use Tailwind utilities (<code>dark:bg-card</code>); only mobile imports <code>darkColors</code> directly from <code>@old-st/design-tokens</code>. Importing the TS map in a web component bypasses the CSS variable layer.",
+        "<strong>Don't import <code>darkColors</code> in webapp components.</strong> Web components use Tailwind utilities (<code>dark:bg-card</code>); only mobile imports <code>darkColors</code> directly from <code>@mma/design-tokens</code>. Importing the TS map in a web component bypasses the CSS variable layer.",
         "<strong>Don't inline SVGR output as JSX in a component file.</strong> Run the CLI once, commit the generated files, then import from the icons barrel. Re-run the CLI whenever icons change — regenerating is idempotent.",
         "<strong>Don't implement Figma pages before all required primitives exist.</strong> The <code>/figma-page</code> workflow will flag missing primitives — complete those first via <code>/figma-component</code>, then continue. Skipping this produces page components that duplicate primitive logic.",
         "<strong>Don't accept raw hex values from <code>get_design_context</code> output.</strong> The design context returns loosely structured code as a reference. Every colour must map to a token utility. If a colour is not in the token map, add it before wiring the component.",

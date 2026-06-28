@@ -1,4 +1,4 @@
-import { Skeleton } from '@old-st/ui';
+import { Skeleton } from '@mma/ui';
 
 interface TableSkeletonProps {
   /** Number of placeholder rows to render. */

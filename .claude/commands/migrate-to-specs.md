@@ -26,7 +26,7 @@ You orchestrate the **translation phase** of a project migration. The `/migrate-
 
 Ask in a single structured message and wait for answers.
 
-1. **Migration root?** The extraction output folder (e.g. `old-st-flow-migration`). Default: auto-detect the single `*-migration/` folder at the workspace root; if more than one exists, ask.
+1. **Migration root?** The extraction output folder (e.g. `mma-flow-migration`). Default: auto-detect the single `*-migration/` folder at the workspace root; if more than one exists, ask.
 2. **Scope?**
    - **Full** _(default)_ — all domain cards → domain specs AND all route cards → page specs.
    - **Domains-only** — only `domains/domain-*.md` → domain specs (skip page specs).

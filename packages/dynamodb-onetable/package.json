@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/dynamodb-onetable",
+  "name": "@mma/dynamodb-onetable",
   "version": "1.0.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1030.0",
-    "@old-st/common": "workspace:*",
+    "@mma/common": "workspace:*",
     "dynamodb-onetable": "^2.0.0"
   },
   "devDependencies": {

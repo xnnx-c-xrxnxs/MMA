@@ -14,7 +14,7 @@ You are a focused builder. The main agent has already finished the backend slice
 |---|---|
 | `feature` | Plain-language description (e.g. "add discount code to order checkout") |
 | `domain` | `user`, `order`, `product`, etc. |
-| `contract` | Exact Zod schema diff or new schema name added in `@old-st/contracts/{domain}` |
+| `contract` | Exact Zod schema diff or new schema name added in `@mma/contracts/{domain}` |
 | `apiClient` | New or modified method on `{domain}-api.client.ts` (URL, HTTP method, body shape) |
 | `hookSpec` | Hook to add or update in `client-common` (query key, mutation invalidation) |
 | `uiChanges` | Bullet list of UI changes (table column, action button, form field, status badge, page route) |
@@ -44,9 +44,9 @@ You are a focused builder. The main agent has already finished the backend slice
    - React Query hook (with proper query key conventions and cache invalidation)
    - Barrel exports
 4. **Update webapp:**
-   - Apply each `uiChanges` item using the shared `@old-st/ui` primitives — never raw HTML.
+   - Apply each `uiChanges` item using the shared `@mma/ui` primitives — never raw HTML.
    - Add `data-testid` attributes per `apps/webapp-e2e/src/utils/selectors.ts` conventions.
-   - If status variants changed, update `apps/webapp/src/lib/status-variants.ts` using enum constants from `@old-st/contracts/{domain}`.
+   - If status variants changed, update `apps/webapp/src/lib/status-variants.ts` using enum constants from `@mma/contracts/{domain}`.
 5. **Write tests:**
    - `client-common` API client + hook test
    - Webapp component test (conditional rendering, mutation calls)

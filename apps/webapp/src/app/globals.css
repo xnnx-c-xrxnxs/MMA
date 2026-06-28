@@ -13,7 +13,7 @@
 @import "../../../../packages/design-tokens/src/lib/tokens.css";
 
 /* Tailwind v4 only auto-scans `apps/webapp/src/`. Workspace packages that
- * use cva() (e.g. @old-st/ui) are excluded by default — utility classes
+ * use cva() (e.g. @mma/ui) are excluded by default — utility classes
  * inside cva() strings would be silently dropped, causing primitives to
  * render as 0×0 boxes. The @source directive below opts the package in. */
 @source "../../../../packages/ui/src";

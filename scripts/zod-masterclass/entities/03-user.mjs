@@ -7,9 +7,9 @@ export default {
       title: 'Create Schema',
       subtitle: 'createUserSchema',
       code: `import { z } from 'zod';
-import { USER_ROLES } from '@old-st/user-domain';
+import { USER_ROLES } from '@mma/user-domain';
 
-// Re-export so the frontend doesn't import @old-st/user-domain directly
+// Re-export so the frontend doesn't import @mma/user-domain directly
 export const userRoleSchema = z.enum(USER_ROLES);
 
 export const createUserSchema = z.object({
@@ -42,7 +42,7 @@ export const listUsersByStatusQuerySchema = z.object({
     {
       title: 'Response Schema',
       subtitle: 'userResponseSchema',
-      code: `import { USER_STATUSES } from '@old-st/user-domain';
+      code: `import { USER_STATUSES } from '@mma/user-domain';
 export const userStatusSchema = z.enum(USER_STATUSES);
 
 export const userResponseSchema = z.object({
@@ -64,7 +64,7 @@ export type UserResponse = z.infer<typeof userResponseSchema>;`,
     <h4>Enums from domain constants — never inline strings</h4>
     <p>The entity uses <code>UserStatusEnum.PENDING</code> for status comparisons (Golden Rule #8). The schema mirrors that:</p>
     <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>// ✅ Correct — single source of truth
-import { USER_STATUSES } from '@old-st/user-domain';
+import { USER_STATUSES } from '@mma/user-domain';
 const userStatusSchema = z.enum(USER_STATUSES);
 
 // ❌ Wrong — duplicates the source of truth

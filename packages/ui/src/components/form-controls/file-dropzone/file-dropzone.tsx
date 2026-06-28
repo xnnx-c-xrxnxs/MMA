@@ -23,7 +23,7 @@ export interface FileDropzoneProps
 
 /**
  * Accessible file picker with drag-and-drop. Calls `onFileSelected` with the
- * picked `File`. Pair with `useFileUpload()` from `@old-st/client-common` to
+ * picked `File`. Pair with `useFileUpload()` from `@mma/client-common` to
  * upload the file directly to S3 via a presigned URL.
  */
 export const FileDropzone = React.forwardRef<HTMLDivElement, FileDropzoneProps>(

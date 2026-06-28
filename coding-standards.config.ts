@@ -26,7 +26,7 @@ export interface CodingStandardsConfig {
     'event-handler-service-exists': boolean;
     /** Every service must have a DomainExceptionFilter (A9) */
     'domain-exception-filter-exists': boolean;
-    /** Every application service must use createLogger() from @old-st/telemetry (B35) */
+    /** Every application service must use createLogger() from @mma/telemetry (B35) */
     'app-service-has-logger': boolean;
     /** Controllers must extract userId/email/userRole via @CurrentUser() — never from body/query/path (B45 — Golden Rule #45) */
     'no-userId-in-controller-input': boolean;
@@ -34,7 +34,7 @@ export interface CodingStandardsConfig {
     'gateway-public-routes-sync': boolean;
     /** Every prompt file in .claude/commands/ must have a row in CLAUDE.md §11.1 Workflow Entry Points decision tree */
     'prompt-entry-point-sync': boolean;
-    /** Status enum values rendered in JSX must be wrapped in a format*Status() helper from @old-st/client-common — never raw (Golden Rule #22a) */
+    /** Status enum values rendered in JSX must be wrapped in a format*Status() helper from @mma/client-common — never raw (Golden Rule #22a) */
     'no-raw-status-in-jsx': boolean;
     /** No SCSS / Sass / styled-components / Emotion files anywhere in the workspace — styling is Tailwind utilities + cva only (Golden Rule #23j / fe-design-tokens skill) */
     'no-scss-files': boolean;

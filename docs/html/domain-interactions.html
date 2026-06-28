@@ -298,7 +298,7 @@ flowchart TD
 
       <h4>Key Rules</h4>
       <ul>
-        <li>The consumer imports event schemas from <code>@old-st/contracts/product</code> only — <strong>never</strong> from <code>@old-st/product-domain</code>.</li>
+        <li>The consumer imports event schemas from <code>@mma/contracts/product</code> only — <strong>never</strong> from <code>@mma/product-domain</code>.</li>
         <li>Handlers write to the consuming domain's own repository — never to the publishing domain's data.</li>
         <li>Fire-and-forget: the publisher returns immediately after queuing the message.</li>
       </ul>
@@ -344,7 +344,7 @@ flowchart TD
 
       <h4>Key Difference from Cross-Domain</h4>
       <ul>
-        <li>Both publisher and consumer import from <code>@old-st/contracts/user</code> <strong>and</strong> <code>@old-st/user-domain</code> — no ACL boundary needed since they're in the same bounded context.</li>
+        <li>Both publisher and consumer import from <code>@mma/contracts/user</code> <strong>and</strong> <code>@mma/user-domain</code> — no ACL boundary needed since they're in the same bounded context.</li>
       </ul>
 
       <!-- ──────────────────────────────────────────── -->

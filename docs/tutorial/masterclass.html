@@ -1812,7 +1812,7 @@ GET /api/files/presigned-download/{key}
     <!-- 7.1 Data Flow -->
     <div class="topic fade-in">
       <h3>The Frontend Data Flow</h3>
-      <p>Frontend follows a strict layered architecture. Each layer has a single responsibility. The data-access layer (<code>@old-st/client-common</code>) is <strong>shared between webapp and mobile</strong>.</p>
+      <p>Frontend follows a strict layered architecture. Each layer has a single responsibility. The data-access layer (<code>@mma/client-common</code>) is <strong>shared between webapp and mobile</strong>.</p>
 
       <table>
         <thead><tr><th>Layer</th><th>Responsibility</th><th>Example</th></tr></thead>
@@ -1821,13 +1821,13 @@ GET /api/files/presigned-download/{key}
           <tr><td>🧩 <strong>Domain Component</strong></td><td>Domain-specific UI (tables, forms, action menus)</td><td><code>components/users/users-table.tsx</code></td></tr>
           <tr><td>🪝 <strong>React Query Hook</strong></td><td>Data fetching, caching, cache invalidation</td><td><code>hooks/use-users.ts</code></td></tr>
           <tr><td>📡 <strong>API Client</strong></td><td>Typed fetch + Zod response parsing</td><td><code>api-clients/user-api.client.ts</code></td></tr>
-          <tr><td>🎨 <strong>UI Primitive</strong></td><td>Reusable components (Badge, Button, Table&hellip;)</td><td><code>@old-st/ui</code></td></tr>
+          <tr><td>🎨 <strong>UI Primitive</strong></td><td>Reusable components (Badge, Button, Table&hellip;)</td><td><code>@mma/ui</code></td></tr>
         </tbody>
       </table>
 
       <div class="callout">
         <div class="callout-title">The Shared Data Layer</div>
-        <p><code>@old-st/client-common</code> contains API clients + React Query hooks. Both the <strong>webapp</strong> and <strong>mobile app</strong> import from this same package. Write once, use on both platforms.</p>
+        <p><code>@mma/client-common</code> contains API clients + React Query hooks. Both the <strong>webapp</strong> and <strong>mobile app</strong> import from this same package. Write once, use on both platforms.</p>
       </div>
     </div>
 
@@ -1846,7 +1846,7 @@ GET /api/files/presigned-download/{key}
 in client-common.
 - Methods: listByStatus, create, delete, activate,
   deactivate, verifyEmail
-- Use Zod schemas from @old-st/contracts/user for response parsing
+- Use Zod schemas from @mma/contracts/user for response parsing
 - Hooks: useUsersByStatus (query), useCreateUser (mutation with
   cache invalidation), useDeleteUser, useActivateUser, etc.</code></pre>
       </div>
@@ -1854,8 +1854,8 @@ in client-common.
       <h4>AI Output &mdash; API Client (typed fetch + Zod)</h4>
       <pre><code>import { apiRequest, apiRequestVoid } from './base-api.client';
 import { userResponseSchema, type CreateUserInput,
-         type UserResponse } from '@old-st/contracts/user';
-import { paginatedResponseSchema } from '@old-st/contracts/common';
+         type UserResponse } from '@mma/contracts/user';
+import { paginatedResponseSchema } from '@mma/contracts/common';
 
 const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
 const baseUrl = () =&gt; getApiConfig().userApiUrl;
@@ -1931,7 +1931,7 @@ export function useDeleteUser() {
         </div>
         <div class="card">
           <h4>📦 Shared by Web + Mobile</h4>
-          <p>These hooks and clients live in <code>@old-st/client-common</code>. Both the Next.js webapp and Expo mobile app import them. Zero duplication.</p>
+          <p>These hooks and clients live in <code>@mma/client-common</code>. Both the Next.js webapp and Expo mobile app import them. Zero duplication.</p>
         </div>
       </div>
 
@@ -1962,7 +1962,7 @@ export function useDeleteUser() {
         <pre><code>Create a Users page for the webapp with:
 - Status filter dropdown using USER_STATUSES from contracts
 - Create user form toggle
-- UsersTable component: @old-st/ui Table primitives,
+- UsersTable component: @mma/ui Table primitives,
   status badges using userStatusVariant, action column
 - UserActions: conditional buttons per user status
   (Verify for PENDING, Activate for INACTIVE, etc.)</code></pre>
@@ -2073,7 +2073,7 @@ export default function UsersPage() {
         <div class="callout-title">What AI Got Right</div>
         <ul>
           <li><strong>Thin page</strong> &mdash; no table markup or form logic in the page (Rule #19)</li>
-          <li><strong>Shared UI primitives</strong> from <code>@old-st/ui</code> &mdash; no raw <code>&lt;table&gt;</code> or <code>&lt;button&gt;</code> (Rule #21)</li>
+          <li><strong>Shared UI primitives</strong> from <code>@mma/ui</code> &mdash; no raw <code>&lt;table&gt;</code> or <code>&lt;button&gt;</code> (Rule #21)</li>
           <li><strong>Enum constants</strong> for status comparison (<code>UserStatusEnum.PENDING</code>) &mdash; not strings (Rule #22)</li>
           <li><strong>Conditional rendering by status</strong> &mdash; business-driven UI from domain contracts</li>
           <li><strong>Mutation hooks with auto-invalidation</strong> from the shared data layer</li>
@@ -2090,11 +2090,11 @@ export default function UsersPage() {
         <span class="prompt-label good">Spec-Driven</span>
         <pre><code>Add userStatusVariant mapping for the webapp badge component.
 Map each UserStatusEnum value to a Badge variant.
-Use enum constants from @old-st/contracts/user — no strings.</code></pre>
+Use enum constants from @mma/contracts/user — no strings.</code></pre>
       </div>
 
       <h4>AI Output</h4>
-      <pre><code>import { UserStatusEnum } from '@old-st/contracts/user';
+      <pre><code>import { UserStatusEnum } from '@mma/contracts/user';
 
 type BadgeVariant = 'default' | 'secondary' | 'destructive'
                   | 'outline' | 'success' | 'warning';
@@ -2162,7 +2162,7 @@ export function userStatusVariant(status: string): BadgeVariant {
           <tr><td>🧩 <strong>Domain Component</strong></td><td>Native lists, cards, detail views</td><td>Mobile only</td></tr>
           <tr><td>🪝 <strong>React Query Hook</strong></td><td>Data fetch, cache, invalidation</td><td>✅ <strong>Shared</strong> (<code>client-common</code>)</td></tr>
           <tr><td>📡 <strong>API Client</strong></td><td>Typed fetch + Zod parsing</td><td>✅ <strong>Shared</strong> (<code>client-common</code>)</td></tr>
-          <tr><td>🎨 <strong>UI Primitive</strong></td><td>React Native components (Badge, Card, Button)</td><td>Mobile only (<code>@old-st/mobile-ui</code>)</td></tr>
+          <tr><td>🎨 <strong>UI Primitive</strong></td><td>React Native components (Badge, Card, Button)</td><td>Mobile only (<code>@mma/mobile-ui</code>)</td></tr>
         </tbody>
       </table>
 
@@ -2185,7 +2185,7 @@ export function userStatusVariant(status: string): BadgeVariant {
         <span class="prompt-label good">Spec-Driven</span>
         <pre><code>Create a Users tab screen for the Expo mobile app.
 - Filter buttons for status (ALL + USER_STATUSES from contracts)
-- Use useUsersByStatus hook from @old-st/client-common
+- Use useUsersByStatus hook from @mma/client-common
 - UsersList component: FlatList with Card items
 - Each item shows name, email, status badge, role
 - Navigate to /users/[userId] on press
@@ -2196,9 +2196,9 @@ export function userStatusVariant(status: string): BadgeVariant {
       <pre><code>import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button } from '@old-st/mobile-ui';
-import { useUsersByStatus } from '@old-st/client-common';
-import { USER_STATUSES } from '@old-st/contracts/user';
+import { Text, Button } from '@mma/mobile-ui';
+import { useUsersByStatus } from '@mma/client-common';
+import { USER_STATUSES } from '@mma/contracts/user';
 import { UsersList } from '../../components/users/users-list';
 
 const statuses = ['ALL', ...USER_STATUSES];
@@ -2273,7 +2273,7 @@ const styles = StyleSheet.create({
         <div class="callout-title">What AI Got Right</div>
         <ul>
           <li><strong>Same thin-orchestrator pattern</strong> as webapp &mdash; screen only wires state + hooks + components (Rule #24)</li>
-          <li><strong>Shared hook</strong> <code>useUsersByStatus</code> from <code>@old-st/client-common</code> &mdash; same code as webapp (Rule #25)</li>
+          <li><strong>Shared hook</strong> <code>useUsersByStatus</code> from <code>@mma/client-common</code> &mdash; same code as webapp (Rule #25)</li>
           <li><strong>Mobile-ui primitives</strong> (Badge, Card, Text, Button) &mdash; not raw View/Text (Rule #26)</li>
           <li><strong>StyleSheet.create</strong> for styles (Rule #28)</li>
           <li><strong>Expo Router navigation</strong> <code>router.push()</code> with typed route segments</li>
@@ -2292,7 +2292,7 @@ const styles = StyleSheet.create({
       <h4>The Prompt</h4>
       <div class="prompt-example">
         <span class="prompt-label good">Spec-Driven</span>
-        <pre><code>Add a Badge component to @old-st/mobile-ui.
+        <pre><code>Add a Badge component to @mma/mobile-ui.
 - Variants: default, secondary, destructive, outline,
   success, warning
 - Use design tokens from lib/theme.ts for colors
@@ -2338,7 +2338,7 @@ const variantStyles: Record&lt;BadgeVariant,
       <h4>Web vs Mobile &mdash; Same Concept, Different Implementation</h4>
       <div class="vs-grid">
         <div class="vs-side">
-          <span class="vs-label">🌐 Web Badge (<code>@old-st/ui</code>)</span>
+          <span class="vs-label">🌐 Web Badge (<code>@mma/ui</code>)</span>
           <pre style="font-size:0.8rem;"><code>// class-variance-authority
 const badgeVariants = cva(
   'inline-flex items-center ...',
@@ -2353,7 +2353,7 @@ const badgeVariants = cva(
         </div>
         <div class="vs-divider">vs</div>
         <div class="vs-side">
-          <span class="vs-label">📱 Mobile Badge (<code>@old-st/mobile-ui</code>)</span>
+          <span class="vs-label">📱 Mobile Badge (<code>@mma/mobile-ui</code>)</span>
           <pre style="font-size:0.8rem;"><code>// Variant record + theme tokens
 const variantStyles: Record&lt;
   BadgeVariant,
@@ -2383,7 +2383,7 @@ const variantStyles: Record&lt;
       <table>
         <thead><tr><th></th><th>Webapp</th><th>Mobile</th></tr></thead>
         <tbody>
-          <tr><td><strong>Hook import</strong></td><td><code>import { useUsersByStatus } from '@old-st/client-common';</code></td><td><code>import { useUsersByStatus } from '@old-st/client-common';</code></td></tr>
+          <tr><td><strong>Hook import</strong></td><td><code>import { useUsersByStatus } from '@mma/client-common';</code></td><td><code>import { useUsersByStatus } from '@mma/client-common';</code></td></tr>
           <tr><td><strong>Hook usage</strong></td><td><code>const { data, isLoading } = useUsersByStatus({ userStatus });</code></td><td><code>const { data, isLoading } = useUsersByStatus({ userStatus });</code></td></tr>
           <tr><td><strong>API client</strong></td><td colspan="2" style="text-align:center;"><strong>Identical</strong> &mdash; same <code>userApiClient.listByStatus()</code></td></tr>
           <tr><td><strong>Zod parsing</strong></td><td colspan="2" style="text-align:center;"><strong>Identical</strong> &mdash; same schema validation</td></tr>
@@ -2393,7 +2393,7 @@ const variantStyles: Record&lt;
 
       <div class="callout success">
         <div class="callout-title">Zero Duplication</div>
-        <p>The webapp team builds the API client + hooks in <code>@old-st/client-common</code>. The mobile team uses them <em>as-is</em>. They only write the native UI layer: screens (<code>Expo Router</code>), components (<code>FlatList</code>, <code>Card</code>), and mobile-specific styles (<code>StyleSheet.create</code>).</p>
+        <p>The webapp team builds the API client + hooks in <code>@mma/client-common</code>. The mobile team uses them <em>as-is</em>. They only write the native UI layer: screens (<code>Expo Router</code>), components (<code>FlatList</code>, <code>Card</code>), and mobile-specific styles (<code>StyleSheet.create</code>).</p>
       </div>
     </div>
 
@@ -2462,7 +2462,7 @@ const variantStyles: Record&lt;
         <div class="card">
           <h4>📁 Internal Resources</h4>
           <ul>
-            <li>Reference architecture: <code>old-st-template</code> repo</li>
+            <li>Reference architecture: <code>mma</code> repo</li>
             <li>AI workflow docs: <code>docs/ai-workflows.html</code></li>
             <li>40 skills: <code>.claude/skills/</code></li>
             <li>Testing guide: <code>docs/testing.md</code></li>

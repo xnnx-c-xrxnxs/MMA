@@ -63,16 +63,16 @@ const mockPush = jest.fn();
 
 ### Mocking React Query Hooks
 
-Same pattern as webapp — mock `@old-st/client-common`:
+Same pattern as webapp — mock `@mma/client-common`:
 
 ```typescript
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useUser: jest.fn(),
   useActivateUser: () => ({ mutate: mockMutate, isPending: false }),
   useDeactivateUser: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
-const { useUser } = jest.requireMock('@old-st/client-common');
+const { useUser } = jest.requireMock('@mma/client-common');
 
 // In test:
 useUser.mockReturnValue({ data: mockUserData, isLoading: false });
@@ -99,7 +99,7 @@ Identical pattern to webapp — pure functions, use `it.each`:
 
 ```typescript
 import { userStatusVariant } from './status-variants';
-import { EntityStatusEnum } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum } from '@mma/contracts/{domain}';
 
 describe('userStatusVariant', () => {
   it.each([
@@ -123,7 +123,7 @@ List components use `FlatList` and navigate on press.
 ```typescript
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { UsersList } from './users-list';
-import type { EntityResponse } from '@old-st/contracts/{domain}';
+import type { EntityResponse } from '@mma/contracts/{domain}';
 
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
@@ -187,7 +187,7 @@ Detail screens fetch an entity and show conditional action buttons based on stat
 ```typescript
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import UserDetailScreen from './[userId]';
-import { EntityStatusEnum } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum } from '@mma/contracts/{domain}';
 
 const mockMutate = jest.fn();
 
@@ -196,13 +196,13 @@ jest.mock('expo-router', () => ({
   Stack: { Screen: () => null },
 }));
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useUser: jest.fn(),
   useActivateUser: () => ({ mutate: mockMutate, isPending: false }),
   useDeactivateUser: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
-const { useUser } = jest.requireMock('@old-st/client-common');
+const { useUser } = jest.requireMock('@mma/client-common');
 
 describe('UserDetailScreen', () => {
   beforeEach(() => jest.clearAllMocks());

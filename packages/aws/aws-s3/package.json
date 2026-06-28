@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/aws-s3",
+  "name": "@mma/aws-s3",
   "version": "1.0.0",
   "description": "S3 file storage abstraction — presigned URL generation for uploads and downloads.",
   "main": "src/index.ts",

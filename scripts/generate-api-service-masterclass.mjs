@@ -694,7 +694,7 @@ ${sectionHeader('04', '📦', 'Repository Interface & DynamoDB Implementation', 
 <h3>Repository Interface (Port)</h3>
 ${codeBlock(`// packages/user-domain/src/application/interfaces/user-repository.interface.ts
 
-import { IPaginatedResponse } from '@old-st/common';
+import { IPaginatedResponse } from '@mma/common';
 import { UserRole, UserStatus } from '../../domain/constants';
 import { User } from '../../domain/entities';
 
@@ -734,8 +734,8 @@ ${callout('info', 'Why abstract class instead of interface?', `<p>TypeScript int
 ${codeBlock(`// packages/user-domain/src/infrastructure/repositories/dynamo-user.repository.ts
 
 import { Table } from 'dynamodb-onetable';
-import { IPaginatedResponse } from '@old-st/common';
-import { pageRecordHandler } from '@old-st/dynamodb-onetable';
+import { IPaginatedResponse } from '@mma/common';
+import { pageRecordHandler } from '@mma/dynamodb-onetable';
 import { IUserRepository } from '../../application/interfaces/user-repository.interface';
 import { User } from '../../domain/entities';
 import { UserDataType } from '../schemas/UserSchema';
@@ -832,7 +832,7 @@ ${codeBlock(`// apps/users/user-api-service/src/infrastructure/config/dynamodb.c
 
 import { Table } from 'dynamodb-onetable';
 import type { Dynamo } from 'dynamodb-onetable/Dynamo';
-import { createDynamoLocalClient, createAWSClient, createTable } from '@old-st/dynamodb-onetable';
+import { createDynamoLocalClient, createAWSClient, createTable } from '@mma/dynamodb-onetable';
 
 export class DynamoDBConfig {
   private static client: Dynamo;
@@ -873,7 +873,7 @@ ${sectionHeader('05', '⚙️', 'Use Cases — Single Responsibility Operations'
 <h3>CreateUser Use Case</h3>
 ${codeBlock(`// packages/user-domain/src/application/use-cases/create-user/create-user.use-case.ts
 
-import { IUseCase } from '@old-st/common';
+import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { UserRole, UserRoleEnum } from '../../../domain/constants';
@@ -914,7 +914,7 @@ export class CreateUserUseCase implements IUseCase<CreateUserInput, User> {
 <h3>CreateOrder Use Case — ACL + Event Publishing</h3>
 ${codeBlock(`// packages/order-domain/src/application/use-cases/create-order/create-order.use-case.ts
 
-import { IUseCase, IEventPublisher } from '@old-st/common';
+import { IUseCase, IEventPublisher } from '@mma/common';
 import { IOrderRepository } from '../../interfaces/order-repository.interface';
 import { ICustomerValidator } from '../../interfaces/customer-validator.interface';
 import { Order } from '../../../domain/entities/order.entity';
@@ -971,7 +971,7 @@ ${callout('info', 'Why does the Use Case do event publishing?', `<p>Event publis
 <h3>ActivateUser Use Case — State Transition</h3>
 ${codeBlock(`// packages/user-domain/src/application/use-cases/activate-user/activate-user.use-case.ts
 
-import { IUseCase } from '@old-st/common';
+import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { UserNotFoundError } from '../../exceptions';
@@ -1000,7 +1000,7 @@ export class ActivateUserUseCase implements IUseCase<ActivateUserInput, User> {
 <h3>ListUsersByStatus Use Case — Cursor Pagination</h3>
 ${codeBlock(`// packages/user-domain/src/application/use-cases/list-users-by-status/list-users-by-status.use-case.ts
 
-import { IUseCase, IPaginatedResponse } from '@old-st/common';
+import { IUseCase, IPaginatedResponse } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { UserStatus } from '../../../domain/constants';
@@ -1039,14 +1039,14 @@ function sectionContracts() {
   return `
 <section class="section" id="contracts" data-section="contracts">
 <div class="section-inner fade-up">
-${sectionHeader('06', '📋', 'Contracts — Zod Schemas & TypeScript Types', 'Each domain has its own contracts package. Subpath imports only. Never import from the bare @old-st/contracts root.')}
+${sectionHeader('06', '📋', 'Contracts — Zod Schemas & TypeScript Types', 'Each domain has its own contracts package. Subpath imports only. Never import from the bare @mma/contracts root.')}
 
 <div class="topic">
 <h3>User Contracts Package</h3>
 ${codeBlock(`// packages/contracts/user/src/schemas.ts
 
 import { z } from 'zod';
-import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } from '@old-st/user-domain';
+import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } from '@mma/user-domain';
 
 // Re-export domain constants so consumers don't need both packages
 export { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
@@ -1089,7 +1089,7 @@ export type UserResponse          = z.infer<typeof userResponseSchema>;
 export type CreateUserInput       = z.infer<typeof createUserSchema>;
 export type UpdateUserInput       = z.infer<typeof updateUserSchema>;`, 'packages/contracts/user/src/schemas.ts')}
 
-${callout('danger', '⛔ Import Rule — Always use domain-scoped subpaths', `<p>✅ <code>import { createUserSchema } from '@old-st/contracts/user'</code><br>❌ <code>import { createUserSchema } from '@old-st/contracts'</code></p><p>Each domain sub-package compiles independently. A type error in the order contracts cannot break the user service. Golden Rule #11.</p>`)}
+${callout('danger', '⛔ Import Rule — Always use domain-scoped subpaths', `<p>✅ <code>import { createUserSchema } from '@mma/contracts/user'</code><br>❌ <code>import { createUserSchema } from '@mma/contracts'</code></p><p>Each domain sub-package compiles independently. A type error in the order contracts cannot break the user service. Golden Rule #11.</p>`)}
 
 <h3>Common Pagination Types</h3>
 ${codeBlock(`// packages/contracts/common/src/pagination.ts
@@ -1134,21 +1134,21 @@ ${sectionHeader('07', '🔀', 'Application Service', 'Orchestrates use cases, tr
 ${codeBlock(`// apps/users/user-api-service/src/application/services/user-application.service.ts
 
 import { Injectable, Inject } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import { IPaginatedResponse, IEventPublisher } from '@old-st/common';
+import { createLogger } from '@mma/telemetry';
+import { IPaginatedResponse, IEventPublisher } from '@mma/common';
 import {
   userResponseSchema,
   CreateUserInput, UpdateUserInput, UserResponse,
   ListUsersByStatusInput, UserDomainEvent,
-} from '@old-st/contracts/user';
-import { PaginatedResponse } from '@old-st/contracts/common';
+} from '@mma/contracts/user';
+import { PaginatedResponse } from '@mma/contracts/common';
 import {
   User,
   CreateUserUseCase, GetUserByIdUseCase, GetUserByEmailUseCase,
   UpdateUserProfileUseCase, DeleteUserUseCase,
   ActivateUserUseCase, DeactivateUserUseCase, VerifyUserEmailUseCase,
   UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
-} from '@old-st/user-domain';
+} from '@mma/user-domain';
 
 // Module-level singleton logger — NOT a class property (Golden Rule #35)
 const logger = createLogger('user-api-service');
@@ -1259,7 +1259,7 @@ ${codeBlock(`// apps/users/user-api-service/src/presentation/controllers/user.co
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { z } from 'zod';
-import { createUserSchema, updateUserSchema, userStatusSchema, CreateUserInput, UpdateUserInput } from '@old-st/contracts/user';
+import { createUserSchema, updateUserSchema, userStatusSchema, CreateUserInput, UpdateUserInput } from '@mma/contracts/user';
 import { UserApplicationService } from '../../application/services/user-application.service';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import { CurrentUser } from '../decorators/current-user.decorator';
@@ -1411,9 +1411,9 @@ import {
   UpdateUserProfileUseCase, DeleteUserUseCase,
   ActivateUserUseCase, DeactivateUserUseCase, VerifyUserEmailUseCase,
   UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
-} from '@old-st/user-domain';
-import { DynamoUserRepository, UserSchema } from '@old-st/user-domain/infrastructure';
-import { SqsFifoEventPublisher, createLocalSqsClient, createAwsSqsClient } from '@old-st/aws-sqs';
+} from '@mma/user-domain';
+import { DynamoUserRepository, UserSchema } from '@mma/user-domain/infrastructure';
+import { SqsFifoEventPublisher, createLocalSqsClient, createAwsSqsClient } from '@mma/aws-sqs';
 import { Table } from 'dynamodb-onetable';
 import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
 import { UserApplicationService } from '../application/services/user-application.service';
@@ -1512,7 +1512,7 @@ ${twoCol(
 ${codeBlock(`// apps/users/user-api-service/src/presentation/filters/domain-exception.filter.ts
 
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import { Response } from 'express';
 import {
   UserNotFoundError, EmailAlreadyExistsError, InvalidEmailFormatError,
@@ -1520,7 +1520,7 @@ import {
   CannotActivateNonPendingUserError, CannotActivateUnverifiedEmailError,
   CannotDeactivateDeletedUserError, UserAlreadyDeletedError,
   CannotUpdateDeletedUserError, InvalidInputError,
-} from '@old-st/user-domain';
+} from '@mma/user-domain';
 
 const logger = createLogger('user-api-service');
 
@@ -1656,9 +1656,9 @@ ${codeBlock(`// apps/orders/order-api-service/src/infrastructure/clients/custome
 import { Injectable, HttpException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { getOutboundHeaders } from '@old-st/telemetry'; // forwards correlation + Authorization
-import { ICustomerValidator } from '@old-st/order-domain';
-import { CustomerNotFoundError, CustomerNotActiveError } from '@old-st/order-domain';
+import { getOutboundHeaders } from '@mma/telemetry'; // forwards correlation + Authorization
+import { ICustomerValidator } from '@mma/order-domain';
+import { CustomerNotFoundError, CustomerNotActiveError } from '@mma/order-domain';
 
 // The adapter — in the ORDER service infrastructure (not the user-domain)
 @Injectable()
@@ -1702,7 +1702,7 @@ await this.eventPublisher.publish({
 
 // Consuming side event schema (in contracts/order/src/event-schemas.ts)
 import { z } from 'zod';
-import { OrderEventTypeEnum } from '@old-st/order-domain';
+import { OrderEventTypeEnum } from '@mma/order-domain';
 
 export const orderCreatedEventSchema = z.object({
   eventType:  z.literal(OrderEventTypeEnum.ORDER_CREATED),
@@ -1725,7 +1725,7 @@ export const orderDomainEventSchema = z.discriminatedUnion('eventType', [
   orderCancelledEventSchema,
 ]);`, 'SQS event publishing + schema')}
 
-${callout('warning', 'Cross-domain import rule', `<p>A service consuming events from another bounded context imports event schemas from <code>@old-st/contracts/{publishing-domain}</code>. It must <strong>never</strong> import from <code>@old-st/{publishing-domain}-domain</code> (Golden Rule #15).</p>`)}
+${callout('warning', 'Cross-domain import rule', `<p>A service consuming events from another bounded context imports event schemas from <code>@mma/contracts/{publishing-domain}</code>. It must <strong>never</strong> import from <code>@mma/{publishing-domain}-domain</code> (Golden Rule #15).</p>`)}
 </div>
 
 <div class="topic">

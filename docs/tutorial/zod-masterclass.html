@@ -800,9 +800,9 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="subtitle">createUserSchema</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { USER_ROLES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+<span class="kw">import</span> { USER_ROLES } <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 
-<span class="com">// Re-export so the frontend doesn't import @old-st/user-domain directly</span>
+<span class="com">// Re-export so the frontend doesn't import @mma/user-domain directly</span>
 <span class="kw">export</span> <span class="kw">const</span> userRoleSchema = z.<span class="kw">enum</span>(USER_ROLES);
 
 <span class="kw">export</span> <span class="kw">const</span> createUserSchema = z.object({
@@ -841,7 +841,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Response Schema</span>
     <span class="subtitle">userResponseSchema</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 <span class="kw">export</span> <span class="kw">const</span> userStatusSchema = z.<span class="kw">enum</span>(USER_STATUSES);
 
 <span class="kw">export</span> <span class="kw">const</span> userResponseSchema = z.object({
@@ -864,7 +864,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <h4>Enums from domain constants — never inline strings</h4>
     <p>The entity uses <code>UserStatusEnum.PENDING</code> for status comparisons (Golden Rule #8). The schema mirrors that:</p>
     <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>// ✅ Correct — single source of truth
-import { USER_STATUSES } from '@old-st/user-domain';
+import { USER_STATUSES } from '@mma/user-domain';
 const userStatusSchema = z.enum(USER_STATUSES);
 
 // ❌ Wrong — duplicates the source of truth
@@ -1001,7 +1001,7 @@ const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</cod
     <span class="subtitle">createProductSchema (with status)</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { PRODUCT_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/product-domain'</span>;
+<span class="kw">import</span> { PRODUCT_STATUSES } <span class="kw">from</span> <span class="str">'@mma/product-domain'</span>;
 
 <span class="kw">export</span> <span class="kw">const</span> productStatusSchema = z.<span class="kw">enum</span>(PRODUCT_STATUSES);
 
@@ -1623,7 +1623,7 @@ const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</cod
     <span class="title">Response Schema</span>
     <span class="subtitle">shipmentResponseSchema (event log)</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { SHIPMENT_STATUSES, SHIPMENT_EVENT_TYPES } <span class="kw">from</span> <span class="str">'@old-st/shipping-domain'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { SHIPMENT_STATUSES, SHIPMENT_EVENT_TYPES } <span class="kw">from</span> <span class="str">'@mma/shipping-domain'</span>;
 
 <span class="kw">const</span> shipmentEventSchema = z.object({
   <span class="kw">type</span>:       z.<span class="kw">enum</span>(SHIPMENT_EVENT_TYPES),  <span class="com">// 'PICKED_UP' | 'IN_TRANSIT' | ...</span>
@@ -1820,7 +1820,7 @@ const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</cod
     <span class="subtitle">createOrderSchema (with optional coupon + .refine)</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { PAYMENT_METHODS } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+<span class="kw">import</span> { PAYMENT_METHODS } <span class="kw">from</span> <span class="str">'@mma/order-domain'</span>;
 
 <span class="kw">export</span> <span class="kw">const</span> couponInputSchema = z.object({
   code:    z.<span class="ty">string</span>().regex(/^[A-Z0-<span class="num">9</span>]{<span class="num">4</span>,<span class="num">16</span>}$/),  <span class="com">// uppercase alphanumeric</span>
@@ -1871,7 +1871,7 @@ const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</cod
     <span class="title">Response Schema</span>
     <span class="subtitle">orderResponseSchema (full aggregate)</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { ORDER_STATUSES, PAYMENT_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { ORDER_STATUSES, PAYMENT_STATUSES } <span class="kw">from</span> <span class="str">'@mma/order-domain'</span>;
 
 <span class="kw">const</span> couponResponseSchema = z.object({
   code: z.<span class="ty">string</span>(), percent: z.<span class="ty">number</span>().int(),
@@ -2073,7 +2073,7 @@ const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</cod
     <span class="subtitle">createSubscriptionSchema</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { SUBSCRIPTION_PLANS } <span class="kw">from</span> <span class="str">'@old-st/billing-domain'</span>;
+<span class="kw">import</span> { SUBSCRIPTION_PLANS } <span class="kw">from</span> <span class="str">'@mma/billing-domain'</span>;
 
 <span class="kw">export</span> <span class="kw">const</span> planSchema = z.<span class="kw">enum</span>(SUBSCRIPTION_PLANS);  <span class="com">// 'FREE' | 'PRO' | 'ENTERPRISE'</span>
 
@@ -2227,7 +2227,7 @@ schema.extend({ age: z.<span class="ty">number</span>() })</code></pre></div>
 z.array(itemSchema).min(<span class="num">1</span>)   <span class="com">// non-empty</span>
 z.array(itemSchema).max(<span class="num">50</span>)
 z.tuple([z.<span class="ty">string</span>(), z.<span class="ty">number</span>()])</code></pre></div>
-<div class="cheat-card"><h4>Enums (from domain)</h4><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+<div class="cheat-card"><h4>Enums (from domain)</h4><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 
 z.<span class="kw">enum</span>(USER_STATUSES)        <span class="com">// 'PENDING' | 'ACTIVE' | ...</span>
 <span class="com">// NOT z.enum(['PENDING','ACTIVE',...])  &lt;- duplicates source of truth</span></code></pre></div>

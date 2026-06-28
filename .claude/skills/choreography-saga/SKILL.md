@@ -293,7 +293,7 @@ export class OrderCreatedHandler implements IEventHandler<OrderCreatedPayload> {
 ```
 
 **Rules:**
-- The responder imports the request event schema from `@old-st/contracts/{initiating-domain}`.
+- The responder imports the request event schema from `@mma/contracts/{initiating-domain}`.
 - The responder publishes result events via its own event publisher, directed at the **initiating domain's inbox** (e.g. `ORDER_EVENTS_SQS_QUEUE_URL` → `order-events` queue).
 - The responder reads only from its own repository — never from the initiating domain's database.
 - Infrastructure errors during validation should be treated as failure (publish `FAILED` event), not silently swallowed.
@@ -352,7 +352,7 @@ case ProductEventTypeEnum.PRODUCT_VALIDATION_FAILED:
   break;
 ```
 
-**Rule:** The dispatcher imports event type enums from `@old-st/contracts/{responding-domain}` (the domain that published the result event).
+**Rule:** The dispatcher imports event type enums from `@mma/contracts/{responding-domain}` (the domain that published the result event).
 
 ### Step 10 — Wire NestJS Module Providers
 
@@ -416,6 +416,6 @@ Follow the `write-domain-tests` skill. Minimum coverage:
 1. **Starting in final state:** Never create the entity in `PENDING` or `CONFIRMED` — always start in the provisional state and let the saga resolve.
 2. **Publishing from app service:** This scatters event logic across layers. Publish from the use case alongside the save.
 3. **Non-idempotent handlers:** SQS can deliver the same message twice. If the handler doesn't check current state, it may throw and enter retry loops.
-4. **Cross-domain package imports:** The responder must never import from `@old-st/{initiating-domain}-domain`. Use `@old-st/contracts/{initiating-domain}` only.
+4. **Cross-domain package imports:** The responder must never import from `@mma/{initiating-domain}-domain`. Use `@mma/contracts/{initiating-domain}` only.
 5. **Responder writing to initiating domain's DB:** Each saga participant writes only to its own repository. The result event is how the response travels back.
 6. **Missing error event for infrastructure failures:** If the responder's validation throws unexpectedly, it should still publish a `FAILED` event — otherwise the order stays in `DRAFT` forever.

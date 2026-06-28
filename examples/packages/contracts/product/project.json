@@ -1,7 +1,0 @@
-{
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "contracts-product",
-  "sourceRoot": "packages/contracts/product/src",
-  "projectType": "library",
-  "tags": ["scope:product", "type:contracts"]
-}

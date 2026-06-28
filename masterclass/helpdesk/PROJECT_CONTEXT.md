@@ -57,7 +57,7 @@ ticket). Same **cross-service/ACL pattern** as agent assignment (Golden Rules #1
 ## 4. Tech Stack
 
 NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIFO · Next.js 15 webapp ·
-`@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
+`@mma/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
 
 ---
 
@@ -66,9 +66,9 @@ NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIF
 - Clean-Arch layering; application services always present.
 - **Prisma → offset pagination**. Never cursor (#16). Schema enums mirror domain constants (#17);
   generated client is infra-only (#18).
-- Contracts via `@old-st/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
+- Contracts via `@mma/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
 - **ACL:** `ticket` validates `agent` via an abstract port + HTTP adapter (#14).
-- **Cross-domain events:** consumers import `@old-st/contracts/ticket` — never `@old-st/ticket-domain` (#15).
+- **Cross-domain events:** consumers import `@mma/contracts/ticket` — never `@mma/ticket-domain` (#15).
 
 ---
 
@@ -88,7 +88,7 @@ NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIF
 
 REST plural nouns (`/tickets`, `/agents`); actions as POST sub-resources
 (`POST /tickets/:id/assign`, `/escalate`, `/resolve`). Status badges via `status-variants.ts`.
-Forms via react-hook-form + Zod from `@old-st/contracts/{domain}`.
+Forms via react-hook-form + Zod from `@mma/contracts/{domain}`.
 
 ---
 
@@ -153,10 +153,10 @@ Port in `ticket-domain/application/interfaces/`; HTTP adapter in `infrastructure
 `agent-api-service`. Forward auth + correlation via `getOutboundHeaders()`.
 
 ### Choreography saga (asynchronous)
-1. `ticket.create` persists ticket `OPEN` and publishes **`TICKET_CREATED`** (`@old-st/contracts/ticket`).
+1. `ticket.create` persists ticket `OPEN` and publishes **`TICKET_CREATED`** (`@mma/contracts/ticket`).
 2. `agent-event-handler-service` consumes it, runs `PickAvailableAgentUseCase` (lowest-load available
    agent), replies **`TICKET_ASSIGNED`** (with `agentId`) or **`NO_AGENT_AVAILABLE`**
-   (`@old-st/contracts/agent`).
+   (`@mma/contracts/agent`).
 3. `ticket-event-handler-service` consumes the reply → ticket `ASSIGNED` (set `assignedAgentId`) or
    `ESCALATED`. A separate SLA-breach timer publishes `TICKET_SLA_BREACHED` → escalate. **Idempotent**.
 

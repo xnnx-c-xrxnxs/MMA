@@ -7,7 +7,7 @@ describe('addPathAliases', () => {
     tree.write(
       'tsconfig.base.json',
       JSON.stringify(
-        { compilerOptions: { paths: { '@old-st/common': ['packages/common/src/index.ts'] } } },
+        { compilerOptions: { paths: { '@mma/common': ['packages/common/src/index.ts'] } } },
         null,
         2,
       ),
@@ -17,26 +17,26 @@ describe('addPathAliases', () => {
 
   it('adds a new alias', () => {
     const tree = seedTree();
-    addPathAliases(tree, { '@old-st/shipping-domain': 'packages/shipping-domain/src/index.ts' });
+    addPathAliases(tree, { '@mma/shipping-domain': 'packages/shipping-domain/src/index.ts' });
     const json = JSON.parse(tree.read('tsconfig.base.json', 'utf-8') ?? '{}');
-    expect(json.compilerOptions.paths['@old-st/shipping-domain']).toEqual([
+    expect(json.compilerOptions.paths['@mma/shipping-domain']).toEqual([
       'packages/shipping-domain/src/index.ts',
     ]);
-    expect(json.compilerOptions.paths['@old-st/common']).toBeDefined();
+    expect(json.compilerOptions.paths['@mma/common']).toBeDefined();
   });
 
   it('is idempotent for identical alias+target', () => {
     const tree = seedTree();
-    addPathAliases(tree, { '@old-st/common': 'packages/common/src/index.ts' });
+    addPathAliases(tree, { '@mma/common': 'packages/common/src/index.ts' });
     expect(() =>
-      addPathAliases(tree, { '@old-st/common': 'packages/common/src/index.ts' }),
+      addPathAliases(tree, { '@mma/common': 'packages/common/src/index.ts' }),
     ).not.toThrow();
   });
 
   it('throws when overwriting an alias with a different target', () => {
     const tree = seedTree();
     expect(() =>
-      addPathAliases(tree, { '@old-st/common': 'packages/different/src/index.ts' }),
+      addPathAliases(tree, { '@mma/common': 'packages/different/src/index.ts' }),
     ).toThrow();
   });
 

@@ -1,4 +1,4 @@
-// Module 05 — UI Primitives (@old-st/ui)
+// Module 05 — UI Primitives (@mma/ui)
 // Compares the old SCSS component library with shadcn-style primitives + Tailwind v4 + cva().
 
 export default {
@@ -6,9 +6,9 @@ export default {
     level: 2,
     complexityLabel: 'L2 · Design System',
     domain: 'UI',
-    title: 'UI Primitives — @old-st/ui',
+    title: 'UI Primitives — @mma/ui',
     introShort: 'shadcn-style primitives + cva() variants replace a global SCSS component library.',
-    intro: "The old template maintained a components-web library of SCSS-styled React components with no variant system. The new template uses @old-st/ui — shadcn-style primitives built on Radix UI, styled with Tailwind v4 utilities and class-variance-authority (cva()) for type-safe variants. Every primitive has a story (Storybook 8) and a co-located test.",
+    intro: "The old template maintained a components-web library of SCSS-styled React components with no variant system. The new template uses @mma/ui — shadcn-style primitives built on Radix UI, styled with Tailwind v4 utilities and class-variance-authority (cva()) for type-safe variants. Every primitive has a story (Storybook 8) and a co-located test.",
 
     specTitle: 'UI · Primitive Rules',
     specBodyHtml: `
@@ -19,11 +19,11 @@ export default {
       <li>No Storybook; no co-located tests.</li>
       <li>Duplicated between web and mobile — mobile had separate SCSS.</li>
     </ul>
-    <p><strong>New template (@old-st/ui):</strong></p>
+    <p><strong>New template (@mma/ui):</strong></p>
     <ul>
       <li>Every primitive is a <strong>shadcn-style</strong> component: Radix UI headless + Tailwind utilities.</li>
       <li>Variants declared with <strong><code>cva()</code></strong> (class-variance-authority) — fully type-safe.</li>
-      <li>Design tokens from <code>@old-st/design-tokens</code> feed CSS custom properties — no hardcoded colours.</li>
+      <li>Design tokens from <code>@mma/design-tokens</code> feed CSS custom properties — no hardcoded colours.</li>
       <li>Each primitive ships: <code>{name}.tsx</code> + <code>index.ts</code> + <code>{name}.stories.tsx</code> + <code>{name}.spec.tsx</code>.</li>
       <li>No SCSS anywhere in <code>packages/ui/</code> — Tailwind v4 utilities only.</li>
       <li>Dark mode via CSS variable overrides in <code>globals.css</code> under <code>.dark</code>.</li>
@@ -118,10 +118,10 @@ export { Badge, badgeVariants };`,
 // ─────────────────────────────────────────────────────────────────
 //  NEW TEMPLATE — centralised map using domain enum constants
 // ─────────────────────────────────────────────────────────────────
-import type { BadgeProps } from '@old-st/ui';
-import { UserStatusEnum } from '@old-st/contracts/user';
-import { OrderStatusEnum } from '@old-st/contracts/order';
-import { ProductStatusEnum } from '@old-st/contracts/product';
+import type { BadgeProps } from '@mma/ui';
+import { UserStatusEnum } from '@mma/contracts/user';
+import { OrderStatusEnum } from '@mma/contracts/order';
+import { ProductStatusEnum } from '@mma/contracts/product';
 
 // ✅ Keys are enum values — TypeScript prevents stale string literals.
 export const USER_STATUS_VARIANTS: Record<string, BadgeProps['variant']> = {
@@ -151,7 +151,7 @@ export const PRODUCT_STATUS_VARIANTS: Record<string, BadgeProps['variant']> = {
 
     pitfalls: [
         "<strong>Template-literal Tailwind classes:</strong> <code>className={`bg-${'brand'}-500`}</code> produces <em>no styles</em> — Tailwind v4's JIT scanner never sees this string. Use a <code>cva()</code> variant map or <code>style={{ backgroundColor: token }}</code> for dynamic values.",
-        '<strong>Adding domain knowledge to @old-st/ui:</strong> a <code>UserStatusBadge</code> that knows about <code>UserStatusEnum</code> belongs in <code>apps/webapp/src/components/users/</code>. The primitives package must stay domain-agnostic.',
+        '<strong>Adding domain knowledge to @mma/ui:</strong> a <code>UserStatusBadge</code> that knows about <code>UserStatusEnum</code> belongs in <code>apps/webapp/src/components/users/</code>. The primitives package must stay domain-agnostic.',
         "<strong>Skipping co-located tests:</strong> the 70% coverage threshold on <code>packages/ui</code> is enforced by CI. Every new primitive needs a <code>.spec.tsx</code> testing at minimum the default render and each variant.",
     ],
 };

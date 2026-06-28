@@ -434,7 +434,7 @@ export default async function uiPrimitiveGenerator(
   }
 
   logger.info(
-    `\n[@old-st/nx-plugin:ui-primitive] Generated ${ctx.pascal} (${ctx.pattern})\n` +
+    `\n[@mma/nx-plugin:ui-primitive] Generated ${ctx.pascal} (${ctx.pattern})\n` +
       `  → ${componentPath}\n` +
       `  → ${componentDir}/index.ts\n` +
       `  → ${componentDir}/${ctx.kebab}.stories.tsx\n` +

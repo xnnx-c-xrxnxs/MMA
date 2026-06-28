@@ -20,7 +20,7 @@ The CD packaging pipeline is:
    extracted Lambda ZIP to materialize `node_modules/` before uploading.
 
 If a service ships a hand-rolled `apps/{domain}/{service}/package.json` with
-deps like `"@old-st/foo": "workspace:*"`, that file is copied unchanged into
+deps like `"@mma/foo": "workspace:*"`, that file is copied unchanged into
 `dist/` by webpack's `copy-webpack-plugin` and shadows whatever
 `@nx/js:prune-lockfile` would have generated. The `workspace:` protocol is a
 pnpm-only string — `npm install` rejects it with `EUNSUPPORTEDPROTOCOL` and

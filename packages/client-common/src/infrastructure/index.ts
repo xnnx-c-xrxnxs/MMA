@@ -2,7 +2,7 @@
 //
 // Narrowed for the base template: only universal clients (auth, file, base)
 // are exported. Example-domain clients (user, product, order) live in
-// `@old-st/client-common-examples` (see [examples/packages/client-common-examples](examples/packages/client-common-examples)).
+// `@mma/client-common-examples` (see [examples/packages/client-common-examples](examples/packages/client-common-examples)).
 export {
   authApiClient
 } from './api-clients/auth-api.client';

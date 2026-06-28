@@ -237,7 +237,7 @@ nvm use 24
 
 ## Failure 8 — `pnpm install` Fails or Modules Missing
 
-**Symptom:** `Cannot find module '@old-st/{domain}-domain'` or similar after adding a new package.
+**Symptom:** `Cannot find module '@mma/{domain}-domain'` or similar after adding a new package.
 
 **Fix:**
 
@@ -246,7 +246,7 @@ nvm use 24
 pnpm install
 
 # Step 2: If a new package was added, verify tsconfig.base.json has the path alias
-Get-Content tsconfig.base.json | Select-String "@old-st/{new-package}"
+Get-Content tsconfig.base.json | Select-String "@mma/{new-package}"
 
 # Step 3: Verify the package.json name matches the path alias
 Get-Content packages/{new-package}/package.json | Select-String '"name"'

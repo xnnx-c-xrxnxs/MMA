@@ -1,5 +1,5 @@
 import { Header } from '@/components/layout/header';
-import { Card, CardContent, CardHeader, CardTitle } from '@old-st/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@mma/ui';
 
 export default function DashboardPage() {
   return (
@@ -8,7 +8,7 @@ export default function DashboardPage() {
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight">
-            Welcome to Old ST Admin
+            Welcome to Mma Admin
           </h2>
           <p className="text-muted-foreground">
             This is your application dashboard. Add domain section cards below as you

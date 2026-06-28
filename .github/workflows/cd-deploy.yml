@@ -9,7 +9,6 @@ on:
       - "infra/bootstrap/**"
       - "**.md"
       - ".github/CODEOWNERS"
-      - "examples/**"
   workflow_dispatch:
     inputs:
       environment:

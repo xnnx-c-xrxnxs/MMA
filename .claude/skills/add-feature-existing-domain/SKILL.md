@@ -299,7 +299,7 @@ File: `apps/{domain}/{service}/src/presentation/filters/domain-exception.filter.
 If a new domain exception was created in Step 2c, add it to `DOMAIN_ERROR_MAP`:
 
 ```typescript
-import { {Entity}AlreadySuspendedError } from '@old-st/{domain}-domain';
+import { {Entity}AlreadySuspendedError } from '@mma/{domain}-domain';
 
 const DOMAIN_ERROR_MAP: ... = [
   // ... existing
@@ -374,10 +374,10 @@ If the feature adds new UI state (filters, modals, pagination), update the page 
 **11e. Status-Variant Mapping (only if new status was added)**
 File: `apps/webapp/src/lib/status-variants.ts`
 
-Add the new status to the variant mapper using the enum constant from `@old-st/contracts/{domain}`. Follow the `webapp-new-page` skill.
+Add the new status to the variant mapper using the enum constant from `@mma/contracts/{domain}`. Follow the `webapp-new-page` skill.
 
 **11f. UI Primitive (only if no existing component fits)**
-If the feature needs a component that doesn't exist in `@old-st/ui`, create it following the `webapp-ui-primitive` skill. This is rare — check the existing primitives first.
+If the feature needs a component that doesn't exist in `@mma/ui`, create it following the `webapp-ui-primitive` skill. This is rare — check the existing primitives first.
 
 ---
 
@@ -387,7 +387,7 @@ Skip this step if the feature is backend-only or webapp-only.
 
 When the new capability must also be visible in the Expo (React Native) mobile app, work through these sub-steps **after** the backend (and ideally the shared data-access layer from Step 11a/11b) is complete.
 
-**Important:** Steps 11a and 11b (API client method + React Query hook) are shared between webapp and mobile via `@old-st/client-common`. You do NOT need to create separate mobile hooks — complete Step 11a/11b once and both platforms can consume them.
+**Important:** Steps 11a and 11b (API client method + React Query hook) are shared between webapp and mobile via `@mma/client-common`. You do NOT need to create separate mobile hooks — complete Step 11a/11b once and both platforms can consume them.
 
 **12a. Domain List Component (if new domain or new list field)**
 File: `apps/mobile/src/components/{domain}/{domain}-list.tsx`
@@ -407,10 +407,10 @@ Update the detail screen to show new fields or add new action buttons. For a new
 **12d. Status-Variant Mapping (only if new status was added)**
 File: `apps/mobile/src/lib/status-variants.ts`
 
-Add the new status to the variant mapper using the enum constant from `@old-st/contracts/{domain}`. Return type is `BadgeVariant` from `@old-st/mobile-ui`.
+Add the new status to the variant mapper using the enum constant from `@mma/contracts/{domain}`. Return type is `BadgeVariant` from `@mma/mobile-ui`.
 
 **12e. Mobile UI Primitive (only if no existing component fits)**
-If the feature needs a component that doesn't exist in `@old-st/mobile-ui`, create it following the `mobile-ui-primitive` skill. Check existing primitives first (Badge, Button, Card, Input, Text, Separator).
+If the feature needs a component that doesn't exist in `@mma/mobile-ui`, create it following the `mobile-ui-primitive` skill. Check existing primitives first (Badge, Button, Card, Input, Text, Separator).
 
 **12f. Environment Setup (only if new domain)**
 File: `apps/mobile/src/app/_layout.tsx`

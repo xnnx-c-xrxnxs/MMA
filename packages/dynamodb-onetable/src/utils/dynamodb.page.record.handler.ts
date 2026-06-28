@@ -1,4 +1,4 @@
-import { IPaginatedResponse, CursorPointer } from '@old-st/common';
+import { IPaginatedResponse, CursorPointer } from '@mma/common';
 
 /**
  * Handles cursor-based pagination for DynamoDB query results.

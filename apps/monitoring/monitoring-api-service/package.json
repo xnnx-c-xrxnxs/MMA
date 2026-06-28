@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@old-st/monitoring-sdk": "workspace:*",
+    "@mma/monitoring-sdk": "workspace:*",
     "@nestjs/swagger": "^11.0.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.0",

@@ -55,7 +55,7 @@ apps/{consuming-domain}/{service}/
 
 The consuming domain defines an **abstract interface** (port) that describes what it needs — not how to get it. The infrastructure layer provides a **concrete HTTP client** (adapter) that implements the interface.
 
-**Key isolation guarantee:** The domain package (`packages/{consuming-domain}-domain`) **never imports from** `@old-st/{upstream-domain}` or from the upstream service. It defines its own interface with its own types.
+**Key isolation guarantee:** The domain package (`packages/{consuming-domain}-domain`) **never imports from** `@mma/{upstream-domain}` or from the upstream service. It defines its own interface with its own types.
 
 ---
 
@@ -101,7 +101,7 @@ export abstract class I{UpstreamEntity}Validator {
 **Rules:**
 - `Validated{UpstreamEntity}` contains **only the fields the consuming domain needs** — never the full upstream entity shape.
 - The validator interface lives in the **consuming** domain's `application/interfaces/`, not the upstream's.
-- Never import types from `@old-st/{upstream-domain}` — define local types for the response.
+- Never import types from `@mma/{upstream-domain}` — define local types for the response.
 - Status strings are intentionally `string` (not the upstream's enum) — the consuming domain may map them to its own concept.
 
 ---
@@ -193,14 +193,14 @@ File: `apps/{consuming-domain}/{service}/src/infrastructure/clients/{upstream-do
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { createLogger, getOutboundHeaders } from '@old-st/telemetry';
+import { createLogger, getOutboundHeaders } from '@mma/telemetry';
 import {
   I{UpstreamEntity}Validator,
   Validated{UpstreamEntity},
   {UpstreamEntity}NotFoundError,
   {UpstreamEntity}InvalidStatusError,
   {UpstreamEntity}ServiceUnavailableError,
-} from '@old-st/{consuming-domain}-domain';
+} from '@mma/{consuming-domain}-domain';
 
 const logger = createLogger('{consuming-domain}-api-service');
 
@@ -296,14 +296,14 @@ export class {UpstreamDomain}ApiClient extends I{UpstreamEntity}Validator {
 ```
 
 **Rules:**
-- Imports domain types from `@old-st/{consuming-domain}-domain` — never from the upstream domain.
+- Imports domain types from `@mma/{consuming-domain}-domain` — never from the upstream domain.
 - Uses `API_{UPSTREAM_DOMAIN}_URL` env var (already in `.env.local` convention from engineering-handbook §7.1).
 - `timeout: 5000` — always set a timeout on cross-service calls. Adjust based on SLA.
-- **Must propagate `x-correlation-id` AND `Authorization`** via `getOutboundHeaders()` from `@old-st/telemetry`. Without this, the receiving service generates a new correlationId (breaking the event chain) AND its `JwtAuthGuard` rejects the request with 401 (no auth header). The `correlationMiddleware()` on the receiving side reuses the incoming header automatically. **Golden Rule #46.**
+- **Must propagate `x-correlation-id` AND `Authorization`** via `getOutboundHeaders()` from `@mma/telemetry`. Without this, the receiving service generates a new correlationId (breaking the event chain) AND its `JwtAuthGuard` rejects the request with 401 (no auth header). The `correlationMiddleware()` on the receiving side reuses the incoming header automatically. **Golden Rule #46.**
 - Maps HTTP status codes to typed domain exceptions — the application layer never sees Axios errors.
 - Uses `encodeURIComponent(id)` for the path parameter to prevent injection.
 - `firstValueFrom` converts the Axios Observable to a Promise.
-- Uses `createLogger()` from `@old-st/telemetry` — never `new Logger()` from `@nestjs/common` (Golden Rule #35).
+- Uses `createLogger()` from `@mma/telemetry` — never `new Logger()` from `@nestjs/common` (Golden Rule #35).
 - **Must log before and after the outbound call** so the ACL validation appears in the monitoring event chain. Without logs on both the calling adapter AND the receiving service's application method, the cross-service call is invisible in the event chain dashboard.
 
 ### Logging on the Receiving Side
@@ -330,7 +330,7 @@ File: `apps/{consuming-domain}/{service}/src/modules/{domain}.module.ts`
 
 ```typescript
 import { HttpModule } from '@nestjs/axios';
-import { I{UpstreamEntity}Validator } from '@old-st/{consuming-domain}-domain';
+import { I{UpstreamEntity}Validator } from '@mma/{consuming-domain}-domain';
 import { {UpstreamDomain}ApiClient } from '../infrastructure/clients/{upstream-domain}-api.client';
 
 const {UPSTREAM_ENTITY}_VALIDATOR = '{UPSTREAM_ENTITY}_VALIDATOR';
@@ -382,7 +382,7 @@ import {
   {UpstreamEntity}NotFoundError,
   {UpstreamEntity}InvalidStatusError,
   {UpstreamEntity}ServiceUnavailableError,
-} from '@old-st/{consuming-domain}-domain';
+} from '@mma/{consuming-domain}-domain';
 
 // Add to DOMAIN_ERROR_MAP:
 [{UpstreamEntity}NotFoundError, HttpStatus.NOT_FOUND],             // upstream entity not found
@@ -461,7 +461,7 @@ const useCase = new {Verb}{Entity}UseCase(mockRepo, mockValidator);
 
 ## Common Mistakes to Avoid
 
-- **Importing upstream domain types in the consuming domain package.** The ACL interface must define its own `Validated{UpstreamEntity}` type — never import upstream entity types from `@old-st/{upstream-domain}-domain`.
+- **Importing upstream domain types in the consuming domain package.** The ACL interface must define its own `Validated{UpstreamEntity}` type — never import upstream entity types from `@mma/{upstream-domain}-domain`.
 - **Catching ACL exceptions in the use case.** Let them propagate — the exception filter handles HTTP mapping.
 - **Forgetting to import `HttpModule` in the NestJS module.** `HttpService` won't be injectable without it.
 - **Using `fetch()` or raw `http` instead of `@nestjs/axios`.** The `HttpService` from `@nestjs/axios` is the standard HTTP client in NestJS — it integrates with NestJS DI and testing.

@@ -433,8 +433,8 @@ When the service injects an `IEventPublisher`, mock it with `{ publish: jest.fn(
 import { {Entity}ApplicationService } from './{entity}-application.service';
 
 // Mock contracts schemas — pass-through
-jest.mock('@old-st/contracts/{domain}', () => ({
-  ...(jest.requireActual('@old-st/contracts/{domain}') as object),
+jest.mock('@mma/contracts/{domain}', () => ({
+  ...(jest.requireActual('@mma/contracts/{domain}') as object),
   {entity}ResponseSchema: { parse: jest.fn((input: unknown) => input) },
   paginatedResponseSchema: { parse: jest.fn((input: unknown) => input) },
 }));

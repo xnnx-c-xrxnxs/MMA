@@ -1,9 +1,9 @@
 {
-  "name": "@old-st/design-tokens",
+  "name": "@mma/design-tokens",
   "version": "1.0.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "description": "Cross-platform design tokens (colors, spacing, radii, typography) — single source of truth for @old-st/ui (via CSS variables) and @old-st/mobile-ui (via JS imports)",
+  "description": "Cross-platform design tokens (colors, spacing, radii, typography) — single source of truth for @mma/ui (via CSS variables) and @mma/mobile-ui (via JS imports)",
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/lib/tokens.css"

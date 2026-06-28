@@ -71,14 +71,14 @@
 
       <pre><code>packages/contracts/
   common/
-    package.json        ← @old-st/contracts-common
+    package.json        ← @mma/contracts-common
     project.json        ← tags: scope:common, type:contracts
     tsconfig.json
     src/
       index.ts          ← shared pagination schemas
       pagination.ts     ← cursor-based + offset-based helpers
   user/
-    package.json        ← @old-st/contracts-user (depends on @old-st/user-domain)
+    package.json        ← @mma/contracts-user (depends on @mma/user-domain)
     project.json        ← tags: scope:user, type:contracts
     tsconfig.json
     src/
@@ -86,7 +86,7 @@
       schemas.ts        ← Zod schemas + TypeScript types
       event-schemas.ts  ← discriminated union for USER_DELETED
   order/
-    package.json        ← @old-st/contracts-order (depends on @old-st/order-domain)
+    package.json        ← @mma/contracts-order (depends on @mma/order-domain)
     project.json        ← tags: scope:order, type:contracts
     tsconfig.json
     src/
@@ -94,7 +94,7 @@
       schemas.ts        ← Order, OrderItem, OrderPayment schemas
       event-schemas.ts  ← discriminated union for ORDER_CREATED
   product/
-    package.json        ← @old-st/contracts-product (depends on @old-st/product-domain)
+    package.json        ← @mma/contracts-product (depends on @mma/product-domain)
     project.json        ← tags: scope:product, type:contracts
     tsconfig.json
     src/
@@ -107,22 +107,22 @@
 
       <p>
         Each domain has its own independent package with its own <code>package.json</code> and dependencies.
-        There is no root <code>@old-st/contracts</code> package — only per-domain packages.
+        There is no root <code>@mma/contracts</code> package — only per-domain packages.
       </p>
 
       <p>
-        <code>tsconfig.base.json</code> defines path aliases so TypeScript resolves <code>@old-st/contracts/{domain}</code> to the correct per-domain package:
+        <code>tsconfig.base.json</code> defines path aliases so TypeScript resolves <code>@mma/contracts/{domain}</code> to the correct per-domain package:
       </p>
 
       <pre><code>// tsconfig.base.json (paths)
-"@old-st/contracts/common":  ["packages/contracts/common/src/index.ts"],
-"@old-st/contracts/user":    ["packages/contracts/user/src/index.ts"],
-"@old-st/contracts/order":   ["packages/contracts/order/src/index.ts"],
-"@old-st/contracts/product": ["packages/contracts/product/src/index.ts"],
-"@old-st/contracts/auth":    ["packages/contracts/auth/src/index.ts"]</code></pre>
+"@mma/contracts/common":  ["packages/contracts/common/src/index.ts"],
+"@mma/contracts/user":    ["packages/contracts/user/src/index.ts"],
+"@mma/contracts/order":   ["packages/contracts/order/src/index.ts"],
+"@mma/contracts/product": ["packages/contracts/product/src/index.ts"],
+"@mma/contracts/auth":    ["packages/contracts/auth/src/index.ts"]</code></pre>
 
       <div class="callout warning">
-        <strong>Golden Rule #11 — Never import from the bare <code>@old-st/contracts</code> root.</strong>
+        <strong>Golden Rule #11 — Never import from the bare <code>@mma/contracts</code> root.</strong>
         Always use domain-scoped subpath imports. The root barrel creates transitive type coupling —
         a type error in <em>any</em> domain will break <em>every</em> consumer.
       </div>
@@ -130,12 +130,12 @@
       <h3>Correct vs Incorrect Import</h3>
 
       <pre><code>// ✅ Correct — domain-scoped, isolated
-import { createUserSchema, UserResponse } from '@old-st/contracts/user';
-import { orderResponseSchema } from '@old-st/contracts/order';
-import { PaginatedResponse } from '@old-st/contracts/common';
+import { createUserSchema, UserResponse } from '@mma/contracts/user';
+import { orderResponseSchema } from '@mma/contracts/order';
+import { PaginatedResponse } from '@mma/contracts/common';
 
 // ❌ Wrong — transitive coupling
-import { createUserSchema, orderResponseSchema } from '@old-st/contracts';</code></pre>
+import { createUserSchema, orderResponseSchema } from '@mma/contracts';</code></pre>
 
       <!-- ════════════════════════════════════════════ -->
       <h2>The Zod → TypeScript Pipeline</h2>
@@ -173,7 +173,7 @@ export const UserStatusEnum = {
       <p>Contracts re-export the domain constants and build Zod schemas from them:</p>
 
       <pre><code>// packages/contracts/user/src/schemas.ts
-import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } from '@old-st/user-domain';
+import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } from '@mma/user-domain';
 
 // Re-export for consumers
 export { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
@@ -392,7 +392,7 @@ switch (parsed.eventType) {
       <h2>Pagination Schemas</h2>
 
       <p>
-        The <code>@old-st/contracts/common</code> subpath provides two pagination helpers, matching each
+        The <code>@mma/contracts/common</code> subpath provides two pagination helpers, matching each
         persistence strategy:
       </p>
 
@@ -417,14 +417,14 @@ switch (parsed.eventType) {
       </table>
 
       <pre><code>// Cursor-based (DynamoDB)
-import { PaginatedResponse, createPaginatedResponse } from '@old-st/contracts/common';
+import { PaginatedResponse, createPaginatedResponse } from '@mma/contracts/common';
 
 const result: PaginatedResponse&lt;UserResponse&gt; = createPaginatedResponse(
   users, nextCursor, prevCursor
 );
 
 // Offset-based (Prisma)
-import { OffsetPaginatedResponse, createOffsetPaginatedResponse } from '@old-st/contracts/common';
+import { OffsetPaginatedResponse, createOffsetPaginatedResponse } from '@mma/contracts/common';
 
 const result: OffsetPaginatedResponse&lt;OrderResponse&gt; = createOffsetPaginatedResponse(
   orders, totalCount, page, limit
@@ -438,7 +438,7 @@ const result: OffsetPaginatedResponse&lt;OrderResponse&gt; = createOffsetPaginat
         <li>Create <code>packages/contracts/{domain}/src/schemas.ts</code> — import domain constants, create Zod schemas, infer types.</li>
         <li>Create <code>packages/contracts/{domain}/src/event-schemas.ts</code> — import event type enum, create per-event Zod schemas, build discriminated union.</li>
         <li>Create <code>packages/contracts/{domain}/src/index.ts</code> — re-export both files.</li>
-        <li>Add path alias to <code>tsconfig.base.json</code>: <code>"@old-st/contracts/{domain}": ["packages/contracts/{domain}/src/index.ts"]</code></li>
+        <li>Add path alias to <code>tsconfig.base.json</code>: <code>"@mma/contracts/{domain}": ["packages/contracts/{domain}/src/index.ts"]</code></li>
         <li>Run <code>pnpm install</code> from the workspace root to link the new package.</li>
       </ol>
 

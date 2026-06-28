@@ -86,7 +86,7 @@ pnpm exec nx affected -t e2e --base=origin/develop
 ```
 
 ## Blast Radius Notes
-- Contract change in `@old-st/contracts/{domain}` was detected — recommend running ALL related E2E specs across backend AND webapp regardless of granular matching.
+- Contract change in `@mma/contracts/{domain}` was detected — recommend running ALL related E2E specs across backend AND webapp regardless of granular matching.
 
 ## Files With No E2E Coverage
 - [`apps/.../foo.ts`](path) — no matching spec found, gap?

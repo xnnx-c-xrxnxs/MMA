@@ -1,7 +1,7 @@
 import './globals.css';
 import { Mulish } from 'next/font/google';
-import { Providers } from '@old-st/client-common';
-import { Toaster } from '@old-st/ui';
+import { Providers } from '@mma/client-common';
+import { Toaster } from '@mma/ui';
 import { ThemeProvider } from '../components/theme-provider';
 
 // Mulish exposes itself as the `--font-sans` CSS variable. Tailwind v4's

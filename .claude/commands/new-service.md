@@ -117,10 +117,10 @@ src/
 
 **(H1 — mandatory) Health endpoint:** Add `AppController` with `@Get('health')` + `@Public()` returning `{ status: 'ok', service: '{service}' }`. The method MUST be named `health()`. Never use `@Get()` (root) — it conflicts with the global API prefix and returns 404. The CD smoke test only accepts HTTP 200 from `/api/health` (Golden Rule #43).
 
-**(H7) Application service singleton logger:** Declare `const logger = createLogger('{service}')` from `@old-st/telemetry` at module top — mandatory and lint-checked (Golden Rule #35 / `app-service-has-logger`). Never use `new Logger()` from `@nestjs/common`.
+**(H7) Application service singleton logger:** Declare `const logger = createLogger('{service}')` from `@mma/telemetry` at module top — mandatory and lint-checked (Golden Rule #35 / `app-service-has-logger`). Never use `new Logger()` from `@nestjs/common`.
 
 **(M2) Prisma additional steps:**
-- Import `SecretsConfig` from `@old-st/aws-secrets` in `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap.
+- Import `SecretsConfig` from `@mma/aws-secrets` in `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap.
 - Add Prisma engine binary + `schema.prisma` to webpack `assets` array.
 - Add `cp -r packages/{domain}-domain/src/infrastructure/prisma/ /tmp/init-runner/prisma/{domain}/` to the `Package init-runner` step in `.github/workflows/cd-deploy.yml` and `cd-preview-create.yml`.
 - Add `prisma-migrate` entry to `deployTasks[]` in `service-registry.json`.

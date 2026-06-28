@@ -21,7 +21,7 @@ Structural parity (DOM) is the hard signal; visual side-by-side PNGs are advisor
 
 Ask and wait:
 
-1. **Migration folder?** e.g. `old-st-flow-migration`. Default: auto-detect the single `*-migration/`.
+1. **Migration folder?** e.g. `mma-flow-migration`. Default: auto-detect the single `*-migration/`.
 2. **Routes to verify?** Default: all routes that have BOTH a `screenshots/{route}/` capture set AND a built destination page under `apps/webapp/src/app/(protected)/`.
 3. **Destination boot command + URL?** Default: `pnpm nx run webapp:serve` (MOCK_PREVIEW) at `http://localhost:4200`. Confirm `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local` are set.
 4. **States per route?** Default: every state present in each route's manifest (`populated`, `empty`, `single`, …).

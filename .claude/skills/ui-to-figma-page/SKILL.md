@@ -1,13 +1,13 @@
 ---
 name: ui-to-figma-page
-description: Generate a Figma page/frame from a natural-language brief, a page spec (`.specs/page-*.yaml`), or an existing webapp route, using the `@old-st/ui` design system as published in Figma. Reverse direction of `figma-to-ui-screen` — code/spec → Figma. Use this when a UI/UX designer asks the AI to "build this page in Figma using our components", "draft a Figma mock for the orders dashboard from this spec", or "mirror the production /users page back into Figma".
+description: Generate a Figma page/frame from a natural-language brief, a page spec (`.specs/page-*.yaml`), or an existing webapp route, using the `@mma/ui` design system as published in Figma. Reverse direction of `figma-to-ui-screen` — code/spec → Figma. Use this when a UI/UX designer asks the AI to "build this page in Figma using our components", "draft a Figma mock for the orders dashboard from this spec", or "mirror the production /users page back into Figma".
 ---
 
 # UI Components → Figma Page
 
-This skill produces a **Figma page/frame composed of `@old-st/ui` design-system component instances**. It is the *inverse* of `figma-to-ui-screen` — input is a brief / spec / live route, output is a Figma frame.
+This skill produces a **Figma page/frame composed of `@mma/ui` design-system component instances**. It is the *inverse* of `figma-to-ui-screen` — input is a brief / spec / live route, output is a Figma frame.
 
-> **Hard rule:** Every interactive surface in the generated Figma frame MUST be a component instance from the Figma library backing `@old-st/ui`. If `search_design_system` cannot resolve a primitive, STOP and ask — do not draw a raw rectangle/text. Missing primitives must be added to the Figma library first (via `figma-to-ui-component` in reverse).
+> **Hard rule:** Every interactive surface in the generated Figma frame MUST be a component instance from the Figma library backing `@mma/ui`. If `search_design_system` cannot resolve a primitive, STOP and ask — do not draw a raw rectangle/text. Missing primitives must be added to the Figma library first (via `figma-to-ui-component` in reverse).
 
 ---
 
@@ -62,7 +62,7 @@ Load Figma MCP tools first (they are deferred):
 
 1. `tool_search(query="figma mcp design metadata variables screenshot use_figma search_design_system whoami")`.
 2. `mcp__figma__whoami` — confirm auth + which Figma team/account is active. If unauthenticated, STOP.
-3. `mcp__figma__get_libraries` — list the libraries available in the target file. Confirm the `@old-st/ui` library is enabled in that file. **If it is not, STOP** and tell the designer to enable the library in Figma (Assets panel → Libraries → enable `@old-st/ui`) before continuing.
+3. `mcp__figma__get_libraries` — list the libraries available in the target file. Confirm the `@mma/ui` library is enabled in that file. **If it is not, STOP** and tell the designer to enable the library in Figma (Assets panel → Libraries → enable `@mma/ui`) before continuing.
 4. `mcp__figma__get_metadata({ fileKey, nodeId: target page })` — confirm the target page exists; if "create new page named X" was requested, note that Phase 2 must create it via `setCurrentPageAsync`.
 5. Read [packages/ui/src/index.ts](packages/ui/src/index.ts) — the authoritative inventory of primitives that *should* have Figma counterparts.
 
@@ -80,7 +80,7 @@ Produce a **page-build plan table** as your first output. Format:
 **Viewport:** Desktop 1440×900, dark mode
 **Library coverage:** 8/9 primitives resolved via `search_design_system`
 
-| Section | Layout | Primitive | Variant / props | In `@old-st/ui`? | Resolves in Figma library? |
+| Section | Layout | Primitive | Variant / props | In `@mma/ui`? | Resolves in Figma library? |
 |---|---|---|---|---|---|
 | Header | Frame, horizontal, space-between | `Header` | — | ✅ | ✅ |
 | Header > search | inline | `Input` | placeholder="Search orders" | ✅ | ✅ |
@@ -95,7 +95,7 @@ Produce a **page-build plan table** as your first output. Format:
 **Blockers:**
 - `ActivityRow` is not a primitive. Choose one:
   - (a) Inline it as a plain auto-layout frame (Text + Text + Badge) — no library entry needed.
-  - (b) Pause this skill, run `figma-to-ui-component` to add `ActivityRow` to `@old-st/ui` + Figma library first, then resume.
+  - (b) Pause this skill, run `figma-to-ui-component` to add `ActivityRow` to `@mma/ui` + Figma library first, then resume.
 
 **Tokens used:** color.bg.surface, color.text.primary, color.text.muted, spacing.md, radius.lg
 ```
@@ -168,7 +168,7 @@ If the designer iterates on the Figma frame (moves things, changes variants), re
 
 ## Anti-patterns (do NOT)
 
-- Draw raw rectangles/text/lines for anything that has a primitive in `@old-st/ui`. Always use `use_figma` + `search_design_system`.
+- Draw raw rectangles/text/lines for anything that has a primitive in `@mma/ui`. Always use `use_figma` + `search_design_system`.
 - Hard-code colors as hex. Bind to library variables (theme tokens).
 - Skip the Phase 1 checkpoint. Designers regularly correct the AI's primitive choices.
 - `throw` inside a write script — it rolls back the entire frame.
@@ -181,7 +181,7 @@ If the designer iterates on the Figma frame (moves things, changes variants), re
 
 - [ ] Mode (A/B/C) confirmed
 - [ ] Target Figma file URL + page confirmed (designer-supplied, not inferred)
-- [ ] `@old-st/ui` library enabled in the target file (`get_libraries`)
+- [ ] `@mma/ui` library enabled in the target file (`get_libraries`)
 - [ ] Every primitive in the plan resolves via `search_design_system`
 - [ ] Plan table presented and APPROVED by designer
 - [ ] Blockers (missing primitives) resolved before writing

@@ -57,8 +57,8 @@ export default async function eventHandlerGenerator(
   }
 
   const headerOpts = {
-    generator: '@old-st/nx-plugin:event-handler',
-    command: `nx g @old-st/nx-plugin:event-handler --domain=${n.domain.kebab}${
+    generator: '@mma/nx-plugin:event-handler',
+    command: `nx g @mma/nx-plugin:event-handler --domain=${n.domain.kebab}${
       schema.entity ? ` --entity=${n.entity.kebab}` : ''
     } --eventTypes=${n.eventTypes.map((e) => e.constant).join(',')}${
       schema.crossDomain
@@ -174,7 +174,7 @@ export default async function eventHandlerGenerator(
 
   const eventList = n.eventTypes.map((e) => e.constant).join(', ');
   logger.info(
-    `\n[@old-st/nx-plugin:event-handler] Generated ${n.serviceName}\n` +
+    `\n[@mma/nx-plugin:event-handler] Generated ${n.serviceName}\n` +
       `  → ${root}/\n` +
       `  → events: ${eventList}\n` +
       (n.crossDomain

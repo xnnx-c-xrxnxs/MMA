@@ -20,7 +20,7 @@ export default {
       <li>Auth guard is a <code>&lt;ProtectedRoute&gt;</code> wrapper component inside a layout.</li>
       <li>Styles: global SCSS in <code>libs/frontend/components-web/src/styles/</code>.</li>
     </ul>
-    <p><strong>New template (old-st-template):</strong></p>
+    <p><strong>New template (mma):</strong></p>
     <ul>
       <li>Domain components co-locate with features in <code>apps/webapp/src/components/{domain}/</code>.</li>
       <li>Shared UI primitives in <code>packages/ui/src/components/</code> (web) and <code>packages/mobile-ui/</code> (mobile).</li>
@@ -81,7 +81,7 @@ export default {
 //          state-management/         ← Zustand / Context stores
 //
 // ════════════════════════════════════════════════════════════════════
-//  NEW TEMPLATE — old-st-template
+//  NEW TEMPLATE — mma
 // ════════════════════════════════════════════════════════════════════
 //
 //  apps/
@@ -109,7 +109,7 @@ export default {
 //        test-setup.ts
 //
 //  packages/
-//    ui/                             ← @old-st/ui — web primitives (shadcn-style)
+//    ui/                             ← @mma/ui — web primitives (shadcn-style)
 //      src/
 //        components/
 //          data-display/             ← Badge, Card, Table, Skeleton …
@@ -119,7 +119,7 @@ export default {
 //          navigation/               ← Tabs, Breadcrumb …
 //        lib/utils.ts                ← cn() helper (clsx + tailwind-merge)
 //
-//    client-common/                  ← @old-st/client-common — SHARED (web + mobile)
+//    client-common/                  ← @mma/client-common — SHARED (web + mobile)
 //      src/
 //        infrastructure/
 //          config.ts                 ← configureApi() — single call at boot
@@ -137,7 +137,7 @@ export default {
 //          query-client.ts           ← shared QueryClient (staleTime, retry)
 //          providers.tsx             ← <Providers> wraps QueryClientProvider + AuthProvider
 //
-//    design-tokens/                  ← @old-st/design-tokens — cross-platform tokens
+//    design-tokens/                  ← @mma/design-tokens — cross-platform tokens
 //      src/
 //        lib/tokens.ts               ← lightColors, darkColors, spacing, radii …`,
 

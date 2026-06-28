@@ -159,13 +159,13 @@ describe('domain generator', () => {
 
     // Path aliases registered
     const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8') ?? '{}');
-    expect(tsconfig.compilerOptions.paths['@old-st/shipping-domain']).toEqual([
+    expect(tsconfig.compilerOptions.paths['@mma/shipping-domain']).toEqual([
       'packages/shipping-domain/src/index.ts',
     ]);
-    expect(tsconfig.compilerOptions.paths['@old-st/shipping-domain/infrastructure']).toEqual([
+    expect(tsconfig.compilerOptions.paths['@mma/shipping-domain/infrastructure']).toEqual([
       'packages/shipping-domain/src/infrastructure/index.ts',
     ]);
-    expect(tsconfig.compilerOptions.paths['@old-st/contracts/shipping']).toEqual([
+    expect(tsconfig.compilerOptions.paths['@mma/contracts/shipping']).toEqual([
       'packages/contracts/shipping/src/index.ts',
     ]);
 
@@ -251,7 +251,7 @@ describe('domain generator', () => {
     });
     expect(tree.exists('packages/contracts/shipping/package.json')).toBe(false);
     const ts = JSON.parse(tree.read('tsconfig.base.json', 'utf-8') ?? '{}');
-    expect(ts.compilerOptions.paths['@old-st/contracts/shipping']).toBeUndefined();
+    expect(ts.compilerOptions.paths['@mma/contracts/shipping']).toBeUndefined();
   });
 
   it('skips service when withService=false', async () => {

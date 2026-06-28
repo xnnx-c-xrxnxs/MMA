@@ -1,11 +1,11 @@
 ---
 name: webapp-data-table
-description: Build sortable, selectable, column-toggleable tables in the webapp using the `<DataTable>` primitive (built on `@tanstack/react-table`) from `@old-st/ui`. Use this when migrating a hand-rolled `<Table>` to a feature-richer surface or when adding a new list page that needs sorting / row selection.
+description: Build sortable, selectable, column-toggleable tables in the webapp using the `<DataTable>` primitive (built on `@tanstack/react-table`) from `@mma/ui`. Use this when migrating a hand-rolled `<Table>` to a feature-richer surface or when adding a new list page that needs sorting / row selection.
 ---
 
 # Webapp DataTable
 
-The shared `<DataTable>` primitive in `@old-st/ui` is a thin headless-table wrapper around `@tanstack/react-table` that renders into the existing shadcn `<Table>` shell. Pages stay thin: they own the column definitions and pass the data array.
+The shared `<DataTable>` primitive in `@mma/ui` is a thin headless-table wrapper around `@tanstack/react-table` that renders into the existing shadcn `<Table>` shell. Pages stay thin: they own the column definitions and pass the data array.
 
 Source: `packages/ui/src/components/data-display/data-table/data-table.tsx`.
 
@@ -22,9 +22,9 @@ For simple read-only tables with no interaction, the existing `<Table>` primitiv
 
 ```tsx
 'use client';
-import { DataTable, type ColumnDef, Badge } from '@old-st/ui';
-import type { EntityResponse } from '@old-st/contracts/{domain}';
-import { useUsersByStatus } from '@old-st/client-common';
+import { DataTable, type ColumnDef, Badge } from '@mma/ui';
+import type { EntityResponse } from '@mma/contracts/{domain}';
+import { useUsersByStatus } from '@mma/client-common';
 
 const columns: ColumnDef<UserResponse>[] = [
   {

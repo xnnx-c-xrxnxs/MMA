@@ -5,7 +5,7 @@ description: Use the `TokenStorage` adapter pattern to persist auth state on mob
 
 # Mobile — Secure Storage Auth
 
-Authentication state on mobile is persisted via the **`TokenStorage`** adapter from `@old-st/client-common`, backed on the device by `expo-secure-store` (Keychain on iOS, EncryptedSharedPreferences on Android).
+Authentication state on mobile is persisted via the **`TokenStorage`** adapter from `@mma/client-common`, backed on the device by `expo-secure-store` (Keychain on iOS, EncryptedSharedPreferences on Android).
 
 ## Architecture
 

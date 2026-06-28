@@ -7,7 +7,7 @@ export default {
       title: 'Create Schema',
       subtitle: 'createOrderSchema (with optional coupon + .refine)',
       code: `import { z } from 'zod';
-import { PAYMENT_METHODS } from '@old-st/order-domain';
+import { PAYMENT_METHODS } from '@mma/order-domain';
 
 export const couponInputSchema = z.object({
   code:    z.string().regex(/^[A-Z0-9]{4,16}$/),  // uppercase alphanumeric
@@ -52,7 +52,7 @@ export const cancelOrderSchema = z.object({
     {
       title: 'Response Schema',
       subtitle: 'orderResponseSchema (full aggregate)',
-      code: `import { ORDER_STATUSES, PAYMENT_STATUSES } from '@old-st/order-domain';
+      code: `import { ORDER_STATUSES, PAYMENT_STATUSES } from '@mma/order-domain';
 
 const couponResponseSchema = z.object({
   code: z.string(), percent: z.number().int(),

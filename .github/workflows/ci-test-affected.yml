@@ -6,7 +6,6 @@ name: CI - Test Affected Services
 on:
   pull_request:
     paths-ignore:
-      - "examples/**"
     branches: [main, develop]
 
 permissions:

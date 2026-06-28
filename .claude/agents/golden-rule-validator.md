@@ -31,7 +31,7 @@ You **never** edit files.
 | `G28-guard` | Service has its own `JwtAuthGuard` and wires `APP_GUARD` in `AppModule` | Read `app.module.ts`; confirm `provide: APP_GUARD` block referencing `JwtAuthGuard` |
 | `G28-publicroutes` | Public endpoints use `@Public()` decorator | Read controllers, find `@Get/@Post/@Put/@Delete` decorators on routes that should be public (e.g. health, sign-in) — verify `@Public()` is present |
 | `G28-registry-sync` | Every `@Public()` route is declared in `service-registry.json` → `gatewayAuth.publicRoutes` | Cross-reference controller files against registry |
-| `G35-logger` | Application services use module-level `createLogger('{service}')` from `@old-st/telemetry`, never `new Logger()` | Read each `*.service.ts` in `application/services/` |
+| `G35-logger` | Application services use module-level `createLogger('{service}')` from `@mma/telemetry`, never `new Logger()` | Read each `*.service.ts` in `application/services/` |
 | `G36-middleware` | `main.ts` calls `app.use(correlationMiddleware())` BEFORE CORS and global prefix | Read `main.ts` |
 | `G36-init` | `main.ts` calls `initTelemetry('{service}')` BEFORE `NestFactory.create` | Read `main.ts` |
 | `G45-current-user` | Controller endpoints that mutate state use `@CurrentUser()` to get the actor — not `@Body()` userId | Read all controllers |
@@ -45,7 +45,7 @@ You **never** edit files.
 | `G36-runWith` | Dispatcher wraps each event in `runWithCorrelationId(correlationId, ...)` | Read application service that handles SQS records |
 | `G36-extract` | Dispatcher extracts `correlationId` from the **raw event body** before validation, with fallback | Read dispatcher |
 | `G35-logger` | Handler service uses `createLogger()` not `new Logger()` | Read all `application/services/` files |
-| `G15-cross-domain` | If consuming events from another bounded context, imports come from `@old-st/contracts/{publisher}` ONLY — never from `@old-st/{publisher}-domain` | Scan imports |
+| `G15-cross-domain` | If consuming events from another bounded context, imports come from `@mma/contracts/{publisher}` ONLY — never from `@mma/{publisher}-domain` | Scan imports |
 | `Saga-idempotent` | Saga handlers (state-resolving handlers) catch domain exceptions for already-resolved entities and skip without rethrowing | Look for try/catch around use case calls in saga handlers |
 
 ### Domain Package (ruleSet=domain)
@@ -54,7 +54,7 @@ You **never** edit files.
 |---|---|---|
 | `G3-usecase-returns-entity` | Use cases return domain entities (or void/primitives), never DTOs | Read use case `execute` signatures |
 | `G6-repo-no-business-logic` | Repository implementations are CRUD only — no branching on status, no validation | Read repository methods |
-| `G5-domain-pure` | No `@nestjs/*`, no `@old-st/contracts`, no fetch/axios in `domain/` or `application/` | Already covered partially by dependency-auditor — re-check |
+| `G5-domain-pure` | No `@nestjs/*`, no `@mma/contracts`, no fetch/axios in `domain/` or `application/` | Already covered partially by dependency-auditor — re-check |
 | `G8-enum-constants` | Entity methods compare against enum constants (`UserStatusEnum.ACTIVE`), never raw strings | Already covered by dependency-auditor at file level — here verify intent |
 
 ## Workflow
@@ -79,7 +79,7 @@ You **never** edit files.
 - File: [`apps/{domain}/{domain}-api-service/src/application/services/{entity}-application.service.ts`](apps/{domain}/{domain}-api-service/src/application/services/{entity}-application.service.ts)
 - Line: 12
 - Found: `private logger = new Logger({Entity}ApplicationService.name);`
-- Expected: module-level `const logger = createLogger('{domain}-api-service');` from `@old-st/telemetry`
+- Expected: module-level `const logger = createLogger('{domain}-api-service');` from `@mma/telemetry`
 - Skill to fix: `add-monitoring`
 
 ### G36-middleware — correlationMiddleware not first

@@ -5,21 +5,21 @@
 module.exports = [
   {
     plugins: {
-      get '@old-st'() {
+      get '@mma'() {
         return require('../index');
       },
     },
     rules: {
-      '@old-st/no-bare-contracts-import': 'error',
-      '@old-st/no-domain-framework-imports': 'error',
-      '@old-st/no-prisma-client-in-domain': 'error',
-      '@old-st/no-contracts-in-use-cases': 'warn',
-      '@old-st/no-direct-fetch-in-components': 'warn',
-      '@old-st/no-hardcoded-status-strings': 'warn',
-      '@old-st/enforce-service-boundary': 'warn',
-      '@old-st/no-node-env-development': 'error',
-      '@old-st/require-event-handler-service': 'warn',
-      '@old-st/require-file-api-service': 'off',
+      '@mma/no-bare-contracts-import': 'error',
+      '@mma/no-domain-framework-imports': 'error',
+      '@mma/no-prisma-client-in-domain': 'error',
+      '@mma/no-contracts-in-use-cases': 'warn',
+      '@mma/no-direct-fetch-in-components': 'warn',
+      '@mma/no-hardcoded-status-strings': 'warn',
+      '@mma/enforce-service-boundary': 'warn',
+      '@mma/no-node-env-development': 'error',
+      '@mma/require-event-handler-service': 'warn',
+      '@mma/require-file-api-service': 'off',
     },
   },
 ];

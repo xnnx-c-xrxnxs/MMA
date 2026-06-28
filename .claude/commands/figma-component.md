@@ -1,5 +1,5 @@
 ---
-description: "Generate ONE shared UI primitive in @old-st/ui (and optionally @old-st/mobile-ui) from a Figma component URL. USE WHEN the user pastes a Figma URL pointing to a single component / variant set, or says 'build this Figma component', 'generate from this Figma URL', 'translate this Figma node'."
+description: "Generate ONE shared UI primitive in @mma/ui (and optionally @mma/mobile-ui) from a Figma component URL. USE WHEN the user pastes a Figma URL pointing to a single component / variant set, or says 'build this Figma component', 'generate from this Figma URL', 'translate this Figma node'."
 ---
 
 # Figma → UI Component (single primitive)
@@ -136,7 +136,7 @@ If adding tokens, edit `packages/ui/src/lib/tokens.ts` (single source of truth) 
 Run the generator to produce the four-file skeleton before filling anything in:
 
 ```sh
-pnpm nx g @old-st/nx-plugin:ui-primitive \
+pnpm nx g @mma/nx-plugin:ui-primitive \
   --name={Name} \
   --category={category} \
   --pattern={simple-variants | simple-no-variants | compound}
@@ -198,7 +198,7 @@ pnpm nx lint ui --skip-nx-cache
 pnpm nx test ui --skip-nx-cache
 ```
 
-> **Note:** `@old-st/ui` has no standalone `build` target — TypeScript is validated through `test` (jest type-checks) and `build-storybook`. Do not run `pnpm nx build ui`.
+> **Note:** `@mma/ui` has no standalone `build` target — TypeScript is validated through `test` (jest type-checks) and `build-storybook`. Do not run `pnpm nx build ui`.
 
 Fix any errors before proceeding.
 
@@ -238,7 +238,7 @@ Then:
 
 1. Create `packages/mobile-ui/src/components/{name}.tsx`
 2. Use the variant-record pattern (object literal mapping variant → `StyleSheet`)
-3. Use theme tokens from `@old-st/mobile-ui` (re-exports `@old-st/ui` tokens)
+3. Use theme tokens from `@mma/mobile-ui` (re-exports `@mma/ui` tokens)
 4. Same prop names as web (with `style` instead of `className`, `accessibilityLabel` instead of `aria-label`)
 5. Export from `packages/mobile-ui/src/index.ts`
 

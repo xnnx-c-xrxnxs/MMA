@@ -1,6 +1,6 @@
 // auth-api-service uses Lambda Web Adapter in deployed environments.
 // Single-mode HTTP server — works identically locally and in Lambda.
-import { initTelemetry, correlationMiddleware } from '@old-st/telemetry';
+import { initTelemetry, correlationMiddleware } from '@mma/telemetry';
 initTelemetry('auth-api-service');
 
 import { Logger, ValidationPipe } from '@nestjs/common';

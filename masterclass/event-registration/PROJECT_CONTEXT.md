@@ -45,7 +45,7 @@ capacity and resolves the registration to `CONFIRMED` or `WAITLISTED` when sold 
 ## 4. Tech Stack
 
 NestJS 11 · Node 24 · **DynamoDB OneTable v2** · Zod contracts · SQS FIFO · Next.js 15 webapp ·
-Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
+Expo mobile · `@mma/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
 
 ---
 
@@ -55,9 +55,9 @@ Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](.
 - **DynamoDB → cursor pagination** (`items, nextCursorPointer, prevCursorPointer`). Never offset (#16).
 - Every repository query passes an explicit **GSI index** param (see `dynamo-repository` skill).
 - Seat decrement uses a **conditional/atomic update** to prevent overselling under concurrency.
-- Contracts via `@old-st/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
+- Contracts via `@mma/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
 - **ACL:** `registration` validates `event` via an abstract port + HTTP adapter (#14).
-- **Cross-domain events:** consumers import `@old-st/contracts/registration` — never the domain package (#15).
+- **Cross-domain events:** consumers import `@mma/contracts/registration` — never the domain package (#15).
 
 ---
 
@@ -78,7 +78,7 @@ Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](.
 
 REST plural nouns (`/events`, `/registrations`); actions as POST sub-resources
 (`POST /events/:id/publish`, `POST /registrations/:id/cancel`). Status badges via `status-variants.ts`.
-Forms via react-hook-form + Zod from `@old-st/contracts/{domain}`.
+Forms via react-hook-form + Zod from `@mma/contracts/{domain}`.
 
 ---
 
@@ -145,9 +145,9 @@ HTTP adapter in `infrastructure/clients/` calling `event-api-service`. Forward a
 
 ### Choreography saga (asynchronous)
 1. `registration.request` persists registration `REQUESTED` and publishes **`REGISTRATION_REQUESTED`**
-   (`@old-st/contracts/registration`) with `{ eventId, attendeeId }`.
+   (`@mma/contracts/registration`) with `{ eventId, attendeeId }`.
 2. `event-event-handler-service` consumes it, runs `ReserveSeatUseCase` (atomic conditional increment),
-   replies **`SEAT_RESERVED`** or **`SOLD_OUT`** (`@old-st/contracts/event`).
+   replies **`SEAT_RESERVED`** or **`SOLD_OUT`** (`@mma/contracts/event`).
 3. `registration-event-handler-service` consumes the reply → registration `CONFIRMED` | `WAITLISTED`.
    A `CANCEL` frees a seat (`SEAT_RELEASED`) and may promote a waitlisted registration. **Idempotent**:
    re-delivering `SEAT_RESERVED` must not reserve a second seat.

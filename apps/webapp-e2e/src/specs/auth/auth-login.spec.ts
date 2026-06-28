@@ -31,7 +31,7 @@ test.describe('Login Page', () => {
     // After successful login, should redirect to the dashboard
     await expect(page).toHaveURL('/', { timeout: 10000 });
     await expect(
-      page.getByRole('heading', { name: 'Welcome to Old ST Admin' }),
+      page.getByRole('heading', { name: 'Welcome to Mma Admin' }),
     ).toBeVisible();
   });
 

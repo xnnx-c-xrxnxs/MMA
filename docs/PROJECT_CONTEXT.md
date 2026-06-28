@@ -8,11 +8,11 @@
 
 ## 1. What This Project Is
 
-`old-st-template` is a **full-stack Clean Architecture template** for AWS-deployed products. It ships:
+`mma` is a **full-stack Clean Architecture template** for AWS-deployed products. It ships:
 
 - **Backend microservices** — NestJS on Lambda (HTTP API services + SQS event-handler services).
 - **Webapp** — Next.js 15 App Router (Tailwind v4, shadcn-style UI primitives, React Query).
-- **Mobile app** — Expo / React Native (shared data-access layer with the webapp via `@old-st/client-common`).
+- **Mobile app** — Expo / React Native (shared data-access layer with the webapp via `@mma/client-common`).
 - **CD pipeline** — Terraform child modules driven by `.github/service-registry.json` (zero-edit deploys for new services).
 - **Workflow prompts + skills** — `.claude/commands/` and `.claude/skills/` automate Clean Architecture-compliant feature development.
 
@@ -59,10 +59,10 @@ Role enums live in `packages/{auth-domain}-domain/src/domain/constants/{auth-dom
 | Persistence (NoSQL) | DynamoDB OneTable v2 |
 | Persistence (SQL) | Prisma 5 + PostgreSQL 16 (RDS) |
 | Auth | AWS Cognito (deployed), JWT JWKS verification |
-| Eventing | SQS Standard + FIFO via `@old-st/aws-sqs` |
-| Telemetry | OpenTelemetry + structured JSON logs (`@old-st/telemetry`) + CloudWatch + X-Ray |
+| Eventing | SQS Standard + FIFO via `@mma/aws-sqs` |
+| Telemetry | OpenTelemetry + structured JSON logs (`@mma/telemetry`) + CloudWatch + X-Ray |
 | Webapp | Next.js 15 App Router, Tailwind v4, shadcn primitives, React Query, react-hook-form + Zod resolver |
-| Mobile | Expo SDK 52, Expo Router, React Query, `@old-st/mobile-ui` primitives |
+| Mobile | Expo SDK 52, Expo Router, React Query, `@mma/mobile-ui` primitives |
 | IaC | Terraform (child modules + per-environment roots) |
 | CI/CD | GitHub Actions, GitHub OIDC → AWS, Nx affected |
 | Monorepo | Nx 19 + pnpm workspaces |
@@ -75,12 +75,12 @@ The full list is in [CLAUDE.md](../CLAUDE.md) — Golden Rules #1–#46. Highlig
 
 - **Clean Architecture layering** — Presentation → Application → Use Cases → Domain → Infrastructure. Inner never depends on outer.
 - **Application services always exist** — controllers never call use cases directly.
-- **Contracts via subpath imports only** — `@old-st/contracts/{domain}`, never bare `@old-st/contracts`.
+- **Contracts via subpath imports only** — `@mma/contracts/{domain}`, never bare `@mma/contracts`.
 - **Pagination per persistence** — DynamoDB → cursor; Prisma → offset. Never mix within a domain.
 - **Authenticated actor from JWT only** — `@CurrentUser()` decorator, never from request body.
 - **Refresh tokens are httpOnly cookies; access tokens memory-only** (no localStorage).
 - **All file uploads/downloads go through `file-api-service` via S3 presigned URLs** — domain services never touch S3.
-- **Structured logging via `createLogger()` from `@old-st/telemetry`** — never `new Logger()` from `@nestjs/common`.
+- **Structured logging via `createLogger()` from `@mma/telemetry`** — never `new Logger()` from `@nestjs/common`.
 - **CorrelationId propagated across HTTP + SQS** — via `correlationMiddleware()` and `getOutboundHeaders()`.
 - **Service registry-driven CD** — adding a service = editing `.github/service-registry.json`, not Terraform `.tf` files.
 
@@ -125,11 +125,11 @@ The full list with trigger phrases is in [CLAUDE.md §11](../CLAUDE.md) under "W
 
 ### Forms (Webapp)
 
-`react-hook-form` + Zod resolver, schema imported from `@old-st/contracts/{domain}`. See `webapp-form-with-validation` skill.
+`react-hook-form` + Zod resolver, schema imported from `@mma/contracts/{domain}`. See `webapp-form-with-validation` skill.
 
 ### Toast feedback
 
-All mutations use `toast` from `@old-st/ui`. `<Toaster>` is mounted once in `apps/webapp/src/app/layout.tsx`.
+All mutations use `toast` from `@mma/ui`. `<Toaster>` is mounted once in `apps/webapp/src/app/layout.tsx`.
 
 ---
 

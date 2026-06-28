@@ -1,4 +1,4 @@
-# @old-st/eslint-plugin — Migration Guide
+# @mma/eslint-plugin — Migration Guide
 
 This file documents breaking changes and new rules across plugin versions.
 Projects forked from the template should reference this when updating.
@@ -11,16 +11,16 @@ Projects forked from the template should reference this when updating.
 
 | Rule | Severity | Description |
 |---|---|---|
-| `@old-st/no-bare-contracts-import` | error | Ban bare `@old-st/contracts` imports — use domain subpaths |
-| `@old-st/no-domain-framework-imports` | error | Ban `@nestjs/*`, `zod`, `express`, `@aws-sdk/*` in domain layer |
-| `@old-st/no-prisma-client-in-domain` | error | Ban `@prisma/client` outside infrastructure |
-| `@old-st/no-contracts-in-use-cases` | error | Ban `@old-st/contracts/*` in use-case files |
-| `@old-st/no-direct-fetch-in-components` | error | Ban direct `fetch()`/`axios` in frontend components |
-| `@old-st/no-hardcoded-status-strings` | error | Flag hardcoded status/role strings in domain files |
-| `@old-st/enforce-service-boundary` | error | Controllers must only import from application/services |
-| `@old-st/no-node-env-development` | error | Ban `NODE_ENV === 'development'` checks |
-| `@old-st/require-event-handler-service` | error | Events must be in dedicated event-handler-service |
-| `@old-st/require-file-api-service` | **off** | File ops via file-api-service (enable when ready) |
+| `@mma/no-bare-contracts-import` | error | Ban bare `@mma/contracts` imports — use domain subpaths |
+| `@mma/no-domain-framework-imports` | error | Ban `@nestjs/*`, `zod`, `express`, `@aws-sdk/*` in domain layer |
+| `@mma/no-prisma-client-in-domain` | error | Ban `@prisma/client` outside infrastructure |
+| `@mma/no-contracts-in-use-cases` | error | Ban `@mma/contracts/*` in use-case files |
+| `@mma/no-direct-fetch-in-components` | error | Ban direct `fetch()`/`axios` in frontend components |
+| `@mma/no-hardcoded-status-strings` | error | Flag hardcoded status/role strings in domain files |
+| `@mma/enforce-service-boundary` | error | Controllers must only import from application/services |
+| `@mma/no-node-env-development` | error | Ban `NODE_ENV === 'development'` checks |
+| `@mma/require-event-handler-service` | error | Events must be in dedicated event-handler-service |
+| `@mma/require-file-api-service` | **off** | File ops via file-api-service (enable when ready) |
 
 ### Preset Configs
 
@@ -35,7 +35,7 @@ Projects forked from the template should reference this when updating.
 1. Install: plugin ships with the template workspace — no extra install needed
 2. Update `eslint.config.mjs`:
    ```js
-   import oldStPlugin from '@old-st/eslint-plugin';
+   import oldStPlugin from '@mma/eslint-plugin';
    // Add the plugin to your existing config
    ```
 3. Run `pnpm nx lint --all` to find violations

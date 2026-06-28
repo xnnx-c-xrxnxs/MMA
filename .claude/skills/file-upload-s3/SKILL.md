@@ -18,7 +18,7 @@ Use this skill when:
 
 ## 1. Golden Rule
 
-**All file uploads and downloads MUST go through `file-api-service`.** Domain services (user-api-service, order-api-service, etc.) must never touch S3 directly. They never import `@aws-sdk/client-s3` or `@old-st/aws-s3`.
+**All file uploads and downloads MUST go through `file-api-service`.** Domain services (user-api-service, order-api-service, etc.) must never touch S3 directly. They never import `@aws-sdk/client-s3` or `@mma/aws-s3`.
 
 The `file-api-service` is the single gate for all S3 operations. It issues **presigned URLs** that allow the client to upload or download directly to/from S3 — no file bytes ever pass through any backend service.
 
@@ -97,7 +97,7 @@ Pass `:key` as the `fileKey` value stored in the domain entity (URL-encoded).
 
 ## 4. S3FileStorage (aws-s3 package)
 
-The `file-api-service` delegates S3 operations to `S3FileStorage` from `@old-st/aws-s3`.
+The `file-api-service` delegates S3 operations to `S3FileStorage` from `@mma/aws-s3`.
 
 ```typescript
 // packages/aws/aws-s3/src/s3-file-storage.ts
@@ -115,7 +115,7 @@ export class S3FileStorage {
 }
 ```
 
-**Local development:** LocalStack provides S3 on port 4566. The `s3-client-factory.ts` in `@old-st/aws-s3` checks `STAGE=local` and points the client at `LOCALSTACK_ENDPOINT`.
+**Local development:** LocalStack provides S3 on port 4566. The `s3-client-factory.ts` in `@mma/aws-s3` checks `STAGE=local` and points the client at `LOCALSTACK_ENDPOINT`.
 
 You must add `s3` to the `SERVICES=` list in `docker-compose.yml` for LocalStack to activate S3:
 
@@ -172,7 +172,7 @@ export class FileApplicationService {
       provide: S3FileStorage,
       useFactory: () => {
         return new S3FileStorage(
-          createS3Client(), // from @old-st/aws-s3
+          createS3Client(), // from @mma/aws-s3
           process.env.FILES_S3_BUCKET_NAME ?? '',
         );
       },
@@ -184,7 +184,7 @@ export class FileApplicationService {
 export class FileModule {}
 ```
 
-Import `S3FileStorage` and `createS3Client` from `@old-st/aws-s3`.
+Import `S3FileStorage` and `createS3Client` from `@mma/aws-s3`.
 
 ---
 
@@ -370,7 +370,7 @@ Add to the `file-api-service` entry in `apiServices`:
 
 ## 13. Checklist
 
-- [ ] `file-api-service` wired with `S3FileStorage` from `@old-st/aws-s3`
+- [ ] `file-api-service` wired with `S3FileStorage` from `@mma/aws-s3`
 - [ ] `FILES_S3_BUCKET_NAME` env var present in `.env.local` and `service-registry.json`
 - [ ] `s3` added to `SERVICES=` in `docker-compose.yml`
 - [ ] S3 bucket created in `scripts/setup-localstack.ts`

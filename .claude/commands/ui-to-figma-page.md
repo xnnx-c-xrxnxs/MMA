@@ -1,10 +1,10 @@
 ---
-description: "Generate ONE Figma page/frame from a natural-language brief, a page spec (.specs/page-*.yaml), or an existing webapp route — using @old-st/ui components as published in the Figma library. Reverse direction of /figma-page (code → Figma instead of Figma → code). USE WHEN a UI/UX designer says 'build this page in Figma using our components', 'draft a Figma mock from this spec', 'mirror the /users page back into Figma', or asks to compose a Figma frame from design-system primitives."
+description: "Generate ONE Figma page/frame from a natural-language brief, a page spec (.specs/page-*.yaml), or an existing webapp route — using @mma/ui components as published in the Figma library. Reverse direction of /figma-page (code → Figma instead of Figma → code). USE WHEN a UI/UX designer says 'build this page in Figma using our components', 'draft a Figma mock from this spec', 'mirror the /users page back into Figma', or asks to compose a Figma frame from design-system primitives."
 ---
 
 # UI Components → Figma Page (single screen)
 
-You are orchestrating the generation of **one** Figma page/frame composed of `@old-st/ui` component instances. The output is a Figma frame in a designer-supplied file — NOT a Next.js page (for that, use `figma-page.md`).
+You are orchestrating the generation of **one** Figma page/frame composed of `@mma/ui` component instances. The output is a Figma frame in a designer-supplied file — NOT a Next.js page (for that, use `figma-page.md`).
 
 **Do NOT call any tools or write to Figma until Phase 0 (Interview) is complete AND the Phase 2 plan table is APPROVED by the designer.**
 
@@ -24,7 +24,7 @@ Ask the following in a single structured message and wait for answers.
 
 ### Mode selection — pick ONE
 
-- **Mode A — Natural-language brief.** Designer describes the layout in prose, naming `@old-st/ui` primitives.
+- **Mode A — Natural-language brief.** Designer describes the layout in prose, naming `@mma/ui` primitives.
 - **Mode B — Page spec file.** Designer provides a `.specs/page-*.yaml` path (same shape as `/webapp-feature` input).
 - **Mode C — Mirror an existing webapp route.** Designer gives a route path (e.g. `/users`); the orchestrator captures the live page as a pixel-perfect reference AND builds a design-system version next to it.
 
@@ -57,7 +57,7 @@ The Figma MCP tools are **deferred** — they appear in `availableDeferredTools`
 Run in parallel after Figma tools are loaded:
 
 - `mcp__figma__whoami` — confirm auth + team. If unauthenticated, STOP.
-- `mcp__figma__get_libraries({ fileKey })` — confirm `@old-st/ui` is enabled in the target file. **If not, STOP** and tell the designer to enable it via Figma → Assets → Libraries.
+- `mcp__figma__get_libraries({ fileKey })` — confirm `@mma/ui` is enabled in the target file. **If not, STOP** and tell the designer to enable it via Figma → Assets → Libraries.
 - `mcp__figma__get_metadata({ fileKey, nodeId: target page })` — confirm the target page exists; if `"create new page named X"` was requested, note that Phase 3 must create it.
 - `Agent(subagent_type="prompt-skill-loader", prompt="Pre-load these skills as a digest: ui-to-figma-page, figma-to-ui-screen, figma-to-ui-component, parse-page-spec")`
 - Read [packages/ui/src/index.ts](packages/ui/src/index.ts) — authoritative inventory of primitives that *should* have Figma counterparts.
@@ -104,7 +104,7 @@ Produce the page-build plan table per the SKILL.md Phase 1 format. Include:
 
 - Every section/row/column
 - Every primitive instance (with variant + props)
-- Status column: `In @old-st/ui?` (and a corresponding match in the Figma library via `search_design_system`)
+- Status column: `In @mma/ui?` (and a corresponding match in the Figma library via `search_design_system`)
 - Blockers section — list any primitives missing from either side
 - Tokens used (from `packages/ui/src/lib/tokens.ts`)
 
@@ -121,7 +121,7 @@ For each blocker:
 | Designer answer | Action |
 |---|---|
 | "Inline it as plain frames" | Phase 4 uses `figma.createFrame()` for those nodes instead of `use_figma` |
-| "Add it to the library first" | **STOP this workflow.** Invoke `figma-to-ui-component` (reverse — to add the primitive to `@old-st/ui` AND its Figma counterpart). Resume here only when the new primitive is published in the Figma library. |
+| "Add it to the library first" | **STOP this workflow.** Invoke `figma-to-ui-component` (reverse — to add the primitive to `@mma/ui` AND its Figma counterpart). Resume here only when the new primitive is published in the Figma library. |
 | "Skip that section for now" | Remove from the plan table; proceed with a smaller scope |
 
 ---
@@ -182,7 +182,7 @@ If they iterate on the Figma frame, re-running `/ui-to-figma-page` with the same
 
 | Symptom | Use instead |
 |---|---|
-| Need to ADD a primitive to `@old-st/ui` + Figma library first | `figma-component.md` (reverse mode if it doesn't exist in Figma yet — otherwise add the code primitive manually) |
+| Need to ADD a primitive to `@mma/ui` + Figma library first | `figma-component.md` (reverse mode if it doesn't exist in Figma yet — otherwise add the code primitive manually) |
 | Need to BUILD the Next.js page from an existing Figma frame | `figma-page.md` (the reverse direction of this prompt) |
 | Need to import an entire Figma file (multiple pages + library) | `figma-import.md` |
 | Designer wants a code-side spec, not a Figma frame | `new-page-spec.md` |

@@ -1,5 +1,5 @@
 /**
- * @old-st/eslint-plugin — Coding standards enforcement for Old St Labs template projects.
+ * @mma/eslint-plugin — Coding standards enforcement for Old St Labs template projects.
  *
  * 10 rules covering Clean Architecture boundaries, import hygiene, domain purity,
  * frontend patterns, and service isolation.

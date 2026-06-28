@@ -80,7 +80,7 @@ You **never** edit files. You **never** run migrations.
 - ✅ All proposed enum values exist in `{domain}-statuses.ts`.
 
 ## Cross-Domain Impact
-- `@old-st/contracts/{domain}/event-schemas.ts` defines `ORDER_CREATED` with `status` field — schema change affects published events. Consumers in downstream event-handler services need re-review.
+- `@mma/contracts/{domain}/event-schemas.ts` defines `ORDER_CREATED` with `status` field — schema change affects published events. Consumers in downstream event-handler services need re-review.
 
 ## Recommended Migration Sequence
 1. Update `domain/constants` first (single source of truth)

@@ -15,15 +15,15 @@
 // unchanged for backward compatibility.
 //
 // Usage (HTTP API service main.ts):
-//   import { correlationMiddleware } from '@old-st/telemetry';
+//   import { correlationMiddleware } from '@mma/telemetry';
 //   app.use(correlationMiddleware());      // captures correlationId + authHeader
 //
 // Usage (event handler — in handleRecords):
-//   import { runWithRequestContext } from '@old-st/telemetry';
+//   import { runWithRequestContext } from '@mma/telemetry';
 //   runWithRequestContext({ correlationId: id }, () => processRecord(record));
 //
 // Usage (ACL adapter — outbound HTTP call):
-//   import { getOutboundHeaders } from '@old-st/telemetry';
+//   import { getOutboundHeaders } from '@mma/telemetry';
 //   await axios.post(url, body, { headers: { ...getOutboundHeaders() } });
 //
 // Usage (anywhere — read current values):
@@ -122,7 +122,7 @@ export function getOutboundHeaders(): Record<string, string> {
  * (useful for cross-service HTTP calls that want to share the same chain).
  *
  * Usage in NestJS main.ts:
- *   import { correlationMiddleware } from '@old-st/telemetry';
+ *   import { correlationMiddleware } from '@mma/telemetry';
  *   // inside setupGlobalMiddleware() — must be the FIRST middleware:
  *   app.use(correlationMiddleware());
  */

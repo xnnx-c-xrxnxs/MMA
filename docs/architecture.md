@@ -24,7 +24,7 @@ Presentation (NestJS controllers, pipes, filters)
 |---|---|---|
 | **Presentation** | Parse HTTP, validate with Zod, map errors to status codes | Contain business logic, talk to the database directly |
 | **Application Service** | Orchestrate use cases, transform entities → DTOs via Zod | Contain business rules, skip use cases |
-| **Use Case** | Single domain operation (e.g. `CreateUserUseCase`) | Return DTOs, depend on `@old-st/contracts/*` |
+| **Use Case** | Single domain operation (e.g. `CreateUserUseCase`) | Return DTOs, depend on `@mma/contracts/*` |
 | **Domain Entity** | Business invariants, state transitions, factory methods | Import NestJS, Zod, infrastructure, contracts |
 | **Repository (interface)** | Type contract for persistence | Contain SQL or Dynamo code |
 | **Repository (implementation)** | Translate domain entities ↔ persistence rows | Contain business decisions |
@@ -80,13 +80,13 @@ The complete enforced rules list is in [`CLAUDE.md`](../CLAUDE.md) §2 (37 rules
 3. Domain layer has zero framework dependencies (no NestJS, no Zod, no contracts).
 4. Repository interfaces live in the domain package; implementations in infrastructure.
 5. Never trust `userId` from client input.
-6. **Never import from bare `@old-st/contracts`** — always domain-scoped (`@old-st/contracts/{domain}`).
+6. **Never import from bare `@mma/contracts`** — always domain-scoped (`@mma/contracts/{domain}`).
 7. Entities use `dateCreated` + `updatedAt`. Never add `createdAt`.
 8. Entities have **no `toObject()`** method. Serialization happens in the Application Service via Zod `schema.parse()`.
 9. All status/role comparisons use **enum constants** from the domain. Never hardcode `'PENDING'`, `'ACTIVE'`, etc.
 10. Use `STAGE === 'local'` for local-vs-AWS branching. **Never** use `NODE_ENV === 'development'`.
-11. Every API service uses **`createLogger()`** from `@old-st/telemetry` (not `new Logger()` from `@nestjs/common`).
-12. Every HTTP API service uses **`correlationMiddleware()`** from `@old-st/telemetry` for end-to-end request tracing.
+11. Every API service uses **`createLogger()`** from `@mma/telemetry` (not `new Logger()` from `@nestjs/common`).
+12. Every HTTP API service uses **`correlationMiddleware()`** from `@mma/telemetry` for end-to-end request tracing.
 13. **All file uploads/downloads MUST go through `file-api-service`** — domain services never touch S3 directly.
 
 ---
@@ -126,7 +126,7 @@ Standards are enforced by multiple layers:
 
 | Mechanism | What it covers | Blocks PR? |
 |---|---|---|
-| **ESLint plugin** (`@old-st/eslint-plugin`) | Domain framework imports, hardcoded statuses, bare contracts, Prisma client placement, fetch in components | Yes |
+| **ESLint plugin** (`@mma/eslint-plugin`) | Domain framework imports, hardcoded statuses, bare contracts, Prisma client placement, fetch in components | Yes |
 | **Nx module boundaries** | Cross-domain leaks, package-level dependency rules | Yes |
 | **CI structural checks** (`scripts/lint-standards.ts`) | Toolchain-level rules (no-toObject, no-createdAt, controller-no-direct-usecase, registry-env-sync, app-service-has-logger, etc.) | Yes |
 | **Spectral API lint** (`.spectral.yml`) | REST conventions, error response shape | Yes |

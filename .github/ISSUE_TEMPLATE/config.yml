@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: "💬 Questions or Discussions"
-    url: https://github.com/Old-St-Labs/old-st-template/discussions
+    url: https://github.com/xnnx-c-xrxnxs/mma/discussions
     about: "For questions that aren't user stories, bugs, or infra work — start a discussion."
   - name: "📖 Architecture & Conventions"
-    url: https://github.com/Old-St-Labs/old-st-template/blob/main/CLAUDE.md
+    url: https://github.com/xnnx-c-xrxnxs/mma/blob/main/CLAUDE.md
     about: "Read the Clean Architecture rules, Golden Rules, and skills catalogue."

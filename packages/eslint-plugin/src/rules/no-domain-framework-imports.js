@@ -8,7 +8,7 @@
 
 const DEFAULT_BANNED_PACKAGES = [
   '@nestjs/',
-  '@old-st/contracts',
+  '@mma/contracts',
   'zod',
   'express',
   '@aws-sdk/',

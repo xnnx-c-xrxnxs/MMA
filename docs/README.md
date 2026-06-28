@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the **old-st-template** documentation.
+Welcome to the **mma** documentation.
 
 This template is a full-stack Clean Architecture monorepo (Nx, NestJS, Next.js, Expo).
 

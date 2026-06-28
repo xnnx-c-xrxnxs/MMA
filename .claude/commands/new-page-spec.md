@@ -17,7 +17,7 @@ This prompt does NOT scaffold any code. Its only job is to write the template fi
 Ask via `vscode_askQuestions`:
 
 1. **Route?** — the Next.js path. Examples: `/payments`, `/payments/[paymentId]`, `/admin/discounts`. Dynamic segments use `[paramName]`.
-2. **Domain?** — lowercase kebab-case. Examples: `payment`, `discount`, `shipping-rate`. Determines the contract import (`@old-st/contracts/{domain}`) and the `components/{domain}/` folder.
+2. **Domain?** — lowercase kebab-case. Examples: `payment`, `discount`, `shipping-rate`. Determines the contract import (`@mma/contracts/{domain}`) and the `components/{domain}/` folder.
 
 Derive the file slug from the route:
 
@@ -84,7 +84,7 @@ page:
   title: "TODO Page Title"
   layout: list                  # list | detail | form
   permissions:
-    roles: []                   # e.g. [ADMIN, FINANCE] — see USER_ROLES in @old-st/contracts/{auth-domain}
+    roles: []                   # e.g. [ADMIN, FINANCE] — see USER_ROLES in @mma/contracts/{auth-domain}
   navigation:
     sidebar:
       section: "TODO Section"   # Sidebar header text — Operations, Finance, Admin, ...
@@ -94,7 +94,7 @@ page:
 domain: {domain}
 
 # ─── React Query hooks (REQUIRED — at least one) ─────────────────────────
-# All hooks MUST already exist in @old-st/client-common. If anything is missing,
+# All hooks MUST already exist in @mma/client-common. If anything is missing,
 # /webapp-feature will hard-stop and tell you to run /new-feature first.
 dataSources:
   - hook: use{Domain}sByStatus
@@ -133,7 +133,7 @@ components:
   #     - { name: search, type: search, label: "Search by ID" }
 
 # ─── Forms (if any) ──────────────────────────────────────────────────────
-# Schemas MUST come from @old-st/contracts/{domain} — never duplicate.
+# Schemas MUST come from @mma/contracts/{domain} — never duplicate.
 forms: []
   # - name: create-{domain}
   #   schema: create{Domain}Schema
@@ -198,7 +198,7 @@ Next steps:
 
 Tips:
   - All hooks referenced in dataSources / forms.submit / actions.hook must
-    already exist in @old-st/client-common. Run /new-feature FIRST if not.
+    already exist in @mma/client-common. Run /new-feature FIRST if not.
   - Status columns MUST set both `badge:` and `formatter:` (Golden Rule #22a).
   - The spec file is gitignored by default. To commit it (recommended for
     visibility in PRs), add an exception in .gitignore:

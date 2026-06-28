@@ -80,11 +80,11 @@ The page should only render `<OrderInfoCard>` and `<OrderItemsTable>`.
 #### `apps/webapp/src/app/auth/login/page.tsx`
 #### `apps/webapp/src/app/(protected)/change-password/page.tsx`
 **Problem:** All three use raw `useState` for form state and raw `<label>` (not the
-`<Label>` primitive from `@old-st/ui`). They also bypass `react-hook-form`.
+`<Label>` primitive from `@mma/ui`). They also bypass `react-hook-form`.
 
 **Fix per Golden Rule #23a:** Replace with `react-hook-form` + Zod resolver, sourcing
-the schema from the relevant `@old-st/contracts/{domain}` package. Wrap fields in
-`<FormField>` + `<FormItem>` + `<FormControl>` + `<FormMessage>` from `@old-st/ui`.
+the schema from the relevant `@mma/contracts/{domain}` package. Wrap fields in
+`<FormField>` + `<FormItem>` + `<FormControl>` + `<FormMessage>` from `@mma/ui`.
 This gives `aria-invalid` / `aria-describedby` and inline error rendering for free.
 
 Read the `webapp-form-with-validation` skill before starting:
@@ -120,10 +120,10 @@ The webapp builds to `apps/webapp/out/` and deploys to S3 + CloudFront via the C
 
 ---
 
-## Rule 4 — Replace raw `<label>` with `<Label>` from `@old-st/ui`
+## Rule 4 — Replace raw `<label>` with `<Label>` from `@mma/ui`
 
 **Golden Rule #21:** Never use raw HTML `<label>`. Use the `<Label>` primitive from
-`@old-st/ui` so `aria-invalid` / `aria-describedby` wiring is consistent.
+`@mma/ui` so `aria-invalid` / `aria-describedby` wiring is consistent.
 
 **Current violations (13 occurrences across 5 files):**
 
@@ -136,7 +136,7 @@ The webapp builds to `apps/webapp/out/` and deploys to S3 + CloudFront via the C
 | `apps/webapp/src/components/orders/create-order-form.tsx` | 2 raw `<label>` tags |
 
 These will be naturally fixed when the form files are converted to `react-hook-form` +
-`<FormField>` (Rule 2 above), since `<FormLabel>` from `@old-st/ui` replaces `<label>`
+`<FormField>` (Rule 2 above), since `<FormLabel>` from `@mma/ui` replaces `<label>`
 inside that pattern. Do not fix them in isolation — fix them as part of Rule 2.
 
 ---

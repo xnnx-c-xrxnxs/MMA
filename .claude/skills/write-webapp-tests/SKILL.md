@@ -46,16 +46,16 @@ module.exports = createJestConfig({
 
 ### Mocking React Query Hooks
 
-Mock `@old-st/client-common` to intercept hook calls. Return query-shaped data for read hooks and mutation-shaped objects for mutations:
+Mock `@mma/client-common` to intercept hook calls. Return query-shaped data for read hooks and mutation-shaped objects for mutations:
 
 ```typescript
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useUsers: jest.fn(),
   useCreateUser: jest.fn(),
   useDeleteUser: jest.fn(),
 }));
 
-import { useUsers, useCreateUser, useDeleteUser } from '@old-st/client-common';
+import { useUsers, useCreateUser, useDeleteUser } from '@mma/client-common';
 
 const mockUseUsers = useUsers as jest.Mock;
 const mockUseCreateUser = useCreateUser as jest.Mock;
@@ -106,7 +106,7 @@ Status variant functions are pure functions — test with `it.each`:
 
 ```typescript
 import { userStatusVariant } from './status-variants';
-import { EntityStatusEnum } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum } from '@mma/contracts/{domain}';
 
 describe('userStatusVariant', () => {
   it.each([
@@ -132,9 +132,9 @@ Table components render a list of entities with status badges and action links.
 ```typescript
 import { render, screen } from '@testing-library/react';
 import { UsersTable } from './users-table';
-import type { EntityResponse } from '@old-st/contracts/{domain}';
+import type { EntityResponse } from '@mma/contracts/{domain}';
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useDeleteUser: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -230,18 +230,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateUserForm } from './create-user-form';
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useCreateUser: jest.fn(),
 }));
 
 // Mock the toast so we can assert on it
-jest.mock('@old-st/ui', () => ({
-  ...jest.requireActual('@old-st/ui'),
+jest.mock('@mma/ui', () => ({
+  ...jest.requireActual('@mma/ui'),
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-import { useCreateUser } from '@old-st/client-common';
-import { toast } from '@old-st/ui';
+import { useCreateUser } from '@mma/client-common';
+import { toast } from '@mma/ui';
 
 const mockMutateAsync = jest.fn();
 
@@ -318,7 +318,7 @@ describe('CreateUserForm', () => {
 - [ ] Cancel: calls `onClose`
 - [ ] Zod validation errors: assert `<FormMessage>` text for invalid inputs
 
-> **Note:** Mock `toast` at the `@old-st/ui` module level so you can spy on `toast.success` and `toast.error`. Use `userEvent.setup()` (async) over `fireEvent` for more realistic interaction.
+> **Note:** Mock `toast` at the `@mma/ui` module level so you can spy on `toast.success` and `toast.error`. Use `userEvent.setup()` (async) over `fireEvent` for more realistic interaction.
 
 ---
 
@@ -370,7 +370,7 @@ npx nx test webapp --testFile=src/components/users/users-table.spec.tsx
 
 | Mistake | Correct approach |
 |---|---|
-| Not mocking `@old-st/client-common` hooks | Mock ALL hooks used by the component, even if only reading data |
+| Not mocking `@mma/client-common` hooks | Mock ALL hooks used by the component, even if only reading data |
 | Using `getByText` for optional elements | Use `queryByText` when the element may not be present |
 | Not providing mock data matching the contract type | Build mock objects that satisfy the full `{Entity}Response` type |
 | Testing page components with full rendering | Pages are thin orchestrators — prefer testing the child components directly |

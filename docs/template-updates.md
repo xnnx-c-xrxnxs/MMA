@@ -17,10 +17,10 @@ This doc describes the recommended workflow.
 
 ```sh
 # In your downstream project, after init-project.mjs ran:
-git remote add template https://github.com/Old-St-Labs/old-st-template.git
+git remote add template https://github.com/xnnx-c-xrxnxs/mma.git
 git remote -v
 # origin   git@github.com:acme/acme-platform.git (fetch/push)
-# template https://github.com/Old-St-Labs/old-st-template.git (fetch/push)
+# template https://github.com/xnnx-c-xrxnxs/mma.git (fetch/push)
 ```
 
 ## When the template publishes a new feature you want
@@ -45,7 +45,7 @@ Best for: a new skill, a new orchestrator prompt, a Terraform module fix.
 git cherry-pick template/<commit-sha>
 ```
 
-If the commit touches files that contain your project's renamed scope (`@acme/` instead of `@old-st/`), the cherry-pick will conflict. Resolve by re-running the rename mentally — usually a sed away.
+If the commit touches files that contain your project's renamed scope (`@acme/` instead of `@mma/`), the cherry-pick will conflict. Resolve by re-running the rename mentally — usually a sed away.
 
 ## Strategy 2 — Manual file copy
 

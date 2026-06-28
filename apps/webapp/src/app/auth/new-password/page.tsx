@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@old-st/client-common';
-import { newPasswordRequestSchema } from '@old-st/contracts/auth';
+import { useAuth } from '@mma/client-common';
+import { newPasswordRequestSchema } from '@mma/contracts/auth';
 import {
   Button,
   Card,
@@ -22,11 +22,11 @@ import {
   FormMessage,
   Input,
   toast,
-} from '@old-st/ui';
+} from '@mma/ui';
 
 // UI-only schema: extends the contract with a confirm-password field and a
 // cross-field refinement. The core `newPassword` rule still comes from
-// `@old-st/contracts/auth` (Golden Rule #23a).
+// `@mma/contracts/auth` (Golden Rule #23a).
 const newPasswordFormSchema = newPasswordRequestSchema
   .pick({ newPassword: true })
   .extend({

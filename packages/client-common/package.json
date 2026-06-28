@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/client-common",
+  "name": "@mma/client-common",
   "version": "1.0.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -15,6 +15,6 @@
     "@tanstack/react-query": ">=5"
   },
   "dependencies": {
-    "@old-st/contracts-common": "workspace:*"
+    "@mma/contracts-common": "workspace:*"
   }
 }

@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useChangePassword } from '@old-st/client-common';
-import { changePasswordRequestSchema } from '@old-st/contracts/auth';
+import { useChangePassword } from '@mma/client-common';
+import { changePasswordRequestSchema } from '@mma/contracts/auth';
 import {
   Button,
   Card,
@@ -21,7 +21,7 @@ import {
   FormMessage,
   Input,
   toast,
-} from '@old-st/ui';
+} from '@mma/ui';
 
 // UI-only schema: extends the contract with `confirmPassword` + cross-field
 // match check. Core rules (oldPassword + newPassword) come from the contract.

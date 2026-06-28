@@ -23,9 +23,9 @@
 
 | Package | Assets |
 |---|---|
-| `@old-st/mobile-ui` | 11 primitives: Avatar, Badge, Button, Card (+ Header/Title/Content), EmptyState, ErrorBoundary, Input, ListRow, Separator, Spinner, Text |
-| `@old-st/client-common` | Auth hooks: useSignIn, useCompleteNewPassword, useRefreshSession, useForgotPassword, useConfirmForgotPassword, useChangePassword, useSignOut, useCurrentUser. Also: useFileUpload, optimisticMutation, AuthProvider, useAuth, configureApi |
-| `@old-st/contracts/auth` | Zod schemas: signInRequestSchema (discriminated union), forgotPasswordRequestSchema, confirmForgotPasswordRequestSchema, newPasswordRequestSchema, changePasswordRequestSchema, meResponseSchema |
+| `@mma/mobile-ui` | 11 primitives: Avatar, Badge, Button, Card (+ Header/Title/Content), EmptyState, ErrorBoundary, Input, ListRow, Separator, Spinner, Text |
+| `@mma/client-common` | Auth hooks: useSignIn, useCompleteNewPassword, useRefreshSession, useForgotPassword, useConfirmForgotPassword, useChangePassword, useSignOut, useCurrentUser. Also: useFileUpload, optimisticMutation, AuthProvider, useAuth, configureApi |
+| `@mma/contracts/auth` | Zod schemas: signInRequestSchema (discriminated union), forgotPasswordRequestSchema, confirmForgotPasswordRequestSchema, newPasswordRequestSchema, changePasswordRequestSchema, meResponseSchema |
 | Design tokens | `packages/ui/src/lib/tokens.ts` → re-exported by `packages/mobile-ui/src/lib/theme.ts` (colors, spacing, radii, fontSizes) |
 
 ### Webapp Parity Reference (What the Webapp Already Ships)
@@ -125,8 +125,8 @@ Build the mobile-ui primitives that Phase 1+ screens will need.
 
 | # | Deliverable | Details |
 |---|---|---|
-| 0a | `Toast` primitive in `@old-st/mobile-ui` | Lightweight toast for success/error feedback. Used by all auth screens for error messages and by mutation flows for success confirmation. The webapp uses `sonner` — mobile needs its own implementation using `Animated` API. Provide `toast.success()`, `toast.error()`, `toast.info()` API. |
-| 0b | `ToastProvider` in `@old-st/mobile-ui` | Context provider mounted in root `_layout.tsx` (same pattern as webapp's `<Toaster>` in `layout.tsx`). |
+| 0a | `Toast` primitive in `@mma/mobile-ui` | Lightweight toast for success/error feedback. Used by all auth screens for error messages and by mutation flows for success confirmation. The webapp uses `sonner` — mobile needs its own implementation using `Animated` API. Provide `toast.success()`, `toast.error()`, `toast.info()` API. |
+| 0b | `ToastProvider` in `@mma/mobile-ui` | Context provider mounted in root `_layout.tsx` (same pattern as webapp's `<Toaster>` in `layout.tsx`). |
 
 **Skill:** `mobile-ui-primitive`
 **Tests:** `packages/mobile-ui/src/components/toast.spec.tsx`
@@ -151,8 +151,8 @@ The highest-priority phase. Every other screen depends on the auth guard.
 | 1h | Update `src/app/_layout.tsx` | Edit | Add `(auth)` Stack.Screen. Add `useProtectedRoute()` hook: reads `useAuth()` → if not authenticated and not on `(auth)` segment → redirect to `/(auth)/login`. If authenticated and on `(auth)` → redirect to `/(tabs)` | `mobile-navigation-patterns` |
 
 **Dependencies:** Phase 0 (Toast for error feedback)
-**Contracts used:** `signInRequestSchema`, `forgotPasswordRequestSchema`, `confirmForgotPasswordRequestSchema`, `newPasswordRequestSchema` from `@old-st/contracts/auth`
-**Hooks used:** `useSignIn`, `useForgotPassword`, `useConfirmForgotPassword`, `useCompleteNewPassword`, `useAuth` from `@old-st/client-common`
+**Contracts used:** `signInRequestSchema`, `forgotPasswordRequestSchema`, `confirmForgotPasswordRequestSchema`, `newPasswordRequestSchema` from `@mma/contracts/auth`
+**Hooks used:** `useSignIn`, `useForgotPassword`, `useConfirmForgotPassword`, `useCompleteNewPassword`, `useAuth` from `@mma/client-common`
 
 **Tests:**
 - `src/app/(auth)/login.spec.tsx` — submit credentials, SUCCESS response, NEW_PASSWORD_REQUIRED response, validation errors, loading state
@@ -168,11 +168,11 @@ The highest-priority phase. Every other screen depends on the auth guard.
 
 | # | File | Type | Description | Skill |
 |---|---|---|---|---|
-| 2a | Update `src/app/(tabs)/_layout.tsx` | Edit | Replace hardcoded colors with theme tokens from `@old-st/mobile-ui`. Clean tab bar styling. Keep Dashboard tab + placeholder comments for domain tabs (same pattern, better code) | `mobile-navigation-patterns` |
+| 2a | Update `src/app/(tabs)/_layout.tsx` | Edit | Replace hardcoded colors with theme tokens from `@mma/mobile-ui`. Clean tab bar styling. Keep Dashboard tab + placeholder comments for domain tabs (same pattern, better code) | `mobile-navigation-patterns` |
 | 2b | Update `src/app/(tabs)/index.tsx` | Edit | Polish dashboard: use theme tokens, show user greeting from `useCurrentUser()`, summary cards as pressable (navigate to domain tabs when added), replace hardcoded `#f8fafc` with `colors.background` | `mobile-new-screen` |
 
 **Dependencies:** Phase 1 (auth guard — dashboard should only render for authenticated users)
-**Hooks used:** `useCurrentUser` from `@old-st/client-common`
+**Hooks used:** `useCurrentUser` from `@mma/client-common`
 
 **Tests:**
 - `src/app/(tabs)/index.spec.tsx` — renders greeting with user name, renders summary cards
@@ -191,8 +191,8 @@ The highest-priority phase. Every other screen depends on the auth guard.
 | 3f | Update `src/app/_layout.tsx` | Edit | Add `change-password` as a Stack.Screen (modal presentation) | `mobile-navigation-patterns` |
 
 **Dependencies:** Phase 1 (auth), Phase 0 (Toast for success feedback)
-**Contracts used:** `changePasswordRequestSchema` from `@old-st/contracts/auth`
-**Hooks used:** `useCurrentUser`, `useChangePassword`, `useSignOut`, `useAuth` from `@old-st/client-common`
+**Contracts used:** `changePasswordRequestSchema` from `@mma/contracts/auth`
+**Hooks used:** `useCurrentUser`, `useChangePassword`, `useSignOut`, `useAuth` from `@mma/client-common`
 
 **Tests:**
 - `src/app/(tabs)/profile.spec.tsx` — renders user info, sign out calls mutation, navigates to change-password and settings
@@ -206,7 +206,7 @@ The highest-priority phase. Every other screen depends on the auth guard.
 
 | # | File | Type | Description | Skill |
 |---|---|---|---|---|
-| 4a | `Switch` primitive in `@old-st/mobile-ui` | Primitive | Wraps RN `Switch` with theme tokens. Props: `checked`, `onCheckedChange`, `disabled`, `label` | `mobile-ui-primitive` |
+| 4a | `Switch` primitive in `@mma/mobile-ui` | Primitive | Wraps RN `Switch` with theme tokens. Props: `checked`, `onCheckedChange`, `disabled`, `label` | `mobile-ui-primitive` |
 | 4b | `src/app/settings.tsx` | Screen | Stack screen. Sections: **Preferences** (dark mode toggle via Switch — future, disabled for now), **Account** (Change Password link → reuses menu-item), **About** (app version from `Constants.expoConfig.version`, environment from `extra.appEnv`) | `mobile-new-screen` |
 | 4c | Update `src/app/_layout.tsx` | Edit | Add `settings` as a Stack.Screen | `mobile-navigation-patterns` |
 
@@ -451,11 +451,11 @@ These phases extend the template with features common in modern mobile apps. Pri
 
 | Deliverable | Details |
 |---|---|
-| `SearchBar` primitive in `@old-st/mobile-ui` | Text input with search icon, clear button, cancel. Controlled component |
+| `SearchBar` primitive in `@mma/mobile-ui` | Text input with search icon, clear button, cancel. Controlled component |
 | `src/app/search.tsx` | Search screen: SearchBar + recent searches (AsyncStorage, capped at 10) + results section |
 | Recent searches | AsyncStorage-backed list, rendered as `ListRow` items |
 
-**Primitives needed:** `SearchBar` in `@old-st/mobile-ui`
+**Primitives needed:** `SearchBar` in `@mma/mobile-ui`
 **Skills:** `mobile-ui-primitive`, `mobile-new-screen`
 **New files:** `packages/mobile-ui/src/components/search-bar.tsx`, `src/app/search.tsx`, `src/lib/recent-searches.ts` + specs
 
@@ -467,7 +467,7 @@ These phases extend the template with features common in modern mobile apps. Pri
 
 | Deliverable | Details |
 |---|---|
-| `BottomSheet` primitive in `@old-st/mobile-ui` | Wraps `@gorhom/bottom-sheet` or custom `Animated`. Snap points, drag to dismiss, backdrop |
+| `BottomSheet` primitive in `@mma/mobile-ui` | Wraps `@gorhom/bottom-sheet` or custom `Animated`. Snap points, drag to dismiss, backdrop |
 | Handle component | Drag indicator bar |
 
 **Skills:** `mobile-ui-primitive`
@@ -514,7 +514,7 @@ These phases extend the template with features common in modern mobile apps. Pri
 
 | Deliverable | Details |
 |---|---|
-| `SwipeableRow` primitive in `@old-st/mobile-ui` | Wraps `react-native-gesture-handler` Swipeable |
+| `SwipeableRow` primitive in `@mma/mobile-ui` | Wraps `react-native-gesture-handler` Swipeable |
 | Left/right action slots | Delete, archive, mark as read |
 
 **Pairs with:** Domain list screens generated by `/mobile-feature`
@@ -540,7 +540,7 @@ These phases extend the template with features common in modern mobile apps. Pri
 |---|---|
 | Image viewer | Zoom/pan with `react-native-image-viewing` or similar |
 | Document preview | PDF viewing capability |
-| Pairs with | `useFileUpload` from `@old-st/client-common` |
+| Pairs with | `useFileUpload` from `@mma/client-common` |
 
 ---
 

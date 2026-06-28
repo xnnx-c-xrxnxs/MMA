@@ -116,7 +116,7 @@ const modules = [
       `,
     },
     code: {
-      subtitle: '@old-st/common + directory layout',
+      subtitle: '@mma/common + directory layout',
       content: `// packages/common/src/interfaces/use-case.interface.ts
 export interface IUseCase<TInput, TOutput> {
   execute(input: TInput): Promise<TOutput>;
@@ -189,7 +189,7 @@ export interface IOffsetPaginatedResponse<T> {
     },
     code: {
       subtitle: 'user-repository.interface.ts',
-      content: `import { IPaginatedResponse } from '@old-st/common';
+      content: `import { IPaginatedResponse } from '@mma/common';
 import { UserRole, UserStatus } from '../../domain/constants';
 import { User } from '../../domain/entities';
 
@@ -330,7 +330,7 @@ export * from './invalid-user-status.error';`,
     },
     code: {
       subtitle: 'create-user.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { UserRole, UserRoleEnum } from '../../../domain/constants';
@@ -397,7 +397,7 @@ export class CreateUserUseCase implements IUseCase<CreateUserInput, User> {
     },
     code: {
       subtitle: 'get-user-by-id.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { InvalidInputError, UserNotFoundError } from '../../exceptions';
@@ -449,7 +449,7 @@ export class GetUserByIdUseCase implements IUseCase<string, User> {
     },
     code: {
       subtitle: 'update-user-profile.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { InvalidInputError, UserNotFoundError } from '../../exceptions';
@@ -520,7 +520,7 @@ export class UpdateUserProfileUseCase implements IUseCase<UpdateUserProfileInput
     code: {
       subtitle: 'delete-user.use-case.ts + delete-order.use-case.ts',
       content: `// ── Soft Delete (User) ────────────────────────────────────────────────────
-import { IUseCase } from '@old-st/common';
+import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { InvalidInputError, UserNotFoundError } from '../../exceptions';
@@ -606,7 +606,7 @@ export class DeleteOrderUseCase implements IUseCase<string, void> {
     },
     code: {
       subtitle: 'activate-user.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { User } from '../../../domain/entities';
 import { InvalidInputError, UserNotFoundError } from '../../exceptions';
@@ -665,7 +665,7 @@ export class ActivateUserUseCase implements IUseCase<string, User> {
     },
     code: {
       subtitle: 'list-users-by-status.use-case.ts',
-      content: `import { IUseCase, IPaginatedResponse } from '@old-st/common';
+      content: `import { IUseCase, IPaginatedResponse } from '@mma/common';
 import { IUserRepository } from '../../interfaces/user-repository.interface';
 import { USER_STATUSES, UserStatus } from '../../../domain/constants';
 import { User } from '../../../domain/entities';
@@ -1084,7 +1084,7 @@ export abstract class ICustomerValidator {
     },
     code: {
       subtitle: 'create-order.use-case.ts (with ACL)',
-      content: `import { IUseCase, IEventPublisher } from '@old-st/common';
+      content: `import { IUseCase, IEventPublisher } from '@mma/common';
 import { IOrderRepository } from '../../interfaces/order-repository.interface';
 import { ICustomerValidator } from '../../interfaces/customer-validator.interface';
 import { Order } from '../../../domain/entities/order.entity';
@@ -1182,7 +1182,7 @@ export class CreateOrderUseCase implements IUseCase<CreateOrderInput, Order> {
     },
     code: {
       subtitle: 'add-order-item.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IOrderRepository } from '../../interfaces/order-repository.interface';
 import { Order } from '../../../domain/entities/order.entity';
 import { OrderItem } from '../../../domain/entities/order-item.entity';
@@ -1256,7 +1256,7 @@ export class AddOrderItemUseCase implements IUseCase<AddOrderItemInput, Order> {
     },
     code: {
       subtitle: 'confirm-order.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IOrderRepository } from '../../interfaces/order-repository.interface';
 import { ICustomerValidator } from '../../interfaces/customer-validator.interface';
 import { Order } from '../../../domain/entities/order.entity';
@@ -1320,7 +1320,7 @@ export class ConfirmOrderUseCase implements IUseCase<string, Order> {
     },
     code: {
       subtitle: 'update-item-latest-price.use-case.ts',
-      content: `import { IUseCase } from '@old-st/common';
+      content: `import { IUseCase } from '@mma/common';
 import { IOrderRepository } from '../../interfaces/order-repository.interface';
 import { OrderStatusEnum } from '../../../domain/constants';
 

@@ -11,7 +11,7 @@ import {
   type SignInResponse,
   type AuthTokens,
   type MeResponse,
-} from '@old-st/contracts/auth';
+} from '@mma/contracts/auth';
 import { getApiConfig } from '../config';
 
 const baseUrl = () => getApiConfig().authApiUrl;

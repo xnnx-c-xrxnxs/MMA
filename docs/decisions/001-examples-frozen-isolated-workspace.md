@@ -11,7 +11,7 @@ The template ships with complete reference implementations (users, products, ord
 
 `examples/` is a self-contained frozen snapshot with its own `pnpm-workspace.yaml`, own `nx.json`, own `node_modules`, and its own root `tsconfig.base.json`. It is **not** part of the main Nx workspace graph.
 
-Shared packages (`@old-st/ui`, `@old-st/telemetry`, `@old-st/client-common`, etc.) are consumed from the main workspace via the pnpm `link:` protocol — not vendored or copied.
+Shared packages (`@mma/ui`, `@mma/telemetry`, `@mma/client-common`, etc.) are consumed from the main workspace via the pnpm `link:` protocol — not vendored or copied.
 
 ## Rationale
 

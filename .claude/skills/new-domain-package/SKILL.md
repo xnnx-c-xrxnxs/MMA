@@ -100,13 +100,13 @@ packages/{domain}-domain/
 ### DynamoDB persistence
 ```json
 {
-  "name": "@old-st/{domain}-domain",
+  "name": "@mma/{domain}-domain",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
   "dependencies": {
-    "@old-st/common": "*",
-    "@old-st/dynamodb-onetable": "*",
+    "@mma/common": "*",
+    "@mma/dynamodb-onetable": "*",
     "dynamodb-onetable": "*"
   }
 }
@@ -115,12 +115,12 @@ packages/{domain}-domain/
 ### Prisma persistence
 ```json
 {
-  "name": "@old-st/{domain}-domain",
+  "name": "@mma/{domain}-domain",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
   "dependencies": {
-    "@old-st/common": "workspace:*"
+    "@mma/common": "workspace:*"
   }
 }
 ```
@@ -261,7 +261,7 @@ export class {Entity}NotFoundError extends Error {
 ### DynamoDB persistence (cursor-based pagination)
 
 ```typescript
-import { IPaginatedResponse } from '@old-st/common';
+import { IPaginatedResponse } from '@mma/common';
 import { {Entity}Status } from '../../domain/constants';
 import { {Entity} } from '../../domain/entities';
 
@@ -281,7 +281,7 @@ export abstract class I{Entity}Repository {
 ### Prisma persistence (offset-based pagination)
 
 ```typescript
-import { IOffsetPaginatedResponse } from '@old-st/common';
+import { IOffsetPaginatedResponse } from '@mma/common';
 import { {Entity}Status } from '../../domain/constants';
 import { {Entity} } from '../../domain/entities';
 
@@ -346,7 +346,7 @@ export * from './application/use-cases';
 export * from './application/exceptions';
 ```
 
-The infrastructure layer (`src/infrastructure/index.ts`) is exported separately via the `@old-st/{domain}-domain/infrastructure` path alias. Do NOT re-export infrastructure from the main barrel.
+The infrastructure layer (`src/infrastructure/index.ts`) is exported separately via the `@mma/{domain}-domain/infrastructure` path alias. Do NOT re-export infrastructure from the main barrel.
 
 ---
 
@@ -354,8 +354,8 @@ The infrastructure layer (`src/infrastructure/index.ts`) is exported separately 
 
 Add to `compilerOptions.paths`:
 ```json
-"@old-st/{domain}-domain": ["packages/{domain}-domain/src/index.ts"],
-"@old-st/{domain}-domain/infrastructure": ["packages/{domain}-domain/src/infrastructure/index.ts"]
+"@mma/{domain}-domain": ["packages/{domain}-domain/src/index.ts"],
+"@mma/{domain}-domain/infrastructure": ["packages/{domain}-domain/src/infrastructure/index.ts"]
 ```
 
 ---

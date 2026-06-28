@@ -60,8 +60,8 @@ You are a read-only aggregator. You receive the Markdown outputs of N subagents 
 ## Warnings
 
 ### ⚠️ dependency-auditor — R11 (bare contracts import)
-- `apps/{domain}/{domain}-api-service/src/foo.ts:12` — fix: `@old-st/contracts/{domain}`
-- `apps/{domain}/{domain}-api-service/src/bar.ts:18` — fix: `@old-st/contracts/{domain}`
+- `apps/{domain}/{domain}-api-service/src/foo.ts:12` — fix: `@mma/contracts/{domain}`
+- `apps/{domain}/{domain}-api-service/src/bar.ts:18` — fix: `@mma/contracts/{domain}`
 
 ## All Clear
 

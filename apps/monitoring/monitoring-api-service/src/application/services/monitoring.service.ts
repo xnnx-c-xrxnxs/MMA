@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import {
   CloudWatchLogsProvider,
   CloudWatchMetricsProvider,
@@ -11,7 +11,7 @@ import {
   ITracesProvider,
   ILambdaProvider,
   ISqsMonitoringProvider,
-} from '@old-st/monitoring-sdk';
+} from '@mma/monitoring-sdk';
 
 const logger = createLogger('monitoring-api-service');
 
@@ -53,7 +53,7 @@ export class MonitoringService {
   }
 
   getNamePrefix(): string {
-    const project = process.env.PROJECT_NAME ?? 'old-st';
+    const project = process.env.PROJECT_NAME ?? 'mma';
     const env = process.env.TARGET_ENVIRONMENT ?? 'dev';
     return `${project}-${env}`;
   }
@@ -62,7 +62,7 @@ export class MonitoringService {
   getEnvironmentInfo(): { environment: string; projectName: string; awsAccountId: string; namePrefix: string } {
     return {
       environment: process.env.TARGET_ENVIRONMENT ?? 'dev',
-      projectName: process.env.PROJECT_NAME ?? 'old-st',
+      projectName: process.env.PROJECT_NAME ?? 'mma',
       awsAccountId: process.env.AWS_ACCOUNT_ID ?? 'unknown',
       namePrefix: this.getNamePrefix(),
     };

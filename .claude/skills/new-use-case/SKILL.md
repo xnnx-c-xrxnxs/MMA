@@ -35,13 +35,13 @@ packages/{domain}-domain/src/application/use-cases/{verb}-{entity}/{verb}-{entit
 ## Use Case Template
 
 ```typescript
-import { IUseCase } from '@old-st/common';
+import { IUseCase } from '@mma/common';
 import { I{Entity}Repository } from '../../interfaces/{entity}-repository.interface';
 import { {Entity} } from '../../../domain/entities';
 import { {ApplicationException} } from '../../exceptions';
 
 export interface {Verb}{Entity}Input {
-  // Primitive types only — no DTOs, no Zod types, no @old-st/contracts imports
+  // Primitive types only — no DTOs, no Zod types, no @mma/contracts imports
   {entity}Id?: string;
   field1?: string;
 }
@@ -170,16 +170,16 @@ async execute(input: List{Entities}ByStatusInput): Promise<IOffsetPaginatedRespo
 }
 ```
 
-> **Note:** The use case must not import Prisma types — only the repository interface (`IOffsetPaginatedResponse` comes from `@old-st/common`).
+> **Note:** The use case must not import Prisma types — only the repository interface (`IOffsetPaginatedResponse` comes from `@mma/common`).
 
 ---
 
 ## Rules
 
-1. Use cases implement `IUseCase<Input, Output>` from `@old-st/common`.
+1. Use cases implement `IUseCase<Input, Output>` from `@mma/common`.
 2. Throw **typed application exceptions** (from `application/exceptions/`) for "not found" and invalid input.
 3. Domain exceptions thrown by entity methods **propagate naturally** — do NOT catch and re-wrap them.
-4. Use cases **never import from `@old-st/contracts`** — DTO transformation is the application service's job.
+4. Use cases **never import from `@mma/contracts`** — DTO transformation is the application service's job.
 5. Use cases return the **domain entity** — never a DTO.
 6. Never call more than one `save()` per use case. If you need a transaction, reconsider the design.
 7. When the use case needs to validate an entity from another bounded context (e.g. check that a customer exists before creating an order), inject an **ACL interface** alongside the repository — see "Use Case with ACL Dependency" below. Follow the `sync-cross-service-call` skill for defining the interface and adapter.
@@ -191,7 +191,7 @@ async execute(input: List{Entities}ByStatusInput): Promise<IOffsetPaginatedRespo
 When a use case needs real-time validation against another bounded context, it receives an **ACL validator interface** as a second constructor dependency — alongside the repository.
 
 ```typescript
-import { IUseCase } from '@old-st/common';
+import { IUseCase } from '@mma/common';
 import { I{Entity}Repository } from '../../interfaces/{entity}-repository.interface';
 import { I{UpstreamEntity}Validator } from '../../interfaces/{upstream-entity}-validator.interface';
 import { {Entity} } from '../../../domain/entities';
@@ -305,7 +305,7 @@ export class Confirm{Root}UseCase implements IUseCase<string, {Root}> {
 - Define `{Verb}{Entity}Input` as an interface in the same use case file.
 - Use domain types (`{Entity}Status`, `{Entity}Role`) not raw string types.
 - Optional fields use `?: string` — not Zod union types.
-- Never import from `@old-st/contracts` in a use case.
+- Never import from `@mma/contracts` in a use case.
 
 ---
 

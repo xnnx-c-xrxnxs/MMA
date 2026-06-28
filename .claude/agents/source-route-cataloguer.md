@@ -1,7 +1,7 @@
 ---
 name: source-route-cataloguer
 tools: Read, Glob, Grep, Write
-description: Read-only route/page cataloguer for a SOURCE project being migrated into old-st-template. Walks the source router (react-router, Next pages, file-based) and enumerates every navigable surface — real routes, nested routes, tab-inside-route states, modal-only surfaces, and auth/role gates. Writes routes/INDEX.md plus one rich Markdown file per route. Seeds the coverage ledger with every route. Spawned by /migrate-extract during discovery.
+description: Read-only route/page cataloguer for a SOURCE project being migrated into mma. Walks the source router (react-router, Next pages, file-based) and enumerates every navigable surface — real routes, nested routes, tab-inside-route states, modal-only surfaces, and auth/role gates. Writes routes/INDEX.md plus one rich Markdown file per route. Seeds the coverage ledger with every route. Spawned by /migrate-extract during discovery.
 ---
 
 # Source Route Cataloguer Subagent
@@ -102,7 +102,7 @@ And one `{migrationRoot}/routes/route-{slug}.md` per surface:
 
 ## Migration Notes
 
-- Target route under old-st-template: {proposed Next.js App Router path}
+- Target route under mma: {proposed Next.js App Router path}
 - Open questions: ...
 ```
 

@@ -136,7 +136,7 @@ aws rds modify-db-instance `
 
 ## Architectural Rules
 
-1. **Never log secret values.** Loggers in `@old-st/telemetry` redact common patterns, but do not depend on this — never `logger.info({ secret })`.
+1. **Never log secret values.** Loggers in `@mma/telemetry` redact common patterns, but do not depend on this — never `logger.info({ secret })`.
 2. **Never commit a secret.** `.gitignore` covers `.env.local` and `.env.e2e`, but a `.env.production` accidentally committed to a feature branch is a leak. Run `git secrets --scan` before pushing if unsure.
 3. **One Secrets Manager secret per environment.** No per-service secrets. Per-service IAM scoping is done via the resolve allow-list, not multiple ARNs.
 4. **Rotation requires a cold-start.** Lambda runtime caches `process.env` — there is no "hot reload" mechanism here.

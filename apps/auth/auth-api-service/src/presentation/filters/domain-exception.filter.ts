@@ -5,7 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import { Response } from 'express';
 
 const logger = createLogger('auth-api-service');

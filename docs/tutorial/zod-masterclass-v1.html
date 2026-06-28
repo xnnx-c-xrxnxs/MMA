@@ -488,7 +488,7 @@ const roleSchema = z.enum(['USER', 'ADMIN', 'MANAGER']);
 type Role = z.infer&lt;typeof roleSchema&gt;; // "USER" | "ADMIN" | "MANAGER"
 
 // From domain constants (our pattern)
-import { USER_ROLES } from '@old-st/user-domain';
+import { USER_ROLES } from '@mma/user-domain';
 // USER_ROLES = ['USER', 'ADMIN', 'MANAGER'] as const
 
 const userRoleSchema = z.enum(USER_ROLES);
@@ -669,7 +669,7 @@ type CreateUserInput = z.infer&lt;typeof createUserSchema&gt;;
         </div>
         <div class="card">
           <h4>2. Full-Stack Sharing</h4>
-          <p>The same Zod schema lives in <code>@old-st/contracts/user</code> and is consumed by NestJS controllers, Next.js API clients, and Expo mobile hooks. One change propagates everywhere.</p>
+          <p>The same Zod schema lives in <code>@mma/contracts/user</code> and is consumed by NestJS controllers, Next.js API clients, and Expo mobile hooks. One change propagates everywhere.</p>
         </div>
         <div class="card">
           <h4>3. Runtime Safety</h4>
@@ -874,7 +874,7 @@ const input = createUserSchema.parse(body);
       schemas.ts           ← Zod schemas for user CRUD operations
       event-schemas.ts     ← Zod schemas for user domain events (SQS)
       index.ts             ← Barrel export
-    package.json           ← depends on @old-st/user-domain + zod
+    package.json           ← depends on @mma/user-domain + zod
   order/
     src/
       schemas.ts           ← Zod schemas for order CRUD
@@ -892,7 +892,7 @@ const input = createUserSchema.parse(body);
 
       <div class="callout warning">
         <div class="callout-title">Import Rule: Always Use Subpath Imports</div>
-        <p><strong>Never</strong> import from <code>@old-st/contracts</code> (the bare root). Always use domain-scoped imports: <code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc. This prevents transitive coupling &mdash; a type error in <code>order</code> contracts cannot break consumers of <code>user</code> contracts.</p>
+        <p><strong>Never</strong> import from <code>@mma/contracts</code> (the bare root). Always use domain-scoped imports: <code>@mma/contracts/user</code>, <code>@mma/contracts/order</code>, etc. This prevents transitive coupling &mdash; a type error in <code>order</code> contracts cannot break consumers of <code>user</code> contracts.</p>
       </div>
     </div>
 
@@ -943,7 +943,7 @@ const input = createUserSchema.parse(body);
       <pre><code>// packages/contracts/user/src/schemas.ts
 import { z } from 'zod';
 import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum }
-  from '@old-st/user-domain';
+  from '@mma/user-domain';
 
 // Re-export domain constants for frontend consumption
 export { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
@@ -988,7 +988,7 @@ export type UserRole = z.infer&lt;typeof userRoleSchema&gt;;</code></pre>
       <pre><code>// packages/contracts/order/src/schemas.ts
 import { z } from 'zod';
 import { ORDER_STATUSES, PAYMENT_STATUSES, PAYMENT_METHODS }
-  from '@old-st/order-domain';
+  from '@mma/order-domain';
 
 export const orderStatusSchema = z.enum(ORDER_STATUSES);
 export const paymentStatusSchema = z.enum(PAYMENT_STATUSES);
@@ -1126,7 +1126,7 @@ listUsersByStatus(
       <p>Zod isn&rsquo;t just for input. Application services use <code>schema.parse()</code> to validate <strong>outgoing</strong> DTOs, ensuring the API never returns data that doesn&rsquo;t match the contract.</p>
 
       <pre><code>// apps/users/user-api-service/src/application/services/user-application.service.ts
-import { userResponseSchema, UserResponse } from '@old-st/contracts/user';
+import { userResponseSchema, UserResponse } from '@mma/contracts/user';
 
 export class UserApplicationService {
   // Domain entity → API DTO, validated by Zod
@@ -1259,13 +1259,13 @@ export async function apiRequest&lt;T&gt;(
     <!-- 7.2 Domain API Clients -->
     <div class="topic fade-in">
       <h3>7.2 Domain API Clients &mdash; Typed &amp; Validated</h3>
-      <p>Each domain has an API client that imports schemas from <code>@old-st/contracts/{domain}</code> and passes them to <code>apiRequest()</code>.</p>
+      <p>Each domain has an API client that imports schemas from <code>@mma/contracts/{domain}</code> and passes them to <code>apiRequest()</code>.</p>
 
       <h4>User API Client</h4>
       <pre><code>// packages/client-common/src/infrastructure/api-clients/user-api.client.ts
 import { userResponseSchema, type CreateUserInput, type UserResponse }
-  from '@old-st/contracts/user';
-import { paginatedResponseSchema } from '@old-st/contracts/common';
+  from '@mma/contracts/user';
+import { paginatedResponseSchema } from '@mma/contracts/common';
 
 // Compose: paginated user list schema
 const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
@@ -1299,8 +1299,8 @@ export const userApiClient = {
 
       <h4>Order API Client (Offset Pagination)</h4>
       <pre><code>// packages/client-common/src/infrastructure/api-clients/order-api.client.ts
-import { orderResponseSchema } from '@old-st/contracts/order';
-import { offsetPaginatedResponseSchema } from '@old-st/contracts/common';
+import { orderResponseSchema } from '@mma/contracts/order';
+import { offsetPaginatedResponseSchema } from '@mma/contracts/common';
 
 // Different pagination schema — offset-based for Prisma domains
 const paginatedOrdersSchema = offsetPaginatedResponseSchema(orderResponseSchema);
@@ -1316,7 +1316,7 @@ export const orderApiClient = {
 
       <h4>Auth API Client (Discriminated Union)</h4>
       <pre><code>// packages/client-common/src/infrastructure/api-clients/auth-api.client.ts
-import { signInResponseSchema } from '@old-st/contracts/auth';
+import { signInResponseSchema } from '@mma/contracts/auth';
 
 export const authApiClient = {
   signIn(email: string, password: string): Promise&lt;SignInResponse&gt; {
@@ -1362,7 +1362,7 @@ export function useCreateUser() {
 
       <div class="callout">
         <div class="callout-title">Shared Between Web and Mobile</div>
-        <p>These hooks and API clients live in <code>@old-st/client-common</code> &mdash; they are imported identically by the Next.js webapp and the Expo mobile app. Zod validation happens once in the shared layer, protecting both platforms.</p>
+        <p>These hooks and API clients live in <code>@mma/client-common</code> &mdash; they are imported identically by the Next.js webapp and the Expo mobile app. Zod validation happens once in the shared layer, protecting both platforms.</p>
       </div>
     </div>
 
@@ -1372,7 +1372,7 @@ export function useCreateUser() {
       <p>By the time data reaches a React component, it has been validated by Zod. Components can trust the type completely.</p>
 
       <pre><code>// apps/webapp/src/components/users/users-table.tsx
-import { type UserResponse } from '@old-st/contracts/user';
+import { type UserResponse } from '@mma/contracts/user';
 
 export function UsersTable({ users }: { users: UserResponse[] }) {
   return (
@@ -1408,7 +1408,7 @@ export function UsersTable({ users }: { users: UserResponse[] }) {
 
       <h4>Status Variants — Enum Constants, Not Strings</h4>
       <pre><code>// apps/webapp/src/lib/status-variants.ts
-import { UserStatusEnum } from '@old-st/contracts/user';
+import { UserStatusEnum } from '@mma/contracts/user';
 
 export function userStatusVariant(status: string): BadgeVariant {
   switch (status) {
@@ -1449,7 +1449,7 @@ export function userStatusVariant(status: string): BadgeVariant {
 
       <pre><code>// packages/contracts/product/src/event-schemas.ts
 import { z } from 'zod';
-import { ProductEventTypeEnum } from '@old-st/product-domain';
+import { ProductEventTypeEnum } from '@mma/product-domain';
 
 // Each event type gets its own schema
 const productPriceChangedSchema = z.object({
@@ -1499,7 +1499,7 @@ export type ProductDomainEvent = z.infer&lt;typeof productDomainEventSchema&gt;;
       <pre><code>// apps/orders/order-event-handler-service/src/application/services/
 //   order-event-handler.service.ts
 import { productDomainEventSchema, ProductEventTypeEnum }
-  from '@old-st/contracts/product';
+  from '@mma/contracts/product';
 
 export class OrderEventHandlerService {
 
@@ -1569,12 +1569,12 @@ export class OrderEventHandlerService {
       <table>
         <thead><tr><th>Import</th><th>Allowed?</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td><code>@old-st/contracts/product</code></td><td>✅ Yes</td><td>Published Language — the agreed-upon event shape</td></tr>
-          <tr><td><code>@old-st/product-domain</code></td><td>❌ Never</td><td>Breaks bounded context isolation</td></tr>
+          <tr><td><code>@mma/contracts/product</code></td><td>✅ Yes</td><td>Published Language — the agreed-upon event shape</td></tr>
+          <tr><td><code>@mma/product-domain</code></td><td>❌ Never</td><td>Breaks bounded context isolation</td></tr>
         </tbody>
       </table>
 
-      <p>The Zod discriminated union schema in <code>@old-st/contracts/product</code> is the <strong>Published Language</strong> &mdash; the formal contract between domains. Both the publisher and consumer validate against it.</p>
+      <p>The Zod discriminated union schema in <code>@mma/contracts/product</code> is the <strong>Published Language</strong> &mdash; the formal contract between domains. Both the publisher and consumer validate against it.</p>
     </div>
 
     <details class="speaker-notes">
@@ -1635,7 +1635,7 @@ export class OrderEventHandlerService {
         </div>
         <div class="card">
           <h4>5. Subpath imports only</h4>
-          <p>Import from <code>@old-st/contracts/user</code>, never from <code>@old-st/contracts</code>. This prevents cross-domain coupling.</p>
+          <p>Import from <code>@mma/contracts/user</code>, never from <code>@mma/contracts</code>. This prevents cross-domain coupling.</p>
         </div>
         <div class="card">
           <h4>6. Zod-free domain layer</h4>

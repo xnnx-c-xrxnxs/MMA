@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@old-st/ui';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@mma/ui';
 
 export default function NotFound() {
   return (

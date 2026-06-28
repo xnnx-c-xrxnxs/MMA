@@ -1,6 +1,6 @@
 ---
 name: webapp-file-upload-ux
-description: Wire client-side file upload UI in the webapp using the `<FileDropzone>` primitive (`@old-st/ui`) and the `useFileUpload` hook (`@old-st/client-common`). Use this when adding any avatar / attachment / document upload that goes through `file-api-service` presigned S3 URLs.
+description: Wire client-side file upload UI in the webapp using the `<FileDropzone>` primitive (`@mma/ui`) and the `useFileUpload` hook (`@mma/client-common`). Use this when adding any avatar / attachment / document upload that goes through `file-api-service` presigned S3 URLs.
 ---
 
 # Webapp File Upload UX
@@ -26,8 +26,8 @@ Browser ──► PATCH /api/{domain}/{id}  body: { fileKey } ── (your domai
 
 ```tsx
 'use client';
-import { FileDropzone, Button, toast } from '@old-st/ui';
-import { useFileUpload } from '@old-st/client-common';
+import { FileDropzone, Button, toast } from '@mma/ui';
+import { useFileUpload } from '@mma/client-common';
 import { useState } from 'react';
 
 export function AvatarUpload({ onUploaded }: { onUploaded: (key: string) => void }) {
@@ -75,7 +75,7 @@ progress: 0..100 (only meaningful during 'uploading')
 ## Showing the file later
 
 ```ts
-import { fileApiClient } from '@old-st/client-common';
+import { fileApiClient } from '@mma/client-common';
 
 const { downloadUrl } = await fileApiClient.presignedDownload(fileKey);
 // Use downloadUrl as <img src> or <a href>. URL expires; re-fetch on render.

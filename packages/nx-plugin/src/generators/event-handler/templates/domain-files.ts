@@ -102,7 +102,7 @@ export const buildNames = (
 
 // ─── main.ts ──────────────────────────────────────────────────────────────────
 
-export const renderMain = (n: Names): string => `import { initTelemetry } from '@old-st/telemetry';
+export const renderMain = (n: Names): string => `import { initTelemetry } from '@mma/telemetry';
 initTelemetry('${n.serviceName}');
 
 import { INestApplicationContext, Logger } from '@nestjs/common';
@@ -191,7 +191,7 @@ import { SqsLocalService } from '../infrastructure/sqs/sqs-local.service';
  *
  * - No \`controllers\` array — this service has no HTTP layer.
  * - Add one plain class provider per new event handler.
-${n.crossDomain ? ` * - Cross-domain consumer: schemas come from @old-st/contracts/${n.sourceDomain.kebab}.\n` : ''} */
+${n.crossDomain ? ` * - Cross-domain consumer: schemas come from @mma/contracts/${n.sourceDomain.kebab}.\n` : ''} */
 @Module({
   providers: [
     // Per-event handlers (one entry per event type)
@@ -230,8 +230,8 @@ export const renderDispatcher = (n: Names): string => {
     .join('\n');
 
   return `import { Injectable } from '@nestjs/common';
-import { createLogger, extractTraceContext, otelContext, runWithCorrelationId } from '@old-st/telemetry';
-import { ${schemaIdentifier}, ${enumIdentifier} } from '@old-st/contracts/${schemaSource.kebab}';
+import { createLogger, extractTraceContext, otelContext, runWithCorrelationId } from '@mma/telemetry';
+import { ${schemaIdentifier}, ${enumIdentifier} } from '@mma/contracts/${schemaSource.kebab}';
 import { NormalizedSqsRecord } from '../interfaces/normalized-sqs-record.interface';
 import { ${handlerImports} } from './handlers';
 
@@ -249,7 +249,7 @@ const logger = createLogger('${n.serviceName}');
  *   - safeParse (not parse) — invalid bodies are logged and skipped.
  *   - Handler errors are rethrown so SqsLocalService skips DeleteMessageCommand.
  *   - Adding a new event: create a handler -> add to handlers/index.ts -> add one case here.
-${n.crossDomain ? ` *   - CROSS-DOMAIN consumer: imports event schemas from @old-st/contracts/${schemaSource.kebab} only.\n` : ''} */
+${n.crossDomain ? ` *   - CROSS-DOMAIN consumer: imports event schemas from @mma/contracts/${schemaSource.kebab} only.\n` : ''} */
 @Injectable()
 export class ${n.entity.pascal}EventHandlerService {
   constructor(
@@ -322,8 +322,8 @@ export const renderEventHandlerStub = (
   if (n.crossDomain) {
     // Cross-domain: derive the payload type from the contracts discriminated union.
     return `import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import type { ${sourceDomainEventType} } from '@old-st/contracts/${n.sourceDomain.kebab}';
+import { createLogger } from '@mma/telemetry';
+import type { ${sourceDomainEventType} } from '@mma/contracts/${n.sourceDomain.kebab}';
 import { IEventHandler } from '../../interfaces/event-handler.interface';
 
 const logger = createLogger('${n.serviceName}');
@@ -359,8 +359,8 @@ export class ${evt.className} implements IEventHandler<${payloadTypeName}> {
 
   // Same-domain: payload type comes from the domain package.
   return `import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import type { ${payloadTypeName} } from '@old-st/${n.sourceDomain.kebab}-domain';
+import { createLogger } from '@mma/telemetry';
+import type { ${payloadTypeName} } from '@mma/${n.sourceDomain.kebab}-domain';
 import { IEventHandler } from '../../interfaces/event-handler.interface';
 
 const logger = createLogger('${n.serviceName}');
@@ -396,7 +396,7 @@ export const renderHandlersBarrel = (n: Names): string =>
 // ─── infrastructure/sqs/sqs-local.service.ts ───────────────────────────────
 
 export const renderSqsLocalService = (n: Names): string => `import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import {
   DeleteMessageCommand,
   Message,

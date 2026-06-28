@@ -196,7 +196,7 @@ import {
   createDynamoLocalClient,
   createAWSClient,
   createTable,
-} from '@old-st/dynamodb-onetable';
+} from '@mma/dynamodb-onetable';
 
 export class DynamoDBConfig {
   private static client: Dynamo;

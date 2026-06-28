@@ -13,19 +13,19 @@ export default [
   // Old St Labs coding standards plugin
   {
     plugins: {
-      '@old-st': oldStPlugin,
+      '@mma': oldStPlugin,
     },
     rules: {
-      '@old-st/no-bare-contracts-import': 'error',
-      '@old-st/no-domain-framework-imports': 'error',
-      '@old-st/no-prisma-client-in-domain': 'error',
-      '@old-st/no-contracts-in-use-cases': 'error',
-      '@old-st/no-direct-fetch-in-components': 'error',
-      '@old-st/no-hardcoded-status-strings': 'error',
-      '@old-st/enforce-service-boundary': 'error',
-      '@old-st/no-node-env-development': 'error',
-      '@old-st/require-event-handler-service': 'error',
-      '@old-st/require-file-api-service': 'off',
+      '@mma/no-bare-contracts-import': 'error',
+      '@mma/no-domain-framework-imports': 'error',
+      '@mma/no-prisma-client-in-domain': 'error',
+      '@mma/no-contracts-in-use-cases': 'error',
+      '@mma/no-direct-fetch-in-components': 'error',
+      '@mma/no-hardcoded-status-strings': 'error',
+      '@mma/enforce-service-boundary': 'error',
+      '@mma/no-node-env-development': 'error',
+      '@mma/require-event-handler-service': 'error',
+      '@mma/require-file-api-service': 'off',
     },
   },
   {

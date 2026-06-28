@@ -27,7 +27,7 @@
  *   2. Creates `dev`, `staging`, `prod` GitHub environments:
  *      - prod: 5-min wait timer
  *      - staging / dev: no gate (CI is the gate)
- *   3. (Optional --rename-codeowners) Replaces `@Old-St-Labs/senior-devs`
+ *   3. (Optional --rename-codeowners) Replaces `@xnnx-c-xrxnxs/senior-devs`
  *      in .github/CODEOWNERS with your org/team.
  *
  * The script also prints follow-ups that must be done in the GitHub UI
@@ -260,7 +260,7 @@ if (renameCodeowners) {
   } else {
     const rl = createInterface({ input, output });
     log('👥 CODEOWNERS rename:');
-    log(`   The default team is @Old-St-Labs/senior-devs. Replace with your org/team.`);
+    log(`   The default team is @xnnx-c-xrxnxs/senior-devs. Replace with your org/team.`);
     const newTeam = (await rl.question('   Enter new team (e.g. @your-org/your-team): ')).trim();
     rl.close();
 
@@ -268,12 +268,12 @@ if (renameCodeowners) {
       log('   ❌ Invalid format. Expected @org/team. Skipping rename.\n');
     } else {
       const original = readFileSync(codeownersPath, 'utf-8');
-      const updated = original.replaceAll('@Old-St-Labs/senior-devs', newTeam);
+      const updated = original.replaceAll('@xnnx-c-xrxnxs/senior-devs', newTeam);
       if (updated === original) {
-        log('   ℹ️  No occurrences of @Old-St-Labs/senior-devs found — nothing to rename.\n');
+        log('   ℹ️  No occurrences of @xnnx-c-xrxnxs/senior-devs found — nothing to rename.\n');
       } else {
         writeFileSync(codeownersPath, updated);
-        log(`   ✅ Replaced @Old-St-Labs/senior-devs → ${newTeam} in .github/CODEOWNERS`);
+        log(`   ✅ Replaced @xnnx-c-xrxnxs/senior-devs → ${newTeam} in .github/CODEOWNERS`);
         log('   Commit + push the change so GitHub picks it up:\n');
         log('       git add .github/CODEOWNERS');
         log('       git commit -m "chore: set CODEOWNERS team for this repo"');

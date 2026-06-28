@@ -1,5 +1,5 @@
 ---
-description: Add a new shared UI primitive in parallel across @old-st/ui (web) and @old-st/mobile-ui (mobile).
+description: Add a new shared UI primitive in parallel across @mma/ui (web) and @mma/mobile-ui (mobile).
 ---
 
 # Workflow: new shared UI primitive (web + mobile)
@@ -13,10 +13,10 @@ This workflow composes the [webapp-ui-primitive](../../skills/webapp-ui-primitiv
 **Always run the generator first** — it creates the 4-file skeleton and wires the barrel export automatically.
 
 ```bash
-pnpm nx g @old-st/nx-plugin:ui-primitive
+pnpm nx g @mma/nx-plugin:ui-primitive
 # Interactive prompts: name, category, pattern
 # Or non-interactively:
-pnpm nx g @old-st/nx-plugin:ui-primitive --name=Switch --category=form-controls --pattern=simple-variants
+pnpm nx g @mma/nx-plugin:ui-primitive --name=Switch --category=form-controls --pattern=simple-variants
 ```
 
 Pattern guide:
@@ -95,7 +95,7 @@ Load [mobile-ui-primitive](../../skills/mobile-ui-primitive/SKILL.md). Then:
 
 1. Create `packages/mobile-ui/src/components/{primitive}.tsx`
 2. Use the variant-record pattern (object literal mapping variant → `StyleSheet`)
-3. Use theme tokens from `@old-st/mobile-ui` (which re-exports `@old-st/ui` tokens)
+3. Use theme tokens from `@mma/mobile-ui` (which re-exports `@mma/ui` tokens)
 4. Export from `packages/mobile-ui/src/index.ts`
 5. Add a React Native Testing Library test if the primitive has interaction logic
 

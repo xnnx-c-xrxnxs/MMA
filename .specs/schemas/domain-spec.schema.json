@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/old-st/old-st-template/.specs/schemas/domain-spec.schema.json",
+  "$id": "https://github.com/mma/mma/.specs/schemas/domain-spec.schema.json",
   "title": "Domain Spec",
   "description": "Declarative spec for /new-domain, /new-domain-dynamo, and /quick-crud-domain orchestrators. Replaces the inline interview phase with a reviewable, autocompleted YAML file.",
   "type": "object",

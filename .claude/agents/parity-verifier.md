@@ -79,7 +79,7 @@ Write `{migrationRoot}/parity/PARITY-{route}.md`:
   resolution mismatch in the destination adapter.
 
 ## Visual side-by-side (advisory)
-- parity/{route}-{state}.side-by-side.png — note: destination uses @old-st/ui spacing (expected).
+- parity/{route}-{state}.side-by-side.png — note: destination uses @mma/ui spacing (expected).
 ```
 
 ## Constraints

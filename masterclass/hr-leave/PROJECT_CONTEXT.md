@@ -58,7 +58,7 @@ example of it. (Async alternative: emit `EMPLOYEE_CREATED` → `auth` provisions
 ## 4. Tech Stack
 
 NestJS 11 · Node 24 · **Prisma 5 + PostgreSQL 16** · Zod contracts · SQS FIFO · Next.js 15 webapp ·
-Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
+Expo mobile · `@mma/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](../../docs/PROJECT_CONTEXT.md).)
 
 ---
 
@@ -67,9 +67,9 @@ Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](.
 - Clean-Arch layering; application services always present.
 - **Prisma → offset pagination** (`data, total, page, limit, totalPages`). Never cursor (#16).
 - Prisma schema enums **mirror domain constants exactly** (#17); generated client is infra-only (#18).
-- Contracts via `@old-st/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
+- Contracts via `@mma/contracts/{domain}` subpath only (#11); actor from `@CurrentUser()` (#23).
 - **ACL:** `leave` validates `employee` via an abstract port + HTTP adapter (#14).
-- **Cross-domain events:** consumers import `@old-st/contracts/leave` — never `@old-st/leave-domain` (#15).
+- **Cross-domain events:** consumers import `@mma/contracts/leave` — never `@mma/leave-domain` (#15).
 
 ---
 
@@ -90,7 +90,7 @@ Expo mobile · `@old-st/telemetry`. (Full table: [docs/PROJECT_CONTEXT.md §4](.
 
 REST plural nouns (`/employees`, `/leave-requests`); actions as POST sub-resources
 (`POST /leave-requests/:id/approve`, `/reject`, `/cancel`). Status badges via `status-variants.ts`.
-Forms via react-hook-form + Zod from `@old-st/contracts/{domain}`.
+Forms via react-hook-form + Zod from `@mma/contracts/{domain}`.
 
 ---
 
@@ -159,9 +159,9 @@ XS≤2h · S≤8h · M≤16h · L≤32h · XL>32h · P0–P3. (See [docs/PROJECT
 
 ### Choreography saga (asynchronous)
 1. `leave.submitRequest` persists request `DRAFT` and publishes **`LEAVE_REQUEST_SUBMITTED`**
-   (`@old-st/contracts/leave`) with `{ employeeId, leaveType, days }`.
+   (`@mma/contracts/leave`) with `{ employeeId, leaveType, days }`.
 2. `employee-event-handler-service` consumes it, runs `ReserveLeaveBalanceUseCase` (transactional),
-   replies **`BALANCE_RESERVED`** or **`BALANCE_INSUFFICIENT`** (`@old-st/contracts/employee`).
+   replies **`BALANCE_RESERVED`** or **`BALANCE_INSUFFICIENT`** (`@mma/contracts/employee`).
 3. `leave-event-handler-service` consumes the reply → request `PENDING_APPROVAL` | `REJECTED`.
 4. On manager approval → publish **`LEAVE_APPROVED`** → employee handler **deducts** the reserved
    balance and sets employee `ON_LEAVE` for the period. **Idempotent** on replay.

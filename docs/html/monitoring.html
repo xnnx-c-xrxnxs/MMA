@@ -48,7 +48,7 @@
 
       <h1>Monitoring &amp; Observability</h1>
       <p class="subtitle">
-        Structured JSON logging via <code>@old-st/telemetry</code>, request-scoped <code>correlationId</code> propagation,
+        Structured JSON logging via <code>@mma/telemetry</code>, request-scoped <code>correlationId</code> propagation,
         the internal <code>monitoring-api-service</code>, and CloudWatch dashboards.
         All services emit correlated log lines — every line carries a <code>correlationId</code> so logs
         from HTTP requests and SQS event chains are joinable in CloudWatch Log Insights.
@@ -70,7 +70,7 @@ graph LR
     OE["order-event-handler"]
   end
 
-  subgraph Telemetry["@old-st/telemetry"]
+  subgraph Telemetry["@mma/telemetry"]
     Logger["createLogger()\nJSON → stdout"]
     OTel["initTelemetry()\nOTel SDK"]
     Corr["correlationMiddleware()\nAsyncLocalStorage"]
@@ -103,7 +103,7 @@ graph LR
       </p>
 
       <!-- ════════════════════════════════════════════ -->
-      <h2>The <code>@old-st/telemetry</code> Package</h2>
+      <h2>The <code>@mma/telemetry</code> Package</h2>
 
       <p>
         Located at <code>packages/telemetry/</code>. Exports five main things:
@@ -181,7 +181,7 @@ graph LR
         Always declare a <strong>module-level singleton</strong>:
       </p>
 
-      <pre><code>import { createLogger } from '@old-st/telemetry';
+      <pre><code>import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('user-api-service');   // top of the file, outside the class
 
@@ -268,7 +268,7 @@ export class UserApplicationService {
         are available to every logger call inside the request.
       </p>
 
-      <pre><code>import { initTelemetry } from '@old-st/telemetry';
+      <pre><code>import { initTelemetry } from '@mma/telemetry';
 
 initTelemetry('user-api-service');   // ← must be FIRST, before NestFactory
 
@@ -298,7 +298,7 @@ bootstrap();</code></pre>
 
       <h3>HTTP API Services (no own <code>package.json</code>)</h3>
       <p>
-        <code>@old-st/telemetry</code> is declared in the workspace root <code>package.json</code>.
+        <code>@mma/telemetry</code> is declared in the workspace root <code>package.json</code>.
         No per-service action needed — imports resolve automatically.
       </p>
 
@@ -306,7 +306,7 @@ bootstrap();</code></pre>
       <p>
         Add to the service's <code>package.json</code> <code>dependencies</code>:
       </p>
-      <pre><code>"@old-st/telemetry": "workspace:*"</code></pre>
+      <pre><code>"@mma/telemetry": "workspace:*"</code></pre>
 
       <!-- ════════════════════════════════════════════ -->
       <h2>Monitoring Service</h2>

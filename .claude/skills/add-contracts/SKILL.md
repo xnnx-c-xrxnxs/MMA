@@ -27,7 +27,7 @@ import {
   {ENTITY}_ROLES,          // include only if entity has roles
   {Entity}StatusEnum,
   {Entity}RoleEnum,
-} from '@old-st/{domain}-domain';
+} from '@mma/{domain}-domain';
 
 // ── Re-export domain constants ──────────────────────────────────────────────
 export { {ENTITY}_STATUSES, {Entity}StatusEnum };
@@ -85,7 +85,7 @@ export const list{Entities}ByStatusSchema = z.object({
 
 // ── Paginated Response ────────────────────────────────────────────────────────
 // DynamoDB domains — cursor-based:
-// PaginatedResponse is already defined in @old-st/contracts/common — import it
+// PaginatedResponse is already defined in @mma/contracts/common — import it
 export type PaginatedResponse<T> = {
   data: T[];
   nextCursorPointer: Record<string, unknown> | null;
@@ -93,7 +93,7 @@ export type PaginatedResponse<T> = {
 };
 
 // Prisma domains — offset-based:
-// OffsetPaginatedResponse is already defined in @old-st/contracts/common — import it
+// OffsetPaginatedResponse is already defined in @mma/contracts/common — import it
 export type OffsetPaginatedResponse<T> = {
   data: T[];
   total: number;
@@ -127,14 +127,14 @@ export type List{Entities}ByStatusInput = z.infer<typeof list{Entities}ByStatusS
 
 ## Re-exporting Domain Constants
 
-The contracts package re-exports domain constants so consumers import from `@old-st/contracts/{domain}` (subpath):
+The contracts package re-exports domain constants so consumers import from `@mma/contracts/{domain}` (subpath):
 
 ```typescript
 // In schemas.ts
-export { {ENTITY}_STATUSES, {Entity}StatusEnum } from '@old-st/{domain}-domain';
+export { {ENTITY}_STATUSES, {Entity}StatusEnum } from '@mma/{domain}-domain';
 ```
 
-This means application services and controllers import from `@old-st/contracts/{domain}` — never from the bare `@old-st/contracts` root or directly from `@old-st/{domain}-domain`. See the `contracts-subpath-imports` skill for the full domain isolation rule.
+This means application services and controllers import from `@mma/contracts/{domain}` — never from the bare `@mma/contracts` root or directly from `@mma/{domain}-domain`. See the `contracts-subpath-imports` skill for the full domain isolation rule.
 
 ---
 
@@ -171,13 +171,13 @@ export * from './schemas';
 ```json
 {
   "paths": {
-    "@old-st/contracts/{domain}": ["packages/contracts/{domain}/src/index.ts"]
+    "@mma/contracts/{domain}": ["packages/contracts/{domain}/src/index.ts"]
   }
 }
 ```
 
 **Service imports must use the domain-scoped path:**
 ```typescript
-import { create{Entity}Schema } from '@old-st/contracts/{domain}';
-import { PaginatedResponse } from '@old-st/contracts/common';
+import { create{Entity}Schema } from '@mma/contracts/{domain}';
+import { PaginatedResponse } from '@mma/contracts/common';
 ```

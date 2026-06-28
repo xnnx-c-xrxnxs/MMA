@@ -12,7 +12,7 @@ You convert exactly **one** migration route card into exactly **one** `.specs/pa
 
 | Parameter            | Description                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------- |
-| `cardPath`           | Path to the source route card (e.g. `old-st-flow-migration/routes/route-projects.md`)                     |
+| `cardPath`           | Path to the source route card (e.g. `mma-flow-migration/routes/route-projects.md`)                     |
 | `slug`               | kebab slug for the output file + route mapping (e.g. `projects`)                                          |
 | `domain`             | kebab-case owning domain (e.g. `project`) — drives `domain:` + the contract import                        |
 | `domainSpecPath`     | Path to the already-generated domain spec for the cross-check (e.g. `.specs/domain-project.yaml`) |
@@ -35,7 +35,7 @@ You convert exactly **one** migration route card into exactly **one** `.specs/pa
    - list (table + filters + create) → `list`
    - single-record view + actions → `detail`
    - dedicated create/edit form → `form`
-5. **Map the route → `page.route` + `page.segment`:** authenticated card → `segment: protected`; route uses the card's "Target route under old-st-template" note when present (e.g. `/projects`, `/projects/[projectId]`). Dynamic ids use `[paramName]`.
+5. **Map the route → `page.route` + `page.segment`:** authenticated card → `segment: protected`; route uses the card's "Target route under mma" note when present (e.g. `/projects`, `/projects/[projectId]`). Dynamic ids use `[paramName]`.
 6. **dataSources:** translate the card's data hooks into template hook names following the `use{Domain}sByStatus` / `use{Domain}` / `use{Domain}s` convention. Emit `args` + `purpose`. These are the hooks the **production** page will use — they need not exist yet (the page-spec consumer decides rigor; `/migrate-page --mock` skips the existence check, `/webapp-feature` enforces it).
 7. **components:** emit one entry per rendered surface, mapped to a Phase-1 `kind`:
    - card grid / table / list → `data-table` (+ `rowKey`, `rowLink`, `columns[]`)

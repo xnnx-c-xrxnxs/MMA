@@ -3,7 +3,7 @@
 This is the **complete journey** for a developer who:
 1. Just cloned this template into a fresh repo.
 2. Has been handed a **Figma design system file** (and possibly screen designs).
-3. Wants to end up with: a working webapp and all primitives in `@old-st/ui` mirroring the Figma library.
+3. Wants to end up with: a working webapp and all primitives in `@mma/ui` mirroring the Figma library.
 
 Follow it top-to-bottom. Each part lists which **slash command** to run in Claude Code.
 
@@ -29,7 +29,7 @@ Follow it top-to-bottom. Each part lists which **slash command** to run in Claud
 
 ## Part 1 — Bootstrap a fresh repository (one-time, ~10 min)
 
-Skip this part if your repo has already been bootstrapped (i.e. `pnpm-workspace.yaml` no longer mentions `@old-st`, `examples/` is gone, and `develop` branch exists).
+Skip this part if your repo has already been bootstrapped (i.e. `pnpm-workspace.yaml` no longer mentions `@mma`, `examples/` is gone, and `develop` branch exists).
 
 ### 1.1 Clone the template
 
@@ -58,7 +58,7 @@ You'll be prompted for:
 - `initDisplayName` — pretty name, e.g. `Acme Time Tracker`
 
 The task:
-- Renames `@old-st/*` → `@<your-scope>/*` across the workspace.
+- Renames `@mma/*` → `@<your-scope>/*` across the workspace.
 - Deletes `examples/`.
 - Creates the `develop` branch.
 - Applies branch protection rulesets to `main` + `develop`.
@@ -275,7 +275,7 @@ Once Parts 1–5 are done, every future change follows this pattern:
 
 | Trigger | Run | Result |
 |---|---|---|
-| Add a brand-new primitive to `@old-st/ui` | `/figma-component <figma-url>` | New `.tsx` + stories + tests in `packages/ui/src/components/` |
+| Add a brand-new primitive to `@mma/ui` | `/figma-component <figma-url>` | New `.tsx` + stories + tests in `packages/ui/src/components/` |
 | Add a new screen | `/figma-page <figma-url>` | Page in `apps/webapp/src/app/(protected)/<slug>/` |
 | Designer changed a token value | `/figma-import` (drift-check first, then sync) | `globals.css` regenerated; visual diff in `/design-preview` |
 | Designer added a new variant axis | `/figma-component <figma-url>` for that primitive | Updated `cva()` + new story variants |
@@ -289,7 +289,7 @@ Once Parts 1–5 are done, every future change follows this pattern:
 | `/figma-import` says "no Figma tools available" | Figma MCP server not configured or not authenticated | Follow **Part 3** to set up and authenticate the Figma MCP server, then re-run `/mcp` to confirm it shows `✓ Connected` |
 | `/figma-import` Phase A plan looks wrong (wrong components page) | Wrong URL given for "Components/Library page" in Phase 0 | Cancel, re-run with the correct URL |
 | Primitives created but visually wrong | Token mismatch | Run `/figma-import` with `drift-check` mode to compare; then `sync` to apply |
-| `mcp_figma_get_design_context` returns generic JSX (raw hex, no `@old-st/ui` imports) | Code Connect is not wired (requires Figma Organization/Enterprise plan) | Expected on Professional and below — use the generated JSX as a reference and adapt it to the existing primitives manually |
+| `mcp_figma_get_design_context` returns generic JSX (raw hex, no `@mma/ui` imports) | Code Connect is not wired (requires Figma Organization/Enterprise plan) | Expected on Professional and below — use the generated JSX as a reference and adapt it to the existing primitives manually |
 | Designer expects "click component in Dev Mode → see real `<Button variant=\"brand\" />`" | Same — Code Connect feature not available on Professional | Either upgrade the Figma workspace to Organization, or keep using `/figma-component` / `/figma-page` for code generation |
 
 ---

@@ -23,7 +23,7 @@ export const buildNames = (domainName: string, entityName?: string): Names => {
   };
 };
 
-export const renderMain = (n: Names): string => `import { initTelemetry, correlationMiddleware } from '@old-st/telemetry';
+export const renderMain = (n: Names): string => `import { initTelemetry, correlationMiddleware } from '@mma/telemetry';
 initTelemetry('${n.serviceName}');
 
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -95,10 +95,10 @@ export class AppModule {}
 `;
 
 export const renderDomainModule = (n: Names): string => `import { Module } from '@nestjs/common';
-// TODO: import use cases + repository interface from @old-st/${n.domain.kebab}-domain
-// import { I${n.entity.pascal}Repository } from '@old-st/${n.domain.kebab}-domain';
-// TODO: import schema + repository implementation from @old-st/${n.domain.kebab}-domain/infrastructure
-// import { Dynamo${n.entity.pascal}Repository, ${n.entity.pascal}Schema } from '@old-st/${n.domain.kebab}-domain/infrastructure';
+// TODO: import use cases + repository interface from @mma/${n.domain.kebab}-domain
+// import { I${n.entity.pascal}Repository } from '@mma/${n.domain.kebab}-domain';
+// TODO: import schema + repository implementation from @mma/${n.domain.kebab}-domain/infrastructure
+// import { Dynamo${n.entity.pascal}Repository, ${n.entity.pascal}Schema } from '@mma/${n.domain.kebab}-domain/infrastructure';
 // import { Table } from 'dynamodb-onetable';
 // import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
 import { ${n.entity.pascal}ApplicationService } from '../application/services/${n.entity.kebab}-application.service';
@@ -132,7 +132,7 @@ export class ${n.entity.pascal}Module {}
 `;
 
 export const renderApplicationService = (n: Names): string => `import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('${n.serviceName}');
 
@@ -270,14 +270,14 @@ export const renderDomainExceptionFilter = (n: Names): string => `import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import { Response } from 'express';
 
 const logger = createLogger('${n.serviceName}');
 
 type ErrorConstructor = new (...args: never[]) => Error;
 
-// TODO: import domain + application exceptions from @old-st/${n.domain.kebab}-domain
+// TODO: import domain + application exceptions from @mma/${n.domain.kebab}-domain
 // and add them to the map below with their HTTP status codes.
 const DOMAIN_ERROR_MAP: Array<[ErrorConstructor, number]> = [
   // [${n.entity.pascal}NotFoundError, 404],

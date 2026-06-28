@@ -2,7 +2,7 @@
 
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { Button } from '@old-st/ui';
+import { Button } from '@mma/ui';
 
 /**
  * Three-state theme toggle: light → dark → system → light...

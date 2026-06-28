@@ -109,11 +109,11 @@ packages/
         index.ts
         pagination.ts
     user/
-      package.json          ← depends on @old-st/{domain}-domain + zod
+      package.json          ← depends on @mma/{domain}-domain + zod
       project.json          ← tags: ["scope:{domain}", "type:contracts"]
       tsconfig.json
       src/
-        index.ts            ← domain barrel (import: @old-st/contracts/{domain})
+        index.ts            ← domain barrel (import: @mma/contracts/{domain})
         schemas.ts
         event-schemas.ts
     order/
@@ -136,7 +136,7 @@ packages/
       project.json
       tsconfig.json
       src/
-        index.ts            ← domain barrel (import: @old-st/contracts/auth)
+        index.ts            ← domain barrel (import: @mma/contracts/auth)
         schemas.ts          ← sign-in, refresh, password flows, discriminated unions
 
   common/
@@ -332,7 +332,7 @@ infra/
     cd-infra-plan.yml             ← Terraform plan on PRs (infra/** changes)
 ```
 
-**Important:** Backend uses **NestJS** in the presentation layer. Frontend uses **Next.js** (App Router) and **Expo** (React Native) with React Query and the shared `@old-st/ui` (web) / `@old-st/mobile-ui` (mobile) + `@old-st/client-common` packages. **Deployment** uses Terraform modules driven by `.github/service-registry.json` — all AWS resources are created via `for_each` over the registry, so most service additions require zero `.tf` file edits.
+**Important:** Backend uses **NestJS** in the presentation layer. Frontend uses **Next.js** (App Router) and **Expo** (React Native) with React Query and the shared `@mma/ui` (web) / `@mma/mobile-ui` (mobile) + `@mma/client-common` packages. **Deployment** uses Terraform modules driven by `.github/service-registry.json` — all AWS resources are created via `for_each` over the registry, so most service additions require zero `.tf` file edits.
 
 ---
 
@@ -440,8 +440,8 @@ For Prisma-based domains, replace the DynamoDB table token with a `PRISMA_CLIENT
 - Import `PrismaConfig` from `../infrastructure/config/prisma.config`.
 - The repository constructor receives `PrismaClient` instead of `Table`.
 - Uses `{DOMAIN}_DATABASE_URL` env var instead of `{DOMAIN}_DYNAMODB_TABLE_NAME`.
-- In Lambda: `AWS_SECRETS_ARN` is injected by Terraform. `SecretsConfig.resolve(['ORDERS_DATABASE_URL'])` (imported from `@old-st/aws-secrets`) is called at Lambda cold-start (in `main.ts` handler) and populates only the keys this service needs from the project-level Secrets Manager secret before NestJS boots. `PrismaConfig.getClient()` then simply sets the engine path and creates the client — it no longer performs any ARN resolution.
-- Import `SecretsConfig` from `@old-st/aws-secrets` (`packages/aws/aws-secrets/`). This package wraps `@aws-sdk/client-secrets-manager` with the allow-list pattern.
+- In Lambda: `AWS_SECRETS_ARN` is injected by Terraform. `SecretsConfig.resolve(['ORDERS_DATABASE_URL'])` (imported from `@mma/aws-secrets`) is called at Lambda cold-start (in `main.ts` handler) and populates only the keys this service needs from the project-level Secrets Manager secret before NestJS boots. `PrismaConfig.getClient()` then simply sets the engine path and creates the client — it no longer performs any ARN resolution.
+- Import `SecretsConfig` from `@mma/aws-secrets` (`packages/aws/aws-secrets/`). This package wraps `@aws-sdk/client-secrets-manager` with the allow-list pattern.
 
 See the `prisma-service-wiring` skill for the complete module template.
 
@@ -491,7 +491,7 @@ See the `prisma-service-wiring` skill for the complete module template.
 - [ ] **Prisma path:** Register domain in `scripts/prisma-migrate-all.ts` → `PRISMA_DOMAINS` array
 - [ ] **Prisma path:** Add `ignoreWarnings` for Prisma generated client in `webpack.config.js` (suppress missing source map warnings)
 - [ ] **Prisma path:** Add Prisma engine binary + `schema.prisma` to webpack `assets` array (see `cd-register-service` skill § Prisma / Lambda Build Requirements)
-- [ ] **Prisma path:** Import `SecretsConfig` from `@old-st/aws-secrets` in `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap
+- [ ] **Prisma path:** Import `SecretsConfig` from `@mma/aws-secrets` in `main.ts` Lambda handler and call `await SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` before NestJS bootstrap
 - [ ] **Prisma path:** Add a `cp -r packages/{domain}-domain/src/infrastructure/prisma/ /tmp/init-runner/prisma/{domain}/` line in the CD workflow's "Package init-runner" step so the Prisma schema is included in the Lambda ZIP
 - [ ] **Prisma path:** Add a `prisma-migrate` entry to `deployTasks[]` in `service-registry.json`
 - [ ] Add `prune-lockfile`, `copy-workspace-modules`, and `prune` targets to `project.json` (required for Lambda ZIP packaging — see `nx-microservice-scaffold` skill)
@@ -527,7 +527,7 @@ Use the `sqs-event-driven-service` skill for all internal file templates.
 
 - [ ] Add or update API client methods in `packages/client-common/src/infrastructure/api-clients/{domain}-api.client.ts`
 - [ ] Add or update React Query hooks in `packages/client-common/src/hooks/use-{domain}.ts`
-- [ ] Add or update contracts types/schemas used by the API client (in `@old-st/contracts/{domain}`)
+- [ ] Add or update contracts types/schemas used by the API client (in `@mma/contracts/{domain}`)
 - [ ] Add or update domain components in `apps/webapp/src/components/{domain}/`
 - [ ] Update page orchestration in `apps/webapp/src/app/{domain}/page.tsx`
 - [ ] If new entity statuses exist, add badge variant mapping in `apps/webapp/src/lib/status-variants.ts`
@@ -596,7 +596,7 @@ apps/{domain}/{domain}-api-service/src/infrastructure/config/prisma.config.ts
 Key rules:
 
 - **One Prisma client per process** (singleton).
-- Import `PrismaClient` from the domain's generated client path (`@old-st/{domain}-domain/infrastructure` re-exports it).
+- Import `PrismaClient` from the domain's generated client path (`@mma/{domain}-domain/infrastructure` re-exports it).
 - **`getClient()` is async** — returns `Promise<PrismaClient>`. NestJS `useFactory` handles this transparently.
 - **`DATABASE_URL` from env**: Locally (`STAGE=local`), the env var is a plain `postgresql://` URL from `.env.local`. In deployed Lambda, `SecretsConfig.resolve(['{DOMAIN}_DATABASE_URL'])` is called first in the Lambda handler and populates only that key from the project-level Secrets Manager secret (`AWS_SECRETS_ARN`) — by the time `PrismaConfig.getClient()` runs, the URL is already resolved. `PrismaConfig` only sets the engine path and creates the client.
 - **Lambda engine path**: When `STAGE !== 'local'`, sets `PRISMA_QUERY_ENGINE_LIBRARY` to `path.join(__dirname, 'libquery_engine-rhel-openssl-3.0.x.so.node')` so Prisma finds the binary copied to `/var/task` by webpack.
@@ -612,7 +612,7 @@ Key rules:
 
 - Keep conversion methods private: `toDomain()` and `toPersistence()`.
 - Use **offset-based pagination** with `skip`/`take` and `Promise.all([findMany, count])`.
-- Return `IOffsetPaginatedResponse` (from `@old-st/common`) with `data`, `total`, `page`, `limit`, `totalPages`.
+- Return `IOffsetPaginatedResponse` (from `@mma/common`) with `data`, `total`, `page`, `limit`, `totalPages`.
 - Use `$transaction` for aggregate saves (e.g., order with items).
 - Cascade delete is handled by Prisma schema `onDelete: Cascade` — repository calls `delete()` on the root entity only.
 - Infrastructure may define **local structural interfaces** to avoid Prisma generated-type leaking into domain.
@@ -709,7 +709,7 @@ npx prisma generate                              # Regenerate client after schem
 
 ### DTO Mapping Contract
 
-- Application services must **transform domain entities into DTOs** using `@old-st/contracts` schemas.
+- Application services must **transform domain entities into DTOs** using `@mma/contracts` schemas.
 - Controllers return DTOs only; domain entities never cross the presentation boundary.
 - Use Zod schemas (e.g., `userResponseSchema.parse(...)`) to validate outputs.
 
@@ -764,7 +764,7 @@ Fields:
 
 - **Domain constants** in `packages/{domain}-domain/src/domain/constants`.
 - **Contracts** re-export constants and define Zod schemas.
-- **Repositories use @old-st/common interfaces** for pagination (type-only).
+- **Repositories use @mma/common interfaces** for pagination (type-only).
 
 ### Pagination Contract (Must Match Repositories)
 
@@ -957,11 +957,11 @@ This template demonstrates three integration patterns between bounded contexts. 
 
 - **Publisher:** Product API → `SqsStandardEventPublisher` → SQS queue
 - **Consumer:** SQS queue → Order Event Handler → consuming domain's use cases
-- **Shared contract:** `@old-st/contracts/{publishing-domain}/event-schemas.ts` (Published Language)
+- **Shared contract:** `@mma/contracts/{publishing-domain}/event-schemas.ts` (Published Language)
 
 **Key rules:**
 
-- The consumer imports event schemas from `@old-st/contracts/{publishing-domain}` only — never from `@old-st/{publishing-domain}-domain`.
+- The consumer imports event schemas from `@mma/contracts/{publishing-domain}` only — never from `@mma/{publishing-domain}-domain`.
 - Handlers write to the consuming domain's own repository — never to the publishing domain's table.
 - Queue naming: consumer-owned inbox pattern — `{consuming-domain}-events` (e.g., `order-events`, `product-events`).
 
@@ -975,7 +975,7 @@ This template demonstrates three integration patterns between bounded contexts. 
 
 **Architecture:**
 
-- Both publisher and consumer import from `@old-st/contracts/{own-domain}` and `@old-st/{own-domain}-domain`.
+- Both publisher and consumer import from `@mma/contracts/{own-domain}` and `@mma/{own-domain}-domain`.
 - Standard intra-domain pattern — no ACL boundary needed.
 
 ### Pattern 4 — Choreography Saga (Multi-Step Cross-Domain Workflow)
@@ -992,7 +992,7 @@ This template demonstrates three integration patterns between bounded contexts. 
 - **Responder:** Product Event Handler → validates products via `IProductRepository` → publishes validation result
 - **Resolver:** Order Event Handler → idempotent handlers call `ApproveProductValidationUseCase` or `FailOrderValidationUseCase`
 - **Queues:** Consumer-owned inbox: `product-events` (TO product domain), `order-events` (TO order domain)
-- **Contract:** Each domain exposes its event schemas in `@old-st/contracts/{domain}/event-schemas.ts`
+- **Contract:** Each domain exposes its event schemas in `@mma/contracts/{domain}/event-schemas.ts`
 
 **Key rules:**
 
@@ -1033,20 +1033,20 @@ Page (apps/webapp/src/app/{domain}/page.tsx)
 
 | Package                 | Purpose                                                                                                                                                                                             |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@old-st/ui`            | Shadcn-style primitives (Badge, Button, Card, Table, Input, Select) + `cn()` utility (clsx + tailwind-merge). No domain logic. See `webapp-ui-primitive` skill.                                     |
-| `@old-st/client-common` | Framework-agnostic API clients (`infrastructure/`), React Query hooks (`hooks/`), shared QueryClient config + Providers (`lib/`). Shared by webapp and mobile. See `webapp-api-client-hooks` skill. |
+| `@mma/ui`            | Shadcn-style primitives (Badge, Button, Card, Table, Input, Select) + `cn()` utility (clsx + tailwind-merge). No domain logic. See `webapp-ui-primitive` skill.                                     |
+| `@mma/client-common` | Framework-agnostic API clients (`infrastructure/`), React Query hooks (`hooks/`), shared QueryClient config + Providers (`lib/`). Shared by webapp and mobile. See `webapp-api-client-hooks` skill. |
 | `apps/webapp`           | Next.js App Router shell, page orchestrators, domain-scoped components, status-variant mapping. See `webapp-new-page` skill.                                                                        |
 
 ### Component Conventions
 
 - **Domain-scoped folders:** `apps/webapp/src/components/{domain}/` (e.g., `users/`, `orders/`, `products/`).
 - **Layout components:** `apps/webapp/src/components/layout/` (Header, Sidebar).
-- All components use `@old-st/ui` primitives — never raw HTML `<table>`, `<button>`, `<input>`.
-- **Status badge variants** are mapped in `apps/webapp/src/lib/status-variants.ts` using enum constants from `@old-st/contracts/{domain}` — never hardcoded strings.
+- All components use `@mma/ui` primitives — never raw HTML `<table>`, `<button>`, `<input>`.
+- **Status badge variants** are mapped in `apps/webapp/src/lib/status-variants.ts` using enum constants from `@mma/contracts/{domain}` — never hardcoded strings.
 
 ### How Webapp Consumes Contracts
 
-- Import types and enums from `@old-st/contracts/{domain}` (subpath imports — Golden Rule #11).
+- Import types and enums from `@mma/contracts/{domain}` (subpath imports — Golden Rule #11).
 - API clients use Zod schemas from contracts to parse responses (`schema.parse(json)`).
 - Status enums from contracts drive badge variant mappings and filter dropdowns.
 - `next.config.js` lists workspace packages in `transpilePackages` so they are compiled by Next.js.
@@ -1071,8 +1071,8 @@ Screen (apps/mobile/src/app/{domain}/)
 
 | Package                 | Purpose                                                                                                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@old-st/mobile-ui`     | React Native primitives (Badge, Button, Card, Text, Input, Separator) + design tokens (`colors`, `spacing`, `radii`, `fontSizes`). No domain logic. See `mobile-ui-primitive` skill. |
-| `@old-st/client-common` | Framework-agnostic API clients + React Query hooks. **Shared by webapp and mobile.** See `webapp-api-client-hooks` skill.                                                            |
+| `@mma/mobile-ui`     | React Native primitives (Badge, Button, Card, Text, Input, Separator) + design tokens (`colors`, `spacing`, `radii`, `fontSizes`). No domain logic. See `mobile-ui-primitive` skill. |
+| `@mma/client-common` | Framework-agnostic API clients + React Query hooks. **Shared by webapp and mobile.** See `webapp-api-client-hooks` skill.                                                            |
 | `apps/mobile`           | Expo Router shell, screen orchestrators, domain-scoped RN components, status-variant mapping. See `mobile-new-screen` skill.                                                         |
 
 ### Routing (Expo Router)
@@ -1085,14 +1085,14 @@ Screen (apps/mobile/src/app/{domain}/)
 ### Component Conventions
 
 - **Domain-scoped folders:** `apps/mobile/src/components/{domain}/` (e.g., `users/`, `orders/`, `products/`).
-- All components use `@old-st/mobile-ui` primitives — never raw `View`/`Text` for interactive or styled elements.
+- All components use `@mma/mobile-ui` primitives — never raw `View`/`Text` for interactive or styled elements.
 - Lists use `FlatList` (never `ScrollView` + `map()`).
-- **Status badge variants** are mapped in `apps/mobile/src/lib/status-variants.ts` using enum constants from `@old-st/contracts/{domain}`.
+- **Status badge variants** are mapped in `apps/mobile/src/lib/status-variants.ts` using enum constants from `@mma/contracts/{domain}`.
 - Styles use `StyleSheet.create()` at the bottom of the file.
 
 ### How Mobile Consumes Contracts
 
-- Import types and enums from `@old-st/contracts/{domain}` (subpath imports — Golden Rule #11).
+- Import types and enums from `@mma/contracts/{domain}` (subpath imports — Golden Rule #11).
 - API clients in `client-common` parse responses with Zod schemas — mobile gets the same runtime type safety as the webapp.
 - Status enums from contracts drive badge variant mappings and filter buttons.
 - `metro.config.js` resolves workspace packages via `@nx/expo/plugins/metro-resolver`.
@@ -1140,8 +1140,8 @@ When Claude Code generates code here, it MUST:
 1. Respect Clean Architecture boundaries.
 2. Use NestJS in presentation layer.
 3. Add Zod validation via `ZodValidationPipe`.
-4. Use `@old-st/contracts/{domain}` subpath imports for DTOs and schemas — never the bare `@old-st/contracts` root.
-5. Use `@old-st/common` for internal interfaces only.
+4. Use `@mma/contracts/{domain}` subpath imports for DTOs and schemas — never the bare `@mma/contracts` root.
+5. Use `@mma/common` for internal interfaces only.
 6. Keep repository interfaces in `packages/{domain}-domain/application/interfaces`.
 7. Keep repositories in `packages/{domain}-domain/infrastructure/repositories`.
 8. Register providers in `apps/{domain}/{service}/src/modules/{domain}.module.ts`.
@@ -1197,8 +1197,8 @@ Before writing any code, Claude Code MUST check whether the task matches one or 
 | Adding a new domain's contracts package                                                                                                            | `contracts-subpath-imports` + `add-contracts`                                     |
 | Adding a new webapp page or domain component                                                                                                       | `webapp-new-page`                                                                 |
 | Adding or extending API clients and React Query hooks for a domain                                                                                 | `webapp-api-client-hooks`                                                         |
-| Adding a new shared UI primitive to `@old-st/ui`                                                                                                   | `webapp-ui-primitive`                                                             |
-| Wrapping a Radix UI primitive (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Command, etc.) in `@old-st/ui`                    | `webapp-radix-primitive-wrap`                                                     |
+| Adding a new shared UI primitive to `@mma/ui`                                                                                                   | `webapp-ui-primitive`                                                             |
+| Wrapping a Radix UI primitive (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Command, etc.) in `@mma/ui`                    | `webapp-radix-primitive-wrap`                                                     |
 | Adding or maintaining the Edge auth middleware / `oldst.session` marker cookie                                                                     | `webapp-auth-middleware` (SSR mode only)                                          |
 | Adding a sortable / selectable / column-toggleable table via `<DataTable>`                                                                         | `webapp-data-table`                                                               |
 | Adding cursor-paginated infinite scroll (users / products)                                                                                         | `webapp-cursor-infinite-scroll`                                                   |
@@ -1214,7 +1214,7 @@ Before writing any code, Claude Code MUST check whether the task matches one or 
 | Investigating bundle size, adding a heavy dependency, performance profiling the webapp                                                             | `fe-performance-bundle-analysis`                                                  |
 | Adding a full-stack feature (backend + webapp) to an existing domain                                                                               | `add-feature-existing-domain` (includes webapp touchpoints)                       |
 | Adding a new mobile screen or domain component                                                                                                     | `mobile-new-screen`                                                               |
-| Adding a new shared UI primitive to `@old-st/mobile-ui`                                                                                            | `mobile-ui-primitive`                                                             |
+| Adding a new shared UI primitive to `@mma/mobile-ui`                                                                                            | `mobile-ui-primitive`                                                             |
 | Adding a mobile feature that surfaces an existing backend capability                                                                               | `mobile-new-domain-feature`                                                       |
 | Configuring EAS Build / EAS Update profiles, channels, runtime version, app.config.ts                                                              | `mobile-eas-build-update`                                                         |
 | Triggering a mobile release (OTA, native build, store submission) via `cd-mobile-deploy.yml`                                                       | `mobile-cd-pipeline`                                                              |
@@ -1250,7 +1250,7 @@ Before writing any code, Claude Code MUST check whether the task matches one or 
 | Scaffolding the backend `notification-domain` package + dispatcher service (push notifications)                                                    | `notification-domain`                                                             |
 | Rotating AWS Secrets Manager secrets (DB passwords, JWT keys, third-party tokens)                                                                  | `secrets-rotation`                                                                |
 | Seeding local LocalStack / Postgres with realistic dev data for the webapp / mobile app                                                            | `local-seed-data`                                                                 |
-| Generating a Figma page/frame from a brief / page spec / live webapp route using `@old-st/ui` library components (reverse of `figma-to-ui-screen`) | `ui-to-figma-page`                                                                |
+| Generating a Figma page/frame from a brief / page spec / live webapp route using `@mma/ui` library components (reverse of `figma-to-ui-screen`) | `ui-to-figma-page`                                                                |
 
 ### Workflow Orchestrators (Guided Prompts)
 
@@ -1283,7 +1283,7 @@ Canonical tool mapping for `Agent(name, prompt)` is fixed by ADR-007 (`docs/deci
 | `new-ui-primitive.md`        | "new ui primitive", "shared component web and mobile", "design system component"                                                                                       | `fe-design-tokens` + `webapp-ui-primitive` (or radix-wrap) + `mobile-ui-primitive`                                                                                                        |
 | `new-domain-dynamo.md`       | "new dynamodb domain", "add a dynamo-backed domain" — fast path that hard-codes `persistence=dynamodb`                                                                 | Same as `/new-domain` minus the persistence-decision question                                                                                                                             |
 | `quick-crud-domain.md`       | "quick crud domain", "simple crud domain", "basic crud entity" — minimum-viable scaffold (no business-rule interview)                                                  | `new-domain-package` + `add-contracts` + `nestjs-service-layers` (skips `domain-business-rules`)                                                                                          |
-| `new-use-case.md`            | "add a use case", "add an action to", "cancel use case", "list X by Y" — single use case via `@old-st/nx-plugin:use-case`                                              | `new-use-case`                                                                                                                                                                            |
+| `new-use-case.md`            | "add a use case", "add an action to", "cancel use case", "list X by Y" — single use case via `@mma/nx-plugin:use-case`                                              | `new-use-case`                                                                                                                                                                            |
 | `add-monitoring-feature.md`  | "add to monitoring tool", "extend monitoring dashboard", "new monitoring page"                                                                                         | `extend-monitoring-service`                                                                                                                                                               |
 | `add-alerting.md`            | "add alerting", "PagerDuty", "Opsgenie", "Slack alerts", "on-call notifications", "wire up alarms"                                                                     | `add-notifications` (new channel) OR `add-monitoring` (wire existing service to alarms)                                                                                                   |
 | `figma-component.md`         | "build this Figma component", "generate from this Figma URL" (single component), "translate this Figma node"                                                           | `figma-to-ui-component` + `webapp-ui-primitive` (or `webapp-radix-primitive-wrap`) + optionally `mobile-ui-primitive` + `fe-design-tokens`                                                |
@@ -1304,8 +1304,8 @@ The migration prompts run in order. Pages build **once** in their real `(protect
 | ---- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | `/migrate-extract`  | Analysis cards (domains, routes, components, tokens) under `{migrationRoot}/`                                                                                                                                                                                                |
 | 2    | `/migrate-to-specs` | `.specs/domain-*.yaml` + `page-*.yaml` (translated from cards)                                                                                                                                                                                                       |
-| 3    | `/migrate-build-ui` | `@old-st/ui` primitives + prop-driven `components/{domain}/` composites; a hard-fail **story-parity gate** (`story-parity-auditor` → `components/STORY_PARITY.md`) proves every source Storybook variant/state is demonstrated in the target or carries a recorded transform |
-| 4    | `/migrate-page`     | Page built once in `(protected)/{route}/`; `--mock` interactive fixture adapter → `--wire` real `@old-st/client-common` hooks. Toggled locally via `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local` (UX-only auth bypass, code never removed).                    |
+| 3    | `/migrate-build-ui` | `@mma/ui` primitives + prop-driven `components/{domain}/` composites; a hard-fail **story-parity gate** (`story-parity-auditor` → `components/STORY_PARITY.md`) proves every source Storybook variant/state is demonstrated in the target or carries a recorded transform |
+| 4    | `/migrate-page`     | Page built once in `(protected)/{route}/`; `--mock` interactive fixture adapter → `--wire` real `@mma/client-common` hooks. Toggled locally via `NEXT_PUBLIC_MOCK_PREVIEW=true` + `NEXT_PUBLIC_STAGE=local` (UX-only auth bypass, code never removed).                    |
 
 #### Domain Workflow Selector — Which `/new-domain` Variant?
 
@@ -1323,12 +1323,12 @@ Four prompts handle Figma workflows. Pick by direction + scope:
 
 | Direction    | User intent                                                                                                            | Prompt                       | Output scope                                                                                                   |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Figma → code | One specific component (Button, Toast, Switch) from a Figma URL                                                        | `figma-component.md`  | 1 file in `@old-st/ui` (+ optional mobile mirror)                                                              |
+| Figma → code | One specific component (Button, Toast, Switch) from a Figma URL                                                        | `figma-component.md`  | 1 file in `@mma/ui` (+ optional mobile mirror)                                                              |
 | Figma → code | One screen / dashboard from a Figma URL                                                                                | `figma-page.md`       | 1 page + N domain components in `apps/webapp/` (recursively invokes `/figma-component` for missing primitives) |
 | Figma → code | Bulk import — whole Figma file or page, AI classifies design-system vs page-local                                      | `figma-import.md`     | M primitives + N pages + components, two-phase plan-then-execute with explicit approval gate                   |
-| code → Figma | Designer wants a Figma frame built from a brief, page spec, or live route — composed of `@old-st/ui` library instances | `ui-to-figma-page.md` | 1 Figma frame (per theme/viewport) in a designer-supplied file                                                 |
+| code → Figma | Designer wants a Figma frame built from a brief, page spec, or live route — composed of `@mma/ui` library instances | `ui-to-figma-page.md` | 1 Figma frame (per theme/viewport) in a designer-supplied file                                                 |
 
-> **Note:** Figma Code Connect (mapping `@old-st/ui` primitives to Figma master components so Dev Mode returns real imports) is **not supported on Figma Professional or below** — it requires Organization/Enterprise. The orchestrator, skill, and CI workflow have been removed from this template. If your team upgrades, re-introduce them or wire `@figma/code-connect` manually following the official docs.
+> **Note:** Figma Code Connect (mapping `@mma/ui` primitives to Figma master components so Dev Mode returns real imports) is **not supported on Figma Professional or below** — it requires Organization/Enterprise. The orchestrator, skill, and CI workflow have been removed from this template. If your team upgrades, re-introduce them or wire `@figma/code-connect` manually following the official docs.
 
 #### Orchestrator Design Rules
 
@@ -1613,14 +1613,14 @@ Current checks include:
 
 - `entity-no-toObject` — Entities must not have `toObject()` methods.
 - `entity-uses-enum-constants` — Entity methods must use enum constants, not string literals.
-- `no-bare-contracts-import` — Imports must use subpath (`@old-st/contracts/{domain}`).
+- `no-bare-contracts-import` — Imports must use subpath (`@mma/contracts/{domain}`).
 - `no-createdAt-in-entities` — Entities use `dateCreated`, not `createdAt`.
 - `no-node-env-development` — Code must check `STAGE`, not `NODE_ENV`, for local mode.
 - `controller-no-direct-usecase` — Controllers must call application services, not use cases.
 - `domain-no-nestjs-imports` — Domain layer must not import from `@nestjs/*`.
 - `prisma-client-infra-only` — Only `infrastructure/repositories/` may import from `@prisma/client` or generated client paths.
 - `service-registry-env-sync` — SQS/DynamoDB/database env vars in module code must be declared in both `service-registry.json` and `service-registry.env`.
-- `app-service-has-logger` — Every application service must use `createLogger()` from `@old-st/telemetry` as a module-level singleton (Golden Rule #35). Detects both missing loggers and forbidden `new Logger()` from `@nestjs/common`.
+- `app-service-has-logger` — Every application service must use `createLogger()` from `@mma/telemetry` as a module-level singleton (Golden Rule #35). Detects both missing loggers and forbidden `new Logger()` from `@nestjs/common`.
 - `mutation-methods-have-actor-id` — Every mutation application service method (non-GET) must accept `actorId: string` and include it in `logger.info()` fields (Golden Rule #10a). Detects mutation methods that log `{ userId }` without `actorId`.
 - `no-dynamic-tailwind-classes` — `className=` template literals containing `${...}` interpolation directly after a Tailwind prefix (`bg-`, `text-`, `border-`, etc.) are forbidden. Tailwind v4's JIT compiler only emits CSS for literal class names — a dynamic `` `bg-${prefix}-${step}` `` produces no styles and renders unstyled (Golden Rule #23o).
 
@@ -1666,7 +1666,7 @@ Configure these checks as **required** on `main` and `develop`:
 ### Step-by-Step: Set Up CODEOWNERS
 
 1. Open `.github/CODEOWNERS`.
-2. Replace the team reference (`@Old-St-Labs/senior-devs` by default) with your actual GitHub organization and team slug. All paths already use a single team — update the team slug only.
+2. Replace the team reference (`@xnnx-c-xrxnxs/senior-devs` by default) with your actual GitHub organization and team slug. All paths already use a single team — update the team slug only.
 3. Commit directly to `main` (or via a setup PR).
 4. Verify: open a draft PR touching any file — `@your-org/your-team` should be auto-requested as reviewer.
 

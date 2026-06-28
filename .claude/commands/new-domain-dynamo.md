@@ -63,7 +63,7 @@ Ask the user the following in a single structured message and wait for answers.
 ## Phase 1 — Dry-run preview
 
 ```bash
-pnpm nx g @old-st/nx-plugin:domain \
+pnpm nx g @mma/nx-plugin:domain \
   --name={domain} \
   --entity={entity} \
   --persistence=dynamodb \
@@ -92,7 +92,7 @@ Drop `--dryRun` and re-run. Then:
 From here on, the workflow is **identical** to `/new-domain` Phases 3–10:
 
 - Phase 3 — Business rules → load `domain-business-rules` skill.
-- Phase 4 — Action use cases → `pnpm nx g @old-st/nx-plugin:use-case ...`.
+- Phase 4 — Action use cases → `pnpm nx g @mma/nx-plugin:use-case ...`.
 - Phase 5 — Contracts refinement → load `add-contracts` skill.
 - Phase 6 — Service wiring → load `add-api-endpoints`, `swagger-controller-docs`, `domain-exception-filter`, `gateway-jwt-auth`.
 - Phase 7 — Cross-service / async (if applicable).

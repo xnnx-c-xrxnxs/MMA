@@ -7,7 +7,6 @@ on:
       - "infra/bootstrap/**"
       - "**.md"
       - ".github/CODEOWNERS"
-      - 'examples/**'
   pull_request:
     branches: [main, develop]
   workflow_dispatch:

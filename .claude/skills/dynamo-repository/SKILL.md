@@ -21,11 +21,11 @@ packages/{domain}-domain/src/infrastructure/repositories/dynamo-{entity}.reposit
 
 ```typescript
 import { Table } from 'dynamodb-onetable';
-import { IPaginatedResponse } from '@old-st/common';
+import { IPaginatedResponse } from '@mma/common';
 import {
   pageRecordHandler,
   createDynamoDbOptionWithPKSKIndex,
-} from '@old-st/dynamodb-onetable';
+} from '@mma/dynamodb-onetable';
 import { I{Entity}Repository } from '../../application/interfaces/{entity}-repository.interface';
 import { {Entity}Status } from '../../domain/constants';
 import { {Entity} } from '../../domain/entities';

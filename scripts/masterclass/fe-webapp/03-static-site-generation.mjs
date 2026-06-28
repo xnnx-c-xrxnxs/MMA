@@ -51,7 +51,7 @@ export default {
 // → No output setting = server render required (Node.js process per env)
 
 // ─────────────────────────────────────────────────────────────────
-//  NEW TEMPLATE — old-st-template/apps/webapp/next.config.js
+//  NEW TEMPLATE — mma/apps/webapp/next.config.js
 // ─────────────────────────────────────────────────────────────────
 const { composePlugins, withNx } = require('@nx/next');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -67,9 +67,9 @@ const nextConfig = {
   output: 'export',
 
   transpilePackages: [
-    '@old-st/contracts-common',
-    '@old-st/contracts-auth',
-    // add new @old-st/* packages here when they use TypeScript source
+    '@mma/contracts-common',
+    '@mma/contracts-auth',
+    // add new @mma/* packages here when they use TypeScript source
   ],
 };
 
@@ -91,7 +91,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
 //   ✅ React Server Components (rendered to static HTML at build)
 //   ✅ useRouter, useSearchParams (client-side navigation)
 //   ✅ React Query (all data fetching is client-side)
-//   ✅ All @old-st/ui primitives
+//   ✅ All @mma/ui primitives
 //   ✅ Dark mode via next-themes (purely client-side)`,
 
     concepts: [
@@ -122,7 +122,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
 // ─────────────────────────────────────────────────────────────────
 'use client';
 
-import { useAuth } from '@old-st/client-common';
+import { useAuth } from '@mma/client-common';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';

@@ -56,7 +56,7 @@
 
       <p>
         The mobile app follows the same layered separation as the webapp.
-        The data-access layer (<code>@old-st/client-common</code>) is <strong>shared</strong> — hooks
+        The data-access layer (<code>@mma/client-common</code>) is <strong>shared</strong> — hooks
         and API clients are written once.
       </p>
 
@@ -162,7 +162,7 @@ graph TB
           </tr>
           <tr>
             <td><strong>React Query</strong> (TanStack Query v5)</td>
-            <td>Server state management — shared with webapp via <code>@old-st/client-common</code></td>
+            <td>Server state management — shared with webapp via <code>@mma/client-common</code></td>
           </tr>
           <tr>
             <td><strong>Zod</strong></td>
@@ -219,7 +219,7 @@ graph TB
       </ul>
 
       <!-- ════════════════════════════════════════════ -->
-      <h2>Shared Data Access (<code>@old-st/client-common</code>)</h2>
+      <h2>Shared Data Access (<code>@mma/client-common</code>)</h2>
 
       <p>
         The mobile app shares the <strong>exact same hooks and API clients</strong> as the webapp.
@@ -234,7 +234,7 @@ graph LR
   subgraph "Mobile (Expo)"
     M["mobile screens"]
   end
-  subgraph "@old-st/client-common"
+  subgraph "@mma/client-common"
     H["React Query Hooks"]
     A["API Clients"]
   end
@@ -282,10 +282,10 @@ graph LR
       </table>
 
       <!-- ════════════════════════════════════════════ -->
-      <h2>Mobile UI Primitives (<code>@old-st/mobile-ui</code>)</h2>
+      <h2>Mobile UI Primitives (<code>@mma/mobile-ui</code>)</h2>
 
       <p>
-        The <code>@old-st/mobile-ui</code> package provides React Native building blocks following
+        The <code>@mma/mobile-ui</code> package provides React Native building blocks following
         a <strong>variant record pattern</strong> with shared design tokens.
       </p>
 
@@ -354,12 +354,12 @@ export const fontSizes = { xs: 10, sm: 12, md: 14, lg: 16, xl: 18, xxl: 24 };</c
 
       <p>
         Status-to-badge-variant mapping in mobile uses domain constants from
-        <code>@old-st/contracts/{domain}</code> — never hardcoded strings.
+        <code>@mma/contracts/{domain}</code> — never hardcoded strings.
       </p>
 
       <pre><code>// apps/mobile/src/lib/status-variants.ts
-import { UserStatusEnum } from '@old-st/contracts/user';
-import { BadgeVariant } from '@old-st/mobile-ui';
+import { UserStatusEnum } from '@mma/contracts/user';
+import { BadgeVariant } from '@mma/mobile-ui';
 
 export const userStatusVariant: Record&lt;string, BadgeVariant&gt; = {
   [UserStatusEnum.ACTIVE]:   'success',
@@ -373,7 +373,7 @@ export const userStatusVariant: Record&lt;string, BadgeVariant&gt; = {
 
       <ul>
         <li><strong>Domain-scoped folders:</strong> <code>apps/mobile/src/components/{domain}/</code></li>
-        <li>All components use <code>@old-st/mobile-ui</code> primitives — never raw <code>View</code>/<code>Text</code> for interactive or styled elements.</li>
+        <li>All components use <code>@mma/mobile-ui</code> primitives — never raw <code>View</code>/<code>Text</code> for interactive or styled elements.</li>
         <li>Lists use <code>FlatList</code> (never <code>ScrollView</code> + <code>map()</code>).</li>
         <li>Styles use <code>StyleSheet.create()</code> at the bottom of the file.</li>
         <li>Screens are thin orchestrators — they wire hooks and components, nothing more.</li>
@@ -383,12 +383,12 @@ export const userStatusVariant: Record&lt;string, BadgeVariant&gt; = {
       <h2>API Configuration</h2>
 
       <p>
-        The root layout calls <code>configureApi()</code> from <code>@old-st/client-common</code>
+        The root layout calls <code>configureApi()</code> from <code>@mma/client-common</code>
         with <code>EXPO_PUBLIC_API_*_URL</code> environment variables:
       </p>
 
       <pre><code>// apps/mobile/src/app/_layout.tsx
-import { configureApi } from '@old-st/client-common/infrastructure';
+import { configureApi } from '@mma/client-common/infrastructure';
 
 configureApi({
   userApiUrl:    process.env.EXPO_PUBLIC_API_USER_URL,

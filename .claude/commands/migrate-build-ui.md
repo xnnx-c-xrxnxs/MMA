@@ -1,12 +1,12 @@
 ---
-description: "Build the reusable UI layer for a migrated project — consumes the artifacts from /migrate-extract (component classification, token mapping) and generates new @old-st/ui primitives plus domain composites (presentational, prop-driven) under packages/ui/ and apps/webapp/src/components/{domain}/, gated by build+typecheck+lint-standards, RTL unit+coverage, and axe. Does NOT build pages (that is /migrate-page) and does NOT build the backend. USE WHEN the user says 'build the migration UI primitives', 'generate the shared components for the migration', or 'build the composites' AFTER /migrate-extract has run."
+description: "Build the reusable UI layer for a migrated project — consumes the artifacts from /migrate-extract (component classification, token mapping) and generates new @mma/ui primitives plus domain composites (presentational, prop-driven) under packages/ui/ and apps/webapp/src/components/{domain}/, gated by build+typecheck+lint-standards, RTL unit+coverage, and axe. Does NOT build pages (that is /migrate-page) and does NOT build the backend. USE WHEN the user says 'build the migration UI primitives', 'generate the shared components for the migration', or 'build the composites' AFTER /migrate-extract has run."
 ---
 
 # Migration → Build UI (primitives + composites)
 
 You orchestrate the **reusable-UI build phase** of a project migration. You consume the analysis artifacts from `/migrate-extract` and build:
 
-1. **New `@old-st/ui` primitives** — shared, reusable shadcn-style components classified BUILD-PRIMITIVE.
+1. **New `@mma/ui` primitives** — shared, reusable shadcn-style components classified BUILD-PRIMITIVE.
 2. **Domain composites** — presentational, **prop-driven** components classified BUILD-COMPOSITE, written to `apps/webapp/src/components/{domain}/` so the pages built later by `/migrate-page` can compose them.
 
 **This phase does NOT build pages and does NOT touch the backend.** Pages are built once, in their real `(protected)/{route}/` location, by `/migrate-page` (mock → wire). Composites are pure presentation — they receive data via props; the page's `_data/{domain}.adapter.ts` supplies that data (mock first, real after `--wire`).
@@ -26,7 +26,7 @@ You orchestrate the **reusable-UI build phase** of a project migration. You cons
 
 Ask in a single message and wait:
 
-1. **Migration root?** (e.g. `old-st-flow-migration/` — produced by `/migrate-extract`)
+1. **Migration root?** (e.g. `mma-flow-migration/` — produced by `/migrate-extract`)
 2. **Mirror new primitives to mobile?** (default: no — web-only for now).
 3. **Composite scope?** Choose one:
    - **All composites** _(default)_ — build every non-deferred BUILD-COMPOSITE item.
@@ -81,9 +81,9 @@ End with: _"Reply `approve` to build the primitives + composites, or adjust scop
 
 **B.1 — Primitives** (parallel; one invocation per BUILD-PRIMITIVE item):
 
-`Agent(subagent_type="ui-primitive-builder", prompt="Build the {name} primitive in @old-st/ui. name={name} sourceRef={...} variants={...} states={...} radixBase={...} tokenNotes={from tokens/_mapping.md} sourceStoriesRef={path + combined Story Matrix from _classification.md, or '— inferred'} variantRenameMap={the classifier Story Delta for this component}. Port every non-dropped source story export into the target stories so the story-parity gate passes.")`
+`Agent(subagent_type="ui-primitive-builder", prompt="Build the {name} primitive in @mma/ui. name={name} sourceRef={...} variants={...} states={...} radixBase={...} tokenNotes={from tokens/_mapping.md} sourceStoriesRef={path + combined Story Matrix from _classification.md, or '— inferred'} variantRenameMap={the classifier Story Delta for this component}. Port every non-dropped source story export into the target stories so the story-parity gate passes.")`
 
-**B.2 — Composites** (parallel after B.1; one per BUILD-COMPOSITE item). Composites are **prop-driven and presentational** — NO data fetching, NO React Query, NO `@old-st/client-common` import. They receive typed props the page will supply via its adapter:
+**B.2 — Composites** (parallel after B.1; one per BUILD-COMPOSITE item). Composites are **prop-driven and presentational** — NO data fetching, NO React Query, NO `@mma/client-common` import. They receive typed props the page will supply via its adapter:
 
 `Agent(subagent_type="composite-builder", prompt="Build the {name} composite as a prop-driven presentational component. name={name} source={composite card} domain={domain} composedOf={primitives} propsShape={from domain card entity fields} states={loading,empty,error,populated} referenceScreenshots={migrationRoot}/screenshots/{route}/ targetPath=apps/webapp/src/components/{domain}/. Match the layout/columns/badges/empty-state shown in the source {state}.png + {state}.dom.json crops. Do NOT fetch data or import client-common — accept all data via props. Include data-testid attributes.")`
 
@@ -103,7 +103,7 @@ If any automated gate fails, fix within scope (or mark the artifact `deferred`) 
 
 Verify the source Storybook surface survived the migration semantically — every source variant/state is either demonstrated by a target story or carries a recorded transform (rename | merge | split | drop+reason) in the classifier Story Delta.
 
-`Agent(subagent_type="story-parity-auditor", prompt="Diff each source component Story Matrix (components/_raw-inventory.md) against the target story surface — ported @old-st/ui primitive stories for BUILD items, existing primitive stories for REUSE items — using the classifier Story Delta as the allowed-transform map. Any unmapped + unexplained source variant/state is a parity-gap = FAIL. Semantic matrix diff only, NOT visual. Write components/STORY_PARITY.md and update LEDGER.md + PARITY.md. migrationRoot={migrationRoot} sourceRoot={sourceRoot} templateRoot={templateRoot}")`
+`Agent(subagent_type="story-parity-auditor", prompt="Diff each source component Story Matrix (components/_raw-inventory.md) against the target story surface — ported @mma/ui primitive stories for BUILD items, existing primitive stories for REUSE items — using the classifier Story Delta as the allowed-transform map. Any unmapped + unexplained source variant/state is a parity-gap = FAIL. Semantic matrix diff only, NOT visual. Write components/STORY_PARITY.md and update LEDGER.md + PARITY.md. migrationRoot={migrationRoot} sourceRoot={sourceRoot} templateRoot={templateRoot}")`
 
 This is a **hard gate**: if the auditor returns **FAIL** (any `parity-gap`), surface the gap list and STOP — do not proceed to reconciliation. Resolve each gap by either porting the missing variant into the target story (preferred) or recording an explicit `drop — reason` in `components/_classification.md`, then re-run the auditor. `stories=inferred` source components are reported, never failed.
 
@@ -131,8 +131,8 @@ Next:
 
 ## Constraints
 
-- Build ONLY `@old-st/ui` primitives and prop-driven domain composites. **No pages** (that is `/migrate-page`) and **no backend**.
-- Composites are presentational — NO data fetching, NO `@old-st/client-common`, NO React Query. Data arrives via props.
+- Build ONLY `@mma/ui` primitives and prop-driven domain composites. **No pages** (that is `/migrate-page`) and **no backend**.
+- Composites are presentational — NO data fetching, NO `@mma/client-common`, NO React Query. Data arrives via props.
 - Build order is strictly primitives → composites.
 - Missing components are `deferred` in the ledger — **never silently dropped**.
 - Honor the final component reconciliation gate.

@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/aws-sqs",
+  "name": "@mma/aws-sqs",
   "version": "1.0.0",
   "description": "SQS client factory and IEventPublisher implementations for standard and FIFO queues.",
   "main": "src/index.ts",
@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.981.0",
-    "@old-st/common": "workspace:*",
-    "@old-st/telemetry": "workspace:*"
+    "@mma/common": "workspace:*",
+    "@mma/telemetry": "workspace:*"
   }
 }

@@ -1,9 +1,9 @@
 {
-  "name": "@old-st/monitoring-webapp",
+  "name": "@mma/monitoring-webapp",
   "version": "1.0.0",
   "private": true,
   "description": "Monitoring dashboard — Next.js App Router, Lambda Web Adapter",
   "dependencies": {
-    "@old-st/monitoring-sdk": "workspace:*"
+    "@mma/monitoring-sdk": "workspace:*"
   }
 }

@@ -1,10 +1,10 @@
 ---
-description: "Extract and document a source project for migration into old-st-template — runs read-only discovery across stack, routes, data model, components, and tokens, then classifies/dedups components, synthesizes bounded-context domains as rich Markdown, recommends DynamoDB-vs-Prisma per domain, maps tokens to the two-tier design system, generates a user-story CSV + project-context brief + backend runbook, and reconciles a coverage ledger. Produces NO spec YAML and writes NO production code — only analysis artifacts under {source}-migration/. USE WHEN the user says 'migrate this project', 'extract this repo into the template', 'analyze this source app for migration', 'port this codebase'."
+description: "Extract and document a source project for migration into mma — runs read-only discovery across stack, routes, data model, components, and tokens, then classifies/dedups components, synthesizes bounded-context domains as rich Markdown, recommends DynamoDB-vs-Prisma per domain, maps tokens to the two-tier design system, generates a user-story CSV + project-context brief + backend runbook, and reconciles a coverage ledger. Produces NO spec YAML and writes NO production code — only analysis artifacts under {source}-migration/. USE WHEN the user says 'migrate this project', 'extract this repo into the template', 'analyze this source app for migration', 'port this codebase'."
 ---
 
 # Source Project → Migration Extract
 
-You are orchestrating the **extraction phase** of a project migration. You ingest a source repository (any stack — Vite/React, Next, CRA, etc.) and produce a complete set of **analysis artifacts** that document how it maps onto old-st-template's Nx Clean-Architecture structure. The companion prompt `/migrate-build-ui` later builds the no-auth preview UI from these artifacts.
+You are orchestrating the **extraction phase** of a project migration. You ingest a source repository (any stack — Vite/React, Next, CRA, etc.) and produce a complete set of **analysis artifacts** that document how it maps onto mma's Nx Clean-Architecture structure. The companion prompt `/migrate-build-ui` later builds the no-auth preview UI from these artifacts.
 
 **This phase writes ONLY Markdown/CSV analysis artifacts under `{source}-migration/`. It does NOT generate spec YAML, does NOT build production code, and does NOT touch the backend.** Domains/pages are documented as rich Markdown; the developer later runs the separate spec/`/new-domain`/`/webapp-feature` workflows.
 
@@ -23,8 +23,8 @@ Ask the following in a single structured message and wait for answers.
 
 ### Required Information
 
-1. **Source repository path?** (absolute path, e.g. `d:\old-st-flow`)
-2. **Source slug?** Short kebab name used for the output folder and preview surface (e.g. `old-st-flow`). Output root becomes `{source-slug}-migration/`.
+1. **Source repository path?** (absolute path, e.g. `d:\mma-flow`)
+2. **Source slug?** Short kebab name used for the output folder and preview surface (e.g. `mma-flow`). Output root becomes `{source-slug}-migration/`.
 3. **Router / framework hint?** (e.g. `react-router-dom v6`, `next-app-router`, `unknown` — helps the route cataloguer). Default `unknown` (auto-detect).
 4. **Data-layer hint?** (e.g. `supabase + sql migrations`, `prisma`, `rest api`, `unknown`). If SQL migrations exist, they are treated as the **authoritative data model**. Default `unknown`.
 5. **Milestone/sprint hint for user stories?** (e.g. `Sprint 1`, or `none` to leave unassigned). Default `none`.
@@ -42,7 +42,7 @@ Run in parallel:
 
 - Confirm the source path exists and read its `package.json` (or equivalent manifest) to detect language/build/deps.
 - `Agent(subagent_type="prompt-skill-loader", prompt="Pre-load these skills as a digest: new-domain-package, add-contracts, dynamo-repository, prisma-repository, new-dynamo-schema, new-prisma-schema, webapp-new-page, webapp-api-client-hooks, fe-design-tokens, contracts-subpath-imports")`
-- Read `packages/ui/src/index.ts` — inventory of existing `@old-st/ui` primitives (for classifier reuse decisions).
+- Read `packages/ui/src/index.ts` — inventory of existing `@mma/ui` primitives (for classifier reuse decisions).
 - Read `packages/design-tokens/src/lib/tokens.ts` — target token inventory.
 
 Wait for all to return.
@@ -55,7 +55,7 @@ This phase **MUST NOT WRITE ANY ARTIFACTS**. Output is a single approval documen
 
 ### A.1 — Profile the source repo
 
-`Agent(subagent_type="source-stack-profiler", prompt="Profile source at {sourceRoot}. Detect language/build, UI framework, routing, state, data layer, BaaS, styling, component lib, forms, testing. Map each to the old-st-template target. DRY RUN: report findings only, do not write STACK.md yet. migrationRoot={migrationRoot}")`
+`Agent(subagent_type="source-stack-profiler", prompt="Profile source at {sourceRoot}. Detect language/build, UI framework, routing, state, data layer, BaaS, styling, component lib, forms, testing. Map each to the mma target. DRY RUN: report findings only, do not write STACK.md yet. migrationRoot={migrationRoot}")`
 
 ### A.2 — Produce the execution plan
 
@@ -95,7 +95,7 @@ After all return, confirm the ledger is seeded (every route + component + candid
 
 Run in parallel:
 
-- `Agent(subagent_type="component-classifier", prompt="Cluster duplicate components by structural similarity + usage count, pick a canonical representative, decide REUSE(@old-st/ui)/BUILD-PRIMITIVE/BUILD-COMPOSITE/DROP, assign weights, and reconcile the ledger (mapped→reuse|mapped→build|dropped — nothing stays discovered). Write components/_classification.md. migrationRoot={migrationRoot} sourceRoot={sourceRoot} templateRoot={templateRoot}")`
+- `Agent(subagent_type="component-classifier", prompt="Cluster duplicate components by structural similarity + usage count, pick a canonical representative, decide REUSE(@mma/ui)/BUILD-PRIMITIVE/BUILD-COMPOSITE/DROP, assign weights, and reconcile the ledger (mapped→reuse|mapped→build|dropped — nothing stays discovered). Write components/_classification.md. migrationRoot={migrationRoot} sourceRoot={sourceRoot} templateRoot={templateRoot}")`
 - `Agent(subagent_type="domain-synthesizer", prompt="Finalize candidate contexts into per-domain rich Markdown in target Clean-Architecture vocabulary (constants, entity+invariants+state transitions, use cases, repository interface, persistence recommendation with GSI/index design, endpoints, events, authorization, evidence, completeness). Include a DynamoDB-vs-Prisma recommendation with rationale per domain. Write domains/INDEX.md + domain-{name}.md. No spec YAML. migrationRoot={migrationRoot} sourceRoot={sourceRoot}")`
 
 #### GATE #1 — Developer review (STOP)
@@ -109,7 +109,7 @@ Record confirmed DB choices in the ledger and each `domain-{name}.md`. **Do not 
 
 ### Stage 3 — Token mapping
 
-`Agent(subagent_type="token-mapper", prompt="Map source tokens → two-tier @old-st/design-tokens by intent, synthesize light counterparts for dark-only tokens, flag unmapped, check WCAG AA contrast. PROPOSE (do not apply) a tokens.ts patch and note the pnpm tokens:gen post-step. Write tokens/_mapping.md + tokens.patch.ts. migrationRoot={migrationRoot} templateRoot={templateRoot}")`
+`Agent(subagent_type="token-mapper", prompt="Map source tokens → two-tier @mma/design-tokens by intent, synthesize light counterparts for dark-only tokens, flag unmapped, check WCAG AA contrast. PROPOSE (do not apply) a tokens.ts patch and note the pnpm tokens:gen post-step. Write tokens/_mapping.md + tokens.patch.ts. migrationRoot={migrationRoot} templateRoot={templateRoot}")`
 
 ### Stage 4 — User stories + Project context (skip if scope = analysis-only)
 

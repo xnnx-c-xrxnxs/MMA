@@ -1,4 +1,4 @@
-# @old-st/common
+# @mma/common
 
 Common interfaces and types shared across domain and infrastructure layers.
 
@@ -15,19 +15,19 @@ This package provides type-only interfaces and utilities that are used internall
 2. **Lightweight**: Minimal overhead for internal operations
 3. **Shared**: Reusable across all domains without coupling
 
-## Distinction from @old-st/contracts
+## Distinction from @mma/contracts
 
 | Package | Purpose | Usage | Validation |
 |---------|---------|-------|------------|
-| `@old-st/common` | Internal interfaces | Repositories, Infrastructure | None (TypeScript only) |
-| `@old-st/contracts` | API DTOs | Controllers, API responses | Zod runtime validation |
+| `@mma/common` | Internal interfaces | Repositories, Infrastructure | None (TypeScript only) |
+| `@mma/contracts` | API DTOs | Controllers, API responses | Zod runtime validation |
 
 ## Usage Example
 
-### Repository Layer (Uses @old-st/common)
+### Repository Layer (Uses @mma/common)
 ```typescript
 // packages/{domain}-domain/src/infrastructure/repositories/dynamo-{entity}.repository.ts
-import { IPaginatedResponse } from '@old-st/common';
+import { IPaginatedResponse } from '@mma/common';
 import { {Entity} } from '../../domain/entities/{entity}.entity';
 
 export class Dynamo{Entity}Repository implements I{Entity}Repository {
@@ -44,12 +44,12 @@ export class Dynamo{Entity}Repository implements I{Entity}Repository {
 }
 ```
 
-### Application Service Layer (Transforms to @old-st/contracts)
+### Application Service Layer (Transforms to @mma/contracts)
 ```typescript
 // apps/{domain}/{domain}-api-service/application/services/{entity}.service.ts
-import { IPaginatedResponse } from '@old-st/common';
-import { paginatedResponseSchema, {entity}ResponseSchema } from '@old-st/contracts/{domain}';
-import { {Entity} } from '@old-st/{domain}-domain';
+import { IPaginatedResponse } from '@mma/common';
+import { paginatedResponseSchema, {entity}ResponseSchema } from '@mma/contracts/{domain}';
+import { {Entity} } from '@mma/{domain}-domain';
 
 export class {Entity}ApplicationService {
   async getEntities(limit: number) {
@@ -71,10 +71,10 @@ export class {Entity}ApplicationService {
 }
 ```
 
-### Controller Layer (Uses @old-st/contracts)
+### Controller Layer (Uses @mma/contracts)
 ```typescript
 // apps/{domain}/{domain}-api-service/presentation/controllers/{entity}.controller.ts
-import { paginatedResponseSchema, {entity}ResponseSchema } from '@old-st/contracts/{domain}';
+import { paginatedResponseSchema, {entity}ResponseSchema } from '@mma/contracts/{domain}';
 
 export class {Entity}Controller {
   async getEntities(req: Request) {
@@ -98,7 +98,7 @@ export class {Entity}Controller {
 - Generic helpers without dependencies
 
 ❌ **Exclude:**
-- API validation schemas (use @old-st/contracts)
+- API validation schemas (use @mma/contracts)
 - Domain-specific logic (use domain packages)
 - Infrastructure implementations (use specific packages)
 - Runtime validation (use Zod in contracts)

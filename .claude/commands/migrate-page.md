@@ -1,5 +1,5 @@
 ---
-description: "Build ONE webapp page directly in its production location apps/webapp/src/app/(protected)/{route}/ from a page-spec YAML, in two passes. Pass 1 (--mock) produces a real page + an INTERACTIVE mock adapter (_data/{domain}.adapter.ts backed by useState: filters narrow rows, form submit appends a row) verifiable before the backend exists, with auth bypassed via NEXT_PUBLIC_MOCK_PREVIEW. Pass 2 (--wire) rewrites ONLY the adapter to re-export the real @old-st/client-common hooks — page.tsx stays byte-identical. Replaces the retired migration-preview surface. Spawns the migration-page-builder subagent. USE WHEN the user says 'build this page', 'migrate-page', 'build the projects page mock', or 'wire the projects page to the real API'."
+description: "Build ONE webapp page directly in its production location apps/webapp/src/app/(protected)/{route}/ from a page-spec YAML, in two passes. Pass 1 (--mock) produces a real page + an INTERACTIVE mock adapter (_data/{domain}.adapter.ts backed by useState: filters narrow rows, form submit appends a row) verifiable before the backend exists, with auth bypassed via NEXT_PUBLIC_MOCK_PREVIEW. Pass 2 (--wire) rewrites ONLY the adapter to re-export the real @mma/client-common hooks — page.tsx stays byte-identical. Replaces the retired migration-preview surface. Spawns the migration-page-builder subagent. USE WHEN the user says 'build this page', 'migrate-page', 'build the projects page mock', or 'wire the projects page to the real API'."
 ---
 
 # Migration Page — Staged Build (mock → wire)
@@ -9,7 +9,7 @@ You build one webapp page from its `.specs/page-{slug}.yaml` (produced by `/migr
 **Two passes, run separately:**
 
 - **`--mock` (pass 1):** real page + interactive mock adapter. Verifiable immediately with `NEXT_PUBLIC_MOCK_PREVIEW=true` (auth bypass — see below). No backend required.
-- **`--wire` (pass 2):** rewrite ONLY the adapter to use real `@old-st/client-common` hooks. Runs the parse-page-spec **Mode-A gate** — if hooks/schemas are missing, STOPS with `needs_backend` instead of stubbing.
+- **`--wire` (pass 2):** rewrite ONLY the adapter to use real `@mma/client-common` hooks. Runs the parse-page-spec **Mode-A gate** — if hooks/schemas are missing, STOPS with `needs_backend` instead of stubbing.
 
 **Do NOT call any tools or write code until Phase 0 is complete.**
 
@@ -52,7 +52,7 @@ The subagent:
 
 1. Derives the mock fixture SHAPE from the domain spec's `entity.fields`, **seeded with the actual rows from `{slug}-migration/fixtures/`** (the same data the source-mock rendered) so structure + values match. Falls back to synthesized rows only if no fixtures exist.
 2. Writes `_data/{domain}.adapter.ts` — hook-shaped exports backed by `useState` so the page is **interactive** (filters narrow rows, form submit appends a row, status actions mutate a row).
-3. Writes `page.tsx` (thin orchestrator) + domain components + `error.tsx` + `loading.tsx`, **matching the structural target in each `{state}.dom.json`** (same columns/headings/badges/empty-state copy) and the visual reference in `{state}.png`. `page.tsx` imports the adapter, never `@old-st/client-common`.
+3. Writes `page.tsx` (thin orchestrator) + domain components + `error.tsx` + `loading.tsx`, **matching the structural target in each `{state}.dom.json`** (same columns/headings/badges/empty-state copy) and the visual reference in `{state}.png`. `page.tsx` imports the adapter, never `@mma/client-common`.
 4. Builds webapp and reports.
 
 After it returns, tell the developer how to view it:
@@ -69,7 +69,7 @@ The auth redirect is bypassed only while both flags are set.
 
 The subagent:
 
-1. Runs the parse-page-spec **Mode-A gate** — every `dataSource.hook` must exist in `client-common` and every form `schema` in `@old-st/contracts/{domain}`. Missing → returns `needs_backend` and STOPS.
+1. Runs the parse-page-spec **Mode-A gate** — every `dataSource.hook` must exist in `client-common` and every form `schema` in `@mma/contracts/{domain}`. Missing → returns `needs_backend` and STOPS.
 2. Rewrites ONLY `_data/{domain}.adapter.ts` to re-export the real hooks. `page.tsx` + components stay identical.
 3. Runs `nx test webapp` + `nx build webapp` and reports.
 

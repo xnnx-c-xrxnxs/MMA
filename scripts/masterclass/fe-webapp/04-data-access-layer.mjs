@@ -168,7 +168,7 @@ export async function apiRequest<T>(
 // ─────────────────────────────────────────────────────────────────
 //  NEW — auth-api.client.ts
 // ─────────────────────────────────────────────────────────────────
-import { signInResponseSchema, refreshSessionResponseSchema } from '@old-st/contracts/auth';
+import { signInResponseSchema, refreshSessionResponseSchema } from '@mma/contracts/auth';
 import { getApiConfig } from '../config';
 import { apiRequest } from './base-api.client';
 
@@ -180,7 +180,7 @@ export async function signIn(email: string, password: string) {
     {
       method: 'POST',
       body: { email, password },
-      schema: signInResponseSchema,   // ← schema from @old-st/contracts/auth
+      schema: signInResponseSchema,   // ← schema from @mma/contracts/auth
     },
   );
 }

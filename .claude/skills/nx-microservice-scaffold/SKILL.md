@@ -21,7 +21,7 @@ This skill covers **workspace-level registration only** — project config files
 
 1. **Domain name** (e.g. `orders`, `products`) — determines the `apps/{domain}/` folder
 2. **Service name** (e.g. `order-api-service`) — the Nx project name and folder
-3. **Which domain package does this service use?** (e.g. `@old-st/{domain}-domain`)
+3. **Which domain package does this service use?** (e.g. `@mma/{domain}-domain`)
 4. **Output dist path** — follows convention `dist/apps/{domain}/{service}`
 5. **Service port** — check the port registry in `CLAUDE.md §7.1` and claim the next available port. Add `{DOMAIN}_SERVICE_PORT={PORT}` and `API_{DOMAIN}_URL=http://localhost:{PORT}/api` to `.env.local` at the workspace root. Register both in the registry table in §7.1.
 
@@ -48,7 +48,7 @@ Verify the service `package.json` shows:
 pnpm add @nestjs/swagger --filter {service-name}
 ```
 
-Verify the service `package.json` shows the same as DynamoDB-based. The key difference is in the **domain package** — Prisma-based domains use `@prisma/client` (in the domain `package.json`, not the service `package.json`). They do **not** need `@old-st/dynamodb-onetable`.
+Verify the service `package.json` shows the same as DynamoDB-based. The key difference is in the **domain package** — Prisma-based domains use `@prisma/client` (in the domain `package.json`, not the service `package.json`). They do **not** need `@mma/dynamodb-onetable`.
 
 > For Prisma-based services, also add `{DOMAIN}_DATABASE_URL` to `.env.local` instead of `{DOMAIN}_DYNAMODB_TABLE_NAME`. See the `prisma-service-wiring` skill for wiring details.
 
@@ -204,7 +204,7 @@ If the service uses Prisma + PostgreSQL, add the following to suppress source ma
 module.exports = {
   // ... output block unchanged
   ignoreWarnings: [
-    { module: /@old-st\/{domain}-domain\/src\/infrastructure\/generated\/client/ },
+    { module: /@mma\/{domain}-domain\/src\/infrastructure\/generated\/client/ },
   ],
   plugins: [
     new NxAppWebpackPlugin({
@@ -320,11 +320,11 @@ After creating the domain package, add its path aliases to `tsconfig.base.json` 
 
 ```json
 // In tsconfig.base.json compilerOptions.paths, add:
-"@old-st/{domain}-domain": ["packages/{domain}-domain/src/index.ts"],
-"@old-st/{domain}-domain/infrastructure": ["packages/{domain}-domain/src/infrastructure/index.ts"]
+"@mma/{domain}-domain": ["packages/{domain}-domain/src/index.ts"],
+"@mma/{domain}-domain/infrastructure": ["packages/{domain}-domain/src/infrastructure/index.ts"]
 ```
 
-Without this step, the service will fail to build with "Cannot find module '@old-st/{domain}-domain'" errors.
+Without this step, the service will fail to build with "Cannot find module '@mma/{domain}-domain'" errors.
 
 ---
 

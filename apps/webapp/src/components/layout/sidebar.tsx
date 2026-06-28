@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@old-st/ui';
-import { Button } from '@old-st/ui';
-import { useAuth } from '@old-st/client-common';
+import { cn } from '@mma/ui';
+import { Button } from '@mma/ui';
+import { useAuth } from '@mma/client-common';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: '◻' },

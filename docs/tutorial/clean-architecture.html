@@ -636,7 +636,7 @@ export const UserStatusEnum = {
 export type UserStatus = (typeof UserStatusEnum)[keyof typeof UserStatusEnum];
 
 // Usage in any layer:
-import { UserStatusEnum } from '@old-st/user-domain';
+import { UserStatusEnum } from '@mma/user-domain';
 if (user.getUserStatus() === UserStatusEnum.ACTIVE) { ... }  // ✅
 if (user.getUserStatus() === 'ACTIVE') { ... }               // ❌ never do this</code></pre>
     </div>
@@ -1306,8 +1306,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         <li>
           <div class="rule-num">9</div>
           <div class="rule-text">
-            <strong>Never import from the bare <code>@old-st/contracts</code> root.</strong>
-            <span>Always use domain-scoped subpaths: <code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>. This prevents type coupling between domains. Enforced by structural lint check <code>no-bare-contracts-import</code>.</span>
+            <strong>Never import from the bare <code>@mma/contracts</code> root.</strong>
+            <span>Always use domain-scoped subpaths: <code>@mma/contracts/user</code>, <code>@mma/contracts/order</code>. This prevents type coupling between domains. Enforced by structural lint check <code>no-bare-contracts-import</code>.</span>
           </div>
         </li>
         <li>
@@ -1351,9 +1351,9 @@ export class DomainExceptionFilter implements ExceptionFilter {
             <td>Repository only does find/save — move guard to entity method</td>
           </tr>
           <tr>
-            <td>Import from <code>@old-st/contracts</code></td>
+            <td>Import from <code>@mma/contracts</code></td>
             <td>Bare root creates cross-domain coupling</td>
-            <td>Import from <code>@old-st/contracts/user</code></td>
+            <td>Import from <code>@mma/contracts/user</code></td>
           </tr>
           <tr>
             <td><code>if (process.env.NODE_ENV === 'development')</code></td>
@@ -1478,8 +1478,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
           <tr>
             <td><span class="tag blue">Adapter</span> App Service</td>
             <td><code>apps/{domain}/{service}/src/application/services/</code></td>
-            <td>Use cases, contracts (<code>@old-st/contracts/{domain}</code>), NestJS <code>@Injectable</code></td>
-            <td>Zod-parsed DTOs from <code>@old-st/contracts/{domain}</code></td>
+            <td>Use cases, contracts (<code>@mma/contracts/{domain}</code>), NestJS <code>@Injectable</code></td>
+            <td>Zod-parsed DTOs from <code>@mma/contracts/{domain}</code></td>
           </tr>
           <tr>
             <td><span class="tag orange">Infrastructure</span> Repository</td>
@@ -1504,7 +1504,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
         <div>
           <pre><code>// packages/contracts/user/src/schemas.ts
 import { z } from 'zod';
-import { UserStatusEnum, UserRoleEnum } from '@old-st/user-domain';
+import { UserStatusEnum, UserRoleEnum } from '@mma/user-domain';
 
 export const userResponseSchema = z.object({
   userId:      z.string(),
@@ -1526,14 +1526,14 @@ import {
   UserResponse,
   createUserSchema,
   CreateUserInput,
-} from '@old-st/contracts/user';  // ✅
+} from '@mma/contracts/user';  // ✅
 
 // NEVER the bare root:
-import { ... } from '@old-st/contracts'; // ❌
+import { ... } from '@mma/contracts'; // ❌
 
 // NEVER from another domain's contracts:
 import { UserResponse }
-  from '@old-st/contracts/order'; // ❌</code></pre>
+  from '@mma/contracts/order'; // ❌</code></pre>
         </div>
       </div>
     </div>
@@ -1679,7 +1679,7 @@ import { UserResponse }
     </div>
 
     <div class="topic fade-in">
-      <h3>The Shared Data-Access Layer (<code>@old-st/client-common</code>)</h3>
+      <h3>The Shared Data-Access Layer (<code>@mma/client-common</code>)</h3>
       <p>The biggest win in the frontend architecture: a single package provides all data-fetching logic for both the Next.js webapp and the Expo mobile app. Neither app duplicates API calls or query cache logic.</p>
 
       <div class="card-grid">
@@ -1745,7 +1745,7 @@ export async function apiRequest&lt;T&gt;(
 
     <div class="topic fade-in">
       <h3>Contracts — The Bridge Between Frontend and Backend</h3>
-      <p>The same <code>@old-st/contracts/{domain}</code> packages used by NestJS controllers to validate outputs are used by frontend API clients to validate inputs. The Zod schema is literally the same object — one definition, two validation points.</p>
+      <p>The same <code>@mma/contracts/{domain}</code> packages used by NestJS controllers to validate outputs are used by frontend API clients to validate inputs. The Zod schema is literally the same object — one definition, two validation points.</p>
 
       <div class="diagram">
         <figure>
@@ -1761,7 +1761,7 @@ export async function apiRequest&lt;T&gt;(
             <text x="80"  y="93" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#10b981">schema.parse(entity)</text>
 
             <rect x="270" y="10" width="140" height="110" rx="10" fill="#f5f3ff" stroke="#6366f1" stroke-width="2.5"/>
-            <text x="340" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#4338ca">@old-st/contracts</text>
+            <text x="340" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#4338ca">@mma/contracts</text>
             <text x="340" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#4338ca">/user</text>
             <text x="340" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6b7280">userResponseSchema</text>
             <text x="340" y="93" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6b7280">createUserSchema</text>
@@ -1835,7 +1835,7 @@ export async function apiRequest&lt;T&gt;(
             </li>
             <li>
               <div class="rule-num" style="background:#10b981;">3</div>
-              <div class="rule-text"><strong>UI primitives from <code>@old-st/ui</code></strong><span>No raw <code>&lt;table&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code> — use shared shadcn-style components.</span></div>
+              <div class="rule-text"><strong>UI primitives from <code>@mma/ui</code></strong><span>No raw <code>&lt;table&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code> — use shared shadcn-style components.</span></div>
             </li>
             <li>
               <div class="rule-num" style="background:#3b82f6;">4</div>
@@ -1955,7 +1955,7 @@ export function UsersTable({ users }: { users: UserResponse[] }) {
       <h3>Status Variant Mapping</h3>
       <p>Badge colours are driven by enum constants — never inline string comparisons. All mappings live in one file per platform:</p>
       <pre><code>// apps/webapp/src/lib/status-variants.ts
-import { UserStatusEnum } from '@old-st/contracts/user';  // ✅ subpath import
+import { UserStatusEnum } from '@mma/contracts/user';  // ✅ subpath import
 
 type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
 
@@ -1979,7 +1979,7 @@ export function userStatusVariant(status: string): BadgeVariant {
     <div class="module-header fade-in">
       <div class="module-label">Module 12</div>
       <h2>Mobile — Expo (React Native)</h2>
-      <p class="module-desc">The mobile app follows the same layering as the webapp. Screens are thin. Domain components own the lists. And crucially — <strong>the exact same hooks and API clients are reused</strong> from <code>@old-st/client-common</code>.</p>
+      <p class="module-desc">The mobile app follows the same layering as the webapp. Screens are thin. Domain components own the lists. And crucially — <strong>the exact same hooks and API clients are reused</strong> from <code>@mma/client-common</code>.</p>
     </div>
 
     <div class="topic fade-in">
@@ -2001,11 +2001,11 @@ export function userStatusVariant(status: string): BadgeVariant {
 
             <rect x="10" y="120" width="200" height="36" rx="8" fill="#fff3e0" stroke="#f59e0b" stroke-width="1.5"/>
             <text x="110" y="136" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#92400e">components/users/users-table.tsx</text>
-            <text x="110" y="150" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#92400e">@old-st/ui (Table, Badge, Button)</text>
+            <text x="110" y="150" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#92400e">@mma/ui (Table, Badge, Button)</text>
 
             <!-- Shared column -->
             <rect x="240" y="10" width="200" height="145" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
-            <text x="340" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#065f46">📦 @old-st/client-common</text>
+            <text x="340" y="38" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#065f46">📦 @mma/client-common</text>
             <text x="340" y="60" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#065f46">hooks/use-users.ts</text>
             <text x="340" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#065f46">useUsersByStatus()</text>
             <text x="340" y="96" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#065f46">useActivateUser()</text>
@@ -2021,7 +2021,7 @@ export function userStatusVariant(status: string): BadgeVariant {
 
             <rect x="470" y="120" width="200" height="36" rx="8" fill="#fff3e0" stroke="#f59e0b" stroke-width="1.5"/>
             <text x="570" y="136" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#92400e">components/users/users-list.tsx</text>
-            <text x="570" y="150" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#92400e">@old-st/mobile-ui (Card, Badge, Text)</text>
+            <text x="570" y="150" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#92400e">@mma/mobile-ui (Card, Badge, Text)</text>
 
             <!-- Arrows pointing to shared -->
             <line x1="212" y1="90" x2="237" y2="90" stroke="#10b981" stroke-width="2" marker-end="url(#mob-arr)"/>
@@ -2041,13 +2041,13 @@ export function userStatusVariant(status: string): BadgeVariant {
       <p>Screens in Expo follow the same rule as Next.js pages: manage state, call hooks, delegate markup to domain components.</p>
       <pre><code>// apps/mobile/src/app/(tabs)/users.tsx
 
-const statuses = ['ALL', ...USER_STATUSES];  // constants from @old-st/contracts/user
+const statuses = ['ALL', ...USER_STATUSES];  // constants from @mma/contracts/user
 
 export default function UsersScreen() {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const queryStatus = selectedStatus === 'ALL' ? USER_STATUSES[0] : selectedStatus;
 
-  // ✅ SAME hook as the webapp — from @old-st/client-common
+  // ✅ SAME hook as the webapp — from @mma/client-common
   const { data, isLoading } = useUsersByStatus({ userStatus: queryStatus });
   const users = data?.data ?? [];
 
@@ -2084,7 +2084,7 @@ const styles = StyleSheet.create({
 
     <div class="topic fade-in">
       <h3>Mobile Domain Component — <code>FlatList</code> Pattern</h3>
-      <p>Mobile lists always use <code>FlatList</code> (never <code>ScrollView + map()</code>) for virtualisation. Styles use <code>StyleSheet.create()</code> at the bottom of the file. Primitives come from <code>@old-st/mobile-ui</code>.</p>
+      <p>Mobile lists always use <code>FlatList</code> (never <code>ScrollView + map()</code>) for virtualisation. Styles use <code>StyleSheet.create()</code> at the bottom of the file. Primitives come from <code>@mma/mobile-ui</code>.</p>
       <pre><code>// apps/mobile/src/components/users/users-list.tsx
 
 function UserListItem({ user }: { user: UserResponse }) {
@@ -2139,14 +2139,14 @@ const styles = StyleSheet.create({
       <table>
         <thead><tr><th>Concern</th><th>Webapp (Next.js)</th><th>Mobile (Expo)</th></tr></thead>
         <tbody>
-          <tr><td><strong>UI Primitives</strong></td><td><code>@old-st/ui</code> (shadcn, Tailwind CSS)</td><td><code>@old-st/mobile-ui</code> (RN, StyleSheet)</td></tr>
+          <tr><td><strong>UI Primitives</strong></td><td><code>@mma/ui</code> (shadcn, Tailwind CSS)</td><td><code>@mma/mobile-ui</code> (RN, StyleSheet)</td></tr>
           <tr><td><strong>Status variants</strong></td><td><code>apps/webapp/src/lib/status-variants.ts</code></td><td><code>apps/mobile/src/lib/status-variants.ts</code></td></tr>
           <tr><td><strong>List rendering</strong></td><td><code>&lt;Table&gt;</code> with rows</td><td><code>&lt;FlatList&gt;</code> with cards</td></tr>
           <tr><td><strong>Navigation</strong></td><td><code>&lt;Link href="/users/123"&gt;</code></td><td><code>router.push('/users/123')</code></td></tr>
           <tr><td><strong>Styles</strong></td><td>Tailwind class strings</td><td><code>StyleSheet.create()</code> at file bottom</td></tr>
-          <tr><td><strong>Hooks (data)</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@old-st/client-common</code></span></td></tr>
-          <tr><td><strong>API clients</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@old-st/client-common</code></span></td></tr>
-          <tr><td><strong>Contracts / types</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@old-st/contracts/{domain}</code></span></td></tr>
+          <tr><td><strong>Hooks (data)</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@mma/client-common</code></span></td></tr>
+          <tr><td><strong>API clients</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@mma/client-common</code></span></td></tr>
+          <tr><td><strong>Contracts / types</strong></td><td colspan="2" style="text-align:center;"><span class="shared-badge">📦 identical — both import from <code>@mma/contracts/{domain}</code></span></td></tr>
         </tbody>
       </table>
     </div>

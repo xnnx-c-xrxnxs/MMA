@@ -32,15 +32,15 @@ Ask the following in a single structured message and wait for answers.
 4. **Mode:**
    - **Integrated** — backend endpoints exist; wire real API hooks now (default).
    - **UI-first** — build screens with mock data; integrate API later.
-5. **Which API endpoints does it call?** (list them with the matching `@old-st/client-common` hook names, e.g. `useUsersByStatus`, `useCreateOrder`) — *Integrated mode: required. UI-first mode: list expected endpoints if known, or skip.*
-6. **Are there forms?** (If yes, which contract Zod schema from `@old-st/contracts/{domain}`?) — *UI-first mode: describe the fields even if the schema doesn't exist yet.*
+5. **Which API endpoints does it call?** (list them with the matching `@mma/client-common` hook names, e.g. `useUsersByStatus`, `useCreateOrder`) — *Integrated mode: required. UI-first mode: list expected endpoints if known, or skip.*
+6. **Are there forms?** (If yes, which contract Zod schema from `@mma/contracts/{domain}`?) — *UI-first mode: describe the fields even if the schema doesn't exist yet.*
 7. **Does the entity have statuses?** (If yes, which statuses → which badge variants?)
 8. **What actions are available?** (e.g. activate, deactivate, delete — driven by entity status)
-9. **Does it need any new shared UI primitive** beyond what's in `@old-st/mobile-ui`?
+9. **Does it need any new shared UI primitive** beyond what's in `@mma/mobile-ui`?
 
 ### Auto-Detection
 
-- If the user names a domain, auto-detect the contract package: `@old-st/contracts/{domain}`.
+- If the user names a domain, auto-detect the contract package: `@mma/contracts/{domain}`.
 - Check if hooks already exist in `packages/client-common/src/hooks/use-{domain}.ts`.
 - Check if status-variant mapping already exists in `apps/mobile/src/lib/status-variants.ts`.
 - **Mode auto-detection:** If the user says "mock", "placeholder", "UI first", "no backend yet", "design first", or "just the screens" → default to **UI-first mode**. If hooks and contracts already exist for the domain → suggest **Integrated mode**.
@@ -68,7 +68,7 @@ Wait for all to return. Summarize what already exists (hooks, status enums, comp
 
 If the required hooks (`use{Domain}`, `useCreate{Entity}`, mutation hooks) do not yet exist in `packages/client-common/src/hooks/use-{domain}.ts`, add them now. Re-export from `packages/client-common/src/hooks/index.ts`.
 
-Hooks and API clients live in `@old-st/client-common` — shared by webapp and mobile. **Never create mobile-only API clients or hooks.**
+Hooks and API clients live in `@mma/client-common` — shared by webapp and mobile. **Never create mobile-only API clients or hooks.**
 
 If hooks already exist, skip this phase.
 
@@ -81,7 +81,7 @@ Bash(filePaths=["packages/client-common/src/hooks/use-{domain}.ts", "packages/cl
 
 ## Phase 2 — UI Primitives (only if missing)
 
-If the screen needs a primitive not yet in `@old-st/mobile-ui` (e.g. Switch, BottomSheet, SearchBar), add it.
+If the screen needs a primitive not yet in `@mma/mobile-ui` (e.g. Switch, BottomSheet, SearchBar), add it.
 
 **Load skill:** `.claude/skills/mobile-ui-primitive/SKILL.md`
 
@@ -103,8 +103,8 @@ File: `apps/mobile/src/lib/status-variants.ts`
 Add a variant mapper function for the entity:
 
 ```typescript
-import { {Entity}StatusEnum } from '@old-st/contracts/{domain}';
-import type { BadgeVariant } from '@old-st/mobile-ui';
+import { {Entity}StatusEnum } from '@mma/contracts/{domain}';
+import type { BadgeVariant } from '@mma/mobile-ui';
 
 export function {entity}StatusVariant(status: string): BadgeVariant {
   switch (status) {
@@ -117,15 +117,15 @@ export function {entity}StatusVariant(status: string): BadgeVariant {
 ```
 
 Rules:
-- Import status enum from `@old-st/contracts/{domain}` — never hardcode strings.
+- Import status enum from `@mma/contracts/{domain}` — never hardcode strings.
 - Always include a `default` fallback.
 
-**UI-first mode:** If the contracts package doesn't exist yet, use string literal constants with a `// TODO: replace with {Entity}StatusEnum from @old-st/contracts/{domain}` comment:
+**UI-first mode:** If the contracts package doesn't exist yet, use string literal constants with a `// TODO: replace with {Entity}StatusEnum from @mma/contracts/{domain}` comment:
 
 ```typescript
-import type { BadgeVariant } from '@old-st/mobile-ui';
+import type { BadgeVariant } from '@mma/mobile-ui';
 
-// TODO: replace with {Entity}StatusEnum from @old-st/contracts/{domain}
+// TODO: replace with {Entity}StatusEnum from @mma/contracts/{domain}
 const STATUS = { ACTIVE: 'ACTIVE', PENDING: 'PENDING', INACTIVE: 'INACTIVE' } as const;
 
 export function {entity}StatusVariant(status: string): BadgeVariant {
@@ -154,12 +154,12 @@ Create domain-scoped components in `apps/mobile/src/components/{domain}/`:
 - **`{domain}-form.tsx`** — `react-hook-form` + Zod resolver for create/edit forms.
 
 Each component:
-- Uses `@old-st/mobile-ui` primitives — never raw `View`/`Text` for interactive elements.
+- Uses `@mma/mobile-ui` primitives — never raw `View`/`Text` for interactive elements.
 - Accepts data via props — screens fetch, components render.
 - Uses `StyleSheet.create()` at the bottom of the file.
 - Uses theme tokens for colors, spacing, radii.
 
-**Prop typing rule (both modes):** Components MUST define explicit prop interfaces. In **integrated mode**, import response types from `@old-st/contracts/{domain}`. In **UI-first mode**, if contracts don't exist yet, define a local `{Entity}Item` type in the component file with a `// TODO: replace with {Entity}Response from @old-st/contracts/{domain}` comment. This ensures the integration retrofit (Phase 9) is a type-import swap, not a component rewrite.
+**Prop typing rule (both modes):** Components MUST define explicit prop interfaces. In **integrated mode**, import response types from `@mma/contracts/{domain}`. In **UI-first mode**, if contracts don't exist yet, define a local `{Entity}Item` type in the component file with a `// TODO: replace with {Entity}Response from @mma/contracts/{domain}` comment. This ensures the integration retrofit (Phase 9) is a type-import swap, not a component rewrite.
 
 After this phase, run:
 ```
@@ -174,14 +174,14 @@ Bash(filePaths=["apps/mobile/src/components/{domain}/"])
 
 For each form (create / edit):
 - Use `react-hook-form` + `zodResolver` with `Controller` (not `register` — no DOM refs in RN).
-- Source schema from `@old-st/contracts/{domain}` — never duplicate.
+- Source schema from `@mma/contracts/{domain}` — never duplicate.
 - Wrap in `KeyboardAvoidingView` + `ScrollView` with `keyboardShouldPersistTaps="handled"`.
-- Use `Input` from `@old-st/mobile-ui` with manual error `<Text>` below each field.
-- Use `Button` from `@old-st/mobile-ui` with `loading={mutation.isPending}`.
+- Use `Input` from `@mma/mobile-ui` with manual error `<Text>` below each field.
+- Use `Button` from `@mma/mobile-ui` with `loading={mutation.isPending}`.
 - For password fields, use the `PasswordField` pattern from the skill (secureTextEntry toggle).
 - Wire mutation `onSuccess` to navigation (e.g. `router.back()`) and `isError` to inline error display.
 
-**Important:** Do NOT use `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, or `<FormMessage>` from `@old-st/ui` — these are web-only components that use Radix Slot and `<form>` elements.
+**Important:** Do NOT use `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, or `<FormMessage>` from `@mma/ui` — these are web-only components that use Radix Slot and `<form>` elements.
 
 ---
 
@@ -198,12 +198,12 @@ Screen rules:
 - **Thin orchestrator** — wire hooks → state → child components. No list markup or form fields inline.
 - Use `SafeAreaView` from `react-native-safe-area-context` for screen containers.
 - Use `useLocalSearchParams()` for route params in detail screens.
-- Show `Spinner` from `@old-st/mobile-ui` for loading state.
-- Show `EmptyState` from `@old-st/mobile-ui` when no data.
+- Show `Spinner` from `@mma/mobile-ui` for loading state.
+- Show `EmptyState` from `@mma/mobile-ui` when no data.
 
 ### Integrated mode (default)
 
-- Use hooks from `@old-st/client-common` for all data fetching.
+- Use hooks from `@mma/client-common` for all data fetching.
 - Wire `isLoading`, `data`, and mutation hooks to child components.
 
 ### UI-first mode
@@ -240,7 +240,7 @@ import { useState } from 'react';
 import { MOCK_{ENTITIES} } from '../../mocks/{domain}';
 
 export default function {Entity}sScreen() {
-  // TODO: Replace with use{Entity}sByStatus() from @old-st/client-common
+  // TODO: Replace with use{Entity}sByStatus() from @mma/client-common
   const [isLoading] = useState(false);
   const {entity}s = MOCK_{ENTITIES};
 
@@ -329,11 +329,11 @@ This phase runs **later**, when the backend and hooks are ready. It can be trigg
    - Replace `const [isLoading] = useState(false)` with `const { data, isLoading } = useHook()`.
    - Replace no-op mutation callbacks with real mutation hooks.
 
-3. **Replace local types with contract imports** — for each component with a `// TODO: replace with ... from @old-st/contracts/{domain}` comment:
+3. **Replace local types with contract imports** — for each component with a `// TODO: replace with ... from @mma/contracts/{domain}` comment:
    - Import the real response type.
    - Delete the local `{Entity}Item` type.
 
-4. **Replace status constants** — in `status-variants.ts`, replace the inline `STATUS` object with `{Entity}StatusEnum` from `@old-st/contracts/{domain}`.
+4. **Replace status constants** — in `status-variants.ts`, replace the inline `STATUS` object with `{Entity}StatusEnum` from `@mma/contracts/{domain}`.
 
 5. **Delete mock files** — remove `apps/mobile/src/mocks/{domain}.ts`.
 

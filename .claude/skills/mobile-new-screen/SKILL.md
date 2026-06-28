@@ -27,7 +27,7 @@ Before writing any code, confirm:
 
 1. **Which domain?** (`users`, `orders`, `products`, or a new domain)
 2. **What entity is displayed?** (e.g. `User`, `Order`, `Product`)
-3. **What list/query hook exists?** (e.g. `useUsersByStatus`) — if none, follow the `webapp-api-client-hooks` skill first (hooks are shared via `@old-st/client-common`)
+3. **What list/query hook exists?** (e.g. `useUsersByStatus`) — if none, follow the `webapp-api-client-hooks` skill first (hooks are shared via `@mma/client-common`)
 4. **What fields should the list card show?** (from the entity response type)
 5. **Does the entity have statuses?** (if yes, need status-variant mapping + status filter)
 6. **What actions are available on the detail screen?** (e.g. activate, deactivate, delete — driven by entity status)
@@ -61,7 +61,7 @@ File: `apps/mobile/src/lib/status-variants.ts`
 Add a variant mapper function for the new entity:
 
 ```typescript
-import { {Entity}StatusEnum } from '@old-st/contracts/{domain}';
+import { {Entity}StatusEnum } from '@mma/contracts/{domain}';
 
 export function {entity}StatusVariant(status: string): BadgeVariant {
   switch (status) {
@@ -75,9 +75,9 @@ export function {entity}StatusVariant(status: string): BadgeVariant {
 ```
 
 **Rules:**
-- Import the status enum from `@old-st/contracts/{domain}` — never hardcode string literals.
+- Import the status enum from `@mma/contracts/{domain}` — never hardcode string literals.
 - The function name follows `{entity}StatusVariant` (camelCase).
-- Return type is `BadgeVariant` (from `@old-st/mobile-ui`).
+- Return type is `BadgeVariant` (from `@mma/mobile-ui`).
 - Always include a `default: return 'outline'` fallback.
 - Map semantics match webapp: `success` = positive/active, `warning` = pending/needs-attention, `secondary` = neutral/inactive, `destructive` = error/deleted/cancelled.
 
@@ -87,7 +87,7 @@ export function {entity}StatusVariant(status: string): BadgeVariant {
 
 The per-domain `format{Entity}Status()` helper lives in `packages/client-common/src/lib/status-labels/{domain}.ts` and is **shared with the webapp** — if the webapp already added it, mobile reuses it as-is. If not, follow the **`webapp-new-page`** skill § Step 2a to add it.
 
-Mobile imports it the same way: `import { format{Entity}Status } from '@old-st/client-common';` and wraps every JSX status render: `{format{Entity}Status({entity}.status)}`. Enforced by the `no-raw-status-in-jsx` lint check (Golden Rule #22a).
+Mobile imports it the same way: `import { format{Entity}Status } from '@mma/client-common';` and wraps every JSX status render: `{format{Entity}Status({entity}.status)}`. Enforced by the `no-raw-status-in-jsx` lint check (Golden Rule #22a).
 
 ---
 
@@ -100,10 +100,10 @@ The list component receives the data array and renders a `FlatList` with `Card` 
 ```typescript
 import { View, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Text, Badge, Card, CardContent, Separator } from '@old-st/mobile-ui';
-import { format{Entity}Status } from '@old-st/client-common';
+import { Text, Badge, Card, CardContent, Separator } from '@mma/mobile-ui';
+import { format{Entity}Status } from '@mma/client-common';
 import { {entity}StatusVariant } from '../../lib/status-variants';
-import type { {Entity}Response } from '@old-st/contracts/{domain}';
+import type { {Entity}Response } from '@mma/contracts/{domain}';
 
 interface {Entity}ListItemProps {
   {entity}: {Entity}Response;
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
 **Rules:**
 - Use `FlatList` for list rendering — never `ScrollView` + `map()` (breaks virtualization).
 - Each list item is wrapped in `Pressable` for tap navigation via `useRouter().push()`.
-- Card items use `@old-st/mobile-ui` primitives (Card, CardContent, Badge, Text, Separator).
+- Card items use `@mma/mobile-ui` primitives (Card, CardContent, Badge, Text, Separator).
 - `keyExtractor` uses the entity's primary ID field.
 - Loading state: `ActivityIndicator` centered in a flex container.
 - Empty state: `ListEmptyComponent` with `Text variant="muted"`.
@@ -200,9 +200,9 @@ The tab screen is a **thin orchestrator** — it manages filter state and wires 
 import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button } from '@old-st/mobile-ui';
-import { use{Entity}sByStatus } from '@old-st/client-common';
-import { {ENTITY}_STATUSES } from '@old-st/contracts/{domain}';
+import { Text, Button } from '@mma/mobile-ui';
+import { use{Entity}sByStatus } from '@mma/client-common';
+import { {ENTITY}_STATUSES } from '@mma/contracts/{domain}';
 import { {Entity}sList } from '../../components/{domain}/{domain}-list';
 
 const statuses = ['ALL', ...{ENTITY}_STATUSES];
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
 **Rules:**
 - `export default function` — Expo Router requires default exports for screens.
 - Tab screens wrap content in `SafeAreaView` with `edges={['bottom']}`.
-- Filter buttons use `Button` from `@old-st/mobile-ui` with `variant` toggling.
-- Status filter constants come from `@old-st/contracts/{domain}` — never hardcoded.
+- Filter buttons use `Button` from `@mma/mobile-ui` with `variant` toggling.
+- Status filter constants come from `@mma/contracts/{domain}` — never hardcoded.
 - The screen renders header text, filter bar, and the list component — no card/item markup.
 - Styling uses `StyleSheet.create()` at the bottom of the file.
 
@@ -262,10 +262,10 @@ The detail screen uses Expo Router's dynamic route segment to get the entity ID.
 ```typescript
 import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { Text, Badge, Card, CardHeader, CardTitle, CardContent, Button, Separator } from '@old-st/mobile-ui';
-import { use{Entity}, use{Action1}{Entity}, use{Action2}{Entity}, format{Entity}Status } from '@old-st/client-common';
+import { Text, Badge, Card, CardHeader, CardTitle, CardContent, Button, Separator } from '@mma/mobile-ui';
+import { use{Entity}, use{Action1}{Entity}, use{Action2}{Entity}, format{Entity}Status } from '@mma/client-common';
 import { {entity}StatusVariant } from '../../lib/status-variants';
-import { {Entity}StatusEnum } from '@old-st/contracts/{domain}';
+import { {Entity}StatusEnum } from '@mma/contracts/{domain}';
 
 export default function {Entity}DetailScreen() {
   const { {entity}Id } = useLocalSearchParams<{ {entity}Id: string }>();
@@ -417,9 +417,9 @@ The `[{entity}Id]` bracket syntax creates a dynamic route segment automatically.
 
 - **Putting list item markup in the tab screen** — the screen is a thin orchestrator. Card/item markup lives in the domain list component.
 - **Using `ScrollView` + `map()` for lists** — always use `FlatList` for virtualized scrolling.
-- **Using raw `View`/`Text` instead of `@old-st/mobile-ui` primitives** — use Card, Badge, Button, Text variants.
-- **Hardcoding status strings** — always use `{Entity}StatusEnum.VALUE` from `@old-st/contracts/{domain}`.
-- **Calling `fetch()` directly** — always use React Query hooks from `@old-st/client-common`.
+- **Using raw `View`/`Text` instead of `@mma/mobile-ui` primitives** — use Card, Badge, Button, Text variants.
+- **Hardcoding status strings** — always use `{Entity}StatusEnum.VALUE` from `@mma/contracts/{domain}`.
+- **Calling `fetch()` directly** — always use React Query hooks from `@mma/client-common`.
 - **Inline style objects** — use `StyleSheet.create()` at the bottom of the file for all non-trivial styles.
 - **Forgetting `export default function`** — Expo Router requires default exports for screens.
 - **Forgetting `SafeAreaView`** — tab screens must wrap in `SafeAreaView` with appropriate `edges`.

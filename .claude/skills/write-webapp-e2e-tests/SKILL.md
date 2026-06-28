@@ -59,7 +59,7 @@ Every interactive element that E2E tests target must have a `data-testid` attrib
 | Status badge (detail) | `data-testid="{domain}-status-badge"` |
 | Pagination info | `data-testid="pagination-info"` |
 
-**Where to add:** In the component JSX, add `data-testid` as a prop. All `@old-st/ui` components spread `...props`, so `data-testid` passes through automatically.
+**Where to add:** In the component JSX, add `data-testid` as a prop. All `@mma/ui` components spread `...props`, so `data-testid` passes through automatically.
 
 ### 2. Add selectors to `utils/selectors.ts`
 

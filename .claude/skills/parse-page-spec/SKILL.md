@@ -32,7 +32,7 @@ type PageSpec = {
   };
   domain: string;                        // 'payment'
   domainPascal: string;                  // 'Payment'
-  contractsImport: string;               // '@old-st/contracts/{domain}'
+  contractsImport: string;               // '@mma/contracts/{domain}'
   dataSources: Array<{ hook: string; args?: string; purpose?: string }>;
   states: {
     loading: 'skeleton-table' | 'skeleton-detail' | 'skeleton-form' | 'spinner';
@@ -45,9 +45,9 @@ type PageSpec = {
   testIds: string[];
   figma?: { frame: string; fileKey?: string };
   // Derived analysis ------------------------------------------------
-  missingHooks: string[];                // hooks referenced but not yet exported from @old-st/client-common
+  missingHooks: string[];                // hooks referenced but not yet exported from @mma/client-common
   missingSchemas: string[];              // form schemas referenced but not yet exported from contracts
-  newPrimitives: string[];               // any primitive in components that isn't yet in @old-st/ui
+  newPrimitives: string[];               // any primitive in components that isn't yet in @mma/ui
   componentFiles: string[];              // file paths the orchestrator will create
 };
 ```
@@ -88,7 +88,7 @@ The JSON Schema lives at `.specs/schemas/page-spec.schema.json`. Validate the pa
 | `forms[].fields[].type=select` without `source` | `✗ Spec invalid: form "{name}" field "{field}" type=select requires source (enum constant or hook)` |
 | `actions[].opensForm` references an unknown form | `✗ Spec invalid: action "{name}" opensForm="{form}" — no such form in forms[]` |
 | `empty.cta.action` references an unknown form/action | `✗ Spec invalid: empty.cta.action="{action}" — must match a form name (open-form:{name}) or an action name (action:{name})` |
-| `permissions.roles[]` value not in USER_ROLES | `✗ Spec invalid: permissions.roles contains "{role}" — allowed values: see USER_ROLES in @old-st/contracts/{auth-domain}` |
+| `permissions.roles[]` value not in USER_ROLES | `✗ Spec invalid: permissions.roles contains "{role}" — allowed values: see USER_ROLES in @mma/contracts/{auth-domain}` |
 
 For each error, surface the exact YAML line number when possible.
 
@@ -131,14 +131,14 @@ For every component / form / column / field, fill in defaults so downstream phas
 ### Step 5 — Compute derived values
 
 - `domainPascal` = `domain` converted from kebab-case to PascalCase (`payment-method` → `PaymentMethod`).
-- `contractsImport` = `@old-st/contracts/${domain}`.
+- `contractsImport` = `@mma/contracts/${domain}`.
 - `componentFiles` = compute the file paths the orchestrator will create:
   - Page: `apps/webapp/src/app/${segment === 'protected' ? '(protected)/' : ''}${route.replace(/^\//, '')}/page.tsx`
   - One file per `components[]` entry: `apps/webapp/src/components/${domain}/${kebab(component.name)}.tsx`
   - One file per `forms[]` entry (if `trigger=route` or `trigger=modal`): `apps/webapp/src/components/${domain}/${form.name}-form.tsx`
   - `loading.tsx` and `error.tsx` co-located with the page.
   - Detail layout also gets `apps/webapp/src/components/${domain}/${entity}-detail-skeleton.tsx`.
-- `newPrimitives` = scan `components[].kind` and `forms[].fields[].type` for any primitive not currently exported from `@old-st/ui`. (Phase 1 list: `data-table`, `detail-card`, `filter-bar`, `combobox`, `daterange`, `command`, `dialog`, `alert-dialog` are the candidates that may need wrapping.)
+- `newPrimitives` = scan `components[].kind` and `forms[].fields[].type` for any primitive not currently exported from `@mma/ui`. (Phase 1 list: `data-table`, `detail-card`, `filter-bar`, `combobox`, `daterange`, `command`, `dialog`, `alert-dialog` are the candidates that may need wrapping.)
 
 ### Step 6 — Output the Spec Summary block
 
@@ -149,7 +149,7 @@ Print this block in the chat so the developer can confirm before the orchestrato
 
 - **Route:** /payments (protected)  →  apps/webapp/src/app/(protected)/payments/page.tsx
 - **Layout:** list
-- **Domain:** payment  →  @old-st/contracts/{domain}
+- **Domain:** payment  →  @mma/contracts/{domain}
 - **Title:** Payments
 - **Sidebar:** Finance → Payments (icon: dollar-sign, order: 3)
 - **Permissions:** roles=[ADMIN, FINANCE]

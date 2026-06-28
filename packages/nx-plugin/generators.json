@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "name": "@old-st/nx-plugin",
+  "name": "@mma/nx-plugin",
   "version": "1.0.0",
   "generators": {
     "use-case": {
@@ -26,7 +26,7 @@
     "ui-primitive": {
       "factory": "./src/generators/ui-primitive/generator",
       "schema": "./src/generators/ui-primitive/schema.json",
-      "description": "Scaffold a new @old-st/ui primitive: component.tsx + index.ts + component.stories.tsx + component.spec.tsx, and add the export to packages/ui/src/index.ts."
+      "description": "Scaffold a new @mma/ui primitive: component.tsx + index.ts + component.stories.tsx + component.spec.tsx, and add the export to packages/ui/src/index.ts."
     }
   }
 }

@@ -89,7 +89,7 @@ The `no-userId-in-controller-input` check in `scripts/lint-standards.ts` (run by
 
 ## Cross-service propagation
 
-When your application service makes an outbound HTTP call to another bounded context via an ACL adapter, the adapter must spread `...getOutboundHeaders()` from `@old-st/telemetry` into the outbound headers. This forwards the originating `Authorization` header so the downstream service's `@CurrentUser()` resolves to the same actor end-to-end. See the `sync-cross-service-call` skill.
+When your application service makes an outbound HTTP call to another bounded context via an ACL adapter, the adapter must spread `...getOutboundHeaders()` from `@mma/telemetry` into the outbound headers. This forwards the originating `Authorization` header so the downstream service's `@CurrentUser()` resolves to the same actor end-to-end. See the `sync-cross-service-call` skill.
 
 ## Adding the decorator to a new service
 

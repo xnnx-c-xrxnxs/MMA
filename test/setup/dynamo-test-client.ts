@@ -9,7 +9,7 @@ AWS_ACCESS_KEY_ID *
  *
  * DYNAMODB_ENDPOINT is read from the environment (defaults to http://localhost:4566).
  */
-import { createDynamoLocalClient } from '@old-st/dynamodb-onetable';
+import { createDynamoLocalClient } from '@mma/dynamodb-onetable';
 
 /**
  * Create shared client for all integration tests.

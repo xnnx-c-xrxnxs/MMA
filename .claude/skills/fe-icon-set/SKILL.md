@@ -1,9 +1,9 @@
 ---
 name: fe-icon-set
-description: Add a new icon to @old-st/ui or audit the existing icon set. Use this when a Figma frame references an icon not yet in the standard set, when changing the IIcon contract, or when investigating icon-color drift.
+description: Add a new icon to @mma/ui or audit the existing icon set. Use this when a Figma frame references an icon not yet in the standard set, when changing the IIcon contract, or when investigating icon-color drift.
 ---
 
-# Icon set — @old-st/ui/icons
+# Icon set — @mma/ui/icons
 
 ## Source of truth
 
@@ -14,10 +14,10 @@ packages/ui/src/icons/
   index.ts        # barrel
 ```
 
-The barrel is re-exported from `@old-st/ui` so consumers import from the package root:
+The barrel is re-exported from `@mma/ui` so consumers import from the package root:
 
 ```tsx
-import { ClockIcon, PlayIcon } from '@old-st/ui';
+import { ClockIcon, PlayIcon } from '@mma/ui';
 ```
 
 ## The IIcon contract
@@ -117,6 +117,6 @@ Anti-patterns the rule blocks:
 ## Forbidden
 
 - **No third-party icon libraries pulled into webapp/mobile components.** Always wrap into our `IIcon` contract first.
-- **No raw `<svg>` literals in domain components.** Add the icon to `@old-st/ui` and import it.
+- **No raw `<svg>` literals in domain components.** Add the icon to `@mma/ui` and import it.
 - **No per-icon color props in primitives.** Drive color via Tailwind on the parent.
 - **No agent-invented icons during Figma workflows.** See § Provenance during Figma imports.

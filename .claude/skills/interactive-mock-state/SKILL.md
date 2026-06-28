@@ -1,6 +1,6 @@
 ---
 name: interactive-mock-state
-description: 'Build the swappable _data/{domain}.adapter.ts that lets a webapp page run on INTERACTIVE mock state (useState-backed: filters narrow rows, form submit appends a row, status actions mutate a row) in pass 1, then be re-pointed at real @old-st/client-common hooks in pass 2 — with page.tsx byte-identical between passes. Use this whenever building a migration page via /migrate-page (--mock and --wire) or any page that must be demoable before its backend exists.'
+description: 'Build the swappable _data/{domain}.adapter.ts that lets a webapp page run on INTERACTIVE mock state (useState-backed: filters narrow rows, form submit appends a row, status actions mutate a row) in pass 1, then be re-pointed at real @mma/client-common hooks in pass 2 — with page.tsx byte-identical between passes. Use this whenever building a migration page via /migrate-page (--mock and --wire) or any page that must be demoable before its backend exists.'
 ---
 
 # Interactive Mock State — Skill
@@ -13,7 +13,7 @@ A migration page is built **once, in its real `(protected)/{route}/` location**,
 
 ## The contract
 
-`page.tsx` imports data only from `./_data/{domain}.adapter.ts`. The adapter exports functions whose names + return shapes match the page spec's `dataSources[].hook` (e.g. `useProjectsList`, `useProject`, `useCreateProject`). Each must return the same shape the real `@old-st/client-common` hook returns:
+`page.tsx` imports data only from `./_data/{domain}.adapter.ts`. The adapter exports functions whose names + return shapes match the page spec's `dataSources[].hook` (e.g. `useProjectsList`, `useProject`, `useCreateProject`). Each must return the same shape the real `@mma/client-common` hook returns:
 
 ```ts
 // query hook shape
@@ -50,7 +50,7 @@ Generate **8–12 rows** so filters/pagination are demonstrable.
 
 ```ts
 // apps/webapp/src/app/(protected)/projects/_data/project.adapter.ts
-// MOCK ADAPTER — replaced wholesale by `/migrate-page --wire`. Do NOT import @old-st/client-common here.
+// MOCK ADAPTER — replaced wholesale by `/migrate-page --wire`. Do NOT import @mma/client-common here.
 'use client';
 
 import { useCallback, useState } from 'react';
@@ -133,8 +133,8 @@ Rewrite ONLY the adapter so each export re-exports / thinly wraps the real hook.
 ```ts
 // apps/webapp/src/app/(protected)/projects/_data/project.adapter.ts
 // WIRED ADAPTER — real API. This is the only file that changed from the mock pass.
-export { useProjectsList, useProject, useCreateProject } from '@old-st/client-common';
-export type { Project } from '@old-st/contracts/project';
+export { useProjectsList, useProject, useCreateProject } from '@mma/client-common';
+export type { Project } from '@mma/contracts/project';
 ```
 
 If the real hook's return shape differs from what `page.tsx` consumes, prefer a thin wrapper here (re-map fields in the adapter) over editing `page.tsx`. Only touch `page.tsx` if unavoidable, and flag it.
@@ -157,6 +157,6 @@ NEXT_PUBLIC_STAGE=local
 
 - [ ] Adapter exports match the page spec `dataSources[].hook` names + return shapes.
 - [ ] Mock list filters narrow rows; create appends; status action mutates — all via ONE shared store.
-- [ ] `page.tsx` imports from the adapter only — NEVER `@old-st/client-common` in the mock pass.
+- [ ] `page.tsx` imports from the adapter only — NEVER `@mma/client-common` in the mock pass.
 - [ ] `--wire` changes ONLY the adapter; `page.tsx` stays byte-identical.
 - [ ] MOCK_PREVIEW guard present in `(protected)/layout.tsx` (gated on `NEXT_PUBLIC_MOCK_PREVIEW` + `NEXT_PUBLIC_STAGE=local`).

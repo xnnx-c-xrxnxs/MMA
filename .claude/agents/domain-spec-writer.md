@@ -12,7 +12,7 @@ You convert exactly **one** migration domain card into exactly **one** `.specs/d
 
 | Parameter     | Description                                                                               |
 | ------------- | ----------------------------------------------------------------------------------------- |
-| `cardPath`    | Path to the source domain card (e.g. `old-st-flow-migration/domains/domain-project.md`)   |
+| `cardPath`    | Path to the source domain card (e.g. `mma-flow-migration/domains/domain-project.md`)   |
 | `domain`      | kebab-case domain name for the output file + `domain:` field (e.g. `project`)             |
 | `persistence` | `dynamodb` or `prisma` — the **confirmed** choice from the migration ledger / domain card |
 | `specPath`    | Output path under `.specs/` (e.g. `.specs/domain-project.yaml`)           |

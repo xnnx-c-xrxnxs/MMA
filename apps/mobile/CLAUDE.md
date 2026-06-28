@@ -12,25 +12,25 @@ This file loads automatically for any file inside `apps/mobile/`. Full documenta
 
 ## Data Access
 
-- **All API calls** go through `@old-st/client-common` hooks and API clients — never call `fetch` directly.
-- **No mobile-only API clients** — add to `@old-st/client-common` (shared with webapp).
+- **All API calls** go through `@mma/client-common` hooks and API clients — never call `fetch` directly.
+- **No mobile-only API clients** — add to `@mma/client-common` (shared with webapp).
 - **No Redux/Zustand/MobX** — React Query for server state, `useState` for UI state.
 
 ## UI & Styling
 
-- Use **`@old-st/mobile-ui`** primitives (Badge, Button, Card, Text, Input, etc.) — never raw `View`/`Text` for interactive elements.
+- Use **`@mma/mobile-ui`** primitives (Badge, Button, Card, Text, Input, etc.) — never raw `View`/`Text` for interactive elements.
 - Use **`StyleSheet.create()`** at the bottom of the file — no inline style objects for static styles.
-- Use **theme tokens** (`colors`, `spacing`, `radii`, `fontSizes` from `@old-st/mobile-ui`) — never hardcode colors or spacing values.
+- Use **theme tokens** (`colors`, `spacing`, `radii`, `fontSizes` from `@mma/mobile-ui`) — never hardcode colors or spacing values.
 - Use **`FlatList`** for lists — never `ScrollView` + `.map()`.
 
 ## Contracts & Types
 
-- Import from **`@old-st/contracts/{domain}`** — never bare `@old-st/contracts`.
+- Import from **`@mma/contracts/{domain}`** — never bare `@mma/contracts`.
 - Use **domain enum constants** (e.g. `UserStatusEnum.ACTIVE`) — never string literals.
 
 ## Auth
 
-- Auth state via **`useAuth()`** from `@old-st/client-common`.
+- Auth state via **`useAuth()`** from `@mma/client-common`.
 - Token persistence via **`expo-secure-store`** (`src/lib/secure-storage.ts`).
 - Refresh tokens live in httpOnly cookies — never store in JS.
 
@@ -40,10 +40,10 @@ This file loads automatically for any file inside `apps/mobile/`. Full documenta
 
 **Default display timezone: `Europe/London`** (covers GMT/BST automatically). Override per-project when requirements differ.
 
-Use the helpers from `@old-st/client-common` (implemented in `packages/client-common/src/lib/format-date.ts`, shared with webapp):
+Use the helpers from `@mma/client-common` (implemented in `packages/client-common/src/lib/format-date.ts`, shared with webapp):
 
 ```tsx
-import { formatDate, formatDateTime, formatTime } from '@old-st/client-common';
+import { formatDate, formatDateTime, formatTime } from '@mma/client-common';
 
 <Text>{formatDateTime(order.createdAt)}</Text>   // '13 May 2026, 14:30'
 <Text>{formatDate(user.dateCreated)}</Text>       // '13 May 2026'
@@ -56,7 +56,7 @@ import { formatDate, formatDateTime, formatTime } from '@old-st/client-common';
 
 ## Forms
 
-- Use **`react-hook-form`** + `@hookform/resolvers/zod` with schemas from `@old-st/contracts/{domain}`.
+- Use **`react-hook-form`** + `@hookform/resolvers/zod` with schemas from `@mma/contracts/{domain}`.
 
 ## Error Reporting & Releases
 

@@ -1,6 +1,6 @@
 /**
  * Shared design tokens — single source of truth for colors, spacing, radii,
- * typography across @old-st/ui (web) and @old-st/mobile-ui (React Native).
+ * typography across @mma/ui (web) and @mma/mobile-ui (React Native).
  *
  * ─── Two-tier color model ──────────────────────────────────────────────────
  *
@@ -25,7 +25,7 @@
  *   2. Run `pnpm tokens:gen` afterwards. It regenerates the `@theme { ... }`
  *      and `.dark { ... }` blocks in `apps/webapp/src/app/globals.css`
  *      between the auto-generated sentinels. CI fails if you forget.
- *   3. Mobile imports `lightColors` / `darkColors` directly from `@old-st/design-tokens`.
+ *   3. Mobile imports `lightColors` / `darkColors` directly from `@mma/design-tokens`.
  */
 
 // ─── FIGMA:SYNC START — replaced by `pnpm tokens:sync` (scripts/sync-figma-tokens.mjs) ─

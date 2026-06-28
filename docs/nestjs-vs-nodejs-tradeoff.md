@@ -82,7 +82,7 @@ The strongest counter-point: **"we have a template and AI, so writing raw Node i
 | "DI wiring is tedious" | A scaffold script can emit the composition root |
 | "Manual validation is error-prone" | Zod is framework-agnostic — works identically in Fastify |
 | "OpenAPI maintenance is painful" | `zod-openapi` + `fastify-swagger` solves it |
-| "Auth wiring is repetitive" | A shared `@old-st/auth-middleware` package solves it |
+| "Auth wiring is repetitive" | A shared `@mma/auth-middleware` package solves it |
 | "Error mapping is inconsistent" | A shared `errorHandler` plugin solves it |
 
 We should **not** lean on those points. They are true in general but weak in our specific situation.

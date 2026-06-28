@@ -48,7 +48,7 @@ When axe reports a violation, the output includes:
 Common fixes in this codebase:
 
 - **`button-name`** — add `aria-label` to icon-only buttons (`<Button size="icon">`).
-- **`label`** — wire `<Input>` to a `<Label htmlFor>` or wrap in `<FormField>` from `@old-st/ui`.
+- **`label`** — wire `<Input>` to a `<Label htmlFor>` or wrap in `<FormField>` from `@mma/ui`.
 - **`color-contrast`** — adjust the token in `packages/ui/src/lib/tokens.ts` and mirror to `globals.css`. **Do not** hard-code a workaround color in the offending component.
 - **`landmark-unique`** — ensure pages have a single `<main>`, single `<nav>`, etc.
 - **`heading-order`** — pages start with `<h1>` (Header). Section headings inside the page use `<h2>`+.

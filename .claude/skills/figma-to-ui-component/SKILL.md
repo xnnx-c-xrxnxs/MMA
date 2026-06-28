@@ -1,11 +1,11 @@
 ---
 name: figma-to-ui-component
-description: Convert a Figma component (typically from the Untitled UI base file or any Figma node provided by the designer) into a primitive in @old-st/ui (web) and, when applicable, mirror it in @old-st/mobile-ui. Use this whenever the user pastes a Figma URL, references a Figma node, or asks to "implement this design". Codifies token mapping, variant mapping, and the shadcn-style adaptation rules tuned to this codebase.
+description: Convert a Figma component (typically from the Untitled UI base file or any Figma node provided by the designer) into a primitive in @mma/ui (web) and, when applicable, mirror it in @mma/mobile-ui. Use this whenever the user pastes a Figma URL, references a Figma node, or asks to "implement this design". Codifies token mapping, variant mapping, and the shadcn-style adaptation rules tuned to this codebase.
 ---
 
-# Figma → @old-st/ui Component
+# Figma → @mma/ui Component
 
-This skill is the **happy path** for the Figma MCP integration. It runs whenever a Figma node should become a React component in `@old-st/ui` (and optionally a React Native component in `@old-st/mobile-ui`).
+This skill is the **happy path** for the Figma MCP integration. It runs whenever a Figma node should become a React component in `@mma/ui` (and optionally a React Native component in `@mma/mobile-ui`).
 
 > **Hard rule:** Never paste raw Figma-MCP output (with `bg-[#7f56d9]`, `data-node-id`, inline hex, anonymous div soup) into a source file. Always adapt it through the rules below first.
 
@@ -28,7 +28,7 @@ This skill is the **happy path** for the Figma MCP integration. It runs whenever
 
 1. **Figma URL or node id?** (need `fileKey` + `nodeId` — see URL parsing rules below)
 2. **Component name** in our codebase (e.g. `Switch`, `Tabs`, `IconButton`)
-3. **Does this component already exist in `@old-st/ui`?**
+3. **Does this component already exist in `@mma/ui`?**
    - List `packages/ui/src/components/` and check.
    - If **yes** → this is an *update*; produce a diff vs the existing file, do NOT recreate.
    - If **no** → this is a *new primitive*; chain into the `webapp-ui-primitive` skill.
@@ -165,8 +165,8 @@ When translating Figma's React+Tailwind reference to our primitive, apply ALL of
 
 For atomic primitives (Button, Badge, Input, Card, Separator, Text), produce the React Native equivalent in `packages/mobile-ui/src/components/{name}.tsx` AT THE SAME TIME.
 
-Mobile uses `StyleSheet.create()` + theme tokens from `@old-st/mobile-ui` — NOT Tailwind. Pattern:
-- Import `lightColors` / `darkColors` from `@old-st/ui` (re-exported by `@old-st/mobile-ui`).
+Mobile uses `StyleSheet.create()` + theme tokens from `@mma/mobile-ui` — NOT Tailwind. Pattern:
+- Import `lightColors` / `darkColors` from `@mma/ui` (re-exported by `@mma/mobile-ui`).
 - Use `useColorScheme()` to pick the active palette.
 - Variant resolution via a `Record<Variant, ViewStyle>` (no cva — RN can't consume Tailwind classes).
 - Use `spacing`, `radii`, `fontSizes` from tokens for numeric values.
@@ -217,14 +217,14 @@ If the primitive must be verified in screen context (rare — e.g. it composes w
 
 > Untitled UI `Hierarchy=Primary, Size=sm` ⇒ `<Button variant="default" size="sm">`.
 
-This is the pattern for ALL Untitled UI components that already have an equivalent in `@old-st/ui`: produce a *mapping note*, not a rewrite.
+This is the pattern for ALL Untitled UI components that already have an equivalent in `@mma/ui`: produce a *mapping note*, not a rewrite.
 
 ---
 
 ## Anti-patterns (auto-reject)
 
 - Pasting any of these into a source file: `data-node-id`, `bg-[#......]`, `text-[14px]`, `rounded-[8px]`, `font-['Inter:...']`, `shadow-[0px_1px_2px_...]`.
-- Adding a primitive directly under `apps/webapp/src/components/` instead of `@old-st/ui` (Golden Rule #21).
+- Adding a primitive directly under `apps/webapp/src/components/` instead of `@mma/ui` (Golden Rule #21).
 - Hard-coding hex in a component instead of adding a token (Golden Rule #23j).
 - Hand-rolled focus/keyboard handling instead of Radix (Golden Rule #23d).
 - Forgetting the mobile mirror for atomic primitives (Mobile Rule #32).

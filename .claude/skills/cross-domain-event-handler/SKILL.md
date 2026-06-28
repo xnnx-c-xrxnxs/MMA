@@ -15,15 +15,15 @@ Canonical reference: Order Event Handler consuming Product lifecycle events (to 
 
 | Concern | Intra-domain (`sqs-event-driven-service`) | Cross-domain (this skill) |
 |---|---|---|
-| Event schemas import path | `@old-st/contracts/{own-domain}` | `@old-st/contracts/{publishing-domain}` |
-| Event type constants import | `@old-st/{own-domain}-domain` | `@old-st/contracts/{publishing-domain}` |
+| Event schemas import path | `@mma/contracts/{own-domain}` | `@mma/contracts/{publishing-domain}` |
+| Event type constants import | `@mma/{own-domain}-domain` | `@mma/contracts/{publishing-domain}` |
 | Domain package dependency | Only own domain | Own domain **+ contracts of publishing domain** |
-| Compile-time coupling | None (everything is internal) | **Contracts only** — never import from `@old-st/{publishing-domain}-domain` directly |
+| Compile-time coupling | None (everything is internal) | **Contracts only** — never import from `@mma/{publishing-domain}-domain` directly |
 | Who defines the event shape? | Publishing domain (same as consuming) | **Publishing domain** — consumer reads, never modifies |
 | Handler writes to | Own domain's repository | Own domain's repository |
 | Handler reads from | Own domain's repository + optional use cases | Own domain's repository + optional use cases |
 
-**Golden Rule:** The cross-domain event handler may **import from the publishing domain's contracts** (`@old-st/contracts/{publishing-domain}`) but **never from its domain package** (`@old-st/{publishing-domain}-domain`). The consumer treats event schemas as a Published Language — an API contract it reads but does not own.
+**Golden Rule:** The cross-domain event handler may **import from the publishing domain's contracts** (`@mma/contracts/{publishing-domain}`) but **never from its domain package** (`@mma/{publishing-domain}-domain`). The consumer treats event schemas as a Published Language — an API contract it reads but does not own.
 
 ---
 
@@ -45,7 +45,7 @@ Before following this skill, ensure:
 
 - The **publishing domain** already has event type constants and event schemas defined (see `sqs-event-publisher` skill).
 - The **consuming service** has been scaffolded with `sqs-event-driven-service` (or will be scaffolded now).
-- Contracts subpath exports exist for the publishing domain (`@old-st/contracts/{publishing-domain}` — see `contracts-subpath-imports` skill).
+- Contracts subpath exports exist for the publishing domain (`@mma/contracts/{publishing-domain}` — see `contracts-subpath-imports` skill).
 
 ---
 
@@ -134,13 +134,13 @@ import {
   {publishingDomain}DomainEventSchema,
   {PublishingDomain}EventTypeEnum,
   type {PublishingDomain}DomainEvent,
-} from '@old-st/contracts/{publishing-domain}';
+} from '@mma/contracts/{publishing-domain}';
 
 // ❌ FORBIDDEN — never import from publishing domain package
-import { ... } from '@old-st/{publishing-domain}-domain';
+import { ... } from '@mma/{publishing-domain}-domain';
 
 // ❌ FORBIDDEN — never import from bare contracts root
-import { ... } from '@old-st/contracts';
+import { ... } from '@mma/contracts';
 ```
 
 **Why:** The consumer depends on the **Published Language** (event schemas in contracts), not the publishing domain's internal types. This prevents compile-time coupling — the publishing domain can refactor its internals without breaking consumers.
@@ -157,9 +157,9 @@ File: `apps/{consuming-domain}/{service}/src/application/services/handlers/{publ
 import { Injectable, Logger } from '@nestjs/common';
 import { IEventHandler } from '../../interfaces/event-handler.interface';
 // Import the inferred event type from publishing domain's contracts
-import type { {PublishingDomain}DomainEvent } from '@old-st/contracts/{publishing-domain}';
+import type { {PublishingDomain}DomainEvent } from '@mma/contracts/{publishing-domain}';
 // Import consuming domain's use cases
-import { SomeUseCase } from '@old-st/{consuming-domain}-domain';
+import { SomeUseCase } from '@mma/{consuming-domain}-domain';
 
 // Extract the specific event variant from the discriminated union.
 // This narrows the payload type to only the fields relevant to this handler.
@@ -171,7 +171,7 @@ type {EventName}Payload = Extract<
 /**
  * Handles {PUBLISHING_DOMAIN}_EVENT_NAME events from the {publishing} bounded context.
  *
- * Cross-domain handler: reads event data from @old-st/contracts/{publishing-domain},
+ * Cross-domain handler: reads event data from @mma/contracts/{publishing-domain},
  * writes to {consuming-domain}'s own repository via use cases.
  */
 @Injectable()
@@ -226,13 +226,13 @@ File: `apps/{consuming-domain}/{service}/src/application/services/{consuming-dom
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import { runWithCorrelationId } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
+import { runWithCorrelationId } from '@mma/telemetry';
 // Schemas from PUBLISHING domain's contracts
 import {
   {publishingDomain}DomainEventSchema,
   {PublishingDomain}EventTypeEnum,
-} from '@old-st/contracts/{publishing-domain}';
+} from '@mma/contracts/{publishing-domain}';
 import { NormalizedSqsRecord } from '../interfaces/normalized-sqs-record.interface';
 import { {PublishingEvent}Handler } from './handlers';
 
@@ -305,7 +305,7 @@ export class {ConsumingDomain}EventHandlerService {
 }
 ```
 
-**Key difference from intra-domain:** The `safeParse` and `switch` use schemas/enums from `@old-st/contracts/{publishing-domain}`, not from the consuming domain's own contracts.
+**Key difference from intra-domain:** The `safeParse` and `switch` use schemas/enums from `@mma/contracts/{publishing-domain}`, not from the consuming domain's own contracts.
 
 ---
 
@@ -318,8 +318,8 @@ import { Module } from '@nestjs/common';
 import {
   I{Entity}Repository,
   SomeUseCase,
-} from '@old-st/{consuming-domain}-domain';
-import { Dynamo{Entity}Repository, {Entity}Schema } from '@old-st/{consuming-domain}-domain/infrastructure';
+} from '@mma/{consuming-domain}-domain';
+import { Dynamo{Entity}Repository, {Entity}Schema } from '@mma/{consuming-domain}-domain/infrastructure';
 import { Table } from 'dynamodb-onetable';
 import { DynamoDBConfig } from '../infrastructure/config/dynamodb.config';
 import { {ConsumingDomain}EventHandlerService } from '../application/services/{consuming-domain}-event-handler.service';
@@ -413,7 +413,7 @@ Unit tests for cross-domain handlers follow the same mock pattern as intra-domai
 
 ```typescript
 import { {PublishingEvent}Handler } from './handlers/{publishing-event}.handler';
-import { {PublishingDomain}EventTypeEnum } from '@old-st/contracts/{publishing-domain}';
+import { {PublishingDomain}EventTypeEnum } from '@mma/contracts/{publishing-domain}';
 
 describe('{PublishingEvent}Handler', () => {
   let handler: {PublishingEvent}Handler;
@@ -462,11 +462,11 @@ expect(mockHandler.handle).toHaveBeenCalled();
 
 ## Common Mistakes to Avoid
 
-- **Importing from `@old-st/{publishing-domain}-domain`** — only import from `@old-st/contracts/{publishing-domain}`. The consumer never depends on the publisher's domain internals.
+- **Importing from `@mma/{publishing-domain}-domain`** — only import from `@mma/contracts/{publishing-domain}`. The consumer never depends on the publisher's domain internals.
 - **Modifying the publishing domain's event schemas from the consumer** — the publisher owns the event contract. If you need different fields, request a schema change in the publishing domain.
 - **Writing directly to the publishing domain's table** — handlers always write to the consuming domain's own repository. Cross-domain data stays denormalized.
 - **Adding consuming domain event types to the publishing domain's enum** — each domain defines its own event types. The consumer reacts to the publisher's events, not the other way around.
-- **Forgetting to add the contracts subpath dependency** — the consuming service's `tsconfig` must resolve `@old-st/contracts/{publishing-domain}`.
+- **Forgetting to add the contracts subpath dependency** — the consuming service's `tsconfig` must resolve `@mma/contracts/{publishing-domain}`.
 
 ---
 
@@ -482,12 +482,12 @@ expect(mockHandler.handle).toHaveBeenCalled();
         │ SqsEventPublisher                     │ SqsLocalService (local)
         │                                       │ Lambda trigger (AWS)
         ▼                                       ▼
-  @old-st/contracts/{publishingDomain}     @old-st/contracts/{publishingDomain}
+  @mma/contracts/{publishingDomain}     @mma/contracts/{publishingDomain}
   (event-schemas.ts)                       (same schemas — read only)
                                                 │
                                                 │ writes to
                                                 ▼
-                                       @old-st/{consumingDomain}-domain
+                                       @mma/{consumingDomain}-domain
                                        (own repository)
 ```
 

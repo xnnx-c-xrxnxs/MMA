@@ -7,7 +7,7 @@
  */
 
 export interface GeneratedHeaderOptions {
-  /** Generator name, e.g. `@old-st/nx-plugin:event-handler`. */
+  /** Generator name, e.g. `@mma/nx-plugin:event-handler`. */
   generator: string;
   /** Example regeneration command (single line). */
   command: string;

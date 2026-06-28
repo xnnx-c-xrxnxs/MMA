@@ -1,9 +1,9 @@
 ---
 name: mobile-ui-primitive
-description: Add a new shared UI component to the @old-st/mobile-ui package. Use this when creating a new React Native primitive (e.g. Dialog, Checkbox, Textarea, Tooltip) in packages/mobile-ui/src/components/. Covers the variant record pattern, theme token usage, StyleSheet.create, and barrel export.
+description: Add a new shared UI component to the @mma/mobile-ui package. Use this when creating a new React Native primitive (e.g. Dialog, Checkbox, Textarea, Tooltip) in packages/mobile-ui/src/components/. Covers the variant record pattern, theme token usage, StyleSheet.create, and barrel export.
 ---
 
-# Adding a UI Primitive to @old-st/mobile-ui
+# Adding a UI Primitive to @mma/mobile-ui
 
 Canonical references:
 - With variants: `packages/mobile-ui/src/components/badge.tsx`, `packages/mobile-ui/src/components/button.tsx`
@@ -25,7 +25,7 @@ Canonical references:
 
 ## Component Patterns
 
-The `@old-st/mobile-ui` package uses three component shapes. All use theme tokens from `lib/theme.ts` and `StyleSheet.create()`.
+The `@mma/mobile-ui` package uses three component shapes. All use theme tokens from `lib/theme.ts` and `StyleSheet.create()`.
 
 ### Pattern A — Component with Variant Records
 
@@ -207,7 +207,7 @@ All styling must use tokens from `packages/mobile-ui/src/lib/theme.ts`:
 - Never use raw color values (except `'transparent'` and shadow colors like `'#000'`).
 - Never use raw numbers for spacing, radius, or font size — always use the token objects.
 - Add new tokens to `theme.ts` if a component needs a semantic value not yet defined (e.g. a new color pair).
-- Color token names mirror the web Tailwind tokens from `@old-st/ui` to keep badge-variant maps consistent.
+- Color token names mirror the web Tailwind tokens from `@mma/ui` to keep badge-variant maps consistent.
 
 ---
 
@@ -225,13 +225,13 @@ export { {Component}, type {Component}Props, type {Component}Variant } from './c
 - Export the component function, props interface, and variant type (if Pattern A).
 - Compound components export all sub-components and their props.
 - Maintain logical grouping: theme first, then components in alphabetical order.
-- The barrel is the only public API — consumers import from `@old-st/mobile-ui`, never from individual files.
+- The barrel is the only public API — consumers import from `@mma/mobile-ui`, never from individual files.
 
 ---
 
-## Differences from @old-st/ui (Web)
+## Differences from @mma/ui (Web)
 
-| Aspect | `@old-st/ui` (web) | `@old-st/mobile-ui` (mobile) |
+| Aspect | `@mma/ui` (web) | `@mma/mobile-ui` (mobile) |
 |---|---|---|
 | Styling | Tailwind CSS + `cn()` + `cva()` | `StyleSheet.create()` + theme tokens |
 | Variants | `class-variance-authority` | `Record<Variant, StyleObject>` |
@@ -253,6 +253,6 @@ When adding a mobile equivalent of an existing web component:
 - **Using inline style objects** — always use `StyleSheet.create()`. Exception: one-off dynamic values like `{ color: v.textColor }`.
 - **Using raw color values** — always use `colors.*` from theme. Exception: `'transparent'` and shadow colors.
 - **Using `className` or Tailwind** — React Native uses the `style` prop, not CSS classes.
-- **Forgetting the barrel export** — components not exported from `index.ts` can't be imported via `@old-st/mobile-ui`.
+- **Forgetting the barrel export** — components not exported from `index.ts` can't be imported via `@mma/mobile-ui`.
 - **Missing `type` keyword on exported interfaces** — use `export type { ... }` or `export { type FooProps }` in the barrel.
 - **Nesting sub-components** — compound component parts must be top-level exports, not static properties.

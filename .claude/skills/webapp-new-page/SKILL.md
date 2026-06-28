@@ -45,7 +45,7 @@ File: `apps/webapp/src/lib/status-variants.ts`
 Add a variant mapper function for the new entity:
 
 ```typescript
-import { {Entity}StatusEnum } from '@old-st/contracts/{domain}';
+import { {Entity}StatusEnum } from '@mma/contracts/{domain}';
 
 export function {entity}StatusVariant(status: string): BadgeVariant {
   switch (status) {
@@ -59,7 +59,7 @@ export function {entity}StatusVariant(status: string): BadgeVariant {
 ```
 
 **Rules:**
-- Import the status enum from `@old-st/contracts/{domain}` — never hardcode string literals.
+- Import the status enum from `@mma/contracts/{domain}` — never hardcode string literals.
 - The function name follows `{entity}StatusVariant` (camelCase).
 - Return type is `BadgeVariant` (defined at the top of the file).
 - Always include a `default: return 'outline'` fallback.
@@ -75,7 +75,7 @@ Status enum values are SCREAMING_SNAKE_CASE on the wire (`PAST_DUE`, `VALIDATION
 
 ```typescript
 import { formatStatus } from '../format-status';
-import { {Entity}StatusEnum, type {Entity}Status } from '@old-st/contracts/{domain}';
+import { {Entity}StatusEnum, type {Entity}Status } from '@mma/contracts/{domain}';
 
 const {ENTITY}_STATUS_LABELS: Readonly<Record<{Entity}Status, string>> = {
   [{Entity}StatusEnum.ACTIVE]: 'Active',
@@ -101,7 +101,7 @@ export function format{Entity}Status(status: {Entity}Status): string {
 
 File: `apps/webapp/src/components/{domain}/{domain}-table.tsx`
 
-The table component receives the data array as a prop and renders it using `@old-st/ui` Table primitives.
+The table component receives the data array as a prop and renders it using `@mma/ui` Table primitives.
 
 ```typescript
 'use client';
@@ -109,11 +109,11 @@ The table component receives the data array as a prop and renders it using `@old
 import {
   Badge,
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@old-st/ui';
-import { format{Entity}Status } from '@old-st/client-common';
+} from '@mma/ui';
+import { format{Entity}Status } from '@mma/client-common';
 import { {entity}StatusVariant } from '@/lib/status-variants';
 import { {Entity}Actions } from './{entity}-actions';
-import type { {Entity}Response } from '@old-st/contracts/{domain}';
+import type { {Entity}Response } from '@mma/contracts/{domain}';
 
 export function {Entity}sTable({ {entity}s }: { {entity}s: {Entity}Response[] }) {
   return (
@@ -159,8 +159,8 @@ export function {Entity}sTable({ {entity}s }: { {entity}s: {Entity}Response[] })
 
 **Rules:**
 - Always add `'use client'` directive at the top.
-- Import UI primitives from `@old-st/ui` — never use raw HTML `<table>`.
-- Import types from `@old-st/contracts/{domain}`.
+- Import UI primitives from `@mma/ui` — never use raw HTML `<table>`.
+- Import types from `@mma/contracts/{domain}`.
 - Status columns use `<Badge variant={...}>` with the variant mapper from Step 2.
 - Date columns format with `toLocaleDateString()` and use `text-muted-foreground` class.
 - The `key` prop uses the entity's primary ID field.
@@ -177,10 +177,10 @@ The actions component renders context-sensitive buttons based on entity status.
 ```typescript
 'use client';
 
-import { Button } from '@old-st/ui';
-import { use{Action1}{Entity}, use{Action2}{Entity}, useDelete{Entity} } from '@old-st/client-common';
-import { {Entity}StatusEnum } from '@old-st/contracts/{domain}';
-import type { {Entity}Response } from '@old-st/contracts/{domain}';
+import { Button } from '@mma/ui';
+import { use{Action1}{Entity}, use{Action2}{Entity}, useDelete{Entity} } from '@mma/client-common';
+import { {Entity}StatusEnum } from '@mma/contracts/{domain}';
+import type { {Entity}Response } from '@mma/contracts/{domain}';
 
 export function {Entity}Actions({
   {entity},
@@ -218,7 +218,7 @@ export function {Entity}Actions({
 
 **Rules:**
 - Status comparisons use `{Entity}StatusEnum.VALUE` — never string literals.
-- Each action maps to a mutation hook from `@old-st/client-common`.
+- Each action maps to a mutation hook from `@mma/client-common`.
 - Destructive actions use `className="text-destructive"`.
 - Accept `variant?: 'list' | 'detail'` (default `'list'`): list uses `size="sm" variant="ghost"` for table row density; detail uses `size="default" variant="outline"` for a card context.
 - Conditionally render buttons based on status guards matching the domain entity's business rules.
@@ -245,9 +245,9 @@ import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
   Input, Select,
   toast,
-} from '@old-st/ui';
-import { useCreate{Entity} } from '@old-st/client-common';
-import { create{Entity}Schema, {ENTITY}_ROLES, type Create{Entity}Input } from '@old-st/contracts/{domain}';
+} from '@mma/ui';
+import { useCreate{Entity} } from '@mma/client-common';
+import { create{Entity}Schema, {ENTITY}_ROLES, type Create{Entity}Input } from '@mma/contracts/{domain}';
 
 export function Create{Entity}Form({ onClose }: { onClose: () => void }) {
   const create{Entity} = useCreate{Entity}();
@@ -327,7 +327,7 @@ export function Create{Entity}Form({ onClose }: { onClose: () => void }) {
 
 **Rules:**
 - **Never** use `useState` for form state — use `react-hook-form` + `zodResolver` always (Golden Rule #23a).
-- Schema comes from `@old-st/contracts/{domain}` — never define a form-specific Zod schema in the webapp.
+- Schema comes from `@mma/contracts/{domain}` — never define a form-specific Zod schema in the webapp.
 - Wrap all fields in `<FormField>` → `<FormItem>` → `<FormControl>` → `<FormMessage>` for automatic `aria-invalid` / `aria-describedby` wiring.
 - Always `<Form {...form}>` (spreads FormProvider context) wrapping the `<form>` element.
 - Toast `success` on create; toast `error` on catch — never `alert()`, never silent.
@@ -347,9 +347,9 @@ The page is a **thin orchestrator** (Golden Rule #19). It manages state and wire
 
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
-import { Button, Select } from '@old-st/ui';
-import { use{Entity}sByStatus } from '@old-st/client-common';
-import { {ENTITY}_STATUSES } from '@old-st/contracts/{domain}';
+import { Button, Select } from '@mma/ui';
+import { use{Entity}sByStatus } from '@mma/client-common';
+import { {ENTITY}_STATUSES } from '@mma/contracts/{domain}';
 import { Create{Entity}Form } from '@/components/{domain}/create-{entity}-form';
 import { {Entity}sTable } from '@/components/{domain}/{domain}-table';
 
@@ -439,7 +439,7 @@ A detail page is where users drill into a single entity. Follow the same thin-or
 
 import { use } from 'react';
 import { Header } from '@/components/layout/header';
-import { use{Entity} } from '@old-st/client-common';
+import { use{Entity} } from '@mma/client-common';
 import { {Entity}DetailsCard } from '@/components/{domain}/{entity}-details-card';
 import { {Entity}Actions } from '@/components/{domain}/{entity}-actions';
 
@@ -474,11 +474,11 @@ The details card shows a read view, optionally with inline edit fields using RHF
 ```typescript
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@old-st/ui';
-import { format{Entity}Status } from '@old-st/client-common';
+import { Card, CardContent, CardHeader, CardTitle } from '@mma/ui';
+import { format{Entity}Status } from '@mma/client-common';
 import { {entity}StatusVariant } from '@/lib/status-variants';
-import { Badge } from '@old-st/ui';
-import type { {Entity}Response } from '@old-st/contracts/{domain}';
+import { Badge } from '@mma/ui';
+import type { {Entity}Response } from '@mma/contracts/{domain}';
 
 export function {Entity}DetailsCard({ {entity} }: { {entity}: {Entity}Response }) {
   return (
@@ -553,12 +553,12 @@ const { data } = use{Entity}sByStatus({ {entity}Status: status, page });
 ## Common Mistakes to Avoid
 
 - **Putting table/form markup in the page** — the page is a thin orchestrator. All markup lives in domain components.
-- **Using raw HTML `<table>` or `<button>`** — always use `@old-st/ui` primitives.
+- **Using raw HTML `<table>` or `<button>`** — always use `@mma/ui` primitives.
 - **Using `useState` for form state** — always use `react-hook-form` + `zodResolver` (Golden Rule #23a). `useState` forms bypass Zod validation, ARIA wiring, and toast feedback.
 - **Using raw `<label>`** — always use `<FormLabel>` inside `<FormField>` (Golden Rule #21).
-- **Hardcoding status strings** — always use `{Entity}StatusEnum.VALUE` from `@old-st/contracts/{domain}`.
+- **Hardcoding status strings** — always use `{Entity}StatusEnum.VALUE` from `@mma/contracts/{domain}`.
 - **Hardcoding palette colors** — use semantic tokens (`text-success-text`, `text-destructive`) never `text-green-600` etc. (Golden Rule #23j).
-- **Calling `fetch()` directly** — always use React Query hooks from `@old-st/client-common`.
+- **Calling `fetch()` directly** — always use React Query hooks from `@mma/client-common`.
 - **Forgetting `'use client'`** — pages and components that use hooks or state must be client components.
 - **Forgetting to add the page to the sidebar** — check `sidebar.tsx` after creating a new page route.
 - **Mixing pagination styles** — DynamoDB domains use cursor-based; Prisma domains use offset-based. Check which your domain uses.

@@ -44,7 +44,7 @@ This file is automatically loaded when working on any file inside `apps/files/`.
 
 ---
 
-## S3FileStorage (from `@old-st/aws-s3`)
+## S3FileStorage (from `@mma/aws-s3`)
 
 **Package:** `packages/aws/aws-s3/src/s3-file-storage.ts`
 

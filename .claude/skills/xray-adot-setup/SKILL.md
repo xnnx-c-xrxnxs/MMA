@@ -5,7 +5,7 @@ description: Configure or troubleshoot AWS X-Ray distributed tracing for backend
 
 # X-Ray Tracing Setup
 
-Backend services in this template emit OpenTelemetry spans via the `@old-st/telemetry` package. In **deployed** environments, the spans flow to **AWS X-Ray** (no separate ADOT layer required — the OTel SDK exports directly via the X-Ray exporter).
+Backend services in this template emit OpenTelemetry spans via the `@mma/telemetry` package. In **deployed** environments, the spans flow to **AWS X-Ray** (no separate ADOT layer required — the OTel SDK exports directly via the X-Ray exporter).
 
 This skill covers:
 - Verifying tracing is enabled on a Lambda
@@ -26,7 +26,7 @@ Canonical references:
 In the service's `main.ts`:
 
 ```ts
-import { initTelemetry } from '@old-st/telemetry';
+import { initTelemetry } from '@mma/telemetry';
 
 initTelemetry('my-api-service');   // MUST be called BEFORE NestFactory.create()
 
@@ -118,11 +118,11 @@ The subsegment appears nested under the auto-generated request span in the X-Ray
 
 X-Ray does not auto-propagate trace context across SQS messages — the OTel SDK does, via `MessageAttributes`.
 
-The `@old-st/telemetry` package handles this automatically when you use the SQS publishers in `@old-st/aws-sqs`:
+The `@mma/telemetry` package handles this automatically when you use the SQS publishers in `@mma/aws-sqs`:
 
 ```ts
 // Publisher (HTTP service)
-import { SqsFifoEventPublisher } from '@old-st/aws-sqs';
+import { SqsFifoEventPublisher } from '@mma/aws-sqs';
 
 await this.publisher.publish('user-events', userCreatedEvent, { groupId: userId });
 // ↑ SqsFifoEventPublisher internally calls injectTraceContext()
@@ -131,7 +131,7 @@ await this.publisher.publish('user-events', userCreatedEvent, { groupId: userId 
 
 ```ts
 // Consumer (event-handler service)
-import { extractTraceContext, runWithCorrelationId } from '@old-st/telemetry';
+import { extractTraceContext, runWithCorrelationId } from '@mma/telemetry';
 
 async handle(record: SQSRecord) {
   const ctx = extractTraceContext(record.messageAttributes);

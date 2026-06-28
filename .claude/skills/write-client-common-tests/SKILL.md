@@ -1,6 +1,6 @@
 ---
 name: write-client-common-tests
-description: Write unit tests for the shared data-access layer (@old-st/client-common) including API clients, React Query hooks, error classes, and configuration. Use this when adding tests for new or existing code in packages/client-common/.
+description: Write unit tests for the shared data-access layer (@mma/client-common) including API clients, React Query hooks, error classes, and configuration. Use this when adding tests for new or existing code in packages/client-common/.
 ---
 
 # Writing client-common Tests

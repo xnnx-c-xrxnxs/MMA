@@ -237,7 +237,7 @@ flowchart TD
 
       <h3>Cross-Domain</h3>
       <ol start="13">
-        <li><strong>Never import from the bare <code>@old-st/contracts</code> root.</strong> Always use domain-scoped subpath imports: <code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc.</li>
+        <li><strong>Never import from the bare <code>@mma/contracts</code> root.</strong> Always use domain-scoped subpath imports: <code>@mma/contracts/user</code>, <code>@mma/contracts/order</code>, etc.</li>
         <li><strong>Synchronous cross-service calls must use an ACL.</strong> The consuming domain defines an abstract validator interface; the infrastructure layer provides the HTTP adapter.</li>
         <li><strong>Cross-domain event consumers import from the publishing domain's contracts only</strong> — never from its domain package.</li>
       </ol>

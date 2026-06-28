@@ -21,7 +21,7 @@ packages/{domain}-domain/src/infrastructure/repositories/prisma-{entity}.reposit
 
 ```typescript
 import { PrismaClient, {Entity} as Prisma{Entity} } from '../generated/client';
-import { IOffsetPaginatedResponse, createOffsetPaginatedResponse } from '@old-st/common';
+import { IOffsetPaginatedResponse, createOffsetPaginatedResponse } from '@mma/common';
 import { I{Entity}Repository } from '../../application/interfaces/{entity}-repository.interface';
 import { {Entity} } from '../../domain/entities/{entity}.entity';
 import { {Entity}Status } from '../../domain/constants';
@@ -35,7 +35,7 @@ export class Prisma{Entity}Repository implements I{Entity}Repository {
 
 **Rules:**
 - Import `PrismaClient` and Prisma model types from the generated client (`../generated/client`).
-- Import `IOffsetPaginatedResponse` and `createOffsetPaginatedResponse` from `@old-st/common`.
+- Import `IOffsetPaginatedResponse` and `createOffsetPaginatedResponse` from `@mma/common`.
 - The constructor takes a `PrismaClient` — never create it internally.
 - Never import `@prisma/client` directly in the repository. Always import from the domain's generated client path.
 
@@ -168,7 +168,7 @@ async listByStatus(
 - `skip = (page - 1) * limit` converts 1-based page to 0-based offset.
 - `take = limit` controls page size.
 - Always provide `orderBy` for deterministic ordering (typically `dateCreated: 'desc'`).
-- Use `createOffsetPaginatedResponse()` from `@old-st/common` — it calculates `totalPages` automatically.
+- Use `createOffsetPaginatedResponse()` from `@mma/common` — it calculates `totalPages` automatically.
 
 ---
 
@@ -387,7 +387,7 @@ private toDomain(
 | Total count | Not available (DynamoDB has no count) | `prisma.{model}.count()` in parallel |
 | GSI/index management | Schema-level GSI definitions + LocalStack setup | `@@index` annotations + `prisma migrate` |
 | Delete | Manual cascade (delete all partition items) | Automatic via `onDelete: Cascade` |
-| Import source | `'dynamodb-onetable'` + `@old-st/dynamodb-onetable` | `'../generated/client'` |
+| Import source | `'dynamodb-onetable'` + `@mma/dynamodb-onetable` | `'../generated/client'` |
 
 ---
 

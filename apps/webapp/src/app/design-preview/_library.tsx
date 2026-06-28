@@ -7,7 +7,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
   FolderIcon,
-} from '@old-st/ui';
+} from '@mma/ui';
 import { PreviewSection, PreviewCell, UnmappedItem } from './_shell';
 import manifestJson from './figma-library-manifest.json';
 
@@ -71,7 +71,7 @@ export function FullLibrary() {
         <EmptyStateDescription>
           Run the <code>/figma-import</code> workflow (see{' '}
           <a
-            href="https://github.com/Old-St-Labs/old-st-template/blob/main/.claude/commands/figma-import.md"
+            href="https://github.com/xnnx-c-xrxnxs/mma/blob/main/.claude/commands/figma-import.md"
             className="underline"
           >
             .claude/commands/figma-import.md

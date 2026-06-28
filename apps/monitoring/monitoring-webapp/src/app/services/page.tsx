@@ -11,7 +11,7 @@ import type {
   LambdaVersionInfo,
   QueueAttributes,
   ServiceGraph,
-} from '@old-st/monitoring-sdk';
+} from '@mma/monitoring-sdk';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -1353,7 +1353,7 @@ function ServicesContent() {
   // Build DLQ depth map: queue name -> message count
   const dlqMap = new Map<string, number>();
   for (const dlq of dlqs) {
-    // Map DLQ to its source queue's function (e.g. "old-st-dev-user-events-dlq" -> "user-event-handler")
+    // Map DLQ to its source queue's function (e.g. "mma-dev-user-events-dlq" -> "user-event-handler")
     dlqMap.set(dlq.queueName, dlq.approximateNumberOfMessages);
   }
 

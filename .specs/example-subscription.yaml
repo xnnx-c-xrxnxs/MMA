@@ -70,7 +70,7 @@ businessRules:
   - "priceCents > 0 for any non-CANCELLED subscription"
 
 # Intra-domain events — published to subscription-events SQS queue.
-# Cross-domain consumers (billing, notifications) subscribe via @old-st/contracts/subscription.
+# Cross-domain consumers (billing, notifications) subscribe via @mma/contracts/subscription.
 events:
   - SUBSCRIPTION_CREATED
   - SUBSCRIPTION_ACTIVATED

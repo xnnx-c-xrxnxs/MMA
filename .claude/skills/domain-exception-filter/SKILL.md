@@ -36,10 +36,10 @@ import {
   {Entity}NotFoundError,
   {Entity}AlreadyExistsError,
   Invalid{Entity}StatusTransitionError,
-} from '@old-st/{domain}-domain';
+} from '@mma/{domain}-domain';
 import {
   InvalidInputError,
-} from '@old-st/{domain}-domain';  // application-layer exceptions
+} from '@mma/{domain}-domain';  // application-layer exceptions
 
 // ─── Error map ────────────────────────────────────────────────────────────────
 // Each tuple: [ErrorConstructor, httpStatusCode]
@@ -238,7 +238,7 @@ const DOMAIN_ERROR_MAP: Array<[ErrorConstructor, number]> = [
 ];
 ```
 
-**Rule:** ACL exceptions are imported from the **consuming domain's** domain package (`@old-st/{consuming-domain}-domain`), not from the upstream service. The ACL adapter maps HTTP errors to these domain exceptions — see the `sync-cross-service-call` skill.
+**Rule:** ACL exceptions are imported from the **consuming domain's** domain package (`@mma/{consuming-domain}-domain`), not from the upstream service. The ACL adapter maps HTTP errors to these domain exceptions — see the `sync-cross-service-call` skill.
 
 ### Standardized Error Response Shape
 
@@ -268,7 +268,7 @@ When a new domain or application exception is created, update the filter in thre
 
 **Step 1** — Import the new exception class:
 ```typescript
-import { NewDomainError } from '@old-st/{domain}-domain';
+import { NewDomainError } from '@mma/{domain}-domain';
 ```
 
 **Step 2** — Append it to `DOMAIN_ERROR_MAP` with the correct HTTP status:

@@ -189,11 +189,11 @@ export default async function domainGenerator(
   // ── Workspace updates (skipped on dry-run) ────────────────────────────
   if (!schema.dryRun) {
     addPathAliases(tree, {
-      [`@old-st/${ctx.domain.kebab}-domain`]: `packages/${ctx.domain.kebab}-domain/src/index.ts`,
-      [`@old-st/${ctx.domain.kebab}-domain/infrastructure`]: `packages/${ctx.domain.kebab}-domain/src/infrastructure/index.ts`,
+      [`@mma/${ctx.domain.kebab}-domain`]: `packages/${ctx.domain.kebab}-domain/src/index.ts`,
+      [`@mma/${ctx.domain.kebab}-domain/infrastructure`]: `packages/${ctx.domain.kebab}-domain/src/infrastructure/index.ts`,
       ...(schema.withContracts ?? true
         ? {
-            [`@old-st/contracts/${ctx.domain.kebab}`]: `packages/contracts/${ctx.domain.kebab}/src/index.ts`,
+            [`@mma/contracts/${ctx.domain.kebab}`]: `packages/contracts/${ctx.domain.kebab}/src/index.ts`,
           }
         : {}),
     });
@@ -274,13 +274,13 @@ export default async function domainGenerator(
 
   if (schema.dryRun) {
     logger.info(
-      `\n[@old-st/nx-plugin:domain] DRY RUN — would write ${writes.length} files:\n` +
+      `\n[@mma/nx-plugin:domain] DRY RUN — would write ${writes.length} files:\n` +
         writes.map((p) => `  • ${p}`).join('\n') +
         '\n',
     );
   } else {
     logger.info(
-      `\n[@old-st/nx-plugin:domain] Generated ${ctx.domain.kebab} domain (${writes.length} files)\n` +
+      `\n[@mma/nx-plugin:domain] Generated ${ctx.domain.kebab} domain (${writes.length} files)\n` +
         `  → packages/${ctx.domain.kebab}-domain/\n` +
         ((schema.withContracts ?? true) ? `  → packages/contracts/${ctx.domain.kebab}/\n` : '') +
         ((schema.withService ?? true) ? `  → apps/${ctx.domain.kebab}/${ctx.domain.kebab}-api-service/\n` : '') +
@@ -301,7 +301,7 @@ const renderTodoMd = (
   withService: boolean,
 ): string => `# TODO — ${ctx.domain.pascal} domain
 
-This domain was scaffolded by \`@old-st/nx-plugin:domain\`. The skeleton is
+This domain was scaffolded by \`@mma/nx-plugin:domain\`. The skeleton is
 runnable but intentionally minimal. Complete the steps below to deliver
 production-ready code.
 

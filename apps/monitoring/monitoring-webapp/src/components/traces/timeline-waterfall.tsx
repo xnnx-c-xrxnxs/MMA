@@ -1,5 +1,5 @@
 'use client';
-import type { JourneySegment } from '@old-st/monitoring-sdk';
+import type { JourneySegment } from '@mma/monitoring-sdk';
 
 interface TimelineWaterfallProps {
   segments: JourneySegment[];
@@ -42,7 +42,7 @@ function flattenSegments(
 }
 
 function shortName(name: string): string {
-  // Strip environment prefix: {project}-{env}- (e.g. old-st-dev-)
+  // Strip environment prefix: {project}-{env}- (e.g. mma-dev-)
   return name.replace(/^.*?-(dev|staging|prod|preview)-/, '');
 }
 

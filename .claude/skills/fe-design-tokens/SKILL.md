@@ -127,11 +127,11 @@ Storybook, RSC payloads outside the layout, and any place without `next/font` ge
 
 ### Mobile (React Native)
 
-`@old-st/mobile-ui` re-exports `lightColors`, `darkColors`, `spacing`, `radii`, `fontSizes` from `@old-st/ui` so mobile primitives consume the exact same token names. Switch palette via `useColorScheme()`:
+`@mma/mobile-ui` re-exports `lightColors`, `darkColors`, `spacing`, `radii`, `fontSizes` from `@mma/ui` so mobile primitives consume the exact same token names. Switch palette via `useColorScheme()`:
 
 ```tsx
 import { useColorScheme } from 'react-native';
-import { lightColors, darkColors } from '@old-st/mobile-ui';
+import { lightColors, darkColors } from '@mma/mobile-ui';
 
 const palette = useColorScheme() === 'dark' ? darkColors : lightColors;
 ```

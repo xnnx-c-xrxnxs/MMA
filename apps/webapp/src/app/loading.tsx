@@ -1,4 +1,4 @@
-import { Skeleton } from '@old-st/ui';
+import { Skeleton } from '@mma/ui';
 
 /**
  * Default loading UI shown while a route segment is fetching.

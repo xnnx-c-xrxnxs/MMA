@@ -1,5 +1,5 @@
 'use client';
-import type { ServiceParticipant, JourneySegment } from '@old-st/monitoring-sdk';
+import type { ServiceParticipant, JourneySegment } from '@mma/monitoring-sdk';
 
 interface ServiceFlowDiagramProps {
   services: ServiceParticipant[];
@@ -66,7 +66,7 @@ function formatDuration(ms: number): string {
 }
 
 function shortServiceName(name: string): string {
-  // Strip environment prefix: {project}-{env}- (e.g. old-st-dev-)
+  // Strip environment prefix: {project}-{env}- (e.g. mma-dev-)
   return name.replace(/^.*?-(dev|staging|prod|preview)-/, '');
 }
 

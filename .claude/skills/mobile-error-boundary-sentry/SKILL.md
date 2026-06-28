@@ -13,7 +13,7 @@ The mobile app uses `@sentry/react-native` for crash and error reporting. Initia
 |---|---|---|
 | Native | `Sentry.init()` in `_layout.tsx` | Native crashes, unhandled JS rejections, performance traces |
 | Root | `Sentry.wrap(RootLayout)` | Render errors anywhere in the tree, fatal JS errors |
-| Per-screen | `<ErrorBoundary>` from `@old-st/mobile-ui` | Recoverable render errors with retry UI |
+| Per-screen | `<ErrorBoundary>` from `@mma/mobile-ui` | Recoverable render errors with retry UI |
 
 ## When to Read This Skill
 
@@ -54,7 +54,7 @@ EAS Build runs the Sentry post-build hook automatically when `@sentry/react-nati
 
 Wrap any screen tree that does heavy data manipulation:
 ```tsx
-import { ErrorBoundary } from '@old-st/mobile-ui';
+import { ErrorBoundary } from '@mma/mobile-ui';
 
 export default function OrdersScreen() {
   return (

@@ -1,13 +1,13 @@
 'use client';
 
-import { useAuth } from '@old-st/client-common';
-import { signInRequestSchema, type SignInRequest } from '@old-st/contracts/auth';
+import { useAuth } from '@mma/client-common';
+import { signInRequestSchema, type SignInRequest } from '@mma/contracts/auth';
 import {
   Button,
   StructuredForm,
   toast,
   type FormStructure
-} from '@old-st/ui';
+} from '@mma/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

@@ -1,5 +1,5 @@
-import { S3FileStorage, PresignedUploadResult, PresignedDownloadResult, CloudFrontUrlSigner } from '@old-st/aws-s3';
-import { createLogger } from '@old-st/telemetry';
+import { S3FileStorage, PresignedUploadResult, PresignedDownloadResult, CloudFrontUrlSigner } from '@mma/aws-s3';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('file-api-service');
 

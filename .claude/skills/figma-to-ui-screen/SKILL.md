@@ -1,13 +1,13 @@
 ---
 name: figma-to-ui-screen
-description: Convert a full Figma screen / page (e.g. Dashboard, Project Detail, Settings) into a Next.js page in apps/webapp/. Decomposes the screen into sections, identifies which @old-st/ui primitives are needed, distinguishes existing vs new primitives, then composes the page using the thin-orchestrator pattern. Use this when the user pastes a Figma URL pointing to a page-level frame (not a single component).
+description: Convert a full Figma screen / page (e.g. Dashboard, Project Detail, Settings) into a Next.js page in apps/webapp/. Decomposes the screen into sections, identifies which @mma/ui primitives are needed, distinguishes existing vs new primitives, then composes the page using the thin-orchestrator pattern. Use this when the user pastes a Figma URL pointing to a page-level frame (not a single component).
 ---
 
 # Figma Screen → Next.js Page
 
 This skill handles **screens** (compositions of many primitives). For a **single primitive**, use `figma-to-ui-component` instead.
 
-> **Hard rule:** A screen is composed of primitives from `@old-st/ui`. If you find yourself writing `<button>`, `<input>`, `<table>` directly in a page, stop — the primitive is missing and must be added first via `figma-to-ui-component`.
+> **Hard rule:** A screen is composed of primitives from `@mma/ui`. If you find yourself writing `<button>`, `<input>`, `<table>` directly in a page, stop — the primitive is missing and must be added first via `figma-to-ui-component`.
 
 ---
 
@@ -30,7 +30,7 @@ This skill handles **screens** (compositions of many primitives). For a **single
 3. **Route path?** (e.g. `/dashboard`, `/projects/[projectId]`, `/reports`)
 4. **Protected or public route?** (almost always protected — goes under `apps/webapp/src/app/(protected)/`)
 5. **What domain(s) does this screen pull data from?** (e.g. "users + orders" — drives which hooks we'll need)
-6. **Are the data hooks already in `@old-st/client-common`?** (if not, chain into `webapp-api-client-hooks` first)
+6. **Are the data hooks already in `@mma/client-common`?** (if not, chain into `webapp-api-client-hooks` first)
 7. **Should it appear in the sidebar?** (default yes — drives sidebar wiring)
 8. **Mobile mirror?** (default **no** for screens — mobile usually has its own simpler screen patterns; chain into `mobile-new-screen` only if explicitly requested)
 
@@ -66,12 +66,12 @@ Produce a **screen breakdown table** as your first output to the user. Format:
 | Sidebar item: "Dashboard" | NavLink in sidebar | (existing layout) | ✅ Existing | — |
 
 **Primitives summary:**
-- ✅ Already in `@old-st/ui`: Card, Input, Button, Badge
+- ✅ Already in `@mma/ui`: Card, Input, Button, Badge
 - ❌ New primitives to build first: `StatCard`, `EntryRow`
 - ⚠️ Existing primitive needs extension: `Button` (add `icon-only` variant if not present)
 
 **Hooks summary:**
-- ✅ Already in `@old-st/client-common`: (none yet)
+- ✅ Already in `@mma/client-common`: (none yet)
 - ❌ New hooks to build first: `useTodayStats`, `useActiveTimer`, `useRecentEntries`
 ```
 
@@ -87,11 +87,11 @@ For every primitive marked `❌ NEW` or `⚠️ EXTEND`:
 2. Apply the `figma-to-ui-component` skill — find the equivalent in Untitled UI (or design from scratch if it's a Time Tracker–specific component like `StatCard`), build the primitive, mirror to mobile if applicable, wire the barrel.
 3. Confirm the primitive exists and tests pass before returning.
 
-**Do NOT start composing the screen until every required primitive is in `@old-st/ui`.** This is the single rule that prevents the "raw HTML soup in a page file" anti-pattern.
+**Do NOT start composing the screen until every required primitive is in `@mma/ui`.** This is the single rule that prevents the "raw HTML soup in a page file" anti-pattern.
 
-If a primitive is genuinely one-off (used only on this screen, conceptually inseparable from the screen — e.g. a `DashboardActiveTimer` panel that combines Card + Input + Button in a screen-specific way), then it lives as a **domain component** in `apps/webapp/src/components/{domain}/`, NOT in `@old-st/ui`. Distinguish:
+If a primitive is genuinely one-off (used only on this screen, conceptually inseparable from the screen — e.g. a `DashboardActiveTimer` panel that combines Card + Input + Button in a screen-specific way), then it lives as a **domain component** in `apps/webapp/src/components/{domain}/`, NOT in `@mma/ui`. Distinguish:
 
-| | Goes in `@old-st/ui` | Goes in `apps/webapp/src/components/{domain}/` |
+| | Goes in `@mma/ui` | Goes in `apps/webapp/src/components/{domain}/` |
 |---|---|---|
 | Reusable across screens | ✓ | |
 | Generic (no domain coupling) | ✓ | |
@@ -99,7 +99,7 @@ If a primitive is genuinely one-off (used only on this screen, conceptually inse
 | Talks to a specific hook / mutation | | ✓ |
 | Purely visual, no data-fetching | ✓ | |
 
-Example: `StatCard` (label + number + trend) → `@old-st/ui`. `ActiveTimerPanel` (uses `useActiveTimer()`, calls start/stop mutations) → `apps/webapp/src/components/timer/`.
+Example: `StatCard` (label + number + trend) → `@mma/ui`. `ActiveTimerPanel` (uses `useActiveTimer()`, calls start/stop mutations) → `apps/webapp/src/components/timer/`.
 
 ---
 
@@ -124,9 +124,9 @@ File: `apps/webapp/src/app/(protected)/{route}/page.tsx`
 ```tsx
 'use client';
 
-import { useTodayStats, useActiveTimer, useRecentEntries } from '@old-st/client-common';
-import { Card, CardHeader, CardTitle, CardContent } from '@old-st/ui';
-import { StatCard } from '@old-st/ui';
+import { useTodayStats, useActiveTimer, useRecentEntries } from '@mma/client-common';
+import { Card, CardHeader, CardTitle, CardContent } from '@mma/ui';
+import { StatCard } from '@mma/ui';
 import { ActiveTimerPanel } from '@/components/timer/active-timer-panel';
 import { RecentEntriesList } from '@/components/timer/recent-entries-list';
 
@@ -203,8 +203,8 @@ If the screen should appear in the sidebar (default yes):
 
 ## Phase 9 — Commit-ready checklist
 
-- [ ] All primitives used by the page exist in `@old-st/ui` (no inline `<button>`, `<input>`, `<table>`)
-- [ ] All data fetching goes through `@old-st/client-common` hooks (no `fetch` in page or component files)
+- [ ] All primitives used by the page exist in `@mma/ui` (no inline `<button>`, `<input>`, `<table>`)
+- [ ] All data fetching goes through `@mma/client-common` hooks (no `fetch` in page or component files)
 - [ ] Page is a thin orchestrator (no table/form markup inline)
 - [ ] `loading.tsx` + `error.tsx` exist for the segment
 - [ ] Sidebar nav entry added (if user-facing)
@@ -231,11 +231,11 @@ Sections (top to bottom):
 Primitives needed:
 | Primitive | Status | Source |
 |---|---|---|
-| Card, CardHeader, CardTitle, CardContent | ✅ exists | @old-st/ui |
-| Button | ✅ exists | @old-st/ui |
-| Badge | ✅ exists | @old-st/ui |
-| Input | ✅ exists | @old-st/ui |
-| Skeleton | ✅ exists | @old-st/ui |
+| Card, CardHeader, CardTitle, CardContent | ✅ exists | @mma/ui |
+| Button | ✅ exists | @mma/ui |
+| Badge | ✅ exists | @mma/ui |
+| Input | ✅ exists | @mma/ui |
+| Skeleton | ✅ exists | @mma/ui |
 | StatCard | ❌ NEW | build via figma-to-ui-component |
 | TimerDisplay | ❌ NEW | build via figma-to-ui-component (HH:MM:SS monospace + variants) |
 
@@ -265,8 +265,8 @@ This output, presented to the user as the FIRST response after Phase 1, is the m
 - Inline `fetch()` in the page file.
 - Raw `<button>`, `<input>`, `<table>` in the page or domain components.
 - Using `<Card>` to wrap everything just because Figma shows a panel — Card is for genuinely card-shaped surfaces, not for "a section that needs padding".
-- Adding domain-specific components to `@old-st/ui` (`UserListRow`, `OrderStatusPill` — these go in `apps/webapp/src/components/{domain}/`).
-- Adding screen-generic components to `apps/webapp/src/components/{domain}/` (`StatCard`, `KpiNumber` — these go in `@old-st/ui`).
+- Adding domain-specific components to `@mma/ui` (`UserListRow`, `OrderStatusPill` — these go in `apps/webapp/src/components/{domain}/`).
+- Adding screen-generic components to `apps/webapp/src/components/{domain}/` (`StatCard`, `KpiNumber` — these go in `@mma/ui`).
 - Skipping Phase 2 (decomposition) and going straight to coding.
 - Skipping Phase 3 (build missing primitives first) — leads to inline soup.
 - Forgetting `loading.tsx` / `error.tsx`.

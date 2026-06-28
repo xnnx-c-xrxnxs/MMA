@@ -27,7 +27,7 @@ This file loads automatically for any file inside `packages/client-common/`. The
 
 3. **All requests use `credentials: 'include'`** so the browser sends the httpOnly refresh cookie. The base client sets this automatically; do not override.
 
-4. **Import contract types from domain-scoped subpaths only.** Use `@old-st/contracts/{domain}` — never the bare `@old-st/contracts` root (Golden Rule #11).
+4. **Import contract types from domain-scoped subpaths only.** Use `@mma/contracts/{domain}` — never the bare `@mma/contracts` root (Golden Rule #11).
 
 5. **Query key conventions:**
    - List: `['{domain}', 'list', filters]`

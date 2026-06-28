@@ -1,5 +1,5 @@
 /**
- * @old-st/ui — icon set
+ * @mma/ui — icon set
  *
  * Every icon implements the shared `IIcon` interface (size, color, className).
  * Strokes/fills default to `currentColor` so an icon inherits the surrounding
@@ -7,7 +7,7 @@
  * `text-destructive`, etc.). Dark mode is automatic.
  *
  * Usage:
- *   import { ClockIcon, PlayIcon } from '@old-st/ui';
+ *   import { ClockIcon, PlayIcon } from '@mma/ui';
  *   <button className="text-brand"><ClockIcon size={20} /></button>
  *
  * Adding an icon:

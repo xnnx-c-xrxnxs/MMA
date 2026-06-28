@@ -24,13 +24,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@old-st/common": ["../../packages/common/src/index.ts"],
-      "@old-st/contracts/common": ["../../packages/contracts/common/src/index.ts"],
-      "@old-st/contracts/auth": ["../../packages/contracts/auth/src/index.ts"],
-      "@old-st/ui": ["../../packages/ui/src/index.ts"],
-      "@old-st/client-common": ["../../packages/client-common/src/index.ts"],
-      "@old-st/client-common/infrastructure": ["../../packages/client-common/src/infrastructure/index.ts"],
-      "@old-st/client-common/hooks": ["../../packages/client-common/src/hooks/index.ts"]
+      "@mma/common": ["../../packages/common/src/index.ts"],
+      "@mma/contracts/common": ["../../packages/contracts/common/src/index.ts"],
+      "@mma/contracts/auth": ["../../packages/contracts/auth/src/index.ts"],
+      "@mma/ui": ["../../packages/ui/src/index.ts"],
+      "@mma/client-common": ["../../packages/client-common/src/index.ts"],
+      "@mma/client-common/infrastructure": ["../../packages/client-common/src/infrastructure/index.ts"],
+      "@mma/client-common/hooks": ["../../packages/client-common/src/hooks/index.ts"]
     }
   },
   "references": [{ "path": "./tsconfig.spec.json" }],

@@ -2,7 +2,7 @@
 /**
  * init-project.mjs — One-shot template bootstrap.
  *
- * Renames the @old-st/ scope, the "old-st-template" project name, removes the
+ * Renames the @mma/ scope, the "mma" project name, removes the
  * examples/ directory (unless --keep-examples), optionally `git init`s, then
  * SELF-DELETES along with the migration paper trail.
  *
@@ -14,8 +14,8 @@
  * Flags:
  *   --scope=@acme            (required) New npm scope. Must start with '@'.
  *   --name=acme-platform     (required) New project name. Lowercase, kebab-case.
- *   --org=Acme-Inc           (optional) GitHub org/user. Replaces "Old-St-Labs" in URLs/configs.
- *   --owner=@acme/platform   (optional) Replaces @Old-St-Labs/senior-devs in CODEOWNERS.
+ *   --org=Acme-Inc           (optional) GitHub org/user. Replaces "xnnx-c-xrxnxs" in URLs/configs.
+ *   --owner=@acme/platform   (optional) Replaces @xnnx-c-xrxnxs/senior-devs in CODEOWNERS.
  *   --display-name="Acme"    (optional) Human-readable name for UI strings (default: --name).
  *   --keep-examples          Keep examples/ directory (default: removes it).
  *   --no-git-init            Skip `git init` (default: runs it).
@@ -128,21 +128,21 @@ function buildReplacements(args) {
   const newScope = args.scope.replace(/^@/, ''); // 'acme'
   const reps = [
     // Order matters: more specific patterns first.
-    { pattern: /@old-st\//g, replacement: `@${newScope}/`, label: '@old-st/ scope' },
+    { pattern: /@mma\//g, replacement: `@${newScope}/`, label: '@mma/ scope' },
     // Project-name URLs/strings (broad scan — catches issue templates, docs, terraform tfvars)
-    { pattern: /old-st-template/g, replacement: args.name, label: 'old-st-template name' },
+    { pattern: /mma/g, replacement: args.name, label: 'mma name' },
     // Display-name rewrites (UI strings shown to end users)
-    { pattern: /Welcome to Old ST Admin/g, replacement: `Welcome to ${args.displayName} Admin`, label: 'webapp dashboard title' },
-    { pattern: /Welcome to Old ST Mobile/g, replacement: `Welcome to ${args.displayName} Mobile`, label: 'mobile dashboard title' },
+    { pattern: /Welcome to Mma Admin/g, replacement: `Welcome to ${args.displayName} Admin`, label: 'webapp dashboard title' },
+    { pattern: /Welcome to Mma Mobile/g, replacement: `Welcome to ${args.displayName} Mobile`, label: 'mobile dashboard title' },
   ];
   if (args.org) {
-    // Rewrite the GitHub org/user name. Done last so it doesn't mangle @Old-St-Labs/team
+    // Rewrite the GitHub org/user name. Done last so it doesn't mangle @xnnx-c-xrxnxs/team
     // refs (which the CODEOWNERS pass handles via --owner).
-    reps.push({ pattern: /Old-St-Labs/g, replacement: args.org, label: 'GitHub org name' });
+    reps.push({ pattern: /xnnx-c-xrxnxs/g, replacement: args.org, label: 'GitHub org name' });
   }
-  // Bare "old-st" (lowercase) — used in terraform project_name. Done LAST so it doesn't
-  // collide with "old-st-template" or "old-st-labs" handled above.
-  reps.push({ pattern: /\bold-st\b/g, replacement: args.name, label: 'bare old-st token' });
+  // Bare "mma" (lowercase) — used in terraform project_name. Done LAST so it doesn't
+  // collide with "mma" or "mma-labs" handled above.
+  reps.push({ pattern: /\bold-st\b/g, replacement: args.name, label: 'bare mma token' });
   return reps;
 }
 
@@ -167,12 +167,12 @@ function applyReplacementsToFile(path, replacements, args) {
 // ─── Project-name surfaces — package.json gets extra handling ──────────────
 function renameNameSurfaces(args) {
   const replaced = [];
-  // package.json: rename root package + handle @old-st/source
+  // package.json: rename root package + handle @mma/source
   const pkgPath = join(ROOT, 'package.json');
   if (existsSync(pkgPath)) {
     const before = readFileSync(pkgPath, 'utf-8');
-    let after = before.replace(/old-st-template/g, args.name);
-    after = after.replace(/"@old-st\/source"/g, `"@${args.scope.replace(/^@/, '')}/source"`);
+    let after = before.replace(/mma/g, args.name);
+    after = after.replace(/"@mma\/source"/g, `"@${args.scope.replace(/^@/, '')}/source"`);
     if (after !== before) {
       if (!args.dryRun) writeFileSync(pkgPath, after, 'utf-8');
       replaced.push('package.json');
@@ -180,19 +180,19 @@ function renameNameSurfaces(args) {
   }
 
   // Rename the .code-workspace file (if it exists locally — gitignored)
-  const oldWs = join(ROOT, 'old-st-template.code-workspace');
+  const oldWs = join(ROOT, 'mma.code-workspace');
   const newWs = join(ROOT, `${args.name}.code-workspace`);
   if (existsSync(oldWs)) {
     const before = readFileSync(oldWs, 'utf-8');
     // Strip any literal GH_TOKEN value (defensive — file is gitignored but local copies
     // may contain real PATs from template maintainers).
-    let after = before.replace(/old-st-template/g, args.name);
+    let after = before.replace(/mma/g, args.name);
     after = after.replace(/("GH_TOKEN"\s*:\s*")(github_pat_[A-Za-z0-9_]+|ghp_[A-Za-z0-9]+|ghs_[A-Za-z0-9]+)"/g, '$1"');
     if (!args.dryRun) {
       writeFileSync(oldWs, after, 'utf-8');
       renameSync(oldWs, newWs);
     }
-    replaced.push(`old-st-template.code-workspace → ${args.name}.code-workspace`);
+    replaced.push(`mma.code-workspace → ${args.name}.code-workspace`);
   }
   return replaced;
 }
@@ -202,9 +202,9 @@ function rewriteCodeowners(args) {
   const path = join(ROOT, '.github', 'CODEOWNERS');
   if (!existsSync(path) || !args.owner) return null;
   const before = readFileSync(path, 'utf-8');
-  // Match either the original "@Old-St-Labs/senior-devs" OR the post-org-rewrite
+  // Match either the original "@xnnx-c-xrxnxs/senior-devs" OR the post-org-rewrite
   // "@<org>/senior-devs" form (in case --org has already been applied).
-  const orgPart = args.org ? `(?:Old-St-Labs|${args.org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})` : 'Old-St-Labs';
+  const orgPart = args.org ? `(?:xnnx-c-xrxnxs|${args.org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})` : 'xnnx-c-xrxnxs';
   const re = new RegExp(`@${orgPart}\\/senior-devs`, 'g');
   const after = before.replace(re, args.owner);
   if (after === before) return null;
@@ -284,11 +284,11 @@ async function confirm(args) {
   if (args.yes || args.dryRun) return true;
   const rl = createInterface({ input, output });
   console.log('\nAbout to:');
-  console.log(`  • Replace "@old-st/" → "${args.scope}/" in all source files`);
-  console.log(`  • Replace "old-st-template" → "${args.name}" everywhere`);
+  console.log(`  • Replace "@mma/" → "${args.scope}/" in all source files`);
+  console.log(`  • Replace "mma" → "${args.name}" everywhere`);
   console.log(`  • Replace "Welcome to Old ST …" → "Welcome to ${args.displayName} …" in webapp/mobile`);
-  if (args.org) console.log(`  • Replace "Old-St-Labs" → "${args.org}" in URLs/configs`);
-  console.log(`  • Replace bare "old-st" → "${args.name}" (terraform project_name etc.)`);
+  if (args.org) console.log(`  • Replace "xnnx-c-xrxnxs" → "${args.org}" in URLs/configs`);
+  console.log(`  • Replace bare "mma" → "${args.name}" (terraform project_name etc.)`);
   if (args.owner) console.log(`  • Rewrite CODEOWNERS team → ${args.owner}`);
   if (!args.keepExamples) console.log('  • DELETE examples/ directory');
   if (args.gitInit) console.log('  • Re-initialize git history');
@@ -317,7 +317,7 @@ async function main() {
   if (!(await confirm(args))) { console.log('Aborted.'); process.exit(2); }
 
   // 1. CODEOWNERS team rewrite — must run BEFORE the broad scan so the team
-  //    pattern "@Old-St-Labs/senior-devs" is still intact when we match it.
+  //    pattern "@xnnx-c-xrxnxs/senior-devs" is still intact when we match it.
   const co = rewriteCodeowners(args);
   if (co) console.log(`[owner] rewrote ${relative(ROOT, co)}`);
   else if (!args.owner) console.log(`[owner] skipped (pass --owner=@org/team to rewrite CODEOWNERS)`);

@@ -1,10 +1,10 @@
-// @old-st/client-common — base-template public surface
+// @mma/client-common — base-template public surface
 //
 // This package ships only the cross-domain universals (auth, file uploads,
 // the API request infrastructure, the QueryClient + Providers + AuthProvider).
 //
 // Example-domain hooks and clients (users, products, orders, categories)
-// live in `@old-st/client-common-examples` under `examples/`.
+// live in `@mma/client-common-examples` under `examples/`.
 
 // Infrastructure — framework-agnostic (zero React dependency)
 export {

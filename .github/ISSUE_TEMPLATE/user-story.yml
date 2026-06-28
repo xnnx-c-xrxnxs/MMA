@@ -261,7 +261,7 @@ body:
         - label: "Webapp Playwright E2E passing (if user flow added)"
         - label: "Structural lint (`pnpm tsx scripts/lint-standards.ts`) passes"
         - label: "OpenAPI / Swagger updated (Backend)"
-        - label: "Storybook / shared UI primitive added (if new `@old-st/ui` or `@old-st/mobile-ui` component)"
+        - label: "Storybook / shared UI primitive added (if new `@mma/ui` or `@mma/mobile-ui` component)"
         - label: "Functionality matches designs (Webapp / Mobile)"
         - label: "Accessibility pass — `axe` clean for new pages (Webapp)"
         - label: "Structured logging via `createLogger()` (Backend)"

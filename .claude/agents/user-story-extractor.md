@@ -41,7 +41,7 @@ Epic,User_Story,Story_Type,Domain,Effort,Priority,Milestone/Sprint,Notes,Labels,
 ```
 
 - Quote any field containing commas. One story per row.
-- `Prompt` must reference a concrete old-st-template workflow (`/new-domain`, `/new-feature`, `/webapp-feature`, `/new-event-service`, etc.) where applicable.
+- `Prompt` must reference a concrete mma workflow (`/new-domain`, `/new-feature`, `/webapp-feature`, `/new-event-service`, etc.) where applicable.
 
 Also write `{migrationRoot}/issues/FEATURES_AND_USER_STORIES.md` — the human-readable epic→story outline with acceptance notes, plus a coverage table mapping each route/domain-operation to its story IDs.
 

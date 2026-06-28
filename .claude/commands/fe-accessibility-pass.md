@@ -49,7 +49,7 @@ Fix in dependency order — primitives first, then domain components, then route
 1. `pnpm nx test webapp` (and `ui` if a primitive changed)
 2. Re-run the a11y suite — confirm violation count is decreasing
 
-If a fix requires a new ARIA pattern not currently in `@old-st/ui`, see the [webapp-radix-primitive-wrap](../../skills/webapp-radix-primitive-wrap/SKILL.md) skill before hand-rolling.
+If a fix requires a new ARIA pattern not currently in `@mma/ui`, see the [webapp-radix-primitive-wrap](../../skills/webapp-radix-primitive-wrap/SKILL.md) skill before hand-rolling.
 
 ## Phase 4 — Verify
 

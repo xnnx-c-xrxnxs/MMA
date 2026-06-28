@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/nx-plugin",
+  "name": "@mma/nx-plugin",
   "version": "1.0.0",
   "description": "Internal Nx plugin: generators for domain packages, services, and use cases",
   "main": "src/index.ts",

@@ -39,7 +39,7 @@ You **never** edit files.
    - ⚠️ **Tightening (likely breaking):** optional → required, looser type → stricter type.
    - ❌ **Breaking:** removal, rename, type incompatible change.
 4. **Find consumers** via `Grep` and `Grep`:
-   - Backend services importing `@old-st/contracts/{domain}`: `apps/{domain}/`, ACL adapters in other services
+   - Backend services importing `@mma/contracts/{domain}`: `apps/{domain}/`, ACL adapters in other services
    - Webapp: `packages/client-common/`, `apps/webapp/src/`
    - Mobile: `apps/mobile/src/`
    - Other domains' event handlers (cross-domain Published Language)
@@ -48,7 +48,7 @@ You **never** edit files.
 ## Output Format
 
 ```markdown
-# Contract Diff: @old-st/contracts/{domain}
+# Contract Diff: @mma/contracts/{domain}
 
 ## Change Summary
 | Operation | Severity |

@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/aws-cognito",
+  "name": "@mma/aws-cognito",
   "version": "1.0.0",
   "description": "Cognito auth provider abstraction — IAuthProvider implementations for Cognito (deployed) and local dev mock.",
   "main": "src/index.ts",

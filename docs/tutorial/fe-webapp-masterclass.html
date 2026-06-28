@@ -187,7 +187,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <a href="#02-file-structure">2. File Structure — New vs Old</a>
     <a href="#03-static-site-generation">3. Static Site Generation (SSG)</a>
     <a href="#04-data-access-layer">4. Data-Access Layer</a>
-    <a href="#05-ui-primitives">5. UI Primitives — @old-st/ui</a>
+    <a href="#05-ui-primitives">5. UI Primitives — @mma/ui</a>
     <a href="#06-page-thin-orchestrator">6. Page as Thin Orchestrator</a>
     <a href="#07-auth-flow">7. Auth Flow — Tokens & Cookies</a>
     <a href="#08-forms-rhf-zod">8. Forms with react-hook-form + Zod</a>
@@ -243,7 +243,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     </a>
     <a class="intro-card" href="#05-ui-primitives" style="text-decoration:none; color:inherit;">
       <div class="num">Level 2 · #05</div>
-      <div class="name">UI Primitives — @old-st/ui</div>
+      <div class="name">UI Primitives — @mma/ui</div>
       <div class="desc">shadcn-style primitives + cva() variants replace a global SCSS component library.</div>
     </a>
     <a class="intro-card" href="#06-page-thin-orchestrator" style="text-decoration:none; color:inherit;">
@@ -298,13 +298,13 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <p>The frontend stack has <strong>five layers</strong>, each with exactly one job:</p>
     <ul>
       <li><strong>Page</strong> — thin orchestrator. Wires hooks + domain components. Zero markup. Zero fetch calls. Zero <code>useState</code>.</li>
-      <li><strong>Domain Component</strong> — renders one slice of domain data using <code>@old-st/ui</code> primitives and React Query hooks.</li>
+      <li><strong>Domain Component</strong> — renders one slice of domain data using <code>@mma/ui</code> primitives and React Query hooks.</li>
       <li><strong>React Query Hook</strong> — owns server state (loading, error, data, refetch). Calls one API client method.</li>
-      <li><strong>API Client</strong> — typed <code>fetch</code> wrapper. Parses every response with a Zod schema from <code>@old-st/contracts/{domain}</code>.</li>
+      <li><strong>API Client</strong> — typed <code>fetch</code> wrapper. Parses every response with a Zod schema from <code>@mma/contracts/{domain}</code>.</li>
       <li><strong>UI Primitive</strong> — stateless, domain-agnostic building block. Imports only design tokens and Tailwind classes.</li>
     </ul>
     <p>The <strong>dependency rule</strong>: no layer may reach more than one level below it. A page never imports an API client. A hook never imports a UI primitive. An API client never imports a hook.</p>
-    <p>Shared contracts (<code>@old-st/contracts/{domain}</code>) live outside this stack. They are imported at the boundary layers — by API clients (response validation) and by forms (Zod resolver) — and by the NestJS backend (<code>ZodValidationPipe</code>). One schema, two runtimes.</p>
+    <p>Shared contracts (<code>@mma/contracts/{domain}</code>) live outside this stack. They are imported at the boundary layers — by API clients (response validation) and by forms (Zod resolver) — and by the NestJS backend (<code>ZodValidationPipe</code>). One schema, two runtimes.</p>
   </div>
   </div>
 </div>
@@ -347,17 +347,17 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
   Page:            [<span class="str">'DomainComponent'</span>],
   DomainComponent: [<span class="str">'ReactQueryHook'</span>, <span class="str">'UiPrimitive'</span>],
   ReactQueryHook:  [<span class="str">'ApiClient'</span>],
-  ApiClient:       [],   <span class="com">// leaf — only imports @old-st/contracts and fetch</span>
+  ApiClient:       [],   <span class="com">// leaf — only imports @mma/contracts and fetch</span>
   UiPrimitive:     [],   <span class="com">// leaf — only imports design tokens and Tailwind</span>
 };
 
 <span class="com">// ── Golden Rules (frontend) ───────────────────────────────────────────────</span>
 <span class="com">// Rule 19:  Pages are thin orchestrators — no markup, no fetch, no state.</span>
-<span class="com">// Rule 20:  All API calls go through @old-st/client-common hooks.</span>
-<span class="com">// Rule 21:  UI primitives come from @old-st/ui — never raw HTML elements.</span>
+<span class="com">// Rule 20:  All API calls go through @mma/client-common hooks.</span>
+<span class="com">// Rule 21:  UI primitives come from @mma/ui — never raw HTML elements.</span>
 <span class="com">// Rule 23:  Every API client response is Zod-parsed at the client boundary.</span>
 <span class="com">// Rule 23a: All forms use react-hook-form + zodResolver + schema from contracts.</span>
-<span class="com">// Rule 23n: Every @old-st/ui primitive ships 4 files: tsx + index.ts + stories + spec.</span>
+<span class="com">// Rule 23n: Every @mma/ui primitive ships 4 files: tsx + index.ts + stories + spec.</span>
 <span class="com">// Rule 23o: Never use template-literal Tailwind class interpolation (JIT can't emit those classes).</span></code></pre></div>
 </div>
     </div>
@@ -366,7 +366,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     
     <div class="pitfalls">
         <div class="pitfalls-title">⚠️ Common pitfalls</div>
-        <ul><li><strong>Fetching in a page:</strong> calling <code>fetch()</code> or importing API clients directly from a page component breaks layer isolation — use a React Query hook instead.</li><li><strong>Typing API responses manually:</strong> hand-writing <code>type UserResponse = { ... }</code> instead of importing from <code>@old-st/contracts/user</code> causes the types to drift the moment the backend changes.</li><li><strong>Reading <code>process.env</code> in components:</strong> env vars are configured once via <code>configureApi()</code> in <code>layout.tsx</code> — never read them inside a component or hook.</li></ul>
+        <ul><li><strong>Fetching in a page:</strong> calling <code>fetch()</code> or importing API clients directly from a page component breaks layer isolation — use a React Query hook instead.</li><li><strong>Typing API responses manually:</strong> hand-writing <code>type UserResponse = { ... }</code> instead of importing from <code>@mma/contracts/user</code> causes the types to drift the moment the backend changes.</li><li><strong>Reading <code>process.env</code> in components:</strong> env vars are configured once via <code>configureApi()</code> in <code>layout.tsx</code> — never read them inside a component or hook.</li></ul>
       </div>
   </div>
 </section>
@@ -400,7 +400,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
       <li>Auth guard is a <code>&lt;ProtectedRoute&gt;</code> wrapper component inside a layout.</li>
       <li>Styles: global SCSS in <code>libs/frontend/components-web/src/styles/</code>.</li>
     </ul>
-    <p><strong>New template (old-st-template):</strong></p>
+    <p><strong>New template (mma):</strong></p>
     <ul>
       <li>Domain components co-locate with features in <code>apps/webapp/src/components/{domain}/</code>.</li>
       <li>Shared UI primitives in <code>packages/ui/src/components/</code> (web) and <code>packages/mobile-ui/</code> (mobile).</li>
@@ -470,7 +470,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <div class="panel-header">
       <span class="icon">✅</span>
       <span class="title">After</span>
-      <span class="subtitle">old-st-template</span>
+      <span class="subtitle">mma</span>
     </div>
     <div class="panel-body code-body"><pre><code><span class="com">//</span>
 <span class="com">//  apps/</span>
@@ -498,7 +498,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
 <span class="com">//        test-setup.ts</span>
 <span class="com">//</span>
 <span class="com">//  packages/</span>
-<span class="com">//    ui/                             ← @old-st/ui — web primitives (shadcn-style)</span>
+<span class="com">//    ui/                             ← @mma/ui — web primitives (shadcn-style)</span>
 <span class="com">//      src/</span>
 <span class="com">//        components/</span>
 <span class="com">//          data-display/             ← Badge, Card, Table, Skeleton …</span>
@@ -508,7 +508,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
 <span class="com">//          navigation/               ← Tabs, Breadcrumb …</span>
 <span class="com">//        lib/utils.ts                ← cn() helper (clsx + tailwind-merge)</span>
 <span class="com">//</span>
-<span class="com">//    client-common/                  ← @old-st/client-common — SHARED (web + mobile)</span>
+<span class="com">//    client-common/                  ← @mma/client-common — SHARED (web + mobile)</span>
 <span class="com">//      src/</span>
 <span class="com">//        infrastructure/</span>
 <span class="com">//          config.ts                 ← configureApi() — single call at boot</span>
@@ -526,7 +526,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
 <span class="com">//          query-client.ts           ← shared QueryClient (staleTime, retry)</span>
 <span class="com">//          providers.tsx             ← &lt;Providers&gt; wraps QueryClientProvider + AuthProvider</span>
 <span class="com">//</span>
-<span class="com">//    design-tokens/                  ← @old-st/design-tokens — cross-platform tokens</span>
+<span class="com">//    design-tokens/                  ← @mma/design-tokens — cross-platform tokens</span>
 <span class="com">//      src/</span>
 <span class="com">//        lib/tokens.ts               ← lightColors, darkColors, spacing, radii …</span></code></pre></div>
   </div>
@@ -609,7 +609,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <div class="panel-header">
       <span class="icon">✅</span>
       <span class="title">After</span>
-      <span class="subtitle">old-st-template/apps/webapp/next.config.js</span>
+      <span class="subtitle">mma/apps/webapp/next.config.js</span>
     </div>
     <div class="panel-body code-body"><pre><code><span class="kw">const</span> { composePlugins, withNx } = require(<span class="str">'@nx/next'</span>);
 <span class="kw">const</span> withBundleAnalyzer = require(<span class="str">'@next/bundle-analyzer'</span>)({
@@ -625,9 +625,9 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
   output: <span class="str">'export'</span>,
 
   transpilePackages: [
-    <span class="str">'@old-st/contracts-common'</span>,
-    <span class="str">'@old-st/contracts-auth'</span>,
-    <span class="com">// add new @old-st/* packages here when they use TypeScript source</span>
+    <span class="str">'@mma/contracts-common'</span>,
+    <span class="str">'@mma/contracts-auth'</span>,
+    <span class="com">// add new @mma/* packages here when they use TypeScript source</span>
   ],
 };
 
@@ -647,7 +647,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
 <span class="com">//   ✅ React Server Components (rendered to static HTML at build)</span>
 <span class="com">//   ✅ useRouter, useSearchParams (client-side navigation)</span>
 <span class="com">//   ✅ React Query (all data fetching is client-side)</span>
-<span class="com">//   ✅ All @old-st/ui primitives</span>
+<span class="com">//   ✅ All @mma/ui primitives</span>
 <span class="com">//   ✅ Dark mode via next-themes (purely client-side)</span></code></pre></div>
   </div>
 </div>
@@ -677,7 +677,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
     </div>
     <div class="panel-body code-body"><pre><code><span class="str">'use client'</span>;
 
-<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="str">'@mma/client-common'</span>;
 <span class="kw">import</span> { useRouter } <span class="kw">from</span> <span class="str">'next/navigation'</span>;
 <span class="kw">import</span> { useEffect } <span class="kw">from</span> <span class="str">'react'</span>;
 <span class="kw">import</span> { Sidebar } <span class="kw">from</span> <span class="str">'@/components/layout/sidebar'</span>;
@@ -906,7 +906,7 @@ Problems: <span class="kw">async</span> constructor, untested interceptors, no r
 <span class="com">// ─────────────────────────────────────────────────────────────────</span>
 <span class="com">//  NEW — auth-api.client.ts</span>
 <span class="com">// ─────────────────────────────────────────────────────────────────</span>
-<span class="kw">import</span> { signInResponseSchema, refreshSessionResponseSchema } <span class="kw">from</span> <span class="str">'@old-st/contracts/auth'</span>;
+<span class="kw">import</span> { signInResponseSchema, refreshSessionResponseSchema } <span class="kw">from</span> <span class="str">'@mma/contracts/auth'</span>;
 <span class="kw">import</span> { getApiConfig } <span class="kw">from</span> <span class="str">'../config'</span>;
 <span class="kw">import</span> { apiRequest } <span class="kw">from</span> <span class="str">'./base-api.client'</span>;
 
@@ -918,7 +918,7 @@ Problems: <span class="kw">async</span> constructor, untested interceptors, no r
     {
       method: <span class="str">'POST'</span>,
       body: { email, password },
-      schema: signInResponseSchema,   <span class="com">// ← schema from @old-st/contracts/auth</span>
+      schema: signInResponseSchema,   <span class="com">// ← schema from @mma/contracts/auth</span>
     },
   );
 }
@@ -953,8 +953,8 @@ Problems: <span class="kw">async</span> constructor, untested interceptors, no r
     <div class="module-header fade-in">
       <div class="module-meta">
         <div class="module-label">UI Domain</div>
-        <h2>UI Primitives — @old-st/ui</h2>
-        <p class="module-desc">The old template maintained a components-web library of SCSS-styled React components with no variant system. The new template uses @old-st/ui — shadcn-style primitives built on Radix UI, styled with Tailwind v4 utilities and class-variance-authority (cva()) for type-safe variants. Every primitive has a story (Storybook 8) and a co-located test.</p>
+        <h2>UI Primitives — @mma/ui</h2>
+        <p class="module-desc">The old template maintained a components-web library of SCSS-styled React components with no variant system. The new template uses @mma/ui — shadcn-style primitives built on Radix UI, styled with Tailwind v4 utilities and class-variance-authority (cva()) for type-safe variants. Every primitive has a story (Storybook 8) and a co-located test.</p>
       </div>
       <span class="complexity l2">L2 · Design System</span>
     </div>
@@ -976,11 +976,11 @@ Problems: <span class="kw">async</span> constructor, untested interceptors, no r
       <li>No Storybook; no co-located tests.</li>
       <li>Duplicated between web and mobile — mobile had separate SCSS.</li>
     </ul>
-    <p><strong>New template (@old-st/ui):</strong></p>
+    <p><strong>New template (@mma/ui):</strong></p>
     <ul>
       <li>Every primitive is a <strong>shadcn-style</strong> component: Radix UI headless + Tailwind utilities.</li>
       <li>Variants declared with <strong><code>cva()</code></strong> (class-variance-authority) — fully type-safe.</li>
-      <li>Design tokens from <code>@old-st/design-tokens</code> feed CSS custom properties — no hardcoded colours.</li>
+      <li>Design tokens from <code>@mma/design-tokens</code> feed CSS custom properties — no hardcoded colours.</li>
       <li>Each primitive ships: <code>{name}.tsx</code> + <code>index.ts</code> + <code>{name}.stories.tsx</code> + <code>{name}.spec.tsx</code>.</li>
       <li>No SCSS anywhere in <code>packages/ui/</code> — Tailwind v4 utilities only.</li>
       <li>Dark mode via CSS variable overrides in <code>globals.css</code> under <code>.dark</code>.</li>
@@ -1078,10 +1078,10 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
       <span class="title">After</span>
       <span class="subtitle">centralised map using domain enum constants</span>
     </div>
-    <div class="panel-body code-body"><pre><code><span class="kw">import</span> <span class="kw">type</span> { BadgeProps } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
-<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
-<span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/order'</span>;
-<span class="kw">import</span> { ProductStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/product'</span>;
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> <span class="kw">type</span> { BadgeProps } <span class="kw">from</span> <span class="str">'@mma/ui'</span>;
+<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
+<span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'@mma/contracts/order'</span>;
+<span class="kw">import</span> { ProductStatusEnum } <span class="kw">from</span> <span class="str">'@mma/contracts/product'</span>;
 
 <span class="com">// ✅ Keys are enum values — TypeScript prevents stale string literals.</span>
 <span class="kw">export</span> <span class="kw">const</span> USER_STATUS_VARIANTS: <span class="ty">Record</span>&lt;<span class="ty">string</span>, BadgeProps[<span class="str">'variant'</span>]&gt; = {
@@ -1114,7 +1114,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
     <div class="concepts fade-in"><span class="concept-pill">✦ cva() enforces variant types — no runtime string mistakes</span><span class="concept-pill">✦ cn() merges Tailwind classes without duplication (clsx + tailwind-merge)</span><span class="concept-pill">✦ Design tokens feed CSS custom properties — dark mode is automatic</span><span class="concept-pill">✦ Radix UI handles accessibility (keyboard, focus, ARIA) for interactive primitives</span><span class="concept-pill">✦ No SCSS — Tailwind v4 utilities only (scanned statically by JIT)</span><span class="concept-pill">✦ Four-file rule: tsx + index.ts + stories.tsx + spec.tsx per primitive</span></div>
     <div class="pitfalls">
         <div class="pitfalls-title">⚠️ Common pitfalls</div>
-        <ul><li><strong>Template-literal Tailwind classes:</strong> <code>className={`bg-${'brand'}-500`}</code> produces <em>no styles</em> — Tailwind v4's JIT scanner never sees this string. Use a <code>cva()</code> variant map or <code>style={{ backgroundColor: token }}</code> for dynamic values.</li><li><strong>Adding domain knowledge to @old-st/ui:</strong> a <code>UserStatusBadge</code> that knows about <code>UserStatusEnum</code> belongs in <code>apps/webapp/src/components/users/</code>. The primitives package must stay domain-agnostic.</li><li><strong>Skipping co-located tests:</strong> the 70% coverage threshold on <code>packages/ui</code> is enforced by CI. Every new primitive needs a <code>.spec.tsx</code> testing at minimum the default render and each variant.</li></ul>
+        <ul><li><strong>Template-literal Tailwind classes:</strong> <code>className={`bg-${'brand'}-500`}</code> produces <em>no styles</em> — Tailwind v4's JIT scanner never sees this string. Use a <code>cva()</code> variant map or <code>style={{ backgroundColor: token }}</code> for dynamic values.</li><li><strong>Adding domain knowledge to @mma/ui:</strong> a <code>UserStatusBadge</code> that knows about <code>UserStatusEnum</code> belongs in <code>apps/webapp/src/components/users/</code>. The primitives package must stay domain-agnostic.</li><li><strong>Skipping co-located tests:</strong> the 70% coverage threshold on <code>packages/ui</code> is enforced by CI. Every new primitive needs a <code>.spec.tsx</code> testing at minimum the default render and each variant.</li></ul>
       </div>
   </div>
 </section>
@@ -1150,7 +1150,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
     <p><strong>New template — pages delegate everything:</strong></p>
     <ul>
       <li>Page imports a domain component (e.g. <code>&lt;UsersTable&gt;</code>) and passes hooks' state to it.</li>
-      <li>Domain component owns the table/card markup using <code>@old-st/ui</code> primitives.</li>
+      <li>Domain component owns the table/card markup using <code>@mma/ui</code> primitives.</li>
       <li>React Query hook (<code>useUsers()</code>) owns server state, caching, and loading/error states.</li>
       <li>Sidebar lives in the route group layout — the page never renders layout chrome.</li>
       <li><code>error.tsx</code> and <code>loading.tsx</code> co-located with the route handle error/loading without touching the page.</li>
@@ -1239,17 +1239,17 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
     
   </div>
   <div class="panel-body code-body"><pre><code><span class="com">// apps/webapp/src/components/users/users-table.tsx</span>
-<span class="com">// Domain component — renders the users table using @old-st/ui primitives.</span>
+<span class="com">// Domain component — renders the users table using @mma/ui primitives.</span>
 <span class="com">// Imports the React Query hook; never imports API clients directly.</span>
 <span class="str">'use client'</span>;
 
 <span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
-<span class="kw">import</span> { useUsers } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> { useUsers } <span class="kw">from</span> <span class="str">'@mma/client-common'</span>;
 <span class="kw">import</span> {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
   Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
-<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/ui'</span>;
+<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
 <span class="kw">import</span> { USER_STATUS_VARIANTS } <span class="kw">from</span> <span class="str">'@/lib/status-variants'</span>;
 
 <span class="kw">export</span> <span class="kw">function</span> UsersTable() {
@@ -1278,7 +1278,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
         &lt;/Select&gt;
       &lt;/div&gt;
 
-      {<span class="com">/* Table — @old-st/ui primitives, never raw &lt;table&gt; */</span>}
+      {<span class="com">/* Table — @mma/ui primitives, never raw &lt;table&gt; */</span>}
       &lt;Table data-testid=<span class="str">"users-table"</span>&gt;
         &lt;TableHeader&gt;
           &lt;TableRow&gt;
@@ -1320,7 +1320,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
 }</code></pre></div>
 </div></div>
 
-    <div class="concepts fade-in"><span class="concept-pill">✦ Pages are Server Components by default — add "use client" only if needed</span><span class="concept-pill">✦ Co-located error.tsx + loading.tsx handle error/loading per route segment</span><span class="concept-pill">✦ Domain components live in components/{domain}/ — not in app/</span><span class="concept-pill">✦ React Query hook owns loading/error/data — not useState + useEffect</span><span class="concept-pill">✦ Sidebar + layout chrome live in the (protected)/layout.tsx — not in pages</span><span class="concept-pill">✦ Status variants use enum constants from @old-st/contracts/{domain}</span></div>
+    <div class="concepts fade-in"><span class="concept-pill">✦ Pages are Server Components by default — add "use client" only if needed</span><span class="concept-pill">✦ Co-located error.tsx + loading.tsx handle error/loading per route segment</span><span class="concept-pill">✦ Domain components live in components/{domain}/ — not in app/</span><span class="concept-pill">✦ React Query hook owns loading/error/data — not useState + useEffect</span><span class="concept-pill">✦ Sidebar + layout chrome live in the (protected)/layout.tsx — not in pages</span><span class="concept-pill">✦ Status variants use enum constants from @mma/contracts/{domain}</span></div>
     <div class="pitfalls">
         <div class="pitfalls-title">⚠️ Common pitfalls</div>
         <ul><li><strong>Calling <code>useQuery()</code> directly in a page:</strong> hooks belong in <code>components/{domain}/</code> so they can be tested in isolation and reused across pages. A page that calls a hook directly becomes hard to test and violates the orchestrator pattern.</li><li><strong>Inline status colour logic (<code>status === "ACTIVE" ? "green" : "red"</code>):</strong> this pattern is scattered and silently breaks when a new status is added. Use the central <code>status-variants.ts</code> map.</li><li><strong>Missing <code>data-testid</code> attributes:</strong> E2E tests (Playwright) select elements by <code>data-testid</code>. Every table, row, badge, filter, and action button must have one. See <code>apps/webapp-e2e/src/utils/selectors.ts</code> for the naming convention.</li></ul>
@@ -1566,7 +1566,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
       <div class="module-meta">
         <div class="module-label">Webapp Domain</div>
         <h2>Forms with react-hook-form + Zod</h2>
-        <p class="module-desc">Both templates use react-hook-form. The difference is the validation library and where the schema lives. The old template used yup with an inline schema defined per form component — disconnected from the backend. The new template uses Zod with the schema sourced from @old-st/contracts/{domain} — the exact same schema the NestJS ZodValidationPipe validates against on the backend. One schema, two uses, zero duplication.</p>
+        <p class="module-desc">Both templates use react-hook-form. The difference is the validation library and where the schema lives. The old template used yup with an inline schema defined per form component — disconnected from the backend. The new template uses Zod with the schema sourced from @mma/contracts/{domain} — the exact same schema the NestJS ZodValidationPipe validates against on the backend. One schema, two uses, zero duplication.</p>
       </div>
       <span class="complexity l3">L3 · Forms</span>
     </div>
@@ -1591,14 +1591,14 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
     </ul>
     <p><strong>New template — react-hook-form + Zod + shared contracts:</strong></p>
     <ul>
-      <li>Schema sourced from <code>@old-st/contracts/{domain}</code> — shared with the NestJS <code>ZodValidationPipe</code>.</li>
+      <li>Schema sourced from <code>@mma/contracts/{domain}</code> — shared with the NestJS <code>ZodValidationPipe</code>.</li>
       <li>Switch one import: <code>yupResolver</code> → <code>zodResolver</code>. Everything else in the form stays the same.</li>
       <li>Validation rules are the single source of truth — change the schema once, both frontend and backend update.</li>
       <li>Error messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> — one place for all copy, never inside the schema.</li>
-      <li><code>aria-invalid</code> and <code>aria-describedby</code> wired automatically by <code>&lt;FormControl&gt;</code> from <code>@old-st/ui</code>.</li>
+      <li><code>aria-invalid</code> and <code>aria-describedby</code> wired automatically by <code>&lt;FormControl&gt;</code> from <code>@mma/ui</code>.</li>
       <li>Submit button disabled while submitting (<code>formState.isSubmitting</code>) — no change from the old pattern.</li>
     </ul>
-    <p><strong>Golden Rule 23a:</strong> all forms use react-hook-form + Zod resolver with schemas from <code>@old-st/contracts/{domain}</code>. Never use <code>yupResolver</code>.</p>
+    <p><strong>Golden Rule 23a:</strong> all forms use react-hook-form + Zod resolver with schemas from <code>@mma/contracts/{domain}</code>. Never use <code>yupResolver</code>.</p>
   </div>
   </div>
 </div>
@@ -1649,13 +1649,13 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
 <span class="kw">import</span> { useQueryClient } <span class="kw">from</span> <span class="str">'@tanstack/react-query'</span>;
 
 <span class="com">// ✅ Schema imported from contracts — the SAME schema the NestJS pipe validates against.</span>
-<span class="kw">import</span> { createUserInputSchema } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
-<span class="kw">import</span> { useCreateUser } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> { createUserInputSchema } <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
+<span class="kw">import</span> { useCreateUser } <span class="kw">from</span> <span class="str">'@mma/client-common'</span>;
 <span class="kw">import</span> {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
   Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
-<span class="kw">import</span> { UserRoleEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/ui'</span>;
+<span class="kw">import</span> { UserRoleEnum } <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
 
 <span class="kw">type</span> CreateUserInput = z.infer&lt;<span class="kw">typeof</span> createUserInputSchema&gt;;
 
@@ -1772,10 +1772,10 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
 </div>
     
 
-    <div class="concepts fade-in"><span class="concept-pill">✦ Both templates use react-hook-form — only the resolver and schema source change</span><span class="concept-pill">✦ yupResolver → zodResolver: one import swap, everything else stays the same</span><span class="concept-pill">✦ Zod schema lives in @old-st/contracts/{domain} — shared with the NestJS ZodValidationPipe</span><span class="concept-pill">✦ Error messages live in zod-error-map.ts — never inside the schema or the form component</span><span class="concept-pill">✦ FormControl auto-sets aria-invalid + aria-describedby for accessibility</span><span class="concept-pill">✦ FormMessage renders Zod error messages inline — no separate error state</span><span class="concept-pill">✦ toast.success/error (sonner) for action outcomes — never alert()</span><span class="concept-pill">✦ isSubmitting disables the submit button — same pattern as old template</span></div>
+    <div class="concepts fade-in"><span class="concept-pill">✦ Both templates use react-hook-form — only the resolver and schema source change</span><span class="concept-pill">✦ yupResolver → zodResolver: one import swap, everything else stays the same</span><span class="concept-pill">✦ Zod schema lives in @mma/contracts/{domain} — shared with the NestJS ZodValidationPipe</span><span class="concept-pill">✦ Error messages live in zod-error-map.ts — never inside the schema or the form component</span><span class="concept-pill">✦ FormControl auto-sets aria-invalid + aria-describedby for accessibility</span><span class="concept-pill">✦ FormMessage renders Zod error messages inline — no separate error state</span><span class="concept-pill">✦ toast.success/error (sonner) for action outcomes — never alert()</span><span class="concept-pill">✦ isSubmitting disables the submit button — same pattern as old template</span></div>
     <div class="pitfalls">
         <div class="pitfalls-title">⚠️ Common pitfalls</div>
-        <ul><li><strong>Using <code>yupResolver</code> in a new form:</strong> the old template used yup — if you copy a form from the old codebase, swap <code>yupResolver</code> for <code>zodResolver</code> and replace the yup schema with the corresponding import from <code>@old-st/contracts/{domain}</code>.</li><li><strong>Defining the Zod schema inside the form file:</strong> never write <code>const schema = z.object({ ... })</code> in a component file. The schema must come from <code>@old-st/contracts/{domain}</code> — the same one the backend validates against.</li><li><strong>Adding error message strings to the contract schema:</strong> <code>z.string().email('Please enter a valid email')</code> is forbidden in contracts. Messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> only — the global error map handles them.</li><li><strong>Using <code>alert()</code> or <code>console.error()</code> for feedback:</strong> mutation outcomes must surface via <code>toast()</code> from <code>@old-st/ui</code>. The <code>&lt;Toaster&gt;</code> is mounted once in <code>layout.tsx</code>.</li><li><strong>Forgetting <code>form.reset()</code> after success:</strong> without resetting, the form retains the last values when re-opened. Call <code>form.reset()</code> inside the success branch of <code>onSubmit</code>.</li></ul>
+        <ul><li><strong>Using <code>yupResolver</code> in a new form:</strong> the old template used yup — if you copy a form from the old codebase, swap <code>yupResolver</code> for <code>zodResolver</code> and replace the yup schema with the corresponding import from <code>@mma/contracts/{domain}</code>.</li><li><strong>Defining the Zod schema inside the form file:</strong> never write <code>const schema = z.object({ ... })</code> in a component file. The schema must come from <code>@mma/contracts/{domain}</code> — the same one the backend validates against.</li><li><strong>Adding error message strings to the contract schema:</strong> <code>z.string().email('Please enter a valid email')</code> is forbidden in contracts. Messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> only — the global error map handles them.</li><li><strong>Using <code>alert()</code> or <code>console.error()</code> for feedback:</strong> mutation outcomes must surface via <code>toast()</code> from <code>@mma/ui</code>. The <code>&lt;Toaster&gt;</code> is mounted once in <code>layout.tsx</code>.</li><li><strong>Forgetting <code>form.reset()</code> after success:</strong> without resetting, the form retains the last values when re-opened. Call <code>form.reset()</code> inside the success branch of <code>onSubmit</code>.</li></ul>
       </div>
   </div>
 </section>
@@ -2143,7 +2143,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
         <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);font-weight:700;font-size:.75rem;flex-shrink:0">2</span>
         <div>
           <strong>Convert SVG → Typed Icon Components</strong>
-          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Run SVGR · define <code>IIcon</code> interface · barrel-export from <code>@old-st/ui</code></p>
+          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Run SVGR · define <code>IIcon</code> interface · barrel-export from <code>@mma/ui</code></p>
         </div>
         <code style="white-space:nowrap;background:rgba(99,102,241,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/svg-to-icons</code>
 
@@ -2172,7 +2172,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
       <li><strong>Export tokens from Figma</strong> — use the Figma Tokens / Variables plugin to export a JSON of all colour, spacing, radius, and typography values. Save as <code>packages/design-tokens/src/lib/tokens.ts</code>.</li>
       <li><strong>Define <code>lightColors</code> and <code>darkColors</code></strong> — two typed maps (see code panel). Mobile imports them directly; web consumes them via CSS variables.</li>
       <li><strong>Generate <code>tokens.css</code></strong> — run <code>pnpm tokens:gen</code>. This script writes <code>:root { --color-primary: ... }</code> and <code>.dark { --color-primary: ... }</code> blocks from the TypeScript maps.</li>
-      <li><strong>Import in <code>globals.css</code></strong> — add <code>@import "@old-st/design-tokens/tokens.css"</code> above the <code>@theme {}</code> block. Tailwind v4 reads the CSS variables and exposes them as utilities (<code>bg-primary</code>, <code>text-foreground</code>, etc.).</li>
+      <li><strong>Import in <code>globals.css</code></strong> — add <code>@import "@mma/design-tokens/tokens.css"</code> above the <code>@theme {}</code> block. Tailwind v4 reads the CSS variables and exposes them as utilities (<code>bg-primary</code>, <code>text-foreground</code>, etc.).</li>
       <li><strong>Verify</strong> — open any page; all <code>bg-*</code> and <code>text-*</code> utilities resolve without warnings. Toggle dark mode — colours swap without any JavaScript.</li>
     </ol>
     <p style="margin-top:8px"><strong>Rule:</strong> no raw hex or <code>rgb()</code> values anywhere in component files. If a colour is not in the token map, add it to the token map first — then use the utility class.</p>
@@ -2183,7 +2183,7 @@ Problems: <span class="ty">string</span> variant with no <span class="kw">type</
       <li><strong>Export SVGs from Figma</strong> — select all icons on the icon frame, export at 1× as SVG (no effects, no extra wrappers). Name files in <code>kebab-case</code>: <code>arrow-right.svg</code>, <code>check-circle.svg</code>.</li>
       <li><strong>Run SVGR</strong> — <code>pnpm svgr --icon --typescript --out-dir packages/ui/src/components/icons/generated src/assets/icons/</code>. Each SVG becomes a <code>ArrowRightIcon.tsx</code> exporting a standard React component that accepts <code>className</code> and <code>size</code>.</li>
       <li><strong>Define the <code>IIcon</code> interface</strong> — a shared prop contract for all icon components (see code panel). This makes every icon interchangeable — a component that accepts <code>icon: IIcon</code> works with any icon from the set.</li>
-      <li><strong>Barrel-export from <code>packages/ui/src/components/icons/index.ts</code></strong> — one export per icon so consumers import precisely what they use: <code>import { ArrowRightIcon } from '@old-st/ui'</code>.</li>
+      <li><strong>Barrel-export from <code>packages/ui/src/components/icons/index.ts</code></strong> — one export per icon so consumers import precisely what they use: <code>import { ArrowRightIcon } from '@mma/ui'</code>.</li>
       <li><strong>Theme icons with <code>currentColor</code></strong> — SVGR replaces hard-coded fills with <code>fill="currentColor"</code> automatically. Set colour via <code>className="text-primary"</code> on the icon element — it inherits from the parent.</li>
     </ol>
     <p style="margin-top:8px"><strong>Rule:</strong> never copy SVG markup into a component. Never use <code>&lt;img src="icon.svg"&gt;</code> for UI icons — images are not themeable and not accessible without extra aria attributes.</p>
@@ -2288,7 +2288,7 @@ Problems:
 
 <span class="com">// ── 3. apps/webapp/src/app/globals.css ───────────────────────────</span>
 <span class="com">//</span>
-<span class="com">// @import "@old-st/design-tokens/tokens.css";  // ← generated CSS vars</span>
+<span class="com">// @import "@mma/design-tokens/tokens.css";  // ← generated CSS vars</span>
 <span class="com">// @import "tailwindcss";</span>
 <span class="com">//</span>
 <span class="com">// @theme {</span>
@@ -2374,8 +2374,8 @@ Problems:
 <span class="com">// ... one line per icon — tree-shaken automatically</span>
 
 <span class="com">// 4. Usage in a component — themed, typed, tree-shaken</span>
-<span class="kw">import</span> <span class="kw">type</span> { IIcon } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
-<span class="kw">import</span> { UserIcon } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+<span class="kw">import</span> <span class="kw">type</span> { IIcon } <span class="kw">from</span> <span class="str">'@mma/ui'</span>;
+<span class="kw">import</span> { UserIcon } <span class="kw">from</span> <span class="str">'@mma/ui'</span>;
 
 <span class="com">// Accept any icon from the set via the shared interface</span>
 <span class="kw">interface</span> AvatarProps { icon?: IIcon; name: <span class="ty">string</span> }
@@ -2398,7 +2398,7 @@ Problems:
     <div class="concepts fade-in"><span class="concept-pill">✦ Tokens first — every component written after Step 1 inherits dark mode for free</span><span class="concept-pill">✦ lightColors + darkColors in TypeScript: mobile imports directly, web converts to CSS vars</span><span class="concept-pill">✦ pnpm tokens:gen generates tokens.css from the TypeScript map — one command keeps them in sync</span><span class="concept-pill">✦ Tailwind v4 @theme reads CSS custom properties and generates utilities automatically</span><span class="concept-pill">✦ SVGR converts SVGs to React components with fill="currentColor" — coloured via className</span><span class="concept-pill">✦ IIcon interface makes every icon interchangeable — components stay decoupled from specific icons</span><span class="concept-pill">✦ /figma-component workflow: get_design_context → map to tokens → cva() variants → story + spec</span><span class="concept-pill">✦ /figma-page workflow: decompose screen into sections → map to existing primitives → recurse if missing</span><span class="concept-pill">✦ Primitives before pages: a page can never depend on a primitive that does not yet exist</span></div>
     <div class="pitfalls">
         <div class="pitfalls-title">⚠️ Common pitfalls</div>
-        <ul><li><strong>Don't write components before the token pipeline is live.</strong> The first component that uses <code>bg-[#4f46e5]</code> creates a precedent — every component after it will do the same. Tokens first, always.</li><li><strong>Don't regenerate tokens by hand.</strong> Run <code>pnpm tokens:gen</code> after any change to <code>tokens.ts</code>. The CSS file is generated output — it should never be edited directly.</li><li><strong>Don't import <code>darkColors</code> in webapp components.</strong> Web components use Tailwind utilities (<code>dark:bg-card</code>); only mobile imports <code>darkColors</code> directly from <code>@old-st/design-tokens</code>. Importing the TS map in a web component bypasses the CSS variable layer.</li><li><strong>Don't inline SVGR output as JSX in a component file.</strong> Run the CLI once, commit the generated files, then import from the icons barrel. Re-run the CLI whenever icons change — regenerating is idempotent.</li><li><strong>Don't implement Figma pages before all required primitives exist.</strong> The <code>/figma-page</code> workflow will flag missing primitives — complete those first via <code>/figma-component</code>, then continue. Skipping this produces page components that duplicate primitive logic.</li><li><strong>Don't accept raw hex values from <code>get_design_context</code> output.</strong> The design context returns loosely structured code as a reference. Every colour must map to a token utility. If a colour is not in the token map, add it before wiring the component.</li></ul>
+        <ul><li><strong>Don't write components before the token pipeline is live.</strong> The first component that uses <code>bg-[#4f46e5]</code> creates a precedent — every component after it will do the same. Tokens first, always.</li><li><strong>Don't regenerate tokens by hand.</strong> Run <code>pnpm tokens:gen</code> after any change to <code>tokens.ts</code>. The CSS file is generated output — it should never be edited directly.</li><li><strong>Don't import <code>darkColors</code> in webapp components.</strong> Web components use Tailwind utilities (<code>dark:bg-card</code>); only mobile imports <code>darkColors</code> directly from <code>@mma/design-tokens</code>. Importing the TS map in a web component bypasses the CSS variable layer.</li><li><strong>Don't inline SVGR output as JSX in a component file.</strong> Run the CLI once, commit the generated files, then import from the icons barrel. Re-run the CLI whenever icons change — regenerating is idempotent.</li><li><strong>Don't implement Figma pages before all required primitives exist.</strong> The <code>/figma-page</code> workflow will flag missing primitives — complete those first via <code>/figma-component</code>, then continue. Skipping this produces page components that duplicate primitive logic.</li><li><strong>Don't accept raw hex values from <code>get_design_context</code> output.</strong> The design context returns loosely structured code as a reference. Every colour must map to a token utility. If a colour is not in the token map, add it before wiring the component.</li></ul>
       </div>
   </div>
 </section>

@@ -1,5 +1,5 @@
-import type { IAuthProvider } from '@old-st/aws-cognito';
-import { createLogger } from '@old-st/telemetry';
+import type { IAuthProvider } from '@mma/aws-cognito';
+import { createLogger } from '@mma/telemetry';
 import {
   signInResponseSchema,
   authTokensSchema,
@@ -9,7 +9,7 @@ import {
   signOutResponseSchema,
   type SignInResponse,
   type AuthTokens,
-} from '@old-st/contracts/auth';
+} from '@mma/contracts/auth';
 
 const logger = createLogger('auth-api-service');
 

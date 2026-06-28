@@ -5,7 +5,7 @@ description: Use the `<Skeleton>` primitive and shared loading shells (`<TableSk
 
 # Skeleton Loading
 
-`<Skeleton>` is a thin animated placeholder primitive in `@old-st/ui`. Combine it into shape-specific loaders for each surface.
+`<Skeleton>` is a thin animated placeholder primitive in `@mma/ui`. Combine it into shape-specific loaders for each surface.
 
 Source: `packages/ui/src/components/data-display/skeleton/skeleton.tsx`.
 
@@ -41,7 +41,7 @@ export default function {Domain}Loading() {
 Build a shape-specific skeleton in `components/{domain}/{entity}-detail-skeleton.tsx`:
 
 ```tsx
-import { Skeleton, Card, CardContent, CardHeader } from '@old-st/ui';
+import { Skeleton, Card, CardContent, CardHeader } from '@mma/ui';
 
 export function UserDetailSkeleton() {
   return (

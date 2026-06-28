@@ -20,7 +20,7 @@ Before writing any code, confirm:
 
 1. **Which domain?** (`user`, `order`, `product`, or a new domain)
 2. **What backend endpoints exist?** (HTTP method + path, e.g. `GET /api/users/by-status`)
-3. **What are the request/response types?** (from `@old-st/contracts/{domain}`)
+3. **What are the request/response types?** (from `@mma/contracts/{domain}`)
 4. **Is this a new domain or extending an existing one?** (new domain needs a new client file + config URL)
 5. **Which pagination style?** (cursor-based for DynamoDB domains, offset-based for Prisma domains)
 6. **Which operations are queries (read) vs mutations (write)?**
@@ -33,7 +33,7 @@ Before writing any code, confirm:
 
 ### Step 1 — Verify Contracts Exist
 
-Every API client method needs Zod schemas and TypeScript types from `@old-st/contracts/{domain}`.
+Every API client method needs Zod schemas and TypeScript types from `@mma/contracts/{domain}`.
 
 Required:
 - Response schema: e.g. `{entity}ResponseSchema` (Zod schema for parsing API responses)
@@ -79,8 +79,8 @@ import {
   {entity}ResponseSchema,
   type Create{Entity}Input,
   type {Entity}Response,
-} from '@old-st/contracts/{domain}';
-import { type PaginatedResponse, paginatedResponseSchema } from '@old-st/contracts/common';
+} from '@mma/contracts/{domain}';
+import { type PaginatedResponse, paginatedResponseSchema } from '@mma/contracts/common';
 import { getApiConfig } from '../config';
 
 const paginated{Entity}sSchema = paginatedResponseSchema({entity}ResponseSchema);
@@ -206,7 +206,7 @@ Create one file per domain. Export individual named hooks — one per API client
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { {domain}ApiClient } from '../infrastructure/api-clients/{domain}-api.client';
-import type { Create{Entity}Input } from '@old-st/contracts/{domain}';
+import type { Create{Entity}Input } from '@mma/contracts/{domain}';
 
 const {DOMAIN}_KEY = '{domain}s';
 
@@ -344,7 +344,7 @@ Page / Component
 - **Forgetting the `schema` option** — API responses won't be Zod-validated, defeating runtime type safety.
 - **Using `apiRequest` for void endpoints** — `DELETE` / `204` endpoints must use `apiRequestVoid`.
 - **Hardcoding the base URL** — always use `baseUrl()` which reads from `getApiConfig()`. Never hardcode `http://localhost:3000`.
-- **Missing barrel export** — hooks not exported from `index.ts` won't be importable via `@old-st/client-common`.
+- **Missing barrel export** — hooks not exported from `index.ts` won't be importable via `@mma/client-common`.
 - **Broad invalidation on targeted mutations** — invalidating `['{domain}s']` refreshes every list query. For targeted mutations (activate, update), invalidate both the entity key and the relevant list key.
 - **Forgetting `enabled` guard on single-entity queries** — without `enabled: !!id`, the query fires immediately with an empty ID.
 - **Missing `encodeURIComponent()` on path params** — always encode to prevent path traversal.

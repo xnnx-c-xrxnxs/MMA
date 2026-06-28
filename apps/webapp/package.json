@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/webapp",
+  "name": "@mma/webapp",
   "version": "1.0.0",
   "private": true,
   "description": "Next.js App Router frontend",

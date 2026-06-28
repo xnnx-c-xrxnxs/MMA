@@ -1,11 +1,11 @@
 // file-api-service uses Lambda Web Adapter in deployed environments.
 // Single-mode HTTP server — works identically locally and in Lambda.
-import { initTelemetry, correlationMiddleware } from '@old-st/telemetry';
+import { initTelemetry, correlationMiddleware } from '@mma/telemetry';
 initTelemetry('file-api-service');
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { SecretsConfig } from '@old-st/aws-secrets';
+import { SecretsConfig } from '@mma/aws-secrets';
 import { AppModule } from './app/app.module';
 import { DomainExceptionFilter } from './presentation';
 import { HttpLoggingInterceptor } from './presentation/interceptors/http-logging.interceptor';

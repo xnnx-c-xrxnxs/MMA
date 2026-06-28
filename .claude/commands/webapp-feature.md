@@ -24,16 +24,16 @@ Ask the following in a single structured message and wait for answers.
    - **Detail page** — single record with action buttons?
    - **Form-only page** — create/edit form?
    - **Custom layout** — describe.
-5. **Which API endpoints does it call?** (list them with the matching `@old-st/client-common` hook names)
+5. **Which API endpoints does it call?** (list them with the matching `@mma/client-common` hook names)
 6. **Are there forms?**
-  - If yes, provide the **exact contract schema import path + symbol** (example: `@old-st/contracts/{domain}` + `create{Entity}Schema`).
+  - If yes, provide the **exact contract schema import path + symbol** (example: `@mma/contracts/{domain}` + `create{Entity}Schema`).
   - If yes, provide the **design reference link** (Figma URL, approved design spec URL, or approved existing route reference).
 7. **Are there status-driven action buttons?** (If yes, which statuses → which actions?)
-8. **Does it need any new shared UI primitive** beyond what's already in `@old-st/ui`?
+8. **Does it need any new shared UI primitive** beyond what's already in `@mma/ui`?
 
 ### Auto-Detection
 
-- If the user names a domain, auto-detect the contract package: `@old-st/contracts/{domain}`.
+- If the user names a domain, auto-detect the contract package: `@mma/contracts/{domain}`.
 - If hooks are missing for the named API endpoints, surface that — they'll need to be added in `client-common` first.
 
 **Do not proceed until questions 1–7 are answered.**
@@ -74,7 +74,7 @@ Bash(filePaths=["packages/client-common/src/hooks/use-{domain}.ts", "packages/cl
 
 ## Phase 2 — UI Primitives (only if missing)
 
-If the new page needs a primitive that doesn't exist in `@old-st/ui` (e.g. Tooltip not yet wrapped, custom Dialog variant), add it.
+If the new page needs a primitive that doesn't exist in `@mma/ui` (e.g. Tooltip not yet wrapped, custom Dialog variant), add it.
 
 **Load skill:** `.claude/skills/webapp-radix-primitive-wrap/SKILL.md` (for Radix-backed primitives)
 or `.claude/skills/webapp-ui-primitive/SKILL.md` (for non-Radix primitives).
@@ -114,7 +114,7 @@ Follow this decision flow for every new UI surface:
   - If a second feature is about to copy a component from another feature folder, promote first, then consume the shared component.
 
 Each feature component:
-- Uses `@old-st/ui` primitives (no raw HTML for interactive elements).
+- Uses `@mma/ui` primitives (no raw HTML for interactive elements).
 - Accepts data via props — does NOT call hooks directly when used inside a page that already fetches.
 - Includes `data-testid` attributes per `apps/webapp-e2e/src/utils/selectors.ts` conventions.
 
@@ -133,8 +133,8 @@ If files were created under `features/`, run `Bash` on those paths instead.
 
 For each form (create / edit):
 - Use `react-hook-form` + `zodResolver`.
-- Source schema from `@old-st/contracts/{domain}` — never duplicate.
-- Use `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, `<FormMessage>` from `@old-st/ui`.
+- Source schema from `@mma/contracts/{domain}` — never duplicate.
+- Use `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, `<FormMessage>` from `@mma/ui`.
 - Wire mutation calls to toasts via `toast.success` / `toast.error`.
 
 ---
@@ -154,7 +154,7 @@ export function get{Domain}StatusVariant(status: string): BadgeVariant {
 }
 ```
 
-Use enum constants from `@old-st/contracts/{domain}` — never hardcode strings (Golden Rule #22).
+Use enum constants from `@mma/contracts/{domain}` — never hardcode strings (Golden Rule #22).
 
 ---
 
@@ -168,7 +168,7 @@ Page rules:
 - `'use client'` (React Query hooks).
 - Wires hooks → state → child components.
 - No table/form markup inline — that lives in `features/{domain}/...` (or `components/{domain}/` only when broadly reusable).
-- No direct API calls — only via hooks from `@old-st/client-common`.
+- No direct API calls — only via hooks from `@mma/client-common`.
 - Import feature entrypoints through the domain barrel when present (example: `@/features/{domain}`).
 
 ---

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/old-st/old-st-template/.specs/schemas/page-spec.schema.json",
+  "$id": "https://github.com/mma/mma/.specs/schemas/page-spec.schema.json",
   "title": "Page Spec",
-  "description": "Declarative spec for /webapp-feature when scaffolding a non-trivial page (list, detail, or form). Replaces the inline 10-question interview with a reviewable, autocompleted YAML file. SCOPE — Phase 1: list / detail / form pages that consume EXISTING backend endpoints (Mode A). Phase 1 explicitly does NOT cover: dashboards (multi-widget grids), wizards (multi-step flows), pages that need new backend work (use /full-stack-feature instead), animations / pixel layout (use Figma + @old-st/ui variants).",
+  "description": "Declarative spec for /webapp-feature when scaffolding a non-trivial page (list, detail, or form). Replaces the inline 10-question interview with a reviewable, autocompleted YAML file. SCOPE — Phase 1: list / detail / form pages that consume EXISTING backend endpoints (Mode A). Phase 1 explicitly does NOT cover: dashboards (multi-widget grids), wizards (multi-step flows), pages that need new backend work (use /full-stack-feature instead), animations / pixel layout (use Figma + @mma/ui variants).",
   "type": "object",
   "required": ["page", "domain", "dataSources"],
   "additionalProperties": false,
@@ -39,7 +39,7 @@
             "roles": {
               "type": "array",
               "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
-              "description": "User roles permitted to view this page. Values must come from USER_ROLES in @old-st/contracts/user."
+              "description": "User roles permitted to view this page. Values must come from USER_ROLES in @mma/contracts/user."
             }
           }
         },
@@ -64,12 +64,12 @@
     "domain": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
-      "description": "Lowercase, kebab-case domain name. Drives the components/{domain}/ folder, the contract import (@old-st/contracts/{domain}), and the per-domain status formatter (formatXxxStatus from @old-st/client-common)."
+      "description": "Lowercase, kebab-case domain name. Drives the components/{domain}/ folder, the contract import (@mma/contracts/{domain}), and the per-domain status formatter (formatXxxStatus from @mma/client-common)."
     },
     "dataSources": {
       "type": "array",
       "minItems": 1,
-      "description": "React Query hooks the page consumes. ALL hooks must already exist in @old-st/client-common — if any are missing, /webapp-feature stops in Mode B and redirects to /new-feature. Phase 1 only supports Mode A.",
+      "description": "React Query hooks the page consumes. ALL hooks must already exist in @mma/client-common — if any are missing, /webapp-feature stops in Mode B and redirects to /new-feature. Phase 1 only supports Mode A.",
       "items": { "$ref": "#/definitions/DataSource" }
     },
     "states": {
@@ -111,7 +111,7 @@
     },
     "forms": {
       "type": "array",
-      "description": "react-hook-form + Zod resolver forms on this page. Schemas MUST come from @old-st/contracts/{domain} — never duplicate.",
+      "description": "react-hook-form + Zod resolver forms on this page. Schemas MUST come from @mma/contracts/{domain} — never duplicate.",
       "items": { "$ref": "#/definitions/Form" }
     },
     "actions": {
@@ -153,7 +153,7 @@
         "hook": {
           "type": "string",
           "pattern": "^use[A-Z][A-Za-z0-9]*$",
-          "description": "Hook name from @old-st/client-common. Examples: usePaymentsByStatus, usePayment, useCustomers."
+          "description": "Hook name from @mma/client-common. Examples: usePaymentsByStatus, usePayment, useCustomers."
         },
         "args": {
           "type": "string",
@@ -231,7 +231,7 @@
         },
         "formatter": {
           "type": "string",
-          "description": "Optional format helper from @old-st/client-common. REQUIRED if the column renders a status enum (Golden Rule #22a). Examples: formatPaymentStatus, formatOrderStatus."
+          "description": "Optional format helper from @mma/client-common. REQUIRED if the column renders a status enum (Golden Rule #22a). Examples: formatPaymentStatus, formatOrderStatus."
         },
         "sortable": { "type": "boolean", "description": "Phase 1 default: true for data-table columns." },
         "align": {
@@ -254,7 +254,7 @@
           "description": "Display format. Default: text."
         },
         "badge": { "type": "string", "description": "Optional badge variant function name (status fields only)." },
-        "formatter": { "type": "string", "description": "Optional format*Status helper from @old-st/client-common (REQUIRED for status fields — Golden Rule #22a)." }
+        "formatter": { "type": "string", "description": "Optional format*Status helper from @mma/client-common (REQUIRED for status fields — Golden Rule #22a)." }
       }
     },
     "Filter": {
@@ -274,7 +274,7 @@
         },
         "source": {
           "type": "string",
-          "description": "REQUIRED for type=select. Enum constant name from @old-st/contracts/{domain}. Example: PaymentStatusEnum."
+          "description": "REQUIRED for type=select. Enum constant name from @mma/contracts/{domain}. Example: PaymentStatusEnum."
         },
         "label": { "type": "string", "description": "Display label. Defaults to Title Case of `name`." }
       }
@@ -292,12 +292,12 @@
         "schema": {
           "type": "string",
           "pattern": "^[a-z][A-Za-z0-9]*Schema$",
-          "description": "Zod schema name from @old-st/contracts/{domain}. MUST already exist — never duplicate. Example: createPaymentSchema."
+          "description": "Zod schema name from @mma/contracts/{domain}. MUST already exist — never duplicate. Example: createPaymentSchema."
         },
         "submit": {
           "type": "string",
           "pattern": "^use[A-Z][A-Za-z0-9]*$",
-          "description": "Mutation hook from @old-st/client-common. Example: useCreatePayment."
+          "description": "Mutation hook from @mma/client-common. Example: useCreatePayment."
         },
         "trigger": {
           "type": "string",
@@ -375,7 +375,7 @@
         "hook": {
           "type": "string",
           "pattern": "^use[A-Z][A-Za-z0-9]*$",
-          "description": "Mutation hook from @old-st/client-common. Example: useApprovePayment."
+          "description": "Mutation hook from @mma/client-common. Example: useApprovePayment."
         },
         "confirm": {
           "type": "boolean",

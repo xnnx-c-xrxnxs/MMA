@@ -12,8 +12,8 @@
   },
   "aliases": {
     "components": "@/components",
-    "utils": "@old-st/ui",
-    "ui": "@old-st/ui",
+    "utils": "@mma/ui",
+    "ui": "@mma/ui",
     "hooks": "@/hooks",
     "lib": "@/lib"
   },

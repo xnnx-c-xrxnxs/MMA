@@ -1,11 +1,11 @@
 ---
 name: webapp-ui-primitive
-description: Add a new shared UI component to the @old-st/ui package. Use this when creating a new shadcn-style primitive (e.g. Dialog, Checkbox, Textarea, Tooltip) in packages/ui/src/components/. Covers the class-variance-authority (cva) variant pattern, cn() utility, ref-as-prop (React 19), barrel export, and Tailwind class conventions.
+description: Add a new shared UI component to the @mma/ui package. Use this when creating a new shadcn-style primitive (e.g. Dialog, Checkbox, Textarea, Tooltip) in packages/ui/src/components/. Covers the class-variance-authority (cva) variant pattern, cn() utility, ref-as-prop (React 19), barrel export, and Tailwind class conventions.
 ---
 
-# Adding a UI Primitive to @old-st/ui
+# Adding a UI Primitive to @mma/ui
 
-`@old-st/ui` is a **shadcn/ui-style** component library — Tailwind utilities + `class-variance-authority` (cva) + `cn()` + Radix where a11y matters. Every primitive is a thin, composable React component that accepts `ref` as a regular prop (React 19). There is **no SCSS, no styled-components, no Emotion** anywhere in the package — the `no-scss-files` structural lint check (`scripts/lint-standards.ts`) enforces this.
+`@mma/ui` is a **shadcn/ui-style** component library — Tailwind utilities + `class-variance-authority` (cva) + `cn()` + Radix where a11y matters. Every primitive is a thin, composable React component that accepts `ref` as a regular prop (React 19). There is **no SCSS, no styled-components, no Emotion** anywhere in the package — the `no-scss-files` structural lint check (`scripts/lint-standards.ts`) enforces this.
 
 > **React 19 ref pattern:** `forwardRef` is no longer needed. New components accept `ref` as a destructured prop. Existing components that still use `React.forwardRef` work fine but should be migrated incrementally. When writing **new** primitives, always use the direct `ref` prop pattern. `displayName` is also unnecessary for named function declarations/expressions.
 
@@ -61,7 +61,7 @@ Canonical references:
 
 ## Component Patterns
 
-The `@old-st/ui` package follows the shadcn/ui pattern. There are three component shapes:
+The `@mma/ui` package follows the shadcn/ui pattern. There are three component shapes:
 
 ### Pattern A — Simple Component with cva Variants
 
@@ -365,7 +365,7 @@ export function cn(...inputs: ClassValue[]) {
 
 ## Dependencies
 
-The `@old-st/ui` package uses these peer/direct dependencies:
+The `@mma/ui` package uses these peer/direct dependencies:
 
 | Package | Purpose |
 |---|---|
@@ -377,7 +377,7 @@ The `@old-st/ui` package uses these peer/direct dependencies:
 If adding a component that needs a new dependency (e.g. `@radix-ui/react-dialog` for an accessible Dialog), install it in the `packages/ui` workspace:
 
 ```bash
-pnpm add @radix-ui/react-dialog --filter @old-st/ui
+pnpm add @radix-ui/react-dialog --filter @mma/ui
 ```
 
 ---
@@ -399,8 +399,8 @@ pnpm add @radix-ui/react-dialog --filter @old-st/ui
 - **Using `React.forwardRef` in new code** — React 19 supports `ref` as a regular prop. Use named function declarations instead; `displayName` is then unnecessary.
 - **Using raw colors instead of tokens** — `bg-red-500` breaks theming. Use `bg-destructive` or semantic tokens.
 - **Putting `className` before variant classes in `cn()`** — consumer `className` must be last so it can override defaults.
-- **Creating domain-specific components in `@old-st/ui`** — this package is domain-agnostic. Domain components (e.g. `UsersTable`) go in `apps/webapp/src/components/{domain}/`.
-- **Not exporting from the barrel** — components not in `index.ts` won't be importable via `@old-st/ui`.
+- **Creating domain-specific components in `@mma/ui`** — this package is domain-agnostic. Domain components (e.g. `UsersTable`) go in `apps/webapp/src/components/{domain}/`.
+- **Not exporting from the barrel** — components not in `index.ts` won't be importable via `@mma/ui`.
 - **Shipping a primitive without a `.stories.tsx`** — the lint check will fail and reviewers will block the PR. Stories are the visual contract.
 - **Shipping a primitive without a `.spec.tsx`** — same lint check + drops package coverage below the 70% threshold.
 - **Adding a `.scss` / `.sass` / `.module.css` file** — explicitly rejected by template policy and the `no-scss-files` lint check. Use Tailwind utilities + tokens.

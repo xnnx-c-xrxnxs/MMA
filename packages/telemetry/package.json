@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/telemetry",
+  "name": "@mma/telemetry",
   "version": "1.0.0",
   "description": "OpenTelemetry SDK bootstrapper and structured logger for all services. Platform-agnostic — swap the exporter config to switch backends.",
   "main": "src/index.ts",

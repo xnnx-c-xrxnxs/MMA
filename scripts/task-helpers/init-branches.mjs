@@ -3,7 +3,7 @@
 /**
  * Project bootstrap — create the `develop` branch from `main` and push to origin.
  *
- * Use this immediately after creating a new project from old-st-template.
+ * Use this immediately after creating a new project from mma.
  * GitHub's "Use this template" / `gh repo create --template` produces a fresh
  * repo with a single initial commit and only the `main` branch — it deliberately
  * does NOT inherit the template's branches (chore/*, feat/*, develop, etc.).

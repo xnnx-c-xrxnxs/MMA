@@ -8,7 +8,7 @@ export default {
     domain: 'Webapp',
     title: 'Forms with react-hook-form + Zod',
     introShort: 'Both templates use react-hook-form — the switch is from yup to Zod, and from inline schemas to shared contract schemas.',
-    intro: "Both templates use react-hook-form. The difference is the validation library and where the schema lives. The old template used yup with an inline schema defined per form component — disconnected from the backend. The new template uses Zod with the schema sourced from @old-st/contracts/{domain} — the exact same schema the NestJS ZodValidationPipe validates against on the backend. One schema, two uses, zero duplication.",
+    intro: "Both templates use react-hook-form. The difference is the validation library and where the schema lives. The old template used yup with an inline schema defined per form component — disconnected from the backend. The new template uses Zod with the schema sourced from @mma/contracts/{domain} — the exact same schema the NestJS ZodValidationPipe validates against on the backend. One schema, two uses, zero duplication.",
 
     specTitle: 'Forms · Validation Rules',
     specBodyHtml: `
@@ -22,14 +22,14 @@ export default {
     </ul>
     <p><strong>New template — react-hook-form + Zod + shared contracts:</strong></p>
     <ul>
-      <li>Schema sourced from <code>@old-st/contracts/{domain}</code> — shared with the NestJS <code>ZodValidationPipe</code>.</li>
+      <li>Schema sourced from <code>@mma/contracts/{domain}</code> — shared with the NestJS <code>ZodValidationPipe</code>.</li>
       <li>Switch one import: <code>yupResolver</code> → <code>zodResolver</code>. Everything else in the form stays the same.</li>
       <li>Validation rules are the single source of truth — change the schema once, both frontend and backend update.</li>
       <li>Error messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> — one place for all copy, never inside the schema.</li>
-      <li><code>aria-invalid</code> and <code>aria-describedby</code> wired automatically by <code>&lt;FormControl&gt;</code> from <code>@old-st/ui</code>.</li>
+      <li><code>aria-invalid</code> and <code>aria-describedby</code> wired automatically by <code>&lt;FormControl&gt;</code> from <code>@mma/ui</code>.</li>
       <li>Submit button disabled while submitting (<code>formState.isSubmitting</code>) — no change from the old pattern.</li>
     </ul>
-    <p><strong>Golden Rule 23a:</strong> all forms use react-hook-form + Zod resolver with schemas from <code>@old-st/contracts/{domain}</code>. Never use <code>yupResolver</code>.</p>
+    <p><strong>Golden Rule 23a:</strong> all forms use react-hook-form + Zod resolver with schemas from <code>@mma/contracts/{domain}</code>. Never use <code>yupResolver</code>.</p>
   `,
 
     entityFilename: 'create-user-form.tsx',
@@ -72,13 +72,13 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 // ✅ Schema imported from contracts — the SAME schema the NestJS pipe validates against.
-import { createUserInputSchema } from '@old-st/contracts/user';
-import { useCreateUser } from '@old-st/client-common';
+import { createUserInputSchema } from '@mma/contracts/user';
+import { useCreateUser } from '@mma/client-common';
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
   Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@old-st/ui';
-import { UserRoleEnum } from '@old-st/contracts/user';
+} from '@mma/ui';
+import { UserRoleEnum } from '@mma/contracts/user';
 
 type CreateUserInput = z.infer<typeof createUserInputSchema>;
 
@@ -195,7 +195,7 @@ export function CreateUserForm({ onSuccess }: { onSuccess?: () => void }) {
     concepts: [
         'Both templates use react-hook-form — only the resolver and schema source change',
         'yupResolver → zodResolver: one import swap, everything else stays the same',
-        'Zod schema lives in @old-st/contracts/{domain} — shared with the NestJS ZodValidationPipe',
+        'Zod schema lives in @mma/contracts/{domain} — shared with the NestJS ZodValidationPipe',
         'Error messages live in zod-error-map.ts — never inside the schema or the form component',
         'FormControl auto-sets aria-invalid + aria-describedby for accessibility',
         'FormMessage renders Zod error messages inline — no separate error state',
@@ -204,10 +204,10 @@ export function CreateUserForm({ onSuccess }: { onSuccess?: () => void }) {
     ],
 
     pitfalls: [
-        '<strong>Using <code>yupResolver</code> in a new form:</strong> the old template used yup — if you copy a form from the old codebase, swap <code>yupResolver</code> for <code>zodResolver</code> and replace the yup schema with the corresponding import from <code>@old-st/contracts/{domain}</code>.',
-        '<strong>Defining the Zod schema inside the form file:</strong> never write <code>const schema = z.object({ ... })</code> in a component file. The schema must come from <code>@old-st/contracts/{domain}</code> — the same one the backend validates against.',
+        '<strong>Using <code>yupResolver</code> in a new form:</strong> the old template used yup — if you copy a form from the old codebase, swap <code>yupResolver</code> for <code>zodResolver</code> and replace the yup schema with the corresponding import from <code>@mma/contracts/{domain}</code>.',
+        '<strong>Defining the Zod schema inside the form file:</strong> never write <code>const schema = z.object({ ... })</code> in a component file. The schema must come from <code>@mma/contracts/{domain}</code> — the same one the backend validates against.',
         '<strong>Adding error message strings to the contract schema:</strong> <code>z.string().email(\'Please enter a valid email\')</code> is forbidden in contracts. Messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> only — the global error map handles them.',
-        '<strong>Using <code>alert()</code> or <code>console.error()</code> for feedback:</strong> mutation outcomes must surface via <code>toast()</code> from <code>@old-st/ui</code>. The <code>&lt;Toaster&gt;</code> is mounted once in <code>layout.tsx</code>.',
+        '<strong>Using <code>alert()</code> or <code>console.error()</code> for feedback:</strong> mutation outcomes must surface via <code>toast()</code> from <code>@mma/ui</code>. The <code>&lt;Toaster&gt;</code> is mounted once in <code>layout.tsx</code>.',
         "<strong>Forgetting <code>form.reset()</code> after success:</strong> without resetting, the form retains the last values when re-opened. Call <code>form.reset()</code> inside the success branch of <code>onSubmit</code>.",
     ],
 };

@@ -38,7 +38,7 @@ on:
         type: boolean
         default: true
       monitoring_ecr_repo_url:
-        description: "ECR repo URL for monitoring-webapp (e.g. 123456789.dkr.ecr.eu-west-2.amazonaws.com/old-st-monitoring-webapp)"
+        description: "ECR repo URL for monitoring-webapp (e.g. 123456789.dkr.ecr.eu-west-2.amazonaws.com/mma-monitoring-webapp)"
         required: false
         type: string
 

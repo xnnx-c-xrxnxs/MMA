@@ -4,7 +4,7 @@ import {
   PresignedUploadResult,
   PresignedDownloadResult,
   CloudFrontUrlSigner,
-} from '@old-st/aws-s3';
+} from '@mma/aws-s3';
 
 function createMockS3FileStorage(
   overrides: Partial<S3FileStorage> = {},

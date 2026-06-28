@@ -272,7 +272,7 @@ flowchart TD
           </tr>
           <tr>
             <td><strong>Published Language</strong></td>
-            <td>Event schemas in <code>@old-st/contracts/{domain}/event-schemas.ts</code>. This is the shared vocabulary between publisher and consumer domains.</td>
+            <td>Event schemas in <code>@mma/contracts/{domain}/event-schemas.ts</code>. This is the shared vocabulary between publisher and consumer domains.</td>
             <td><code>productDomainEventSchema</code> — Zod discriminated union of all product event types.</td>
           </tr>
           <tr>
@@ -552,21 +552,21 @@ hasPriceDrift() · getSubtotal()"]
           <tr>
             <td><strong>Imports from other domains</strong></td>
             <td>None</td>
-            <td><code>@old-st/contracts/order</code> (event schemas only)</td>
-            <td><code>@old-st/contracts/product</code> (event schemas only)</td>
+            <td><code>@mma/contracts/order</code> (event schemas only)</td>
+            <td><code>@mma/contracts/product</code> (event schemas only)</td>
           </tr>
           <tr>
             <td><strong>Never imports</strong></td>
             <td>—</td>
-            <td><code>@old-st/order-domain</code> (domain package)</td>
-            <td><code>@old-st/product-domain</code>, <code>@old-st/user-domain</code> (domain packages)</td>
+            <td><code>@mma/order-domain</code> (domain package)</td>
+            <td><code>@mma/product-domain</code>, <code>@mma/user-domain</code> (domain packages)</td>
           </tr>
         </tbody>
       </table>
 
       <div class="callout info">
         <strong>Import rule</strong>
-        Cross-domain services import from <code>@old-st/contracts/{domain}</code> (published language) — never from <code>@old-st/{domain}-domain</code> (internal domain package). This prevents tight coupling between bounded contexts.
+        Cross-domain services import from <code>@mma/contracts/{domain}</code> (published language) — never from <code>@mma/{domain}-domain</code> (internal domain package). This prevents tight coupling between bounded contexts.
       </div>
 
       <!-- ────────────────────────────────────────── -->

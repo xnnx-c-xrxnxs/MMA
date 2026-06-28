@@ -179,7 +179,7 @@ getById(@Param(new ZodValidationPipe(getUserByIdSchema)) params: GetUserByIdInpu
 
 ## DTO Boundary Rule
 
-Controllers must **never** return or receive domain entities. Only DTOs (types from `@old-st/contracts`) cross the presentation boundary.
+Controllers must **never** return or receive domain entities. Only DTOs (types from `@mma/contracts`) cross the presentation boundary.
 
 ```typescript
 // Correct: controller returns what the application service returns (a DTO)

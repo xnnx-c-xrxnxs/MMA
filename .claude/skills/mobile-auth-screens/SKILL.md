@@ -5,7 +5,7 @@ description: Build the authentication screen flow for the Expo mobile app — lo
 
 # Mobile Auth Screens
 
-Authentication screens live outside the `(tabs)` group in an `(auth)` route group. They use `react-hook-form` + Zod with contract schemas from `@old-st/contracts/auth` and mutation hooks from `@old-st/client-common`.
+Authentication screens live outside the `(tabs)` group in an `(auth)` route group. They use `react-hook-form` + Zod with contract schemas from `@mma/contracts/auth` and mutation hooks from `@mma/client-common`.
 
 Canonical references:
 - Auth hooks: `packages/client-common/src/hooks/use-auth.ts`
@@ -111,7 +111,7 @@ The root layout must include the `(auth)` route group in the Stack and gate navi
 ```tsx
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { useAuth } from '@old-st/client-common';
+import { useAuth } from '@mma/client-common';
 
 // Inside RootLayout component:
 function useProtectedRoute() {
@@ -148,7 +148,7 @@ Then call `useProtectedRoute()` inside the `RootLayout` component, and register 
 - Auth guard runs in the root layout — not in individual screens.
 - Use `router.replace()` (not `push()`) for auth redirects — prevents back-navigating to login after signing in.
 - Wait for `isLoading` to be false before redirecting to avoid flash-of-login on cold start.
-- The `useAuth()` hook comes from `@old-st/client-common`'s `AuthProvider`.
+- The `useAuth()` hook comes from `@mma/client-common`'s `AuthProvider`.
 
 ---
 
@@ -161,9 +161,9 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 're
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Text, Button, Input } from '@old-st/mobile-ui';
-import { signInRequestSchema, type SignInRequest } from '@old-st/contracts/auth';
-import { useSignIn } from '@old-st/client-common';
+import { Text, Button, Input } from '@mma/mobile-ui';
+import { signInRequestSchema, type SignInRequest } from '@mma/contracts/auth';
+import { useSignIn } from '@mma/client-common';
 import { PasswordField } from '../../components/auth/password-field';
 
 export default function LoginScreen() {
@@ -307,9 +307,9 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 're
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Text, Button, Input } from '@old-st/mobile-ui';
-import { forgotPasswordRequestSchema, type ForgotPasswordRequest } from '@old-st/contracts/auth';
-import { useForgotPassword } from '@old-st/client-common';
+import { Text, Button, Input } from '@mma/mobile-ui';
+import { forgotPasswordRequestSchema, type ForgotPasswordRequest } from '@mma/contracts/auth';
+import { useForgotPassword } from '@mma/client-common';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -425,12 +425,12 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 're
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Text, Button, Input } from '@old-st/mobile-ui';
+import { Text, Button, Input } from '@mma/mobile-ui';
 import {
   confirmForgotPasswordRequestSchema,
   type ConfirmForgotPasswordRequest,
-} from '@old-st/contracts/auth';
-import { useConfirmForgotPassword } from '@old-st/client-common';
+} from '@mma/contracts/auth';
+import { useConfirmForgotPassword } from '@mma/client-common';
 import { PasswordField } from '../../components/auth/password-field';
 
 export default function ConfirmResetScreen() {
@@ -556,9 +556,9 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 're
 import { useLocalSearchParams } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Text, Button } from '@old-st/mobile-ui';
-import { newPasswordRequestSchema, type NewPasswordRequest } from '@old-st/contracts/auth';
-import { useCompleteNewPassword } from '@old-st/client-common';
+import { Text, Button } from '@mma/mobile-ui';
+import { newPasswordRequestSchema, type NewPasswordRequest } from '@mma/contracts/auth';
+import { useCompleteNewPassword } from '@mma/client-common';
 import { PasswordField } from '../../components/auth/password-field';
 
 export default function NewPasswordScreen() {
@@ -687,7 +687,7 @@ jest.mock('expo-router', () => ({
   Stack: { Screen: () => null },
 }));
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useSignIn: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,

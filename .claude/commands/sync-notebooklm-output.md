@@ -165,7 +165,7 @@ This is idempotent — re-running this workflow always rewrites the dropdown to 
 
 ## Phase 7 — Rewrite README.md Header for the New Project
 
-The repo's [README.md](../../README.md) ships hardcoded for the `old-st-template` itself. After bootstrap it must reflect the actual project — otherwise visitors land on a README about the template, not the product.
+The repo's [README.md](../../README.md) ships hardcoded for the `mma` itself. After bootstrap it must reflect the actual project — otherwise visitors land on a README about the template, not the product.
 
 Rewrite ONLY the top of `README.md` — everything from the file start through (and including) the `## What's in the box` bullet list. Do NOT touch the rest (Quick Start, Documentation table, AI Agents section, License, Contributing — those remain template-managed and accurate).
 
@@ -186,7 +186,7 @@ Replace with the following structure (substitute placeholders from `issue-config
 
 ## What's in the box (template baseline)
 
-This project is built on **old-st-template**, which provides:
+This project is built on **mma**, which provides:
 
 - **Backend bounded contexts** with Clean Architecture (NestJS on Lambda)
 - **Dual persistence**: DynamoDB OneTable + Prisma/PostgreSQL
@@ -201,7 +201,7 @@ This project is built on **old-st-template**, which provides:
 
 Preserve everything from `## Quick Start` onwards untouched. The boundary to detect is the line `## Quick Start` — do NOT modify it or anything after it.
 
-If MARKDOWN_PART_1_PROJECT_AND_ROLES was NOT received in Phase 1, still rewrite the header — but use `[TODO: project tagline]` and `[TODO: project description]` placeholders, and warn the user. The point is to overwrite the `# old-st-template` title so the new project no longer claims to be the template.
+If MARKDOWN_PART_1_PROJECT_AND_ROLES was NOT received in Phase 1, still rewrite the header — but use `[TODO: project tagline]` and `[TODO: project description]` placeholders, and warn the user. The point is to overwrite the `# mma` title so the new project no longer claims to be the template.
 
 After writing, run `Bash` on `README.md`.
 

@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { useMonitoringApi } from '../../lib/use-monitoring-api';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import type { EventChainSummary } from '@old-st/monitoring-sdk';
+import type { EventChainSummary } from '@mma/monitoring-sdk';
 
 const TIME_RANGES = [
   { label: '15 min', value: 15 },

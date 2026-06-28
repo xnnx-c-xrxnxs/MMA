@@ -1,7 +1,7 @@
 import { createTree } from '@nx/devkit/testing';
 import uiPrimitiveGenerator from './generator';
 
-// Seed the @old-st/ui barrel so the generator can find/update it.
+// Seed the @mma/ui barrel so the generator can find/update it.
 const seedUiBarrel = (existing = '') => {
   const tree = createTree();
   tree.write(

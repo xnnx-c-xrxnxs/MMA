@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import type { TokenStorage } from '@old-st/client-common';
+import type { TokenStorage } from '@mma/client-common';
 
 /**
  * Mobile token storage backed by expo-secure-store.

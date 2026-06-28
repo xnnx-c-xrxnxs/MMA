@@ -125,7 +125,7 @@ Per-route `authorization_type = "NONE"` overrides the catch-all because more-spe
 
 ## Cross-service propagation
 
-When Service A (with a JWT) calls Service B via an ACL adapter, Service A must spread `...getOutboundHeaders()` (from `@old-st/telemetry`) into the outbound headers. This forwards both `Authorization: Bearer ...` and `x-correlation-id`, so Service B's JWT guard sees the same token and `@CurrentUser()` resolves to the same actor. See the `sync-cross-service-call` skill and Golden Rule #46.
+When Service A (with a JWT) calls Service B via an ACL adapter, Service A must spread `...getOutboundHeaders()` (from `@mma/telemetry`) into the outbound headers. This forwards both `Authorization: Bearer ...` and `x-correlation-id`, so Service B's JWT guard sees the same token and `@CurrentUser()` resolves to the same actor. See the `sync-cross-service-call` skill and Golden Rule #46.
 
 ## Troubleshooting
 

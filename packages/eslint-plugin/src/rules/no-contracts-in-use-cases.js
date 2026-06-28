@@ -1,5 +1,5 @@
 /**
- * @fileoverview Bans importing from @old-st/contracts/* inside use-case files.
+ * @fileoverview Bans importing from @mma/contracts/* inside use-case files.
  *
  * Standard: B4 — Use cases must accept primitive types as input — no DTOs, no Zod types.
  * @type {import('eslint').Rule.RuleModule}
@@ -23,7 +23,7 @@ module.exports = {
     schema: [],
     messages: {
       noContractsInUseCases:
-        "Use cases must not import from '@old-st/contracts'. Use case input types should use only primitive types. DTO transformation belongs in the Application Service layer.",
+        "Use cases must not import from '@mma/contracts'. Use case input types should use only primitive types. DTO transformation belongs in the Application Service layer.",
     },
   },
   create(context) {
@@ -35,7 +35,7 @@ module.exports = {
         const source = node.source.value;
         if (typeof source !== 'string') return;
 
-        if (source.startsWith('@old-st/contracts')) {
+        if (source.startsWith('@mma/contracts')) {
           context.report({
             node: node.source,
             messageId: 'noContractsInUseCases',

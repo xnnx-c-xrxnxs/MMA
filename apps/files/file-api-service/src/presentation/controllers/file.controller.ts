@@ -18,7 +18,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { z } from 'zod';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 import { FileApplicationService } from '../../application/services/file-application.service';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import {

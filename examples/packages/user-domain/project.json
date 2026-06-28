@@ -1,7 +1,0 @@
-{
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "user-domain",
-  "sourceRoot": "packages/user-domain/src",
-  "projectType": "library",
-  "tags": ["scope:user", "type:domain-logic"]
-}

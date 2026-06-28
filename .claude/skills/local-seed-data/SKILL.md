@@ -47,7 +47,7 @@ Each per-domain seeder is **idempotent** (re-runnable without duplicates) and us
 ```ts
 // scripts/seed/user-seed.ts
 import 'dotenv/config';
-import { createUserApiClient } from '@old-st/client-common';
+import { createUserApiClient } from '@mma/client-common';
 
 export async function seedUsers() {
   const api = createUserApiClient(process.env.API_USER_URL!);

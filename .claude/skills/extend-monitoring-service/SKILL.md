@@ -49,7 +49,7 @@ The API service has **one Lambda execution role** that can `sts:AssumeRole` into
 ```ts
 // packages/monitoring-sdk/src/providers/ecs.provider.ts
 import { ECSClient, ListServicesCommand, DescribeServicesCommand } from '@aws-sdk/client-ecs';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('monitoring-sdk-ecs');
 
@@ -123,8 +123,8 @@ Apply via `cd-monitoring-deploy.yml` workflow (or `infra/environments/{env}/moni
 ```ts
 // apps/monitoring/monitoring-api-service/src/application/services/ecs.service.ts
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '@old-st/telemetry';
-import { EcsProvider } from '@old-st/monitoring-sdk';
+import { createLogger } from '@mma/telemetry';
+import { EcsProvider } from '@mma/monitoring-sdk';
 import { AwsClientFactory } from '../../infrastructure/aws/aws-client-factory';
 
 const logger = createLogger('ecs-service');

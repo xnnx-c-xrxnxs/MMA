@@ -589,7 +589,7 @@
     },
     {
       "label": "GitHub: Setup Branch Protection (Rename CODEOWNERS Team)",
-      "detail": "Same as above + interactively replaces @Old-St-Labs/senior-devs in CODEOWNERS with your org/team",
+      "detail": "Same as above + interactively replaces @xnnx-c-xrxnxs/senior-devs in CODEOWNERS with your org/team",
       "type": "shell",
       "command": "node scripts/task-helpers/setup-branch-protection.mjs --rename-codeowners",
       "presentation": {
@@ -758,7 +758,7 @@
     },
     {
       "label": "Project: Init (Bootstrap from Template)",
-      "detail": "DESTRUCTIVE: Renames @old-st scope, removes examples/, re-inits git, self-deletes. Run ONCE per new project.",
+      "detail": "DESTRUCTIVE: Renames @mma scope, removes examples/, re-inits git, self-deletes. Run ONCE per new project.",
       "type": "shell",
       "command": "node scripts/init-project.mjs --scope=${input:initScope} --name=${input:initName} --owner=${input:initOwner} ${input:initKeepExamples} ${input:initGitInit} ${input:initDryRun}",
       "presentation": {

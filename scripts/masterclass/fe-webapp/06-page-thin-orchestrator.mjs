@@ -22,7 +22,7 @@ export default {
     <p><strong>New template — pages delegate everything:</strong></p>
     <ul>
       <li>Page imports a domain component (e.g. <code>&lt;UsersTable&gt;</code>) and passes hooks' state to it.</li>
-      <li>Domain component owns the table/card markup using <code>@old-st/ui</code> primitives.</li>
+      <li>Domain component owns the table/card markup using <code>@mma/ui</code> primitives.</li>
       <li>React Query hook (<code>useUsers()</code>) owns server state, caching, and loading/error states.</li>
       <li>Sidebar lives in the route group layout — the page never renders layout chrome.</li>
       <li><code>error.tsx</code> and <code>loading.tsx</code> co-located with the route handle error/loading without touching the page.</li>
@@ -99,22 +99,22 @@ export default function UsersPage() {
         'Domain components live in components/{domain}/ — not in app/',
         'React Query hook owns loading/error/data — not useState + useEffect',
         'Sidebar + layout chrome live in the (protected)/layout.tsx — not in pages',
-        'Status variants use enum constants from @old-st/contracts/{domain}',
+        'Status variants use enum constants from @mma/contracts/{domain}',
     ],
 
     exceptionsFilename: 'users-table.tsx',
     exceptionsCode: `// apps/webapp/src/components/users/users-table.tsx
-// Domain component — renders the users table using @old-st/ui primitives.
+// Domain component — renders the users table using @mma/ui primitives.
 // Imports the React Query hook; never imports API clients directly.
 'use client';
 
 import { useState } from 'react';
-import { useUsers } from '@old-st/client-common';
+import { useUsers } from '@mma/client-common';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
   Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@old-st/ui';
-import { UserStatusEnum } from '@old-st/contracts/user';
+} from '@mma/ui';
+import { UserStatusEnum } from '@mma/contracts/user';
 import { USER_STATUS_VARIANTS } from '@/lib/status-variants';
 
 export function UsersTable() {
@@ -143,7 +143,7 @@ export function UsersTable() {
         </Select>
       </div>
 
-      {/* Table — @old-st/ui primitives, never raw <table> */}
+      {/* Table — @mma/ui primitives, never raw <table> */}
       <Table data-testid="users-table">
         <TableHeader>
           <TableRow>

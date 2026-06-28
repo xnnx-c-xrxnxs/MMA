@@ -223,7 +223,7 @@ SOME_API_KEY=your-api-key
 
 3. The CD workflow passes `SENSITIVE_VARS` to Terraform, which writes selected keys to a per-environment Secrets Manager secret.
 
-4. Lambda services read their secrets at cold-start via `SecretsConfig.resolve(['ORDERS_DATABASE_URL'])` (from `@old-st/aws-secrets`).
+4. Lambda services read their secrets at cold-start via `SecretsConfig.resolve(['ORDERS_DATABASE_URL'])` (from `@mma/aws-secrets`).
 
 > **Never hardcode secrets in `.tf` files, workflow YAML, or application code.**
 

@@ -435,10 +435,10 @@ importers:
       '@expo/metro-config':
         specifier: '*'
         version: 54.0.14(expo@54.0.33)
-      '@old-st/client-common':
+      '@mma/client-common':
         specifier: workspace:*
         version: link:../../packages/client-common
-      '@old-st/mobile-ui':
+      '@mma/mobile-ui':
         specifier: workspace:*
         version: link:../../packages/mobile-ui
       '@sentry/react-native':
@@ -516,6 +516,9 @@ importers:
 
   apps/monitoring/monitoring-api-service:
     dependencies:
+      '@mma/monitoring-sdk':
+        specifier: workspace:*
+        version: link:../../../packages/monitoring-sdk
       '@nestjs/jwt':
         specifier: ^11.0.0
         version: 11.0.2(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.1))
@@ -525,9 +528,6 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.0.0
         version: 11.2.6(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
-      '@old-st/monitoring-sdk':
-        specifier: workspace:*
-        version: link:../../../packages/monitoring-sdk
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -541,7 +541,7 @@ importers:
 
   apps/monitoring/monitoring-webapp:
     dependencies:
-      '@old-st/monitoring-sdk':
+      '@mma/monitoring-sdk':
         specifier: workspace:*
         version: link:../../../packages/monitoring-sdk
 
@@ -577,16 +577,16 @@ importers:
       '@aws-sdk/client-sqs':
         specifier: ^3.981.0
         version: 3.997.0
-      '@old-st/common':
+      '@mma/common':
         specifier: workspace:*
         version: link:../../common
-      '@old-st/telemetry':
+      '@mma/telemetry':
         specifier: workspace:*
         version: link:../../telemetry
 
   packages/client-common:
     dependencies:
-      '@old-st/contracts-common':
+      '@mma/contracts-common':
         specifier: workspace:*
         version: link:../contracts/common
       '@tanstack/react-query':
@@ -620,7 +620,7 @@ importers:
       '@aws-sdk/client-dynamodb':
         specifier: ^3.1030.0
         version: 3.1030.0
-      '@old-st/common':
+      '@mma/common':
         specifier: workspace:*
         version: link:../common
       dynamodb-onetable:
@@ -639,7 +639,7 @@ importers:
 
   packages/mobile-ui:
     dependencies:
-      '@old-st/design-tokens':
+      '@mma/design-tokens':
         specifier: workspace:*
         version: link:../design-tokens
 

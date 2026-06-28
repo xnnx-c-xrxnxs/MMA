@@ -1,5 +1,5 @@
 {
-  "name": "@old-st/monitoring-sdk",
+  "name": "@mma/monitoring-sdk",
   "version": "1.0.0",
   "description": "Platform-agnostic monitoring interfaces with AWS CloudWatch + X-Ray implementations. Consumed by monitoring-api-service.",
   "main": "src/index.ts",

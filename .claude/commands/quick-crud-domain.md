@@ -71,7 +71,7 @@ intentionally out of scope for this prompt.
 No dry-run preview — speed is the point of this prompt. Run directly:
 
 ```bash
-pnpm nx g @old-st/nx-plugin:domain \
+pnpm nx g @mma/nx-plugin:domain \
   --name={domain} \
   --entity={entity} \
   --fields="{fields}" \

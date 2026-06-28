@@ -1,6 +1,6 @@
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
-import type { IEventPublisher, EventPublishOptions } from '@old-st/common';
-import { injectTraceContext, getCorrelationId } from '@old-st/telemetry';
+import type { IEventPublisher, EventPublishOptions } from '@mma/common';
+import { injectTraceContext, getCorrelationId } from '@mma/telemetry';
 
 /**
  * SqsStandardEventPublisher<T>

@@ -4,7 +4,7 @@ import {
   createLocalS3Client,
   createAwsS3Client,
   CloudFrontUrlSigner,
-} from '@old-st/aws-s3';
+} from '@mma/aws-s3';
 import { FileApplicationService } from '../application/services/file-application.service';
 import { FileController } from '../presentation/controllers/file.controller';
 
@@ -17,7 +17,7 @@ const CLOUDFRONT_SIGNER = 'CLOUDFRONT_SIGNER';
     {
       provide: S3_FILE_STORAGE,
       useFactory: () => {
-        const bucketName = process.env.FILES_S3_BUCKET_NAME || 'old-st-files';
+        const bucketName = process.env.FILES_S3_BUCKET_NAME || 'mma-files';
         const s3Client =
           process.env.STAGE === 'local'
             ? createLocalS3Client(process.env.DEFAULT_REGION || 'eu-west-2')

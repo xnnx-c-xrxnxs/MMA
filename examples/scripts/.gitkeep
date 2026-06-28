@@ -1,5 +1,0 @@
-# Placeholder so the empty scripts/ directory is committed.
-# Populated by Phase 1.7 with example-specific:
-#   - setup-localstack.ts (example tables + queues only)
-#   - setup-e2e.ts / teardown-e2e.ts (example E2E infra)
-#   - prisma-migrate-all.ts (order-domain migration)

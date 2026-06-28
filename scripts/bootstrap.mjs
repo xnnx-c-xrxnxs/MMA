@@ -3,12 +3,12 @@
  * bootstrap.mjs — One-step project bootstrap from a template-created repo.
  *
  * Run this ONCE, immediately after creating a new repo via:
- *   gh repo create your-org/your-project --template Old-St-Labs/old-st-template --private --clone
+ *   gh repo create your-org/your-project --template xnnx-c-xrxnxs/mma --private --clone
  *
  * What it does, in order:
  *   1. Validates: node 24, gh CLI authed with admin on this repo, on `main`,
  *      origin remote exists, working tree clean.
- *   2. RENAMES the @old-st/ scope, project name, GitHub org, CODEOWNERS team,
+ *   2. RENAMES the @mma/ scope, project name, GitHub org, CODEOWNERS team,
  *      and display strings across every source file (calls init-project.mjs
  *      with --no-git-init --no-self-delete --yes).
  *   3. DELETES examples/ (unless --keep-examples).
@@ -38,7 +38,7 @@
  *   --scope=@acme            (required) New npm scope.
  *   --name=acme-platform     (required) New project name (kebab-case).
  *   --owner=@org/team        (optional) CODEOWNERS team for the new repo.
- *                            Defaults to @Old-St-Labs/senior-devs.
+ *                            Defaults to @xnnx-c-xrxnxs/senior-devs.
  *   --org=Acme-Inc           (optional) GitHub org/user; auto-detected from
  *                            `gh repo view` when not supplied.
  *   --display-name="Acme"    (optional) Human-readable UI string. Defaults to
@@ -61,7 +61,7 @@ import { stdin as input, stdout as output } from 'node:process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-const DEFAULT_OWNER = '@Old-St-Labs/senior-devs';
+const DEFAULT_OWNER = '@xnnx-c-xrxnxs/senior-devs';
 
 // ─── Arg parsing ────────────────────────────────────────────────────────────
 function parseArgs(argv) {
@@ -96,7 +96,7 @@ const HELP = `bootstrap.mjs — one-step project bootstrap.
 Required:
   --scope=@acme           New npm scope.
   --name=acme-platform    Project name (lowercase kebab-case).
-  --owner=@org/team       CODEOWNERS team (default: @Old-St-Labs/senior-devs).
+  --owner=@org/team       CODEOWNERS team (default: @xnnx-c-xrxnxs/senior-devs).
 
 Optional:
   --org=Acme-Inc          GitHub org (auto-detected from origin if omitted).
@@ -215,7 +215,7 @@ function validateEnvironment(args) {
 async function confirm(args) {
   if (args.yes || args.dryRun) return;
   console.log(`\n${c.bold}About to bootstrap ${args._repoNameWithOwner}:${c.reset}`);
-  console.log(`  • Rename @old-st/  →  ${args.scope}/`);
+  console.log(`  • Rename @mma/  →  ${args.scope}/`);
   console.log(`  • Rename project   →  ${args.name}`);
   console.log(`  • Rename UI text   →  "${args.displayName}"`);
   console.log(`  • Rename GH org    →  ${args.org}`);

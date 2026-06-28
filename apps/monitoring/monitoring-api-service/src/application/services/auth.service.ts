@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createHash } from 'crypto';
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 interface GitHubTokenResponse {
   access_token: string;

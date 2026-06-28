@@ -214,7 +214,7 @@ Never use `origin: '*'` with `credentials: true`.
 export class AuthModule {}
 ```
 
-Import `IAuthProvider`, `LocalAuthProvider`, and `CognitoAuthProvider` from `@old-st/aws-cognito`.
+Import `IAuthProvider`, `LocalAuthProvider`, and `CognitoAuthProvider` from `@mma/aws-cognito`.
 
 ---
 

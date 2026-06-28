@@ -1,13 +1,13 @@
 ---
 name: mobile-form-with-validation
-description: Build forms in the Expo mobile app using react-hook-form + Zod resolver, reusing schemas from @old-st/contracts so validation rules live in exactly one place. Use this when adding any create/edit/sign-in form on mobile. Covers field registration, inline error display, KeyboardAvoidingView, submission handling, and the differences from the webapp form pattern.
+description: Build forms in the Expo mobile app using react-hook-form + Zod resolver, reusing schemas from @mma/contracts so validation rules live in exactly one place. Use this when adding any create/edit/sign-in form on mobile. Covers field registration, inline error display, KeyboardAvoidingView, submission handling, and the differences from the webapp form pattern.
 ---
 
 # Mobile Form with Validation (RHF + Zod)
 
-Source schemas come from `@old-st/contracts/{domain}` — **never duplicate Zod schemas in the mobile app**.
+Source schemas come from `@mma/contracts/{domain}` — **never duplicate Zod schemas in the mobile app**.
 
-> **Key difference from webapp:** The webapp uses `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, `<FormMessage>` from `@old-st/ui` (Radix Slot + `<form>` element). **None of these exist in React Native.** Mobile forms use `Controller` from `react-hook-form` directly, with `Input` from `@old-st/mobile-ui` and manual error `<Text>` rendering.
+> **Key difference from webapp:** The webapp uses `<Form>`, `<FormField>`, `<FormItem>`, `<FormControl>`, `<FormMessage>` from `@mma/ui` (Radix Slot + `<form>` element). **None of these exist in React Native.** Mobile forms use `Controller` from `react-hook-form` directly, with `Input` from `@mma/mobile-ui` and manual error `<Text>` rendering.
 
 ---
 
@@ -17,7 +17,7 @@ Source schemas come from `@old-st/contracts/{domain}` — **never duplicate Zod 
 2. **Which contract schema** is the form's source of truth? (e.g. `signInRequestSchema`, `createUserSchema`)
 3. **Is it a create or edit form?** (edit needs `defaultValues` from server data)
 4. **Where does it live?** (`apps/mobile/src/app/{domain}/create-{entity}.tsx` for a screen, or `apps/mobile/src/components/{domain}/{name}-form.tsx` for a reusable form component)
-5. **Which mutation hook does it call?** (e.g. `useSignIn`, `useCreateUser` from `@old-st/client-common`)
+5. **Which mutation hook does it call?** (e.g. `useSignIn`, `useCreateUser` from `@mma/client-common`)
 
 ---
 
@@ -37,9 +37,9 @@ apps/mobile/src/components/auth/login-form.tsx         ← auth form example
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Text, Button, Input } from '@old-st/mobile-ui';
-import { createEntitySchema, type CreateEntityInput } from '@old-st/contracts/{domain}';
-import { useCreateEntity } from '@old-st/client-common';
+import { Text, Button, Input } from '@mma/mobile-ui';
+import { createEntitySchema, type CreateEntityInput } from '@mma/contracts/{domain}';
+import { useCreateEntity } from '@mma/client-common';
 
 interface CreateEntityFormProps {
   onSuccess?: () => void;
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
 
 ## Rules
 
-1. **The Zod schema MUST come from `@old-st/contracts/{domain}`.** Never define a form-specific schema in the mobile app. If the form needs extra UI-only validation (e.g. confirm-password), extend the contract schema with `.extend(...)` inline.
+1. **The Zod schema MUST come from `@mma/contracts/{domain}`.** Never define a form-specific schema in the mobile app. If the form needs extra UI-only validation (e.g. confirm-password), extend the contract schema with `.extend(...)` inline.
 2. **Use `Controller` from `react-hook-form` — NOT `register()`.** The `register()` API relies on DOM refs (`HTMLInputElement`) which don't exist in React Native. Every field must use `<Controller>` with `render` prop.
 3. **Wrap forms in `KeyboardAvoidingView` + `ScrollView`.** On iOS, the keyboard obscures bottom fields without `KeyboardAvoidingView`. Always add `keyboardShouldPersistTaps="handled"` on the `ScrollView` so tapping the submit button works while the keyboard is open.
 4. **No `<form>` element.** React Native has no `<form>`. Submission is triggered by `handleSubmit(onSubmit)` wired to the Button's `onPress`.
@@ -211,7 +211,7 @@ Password fields need `secureTextEntry` toggle:
 ```tsx
 import { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Text, Input } from '@old-st/mobile-ui';
+import { Text, Input } from '@mma/mobile-ui';
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 
 interface PasswordFieldProps {
@@ -299,7 +299,7 @@ import { CreateEntityForm } from './create-entity-form';
 
 const mockMutateAsync = jest.fn();
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useCreateEntity: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
@@ -349,7 +349,7 @@ describe('CreateEntityForm', () => {
 | Bug | Fix |
 |---|---|
 | Using `register()` instead of `Controller` | RN inputs have no DOM refs — always use `Controller` + `render` |
-| Using `<FormField>` / `<FormMessage>` from `@old-st/ui` | These are web-only (Radix Slot). Use `Controller` + manual error text |
+| Using `<FormField>` / `<FormMessage>` from `@mma/ui` | These are web-only (Radix Slot). Use `Controller` + manual error text |
 | Spreading `{...field}` from Controller render | RN `TextInput` uses `onChangeText` not `onChange`. Destructure: `{ onChange, onBlur, value }` and pass `onChangeText={onChange}` |
 | Keyboard covers bottom fields | Wrap in `KeyboardAvoidingView` with platform-specific `behavior` |
 | Tap on submit doesn't work with keyboard open | Add `keyboardShouldPersistTaps="handled"` to `ScrollView` |

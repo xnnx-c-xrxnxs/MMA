@@ -7,7 +7,7 @@ export default {
       title: 'Create Schema',
       subtitle: 'createProductSchema (with status)',
       code: `import { z } from 'zod';
-import { PRODUCT_STATUSES } from '@old-st/product-domain';
+import { PRODUCT_STATUSES } from '@mma/product-domain';
 
 export const productStatusSchema = z.enum(PRODUCT_STATUSES);
 

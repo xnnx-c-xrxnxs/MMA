@@ -8,10 +8,10 @@ This file loads automatically for any file inside `packages/aws/`. These package
 
 | Package | Purpose | Used by |
 |---|---|---|
-| `@old-st/aws-secrets` | `SecretsConfig.resolve(['KEY'])` — Lambda cold-start hydration of selected keys from a project-wide Secrets Manager secret | Every Prisma-based service's `main.ts` |
-| `@old-st/aws-cognito` | `IAuthProvider` abstract class + `CognitoAuthProvider` + `LocalAuthProvider` | `auth-api-service` only |
-| `@old-st/aws-sqs` | `SqsClientFactory`, `SqsStandardEventPublisher`, `SqsFifoEventPublisher` (auto-inject correlationId + trace context) | All services that publish events |
-| `@old-st/aws-s3` | `S3ClientFactory`, `S3FileStorage` (presigned PUT/GET URL generation) | `file-api-service` only |
+| `@mma/aws-secrets` | `SecretsConfig.resolve(['KEY'])` — Lambda cold-start hydration of selected keys from a project-wide Secrets Manager secret | Every Prisma-based service's `main.ts` |
+| `@mma/aws-cognito` | `IAuthProvider` abstract class + `CognitoAuthProvider` + `LocalAuthProvider` | `auth-api-service` only |
+| `@mma/aws-sqs` | `SqsClientFactory`, `SqsStandardEventPublisher`, `SqsFifoEventPublisher` (auto-inject correlationId + trace context) | All services that publish events |
+| `@mma/aws-s3` | `S3ClientFactory`, `S3FileStorage` (presigned PUT/GET URL generation) | `file-api-service` only |
 
 ---
 
@@ -23,7 +23,7 @@ This file loads automatically for any file inside `packages/aws/`. These package
 
 ```ts
 // ✅ Correct — explicit allow-list
-import { SecretsConfig } from '@old-st/aws-secrets';
+import { SecretsConfig } from '@mma/aws-secrets';
 await SecretsConfig.resolve(['ORDERS_DATABASE_URL']);
 
 // ❌ Forbidden — would expose unrelated keys

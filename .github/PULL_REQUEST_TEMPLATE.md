@@ -22,9 +22,9 @@ Closes #<!-- issue number, or remove this line if not linked -->
 
 ## Generator-Driven PRs (skip this section if no generator was used)
 
-If this PR was scaffolded by `nx g @old-st/nx-plugin:domain`, `:service`, `:event-handler`, or `:use-case`:
+If this PR was scaffolded by `nx g @mma/nx-plugin:domain`, `:service`, `:event-handler`, or `:use-case`:
 
-- [ ] Generator command(s) used: <!-- e.g. `nx g @old-st/nx-plugin:domain --name=payment --persistence=dynamo` -->
+- [ ] Generator command(s) used: <!-- e.g. `nx g @mma/nx-plugin:domain --name=payment --persistence=dynamo` -->
 - [ ] Scaffold and business logic are committed separately (`chore(scaffold): ...` then `feat(...): ...`) **OR** all changes are clearly summarized below.
 - [ ] No hand-edits to files marked `@generated` (regenerate instead).
 
@@ -77,4 +77,4 @@ If this PR was scaffolded by `nx g @old-st/nx-plugin:domain`, `:service`, `:even
 ---
 
 > **Automated enforcement (no checkbox needed):**
-> Architecture boundaries, import hygiene, hardcoded status strings, domain purity, `NODE_ENV` checks, contracts subpath imports, Prisma client isolation, and controller→use-case boundaries are all caught by `@old-st/eslint-plugin` and CI structural checks. See `docs/coding-standards.md` for the full list.
+> Architecture boundaries, import hygiene, hardcoded status strings, domain purity, `NODE_ENV` checks, contracts subpath imports, Prisma client isolation, and controller→use-case boundaries are all caught by `@mma/eslint-plugin` and CI structural checks. See `docs/coding-standards.md` for the full list.

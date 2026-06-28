@@ -17,8 +17,8 @@ const nextConfig = {
   // Static export — produces apps/webapp/out/ for S3 + CloudFront deployment.
   output: 'export',
   transpilePackages: [
-    '@old-st/contracts-common',
-    '@old-st/contracts-auth',
+    '@mma/contracts-common',
+    '@mma/contracts-auth',
   ],
 };
 

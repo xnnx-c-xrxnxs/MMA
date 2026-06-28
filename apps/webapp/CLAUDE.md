@@ -46,18 +46,18 @@ apps/webapp/src/
 
 A page component (`page.tsx`) wires hooks, state, and child components. It does **not** contain table markup, form fields, or direct API calls. All visual structure lives in `components/{domain}/`.
 
-### All API Communication via `@old-st/client-common`
+### All API Communication via `@mma/client-common`
 
 Never call `fetch` or Axios directly from page or component code. Always use:
-- Domain React Query hooks (`useUsers`, `useOrders`, etc.) from `@old-st/client-common`
+- Domain React Query hooks (`useUsers`, `useOrders`, etc.) from `@mma/client-common`
 - Typed API clients in `packages/client-common/src/infrastructure/api-clients/`
 
-### UI Primitives from `@old-st/ui` Only
+### UI Primitives from `@mma/ui` Only
 
 Never write raw `<table>`, `<button>`, or `<input>` elements. Use the shared shadcn-style components:
 
 ```tsx
-import { Badge, Button, Card, Table, Input, Select, Dialog, Skeleton } from '@old-st/ui';
+import { Badge, Button, Card, Table, Input, Select, Dialog, Skeleton } from '@mma/ui';
 ```
 
 If a needed primitive doesn't exist, add it to `packages/ui/src/components/` — see the `webapp-ui-primitive` skill.
@@ -93,14 +93,14 @@ useEffect(() => {
 
 ### Contract Imports — Domain-Scoped Only
 
-Always import from `@old-st/contracts/{domain}` — **never** from the bare `@old-st/contracts` root (Golden Rule #11):
+Always import from `@mma/contracts/{domain}` — **never** from the bare `@mma/contracts` root (Golden Rule #11):
 
 ```tsx
 // ✅ correct
-import { EntityStatusEnum, type EntityResponse } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum, type EntityResponse } from '@mma/contracts/{domain}';
 
 // ❌ forbidden
-import { UserStatusEnum } from '@old-st/contracts';
+import { UserStatusEnum } from '@mma/contracts';
 ```
 
 ### Status Badge Variants — Enum Constants, Not Strings
@@ -109,7 +109,7 @@ import { UserStatusEnum } from '@old-st/contracts';
 
 ```ts
 // ✅ correct
-import { EntityStatusEnum } from '@old-st/contracts/{domain}';
+import { EntityStatusEnum } from '@mma/contracts/{domain}';
 export const entityStatusVariants: Record<string, BadgeVariant> = {
   [EntityStatusEnum.ACTIVE]: 'success',
   [EntityStatusEnum.PENDING]: 'warning',
@@ -168,10 +168,10 @@ Use semantic Tailwind utilities (`bg-card`, `text-muted-foreground`, `border-bor
 
 **Default display timezone: `Europe/London`** (covers GMT in winter, BST in summer automatically). Override per-project when requirements differ.
 
-The helpers live in `@old-st/client-common` (shared with mobile — implemented in `packages/client-common/src/lib/format-date.ts`):
+The helpers live in `@mma/client-common` (shared with mobile — implemented in `packages/client-common/src/lib/format-date.ts`):
 
 ```tsx
-import { formatDate, formatDateTime, formatTime } from '@old-st/client-common';
+import { formatDate, formatDateTime, formatTime } from '@mma/client-common';
 
 <span>{formatDateTime(order.createdAt)}</span>   // '13 May 2026, 14:30'
 <span>{formatDate(user.dateCreated)}</span>       // '13 May 2026'
@@ -188,7 +188,7 @@ import { formatDate, formatDateTime, formatTime } from '@old-st/client-common';
 
 ## Form Component Pattern (`<Form structure={...}>`)
 
-> **Status: planned — not yet added to `@old-st/ui`.** When the `Form` primitive is added, use this pattern. Until then, compose forms manually with `react-hook-form` + `<FormField>` per the `webapp-form-with-validation` skill.
+> **Status: planned — not yet added to `@mma/ui`.** When the `Form` primitive is added, use this pattern. Until then, compose forms manually with `react-hook-form` + `<FormField>` per the `webapp-form-with-validation` skill.
 
 The `Form` component is a **structure-driven** wrapper — the entire form layout is declared as a data structure (`FormSection[]`), not as JSX. This is the preferred pattern for standard CRUD forms; manual `<FormField>` composition is reserved for custom or non-standard layouts.
 
@@ -254,7 +254,7 @@ interface FormProps<T> {
 // Define structure and schema separately — keep them co-located with the page/component
 
 import { z } from 'zod';
-import { FormSection } from '@old-st/ui';
+import { FormSection } from '@mma/ui';
 
 export const createUserSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -300,7 +300,7 @@ export const createUserStructure: FormSection[] = [
 ### Usage in a page component
 
 ```tsx
-import { Form } from '@old-st/ui';
+import { Form } from '@mma/ui';
 import { createUserSchema, createUserStructure } from './create-user.structure';
 
 export function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
@@ -327,7 +327,7 @@ export function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
 
 ### Rules
 
-1. **Schema lives in `@old-st/contracts/{domain}` — never duplicated in the component file.** Import and re-use the contract's Zod schema directly as the `schema` prop.
+1. **Schema lives in `@mma/contracts/{domain}` — never duplicated in the component file.** Import and re-use the contract's Zod schema directly as the `schema` prop.
 2. **Use `zodResolver` — never `yupResolver`.** The old project used Yup; this codebase uses Zod throughout.
 3. **Structure arrays are co-located with their page/component** (`create-user.structure.ts` next to `create-user-form.tsx`) — not in the domain package.
 4. **Password fields get show/hide toggle automatically** when `inputType: 'password'` — no extra wiring needed.
@@ -347,7 +347,7 @@ The root has `global-error.tsx` and `not-found.tsx`.
 
 ## Forms
 
-All forms use `react-hook-form` + Zod resolver, with the schema sourced from `@old-st/contracts/{domain}`. Never duplicate Zod schemas in the webapp. Use the `<FormField>` / `<FormItem>` / `<FormControl>` / `<FormMessage>` wrappers from `@old-st/ui`.
+All forms use `react-hook-form` + Zod resolver, with the schema sourced from `@mma/contracts/{domain}`. Never duplicate Zod schemas in the webapp. Use the `<FormField>` / `<FormItem>` / `<FormControl>` / `<FormMessage>` wrappers from `@mma/ui`.
 
 ### Zod Error Messages (`apps/webapp/src/lib/zod-error-map.ts`)
 
@@ -399,7 +399,7 @@ import './globals.css';
 
 ## Toasts
 
-All mutations surface feedback via `toast` from `@old-st/ui` (sonner). Never use `alert()` and never leave mutations silent. The `<Toaster>` is mounted **once** in `apps/webapp/src/app/layout.tsx` — do not add it anywhere else.
+All mutations surface feedback via `toast` from `@mma/ui` (sonner). Never use `alert()` and never leave mutations silent. The `<Toaster>` is mounted **once** in `apps/webapp/src/app/layout.tsx` — do not add it anywhere else.
 
 ---
 
@@ -413,19 +413,19 @@ All mutations surface feedback via `toast` from `@old-st/ui` (sonner). Never use
 
 **23. API client responses must be Zod-parsed.** Every API client method in `client-common` passes a `schema` option to `apiRequest()` so responses are validated at runtime against the contract schema.
 
-**23d. Interactive UI primitives wrap Radix.** When an accessible primitive is needed (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Label, Separator, Command), wrap Radix in `@old-st/ui` — never hand-roll keyboard/focus management. See the `webapp-radix-primitive-wrap` skill.
+**23d. Interactive UI primitives wrap Radix.** When an accessible primitive is needed (Dialog, DropdownMenu, Tooltip, Popover, Tabs, AlertDialog, Sheet, Label, Separator, Command), wrap Radix in `@mma/ui` — never hand-roll keyboard/focus management. See the `webapp-radix-primitive-wrap` skill.
 
-**23g. Cursor-paginated infinite lists** use the domain-specific infinite hooks in `@old-st/client-common` (`useXxxByStatusInfinite`). Prisma/offset domains stay paginated. See the `webapp-cursor-infinite-scroll` skill.
+**23g. Cursor-paginated infinite lists** use the domain-specific infinite hooks in `@mma/client-common` (`useXxxByStatusInfinite`). Prisma/offset domains stay paginated. See the `webapp-cursor-infinite-scroll` skill.
 
 **23h. Optimistic mutations** use the `optimisticMutation` helper or the hand-rolled `onMutate`/`onError`/`onSettled` pattern. Pair every optimistic mutation with an error toast. See the `webapp-optimistic-mutations` skill.
 
-**23i. File uploads** use `<FileDropzone>` from `@old-st/ui` + the `useFileUpload` hook from `@old-st/client-common`. Upload bytes go directly to S3 via a presigned URL — never through a domain backend (Golden Rule #37). See the `webapp-file-upload-ux` skill.
+**23i. File uploads** use `<FileDropzone>` from `@mma/ui` + the `useFileUpload` hook from `@mma/client-common`. Upload bytes go directly to S3 via a presigned URL — never through a domain backend (Golden Rule #37). See the `webapp-file-upload-ux` skill.
 
 **23l. Accessibility.** Every top-level page must pass `@axe-core/playwright` scans for `critical` + `serious` violations. New routes are added to `PAGES_TO_SCAN` in `apps/webapp-e2e/src/specs/a11y/axe-scan.spec.ts`. See the `fe-accessibility-audit` skill.
 
 **23m. Bundle analysis.** Audit before adding any > 50 KB dependency via `ANALYZE=true pnpm nx run webapp:build` (`@next/bundle-analyzer`, opt-in). See the `fe-performance-bundle-analysis` skill.
 
-**23n. Every `@old-st/ui` primitive ships four files:** `{name}.tsx` + `index.ts` + `{name}.stories.tsx` + `{name}.spec.tsx`. No SCSS/Sass/styled-components/Emotion/CSS Modules anywhere in `packages/ui/` — Tailwind v4 utilities + `cva()` only. See the `webapp-ui-primitive` skill.
+**23n. Every `@mma/ui` primitive ships four files:** `{name}.tsx` + `index.ts` + `{name}.stories.tsx` + `{name}.spec.tsx`. No SCSS/Sass/styled-components/Emotion/CSS Modules anywhere in `packages/ui/` — Tailwind v4 utilities + `cva()` only. See the `webapp-ui-primitive` skill.
 
 ---
 
@@ -489,5 +489,5 @@ Add new domain selectors to `apps/webapp-e2e/src/utils/selectors.ts`.
 | `full-stack-feature.md` | Backend + webapp changes together |
 | `new-ui-primitive.md` | New shared primitive for web + mobile |
 | `fe-accessibility-pass.md` | Accessibility audit pass |
-| `figma-component.md` | One Figma component → `@old-st/ui` primitive |
+| `figma-component.md` | One Figma component → `@mma/ui` primitive |
 | `figma-page.md` | One Figma screen → Next.js page |

@@ -4,7 +4,7 @@ This template ships with full observability built on three pillars:
 
 | Pillar | Implementation |
 |---|---|
-| **Structured logging** | `@old-st/telemetry` `createLogger()` → JSON stdout → CloudWatch Logs |
+| **Structured logging** | `@mma/telemetry` `createLogger()` → JSON stdout → CloudWatch Logs |
 | **Distributed tracing** | OpenTelemetry SDK + AWS X-Ray (active in deployed environments) |
 | **Request correlation** | `correlationMiddleware()` + `AsyncLocalStorage` → `correlationId` in every log line |
 
@@ -14,9 +14,9 @@ The internal **monitoring tool** (`apps/monitoring/`) consumes these signals to 
 
 ---
 
-## The `@old-st/telemetry` Package
+## The `@mma/telemetry` Package
 
-All backend services depend on `@old-st/telemetry`. It provides four exports:
+All backend services depend on `@mma/telemetry`. It provides four exports:
 
 ### `initTelemetry(serviceName)`
 
@@ -24,7 +24,7 @@ Bootstraps the OpenTelemetry SDK. **Must be called before `NestFactory.create()`
 
 ```ts
 // apps/{domain}/{service}/src/main.ts
-import { initTelemetry } from '@old-st/telemetry';
+import { initTelemetry } from '@mma/telemetry';
 
 initTelemetry('user-api-service');
 
@@ -42,7 +42,7 @@ Locally, `OTEL_SDK_DISABLED=true` makes this a no-op. In Lambda, the SDK exports
 
 ```ts
 // app service, repository, dispatcher, etc.
-import { createLogger } from '@old-st/telemetry';
+import { createLogger } from '@mma/telemetry';
 
 const logger = createLogger('user-application-service');
 
@@ -82,7 +82,7 @@ Express middleware that generates (or reuses incoming) `x-correlation-id` per re
 
 ```ts
 // apps/{domain}/{service}/src/main.ts
-import { correlationMiddleware } from '@old-st/telemetry';
+import { correlationMiddleware } from '@mma/telemetry';
 
 function setupGlobalMiddleware(app: INestApplication) {
   app.use(correlationMiddleware());        // FIRST — before CORS, before global prefix
@@ -97,20 +97,20 @@ For propagation into outbound calls:
 
 ```ts
 // ACL adapter — outbound HTTP
-import { getCorrelationHeaders } from '@old-st/telemetry';
+import { getCorrelationHeaders } from '@mma/telemetry';
 
 await this.http.axiosRef.get(url, {
   headers: { ...getCorrelationHeaders() },   // x-correlation-id forwarded
 });
 
 // SQS event handler — wrap event processing
-import { runWithCorrelationId } from '@old-st/telemetry';
+import { runWithCorrelationId } from '@mma/telemetry';
 
 const correlationId = body.correlationId ?? crypto.randomUUID();
 await runWithCorrelationId(correlationId, () => this.handle(body));
 ```
 
-SQS publishers in `@old-st/aws-sqs` automatically inject `correlationId` from `getCorrelationId()` into the event body — no manual work required on the publisher side.
+SQS publishers in `@mma/aws-sqs` automatically inject `correlationId` from `getCorrelationId()` into the event body — no manual work required on the publisher side.
 
 ---
 
@@ -174,7 +174,7 @@ An internal Next.js dashboard + NestJS API — **not for end users**. Deployed a
 
 When you scaffold a new service:
 
-1. ✅ Add `"@old-st/telemetry": "workspace:*"` to the service's `package.json`.
+1. ✅ Add `"@mma/telemetry": "workspace:*"` to the service's `package.json`.
 2. ✅ Call `initTelemetry('{service-name}')` in `main.ts` **before** `NestFactory.create()`.
 3. ✅ Add `app.use(correlationMiddleware())` as the **first** middleware in `setupGlobalMiddleware()`.
 4. ✅ Use `const logger = createLogger('{name}')` at module scope in every app service, dispatcher, and ACL adapter.

@@ -426,17 +426,17 @@ export default function UsersPage() {
           <tr>
             <td><code>{domain}-table.tsx</code></td>
             <td>List presentation — columns, badges, links to detail pages, empty state</td>
-            <td>Uses <code>Table</code> + <code>Badge</code> from <code>@old-st/ui</code>, calls status-variant function for badge color</td>
+            <td>Uses <code>Table</code> + <code>Badge</code> from <code>@mma/ui</code>, calls status-variant function for badge color</td>
           </tr>
           <tr>
             <td><code>create-{entity}-form.tsx</code></td>
             <td>Create form — local state matching contract input type, mutation hook</td>
-            <td>Uses <code>Card</code> + <code>Input</code> + <code>Select</code> + <code>Button</code> from <code>@old-st/ui</code>, calls <code>onClose()</code> on success</td>
+            <td>Uses <code>Card</code> + <code>Input</code> + <code>Select</code> + <code>Button</code> from <code>@mma/ui</code>, calls <code>onClose()</code> on success</td>
           </tr>
           <tr>
             <td><code>{entity}-actions.tsx</code></td>
             <td>Status-dependent action buttons — conditional rendering based on entity status</td>
-            <td>Uses <code>Button</code> from <code>@old-st/ui</code>, one mutation hook per action, checks <code>{Entity}StatusEnum</code></td>
+            <td>Uses <code>Button</code> from <code>@mma/ui</code>, one mutation hook per action, checks <code>{Entity}StatusEnum</code></td>
           </tr>
         </tbody>
       </table>
@@ -535,10 +535,10 @@ export default function UsersPage() {
       </table>
 
       <!-- ════════════════════════════════════════════ -->
-      <h2>Data Access Layer (<code>@old-st/client-common</code>)</h2>
+      <h2>Data Access Layer (<code>@mma/client-common</code>)</h2>
 
       <p>
-        All API communication flows through the <code>@old-st/client-common</code> package,
+        All API communication flows through the <code>@mma/client-common</code> package,
         which provides a three-tier data access stack:
       </p>
 
@@ -759,10 +759,10 @@ const queryClient = new QueryClient({
       </p>
 
       <!-- ════════════════════════════════════════════ -->
-      <h2>UI Primitives (<code>@old-st/ui</code>)</h2>
+      <h2>UI Primitives (<code>@mma/ui</code>)</h2>
 
       <p>
-        The <code>@old-st/ui</code> package provides domain-agnostic building blocks following the
+        The <code>@mma/ui</code> package provides domain-agnostic building blocks following the
         <a href="https://ui.shadcn.com/">shadcn/ui</a> pattern — <code>class-variance-authority</code> (CVA)
         for type-safe variants and <code>cn()</code> (clsx + tailwind-merge) for class composition.
       </p>
@@ -922,7 +922,7 @@ export default function RootLayout({ children }) {
       <h2>How Contracts Are Consumed</h2>
 
       <p>
-        The webapp uses the same <code>@old-st/contracts</code> package as the backend, imported via
+        The webapp uses the same <code>@mma/contracts</code> package as the backend, imported via
         domain-scoped subpaths:
       </p>
 
@@ -937,35 +937,35 @@ export default function RootLayout({ children }) {
         <tbody>
           <tr>
             <td>Response validation (API client)</td>
-            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>@mma/contracts/{domain}</code></td>
             <td><code>userResponseSchema</code> passed to <code>apiRequest({ schema })</code></td>
           </tr>
           <tr>
             <td>Input types (forms)</td>
-            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>@mma/contracts/{domain}</code></td>
             <td><code>CreateUserInput</code> used for form state typing</td>
           </tr>
           <tr>
             <td>Status enums (actions, badges)</td>
-            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>@mma/contracts/{domain}</code></td>
             <td><code>UserStatusEnum.ACTIVE</code> for conditional rendering</td>
           </tr>
           <tr>
             <td>Status arrays (filter dropdowns)</td>
-            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>@mma/contracts/{domain}</code></td>
             <td><code>USER_STATUSES</code> to populate <code>&lt;Select&gt;</code> options</td>
           </tr>
           <tr>
             <td>Pagination wrappers</td>
-            <td><code>@old-st/contracts/common</code></td>
+            <td><code>@mma/contracts/common</code></td>
             <td><code>paginatedResponseSchema()</code>, <code>offsetPaginatedResponseSchema()</code></td>
           </tr>
         </tbody>
       </table>
 
       <div class="callout warning">
-        <strong>Never import from the bare <code>@old-st/contracts</code> root</strong> — always use domain-scoped
-        subpath imports (<code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc.).
+        <strong>Never import from the bare <code>@mma/contracts</code> root</strong> — always use domain-scoped
+        subpath imports (<code>@mma/contracts/user</code>, <code>@mma/contracts/order</code>, etc.).
         The root barrel creates transitive type coupling between all domains.
       </div>
 

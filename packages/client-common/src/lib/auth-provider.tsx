@@ -15,7 +15,7 @@ import {
   setAccessTokenGetter,
   setOnUnauthorized,
 } from '../infrastructure/api-clients/base-api.client';
-import type { MeResponse, SignInResponse, AuthTokens } from '@old-st/contracts/auth';
+import type { MeResponse, SignInResponse, AuthTokens } from '@mma/contracts/auth';
 import {
   noopTokenStorage,
   TOKEN_STORAGE_KEYS,

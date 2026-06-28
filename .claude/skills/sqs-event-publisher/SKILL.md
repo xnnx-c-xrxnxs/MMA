@@ -7,7 +7,7 @@ description: Add an SQS event publisher to an existing HTTP API service or domai
 
 > **This skill is for outbound publishing only.** For consuming SQS messages use the `sqs-event-driven-service` skill instead.
 
-> **Cross-domain publishing:** When the events you publish will be consumed by a **different bounded context** (e.g. Product API publishing events consumed by Order Event Handler), ensure the event schemas and type constants are defined in the **publishing domain's contracts** (`@old-st/contracts/{publishing-domain}`). The consumer will import from that subpath — see the `cross-domain-event-handler` skill. Queue naming convention for cross-domain: `{publishing-domain}-events-for-{consuming-domain}` (e.g. `product-events-for-orders`).
+> **Cross-domain publishing:** When the events you publish will be consumed by a **different bounded context** (e.g. Product API publishing events consumed by Order Event Handler), ensure the event schemas and type constants are defined in the **publishing domain's contracts** (`@mma/contracts/{publishing-domain}`). The consumer will import from that subpath — see the `cross-domain-event-handler` skill. Queue naming convention for cross-domain: `{publishing-domain}-events-for-{consuming-domain}` (e.g. `product-events-for-orders`).
 
 ---
 
@@ -39,12 +39,12 @@ description: Add an SQS event publisher to an existing HTTP API service or domai
 
 ## Package
 
-The concrete publishers live in `@old-st/aws-sqs` (`packages/aws/aws-sqs`).  
-The interface lives in `@old-st/common`.
+The concrete publishers live in `@mma/aws-sqs` (`packages/aws/aws-sqs`).  
+The interface lives in `@mma/common`.
 
 ```
-@old-st/common    → IEventPublisher<T>, EventPublishOptions
-@old-st/aws-sqs   → SqsStandardEventPublisher<T>, SqsFifoEventPublisher<T>
+@mma/common    → IEventPublisher<T>, EventPublishOptions
+@mma/aws-sqs   → SqsStandardEventPublisher<T>, SqsFifoEventPublisher<T>
                     createLocalSqsClient(), createAwsSqsClient()
 ```
 
@@ -88,7 +88,7 @@ Convention: `{ENTITY}_EVENT_PUBLISHER` (uppercase, same pattern as `{ENTITY}_REP
 ## Step 3 — Wire the Publisher in the Module
 
 ```typescript
-import { SqsFifoEventPublisher, SqsStandardEventPublisher, createLocalSqsClient, createAwsSqsClient } from '@old-st/aws-sqs';
+import { SqsFifoEventPublisher, SqsStandardEventPublisher, createLocalSqsClient, createAwsSqsClient } from '@mma/aws-sqs';
 
 // inside @Module({ providers: [...] })
 {
@@ -123,11 +123,11 @@ import { SqsFifoEventPublisher, SqsStandardEventPublisher, createLocalSqsClient,
 
 ### CorrelationId Auto-Injection
 
-Both `SqsStandardEventPublisher` and `SqsFifoEventPublisher` **automatically inject `correlationId`** into every published event body. The publisher calls `getCorrelationId()` from `@old-st/telemetry` (which reads from the `AsyncLocalStorage` context set by `correlationMiddleware()`) and merges it into the event payload before `JSON.stringify`. No manual work is needed — if a `correlationId` exists in the current request context, it will be propagated to the SQS message body automatically.
+Both `SqsStandardEventPublisher` and `SqsFifoEventPublisher` **automatically inject `correlationId`** into every published event body. The publisher calls `getCorrelationId()` from `@mma/telemetry` (which reads from the `AsyncLocalStorage` context set by `correlationMiddleware()`) and merges it into the event payload before `JSON.stringify`. No manual work is needed — if a `correlationId` exists in the current request context, it will be propagated to the SQS message body automatically.
 
 This means the consumer (event handler) can extract the `correlationId` from the raw message body and wrap its processing in `runWithCorrelationId()`, creating end-to-end request tracing across HTTP → SQS → event handler chains.
 
-**Event schema requirement:** All event schemas in `@old-st/contracts/{domain}/event-schemas.ts` must include `correlationId: z.string().optional()` so the auto-injected field passes Zod validation on the consumer side.
+**Event schema requirement:** All event schemas in `@mma/contracts/{domain}/event-schemas.ts` must include `correlationId: z.string().optional()` so the auto-injected field passes Zod validation on the consumer side.
 
 ---
 
@@ -135,8 +135,8 @@ This means the consumer (event handler) can extract the `correlationId` from the
 
 ```typescript
 // apps/{domain}/{domain}-api-service/src/application/services/{entity}-application.service.ts
-import type { IEventPublisher, EventPublishOptions } from '@old-st/common';
-import type { {Entity}EventPayload } from '@old-st/contracts/{domain}';
+import type { IEventPublisher, EventPublishOptions } from '@mma/common';
+import type { {Entity}EventPayload } from '@mma/contracts/{domain}';
 
 @Injectable()
 export class UserApplicationService {
@@ -273,7 +273,7 @@ Copy the printed `USERS_SQS_QUEUE_URL` into `.env.local`.
 In `apps/{domain}/{service}/package.json` (or the root if there is no per-service package.json), add:
 
 ```json
-"@old-st/aws-sqs": "workspace:*"
+"@mma/aws-sqs": "workspace:*"
 ```
 
 Then run:
@@ -336,5 +336,5 @@ expect(mockPublisher.publish).toHaveBeenCalledWith(
 - [ ] `.env.local` updated with `{DOMAIN}_SQS_QUEUE_NAME` and `{DOMAIN}_SQS_QUEUE_URL`
 - [ ] `QUEUE_CONFIGS` entry added to `scripts/setup-localstack.ts` (`fifo: true` for default FIFO, omit or `fifo: false` for explicit Standard)
 - [ ] `pnpm run localstack:setup:force` run (queue URL in output)
-- [ ] `@old-st/aws-sqs: workspace:*` dependency added; `pnpm install` run
+- [ ] `@mma/aws-sqs: workspace:*` dependency added; `pnpm install` run
 - [ ] Unit tests mock `IEventPublisher<T>` with `{ publish: jest.fn() }`

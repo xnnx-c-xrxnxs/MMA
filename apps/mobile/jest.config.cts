@@ -8,12 +8,12 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   moduleNameMapper: {
     '\\.svg$': '@nx/expo/plugins/jest/svg-mock',
-    '^@old-st/contracts/common$': '<rootDir>/../../packages/contracts/common/src/index.ts',
-    '^@old-st/contracts/auth$': '<rootDir>/../../packages/contracts/auth/src/index.ts',
-    '^@old-st/mobile-ui$': '<rootDir>/../../packages/mobile-ui/src/index.ts',
-    '^@old-st/client-common$': '<rootDir>/../../packages/client-common/src/index.ts',
-    '^@old-st/client-common/hooks$': '<rootDir>/../../packages/client-common/src/hooks/index.ts',
-    '^@old-st/client-common/infrastructure$': '<rootDir>/../../packages/client-common/src/infrastructure/index.ts',
+    '^@mma/contracts/common$': '<rootDir>/../../packages/contracts/common/src/index.ts',
+    '^@mma/contracts/auth$': '<rootDir>/../../packages/contracts/auth/src/index.ts',
+    '^@mma/mobile-ui$': '<rootDir>/../../packages/mobile-ui/src/index.ts',
+    '^@mma/client-common$': '<rootDir>/../../packages/client-common/src/index.ts',
+    '^@mma/client-common/hooks$': '<rootDir>/../../packages/client-common/src/hooks/index.ts',
+    '^@mma/client-common/infrastructure$': '<rootDir>/../../packages/client-common/src/infrastructure/index.ts',
   },
   transform: {
     '\\.[jt]sx?$': [

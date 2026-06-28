@@ -579,7 +579,7 @@ packages/user-domain/src/
 <h3>Repository Interface (Port)</h3>
 <div class="code-wrap"><div class="code-label">user-repository.interface.ts</div><pre><code><span class="com">// packages/user-domain/src/application/interfaces/user-repository.interface.ts</span>
 
-<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">UserRole</span>, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../domain/constants'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
 
@@ -619,8 +619,8 @@ packages/user-domain/src/
 <div class="code-wrap"><div class="code-label">dynamo-user.repository.ts</div><pre><code><span class="com">// packages/user-domain/src/infrastructure/repositories/dynamo-user.repository.ts</span>
 
 <span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
-<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
-<span class="kw">import</span> { pageRecordHandler } <span class="kw">from</span> <span class="str">'@old-st/dynamodb-onetable'</span>;
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
+<span class="kw">import</span> { pageRecordHandler } <span class="kw">from</span> <span class="str">'@mma/dynamodb-onetable'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../application/interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
 <span class="kw">import</span> { UserDataType } <span class="kw">from</span> <span class="str">'../schemas/UserSchema'</span>;
@@ -717,7 +717,7 @@ packages/user-domain/src/
 
 <span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
 <span class="kw">import</span> <span class="kw">type</span> { Dynamo } <span class="kw">from</span> <span class="str">'dynamodb-onetable/Dynamo'</span>;
-<span class="kw">import</span> { createDynamoLocalClient, createAWSClient, createTable } <span class="kw">from</span> <span class="str">'@old-st/dynamodb-onetable'</span>;
+<span class="kw">import</span> { createDynamoLocalClient, createAWSClient, createTable } <span class="kw">from</span> <span class="str">'@mma/dynamodb-onetable'</span>;
 
 <span class="kw">export</span> <span class="kw">class</span> DynamoDBConfig {
   <span class="kw">private</span> <span class="kw">static</span> client: Dynamo;
@@ -761,7 +761,7 @@ packages/user-domain/src/
 <h3>CreateUser Use Case</h3>
 <div class="code-wrap"><div class="code-label">create-user.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/create-user/create-user.use-case.ts</span>
 
-<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { <span class="ty">UserRole</span>, UserRoleEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
@@ -802,7 +802,7 @@ packages/user-domain/src/
 <h3>CreateOrder Use Case — ACL + Event Publishing</h3>
 <div class="code-wrap"><div class="code-label">create-order.use-case.ts</div><pre><code><span class="com">// packages/order-domain/src/application/use-cases/create-order/create-order.use-case.ts</span>
 
-<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
 <span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
@@ -859,7 +859,7 @@ packages/user-domain/src/
 <h3>ActivateUser Use Case — State Transition</h3>
 <div class="code-wrap"><div class="code-label">activate-user.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/activate-user/activate-user.use-case.ts</span>
 
-<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
@@ -888,7 +888,7 @@ packages/user-domain/src/
 <h3>ListUsersByStatus Use Case — Cursor Pagination</h3>
 <div class="code-wrap"><div class="code-label">list-users-by-status.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/list-users-by-status/list-users-by-status.use-case.ts</span>
 
-<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
@@ -928,7 +928,7 @@ packages/user-domain/src/
   <div class="section-num">06</div>
   <div>
     <h2>📋 Contracts — Zod Schemas & TypeScript Types</h2>
-    <p class="section-desc">Each domain has its own contracts package. Subpath imports only. Never import from the bare @old-st/contracts root.</p>
+    <p class="section-desc">Each domain has its own contracts package. Subpath imports only. Never import from the bare @mma/contracts root.</p>
   </div>
 </div>
 
@@ -937,7 +937,7 @@ packages/user-domain/src/
 <div class="code-wrap"><div class="code-label">packages/contracts/user/src/schemas.ts</div><pre><code><span class="com">// packages/contracts/user/src/schemas.ts</span>
 
 <span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+<span class="kw">import</span> { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 
 <span class="com">// Re-export domain constants so consumers don't need both packages</span>
 <span class="kw">export</span> { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
@@ -980,7 +980,7 @@ packages/user-domain/src/
 <span class="kw">export</span> <span class="kw">type</span> <span class="ty">CreateUserInput</span>       = z.infer&lt;typeof createUserSchema&gt;;
 <span class="kw">export</span> <span class="kw">type</span> <span class="ty">UpdateUserInput</span>       = z.infer&lt;typeof updateUserSchema&gt;;</code></pre></div>
 
-<div class="callout callout-danger"><div class="callout-title">⛔ Import Rule — Always use domain-scoped subpaths</div><p>✅ <code>import { createUserSchema } from '@old-st/contracts/user'</code><br>❌ <code>import { createUserSchema } from '@old-st/contracts'</code></p><p>Each domain sub-package compiles independently. A type error in the order contracts cannot break the user service. Golden Rule #11.</p></div>
+<div class="callout callout-danger"><div class="callout-title">⛔ Import Rule — Always use domain-scoped subpaths</div><p>✅ <code>import { createUserSchema } from '@mma/contracts/user'</code><br>❌ <code>import { createUserSchema } from '@mma/contracts'</code></p><p>Each domain sub-package compiles independently. A type error in the order contracts cannot break the user service. Golden Rule #11.</p></div>
 
 <h3>Common Pagination Types</h3>
 <div class="code-wrap"><div class="code-label">packages/contracts/common/src/pagination.ts</div><pre><code><span class="com">// packages/contracts/common/src/pagination.ts</span>
@@ -1028,21 +1028,21 @@ packages/user-domain/src/
 <div class="code-wrap"><div class="code-label">user-application.service.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/application/services/user-application.service.ts</span>
 
 <span class="kw">import</span> { <span class="ty">Injectable</span>, Inject } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
-<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>;
-<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@mma/telemetry'</span>;
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> {
   userResponseSchema,
   <span class="ty">CreateUserInput</span>, <span class="ty">UpdateUserInput</span>, <span class="ty">UserResponse</span>,
   ListUsersByStatusInput, <span class="ty">UserDomainEvent</span>,
-} <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
-<span class="kw">import</span> { PaginatedResponse } <span class="kw">from</span> <span class="str">'@old-st/contracts/common'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
+<span class="kw">import</span> { PaginatedResponse } <span class="kw">from</span> <span class="str">'@mma/contracts/common'</span>;
 <span class="kw">import</span> {
   <span class="ty">User</span>,
   <span class="ty">CreateUserUseCase</span>, <span class="ty">GetUserByIdUseCase</span>, GetUserByEmailUseCase,
   UpdateUserProfileUseCase, DeleteUserUseCase,
   <span class="ty">ActivateUserUseCase</span>, <span class="ty">DeactivateUserUseCase</span>, <span class="ty">VerifyUserEmailUseCase</span>,
   UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
-} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 
 <span class="com">// Module-level singleton logger — NOT a class property (Golden Rule #35)</span>
 <span class="kw">const</span> logger = createLogger(<span class="str">'user-api-service'</span>);
@@ -1156,7 +1156,7 @@ packages/user-domain/src/
 <span class="kw">import</span> { <span class="ty">Controller</span>, <span class="ty">Get</span>, <span class="ty">Post</span>, <span class="ty">Patch</span>, <span class="ty">Delete</span>, <span class="ty">Body</span>, <span class="ty">Param</span>, <span class="ty">Query</span>, <span class="ty">HttpCode</span>, <span class="ty">HttpStatus</span> } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
 <span class="kw">import</span> { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
 <span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { createUserSchema, updateUserSchema, userStatusSchema, <span class="ty">CreateUserInput</span>, <span class="ty">UpdateUserInput</span> } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { createUserSchema, updateUserSchema, userStatusSchema, <span class="ty">CreateUserInput</span>, <span class="ty">UpdateUserInput</span> } <span class="kw">from</span> <span class="str">'@mma/contracts/user'</span>;
 <span class="kw">import</span> { <span class="ty">UserApplicationService</span> } <span class="kw">from</span> <span class="str">'../../application/services/user-application.service'</span>;
 <span class="kw">import</span> { <span class="ty">ZodValidationPipe</span> } <span class="kw">from</span> <span class="str">'../pipes/zod-validation.pipe'</span>;
 <span class="kw">import</span> { CurrentUser } <span class="kw">from</span> <span class="str">'../decorators/current-user.decorator'</span>;
@@ -1311,9 +1311,9 @@ packages/user-domain/src/
   UpdateUserProfileUseCase, DeleteUserUseCase,
   <span class="ty">ActivateUserUseCase</span>, <span class="ty">DeactivateUserUseCase</span>, <span class="ty">VerifyUserEmailUseCase</span>,
   UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
-} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
-<span class="kw">import</span> { DynamoUserRepository, UserSchema } <span class="kw">from</span> <span class="str">'@old-st/user-domain/infrastructure'</span>;
-<span class="kw">import</span> { SqsFifoEventPublisher, createLocalSqsClient, createAwsSqsClient } <span class="kw">from</span> <span class="str">'@old-st/aws-sqs'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
+<span class="kw">import</span> { DynamoUserRepository, UserSchema } <span class="kw">from</span> <span class="str">'@mma/user-domain/infrastructure'</span>;
+<span class="kw">import</span> { SqsFifoEventPublisher, createLocalSqsClient, createAwsSqsClient } <span class="kw">from</span> <span class="str">'@mma/aws-sqs'</span>;
 <span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
 <span class="kw">import</span> { DynamoDBConfig } <span class="kw">from</span> <span class="str">'../infrastructure/config/dynamodb.config'</span>;
 <span class="kw">import</span> { <span class="ty">UserApplicationService</span> } <span class="kw">from</span> <span class="str">'../application/services/user-application.service'</span>;
@@ -1412,7 +1412,7 @@ packages/user-domain/src/
 <div class="code-wrap"><div class="code-label">domain-exception.filter.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/presentation/filters/domain-exception.filter.ts</span>
 
 <span class="kw">import</span> { ExceptionFilter, Catch, ArgumentsHost, HttpException, <span class="ty">HttpStatus</span> } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
-<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>;
+<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@mma/telemetry'</span>;
 <span class="kw">import</span> { Response } <span class="kw">from</span> <span class="str">'express'</span>;
 <span class="kw">import</span> {
   UserNotFoundError, EmailAlreadyExistsError, InvalidEmailFormatError,
@@ -1420,7 +1420,7 @@ packages/user-domain/src/
   CannotActivateNonPendingUserError, CannotActivateUnverifiedEmailError,
   CannotDeactivateDeletedUserError, UserAlreadyDeletedError,
   CannotUpdateDeletedUserError, InvalidInputError,
-} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+} <span class="kw">from</span> <span class="str">'@mma/user-domain'</span>;
 
 <span class="kw">const</span> logger = createLogger(<span class="str">'user-api-service'</span>);
 
@@ -1560,9 +1560,9 @@ packages/user-domain/src/
 <span class="kw">import</span> { <span class="ty">Injectable</span>, HttpException } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
 <span class="kw">import</span> { HttpService } <span class="kw">from</span> <span class="str">'@nestjs/axios'</span>;
 <span class="kw">import</span> { firstValueFrom } <span class="kw">from</span> <span class="str">'rxjs'</span>;
-<span class="kw">import</span> { getOutboundHeaders } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>; <span class="com">// forwards correlation + Authorization</span>
-<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
-<span class="kw">import</span> { CustomerNotFoundError, CustomerNotActiveError } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+<span class="kw">import</span> { getOutboundHeaders } <span class="kw">from</span> <span class="str">'@mma/telemetry'</span>; <span class="com">// forwards correlation + Authorization</span>
+<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'@mma/order-domain'</span>;
+<span class="kw">import</span> { CustomerNotFoundError, CustomerNotActiveError } <span class="kw">from</span> <span class="str">'@mma/order-domain'</span>;
 
 <span class="com">// The adapter — in the ORDER service infrastructure (not the user-domain)</span>
 <span class="dec">@Injectable(</span>)
@@ -1606,7 +1606,7 @@ packages/user-domain/src/
 
 <span class="com">// Consuming side event schema (in contracts/order/src/event-schemas.ts)</span>
 <span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { OrderEventTypeEnum } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+<span class="kw">import</span> { OrderEventTypeEnum } <span class="kw">from</span> <span class="str">'@mma/order-domain'</span>;
 
 <span class="kw">export</span> <span class="kw">const</span> orderCreatedEventSchema = z.object({
   eventType:  z.literal(OrderEventTypeEnum.ORDER_CREATED),
@@ -1629,7 +1629,7 @@ packages/user-domain/src/
   orderCancelledEventSchema,
 ]);</code></pre></div>
 
-<div class="callout callout-warning"><div class="callout-title">Cross-domain import rule</div><p>A service consuming events from another bounded context imports event schemas from <code>@old-st/contracts/{publishing-domain}</code>. It must <strong>never</strong> import from <code>@old-st/{publishing-domain}-domain</code> (Golden Rule #15).</p></div>
+<div class="callout callout-warning"><div class="callout-title">Cross-domain import rule</div><p>A service consuming events from another bounded context imports event schemas from <code>@mma/contracts/{publishing-domain}</code>. It must <strong>never</strong> import from <code>@mma/{publishing-domain}-domain</code> (Golden Rule #15).</p></div>
 </div>
 
 <div class="topic">

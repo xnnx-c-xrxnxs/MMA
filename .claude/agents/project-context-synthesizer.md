@@ -1,7 +1,7 @@
 ---
 name: project-context-synthesizer
 tools: Read, Glob, Grep, Write
-description: Read-only project-context synthesizer for a project migration. Distills the source project's purpose, actors/roles, glossary, core workflows, business rules, integrations, and non-functional constraints into a single PROJECT_CONTEXT-style brief plus a backend RUNBOOK that tells a developer exactly how to rebuild the backend (domains, persistence, events, auth) using old-st-template workflows. Writes context/ and RUNBOOK.md. Spawned by /migrate-extract during extraction.
+description: Read-only project-context synthesizer for a project migration. Distills the source project's purpose, actors/roles, glossary, core workflows, business rules, integrations, and non-functional constraints into a single PROJECT_CONTEXT-style brief plus a backend RUNBOOK that tells a developer exactly how to rebuild the backend (domains, persistence, events, auth) using mma workflows. Writes context/ and RUNBOOK.md. Spawned by /migrate-extract during extraction.
 ---
 
 # Project Context Synthesizer Subagent
@@ -27,7 +27,7 @@ You **never** edit source files. You write files ONLY under `{migrationRoot}/con
 
 1. **Read source intent**: `README.md`, `docs/**` (ARCHITECTURE, OPERATIONS, SECURITY, HANDOVER), and infer purpose from routes + domains.
 2. **Synthesize the context brief**: product purpose, target users/actors, role/permission model, domain glossary (canonical terms ↔ source synonyms), core end-to-end workflows, key business rules, external integrations (auth provider, payments, GitHub, realtime, email), and non-functional constraints (auth model, data residency, audit needs).
-3. **Write the backend RUNBOOK** — a dependency-ordered, step-by-step rebuild plan that maps each domain to concrete old-st-template actions:
+3. **Write the backend RUNBOOK** — a dependency-ordered, step-by-step rebuild plan that maps each domain to concrete mma actions:
    - Per domain: which workflow to run (`/new-domain` DynamoDB vs Prisma), constants/entity/use-cases to create, repository + schema, endpoints, exception mapping.
    - Cross-domain integration: which pattern (sync ACL / cross-domain async / intra-domain / saga) and the queues/events involved.
    - Auth wiring: JWT guard, `@CurrentUser()`, public routes, gateway authorizer.
@@ -70,7 +70,7 @@ Write `{migrationRoot}/RUNBOOK.md`:
 # Backend Rebuild Runbook: {source-name}
 
 > Backend is rebuilt deliberately — NOT auto-generated. Follow in order.
-> Each step links to a domain card under `domains/` and an old-st-template workflow.
+> Each step links to a domain card under `domains/` and an mma workflow.
 
 ## Build Order
 

@@ -1,11 +1,11 @@
 ---
 name: webapp-cursor-infinite-scroll
-description: Wire cursor-paginated lists into infinite scroll using the `useUsersByStatusInfinite`, `useProductsByStatusInfinite`, etc. hooks from `@old-st/client-common`. Use this when adding a new list view that loads more rows on scroll, or when migrating an existing paginated table to an infinite list.
+description: Wire cursor-paginated lists into infinite scroll using the `useUsersByStatusInfinite`, `useProductsByStatusInfinite`, etc. hooks from `@mma/client-common`. Use this when adding a new list view that loads more rows on scroll, or when migrating an existing paginated table to an infinite list.
 ---
 
 # Webapp Cursor Infinite Scroll
 
-Cursor-paginated DynamoDB-backed list endpoints (users, products) are exposed as `useInfiniteQuery`-based hooks in `@old-st/client-common/src/hooks/use-infinite.ts`. They:
+Cursor-paginated DynamoDB-backed list endpoints (users, products) are exposed as `useInfiniteQuery`-based hooks in `@mma/client-common/src/hooks/use-infinite.ts`. They:
 
 - Pass `direction: 'next'` and a serialised cursor in `cursor` for each subsequent page.
 - Encode the response's `nextCursorPointer` (an object) as a JSON string for the next request via `getNextPageParam`.
@@ -26,8 +26,8 @@ Cursor-paginated DynamoDB-backed list endpoints (users, products) are exposed as
 
 ```tsx
 'use client';
-import { useUsersByStatusInfinite } from '@old-st/client-common';
-import { Button } from '@old-st/ui';
+import { useUsersByStatusInfinite } from '@mma/client-common';
+import { Button } from '@mma/ui';
 
 export function UsersInfiniteList() {
   const q = useUsersByStatusInfinite({ userStatus: 'ACTIVE', limit: 50 });

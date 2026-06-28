@@ -2,11 +2,11 @@
  * API Pagination Schemas with Zod Validation
  * 
  * These schemas are used for API responses and provide runtime validation.
- * For internal repository/infrastructure use, see @old-st/common interfaces.
+ * For internal repository/infrastructure use, see @mma/common interfaces.
  * 
  * Architecture Guidelines:
  * - Controllers/API Layer → Use these Zod schemas (with validation)
- * - Repositories/Infrastructure → Use @old-st/common interfaces (type-only)
+ * - Repositories/Infrastructure → Use @mma/common interfaces (type-only)
  * - Application Services → Transform between common interfaces and validated DTOs
  * 
  * Two pagination styles are supported:

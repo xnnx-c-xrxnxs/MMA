@@ -1,10 +1,10 @@
 ---
-description: "Convert exported SVG files into icon components in @old-st/ui. USE WHEN the user exports SVG files from Figma (or any design tool) and wants them converted to React icon components. No Figma MCP tools required — just paste SVG markup or describe the files."
+description: "Convert exported SVG files into icon components in @mma/ui. USE WHEN the user exports SVG files from Figma (or any design tool) and wants them converted to React icon components. No Figma MCP tools required — just paste SVG markup or describe the files."
 ---
 
 # SVG → Icon Components
 
-Convert one or more exported SVG files into `@old-st/ui` icon components. This is the fast path for icon additions — no Figma MCP connection needed.
+Convert one or more exported SVG files into `@mma/ui` icon components. This is the fast path for icon additions — no Figma MCP connection needed.
 
 **Do NOT write any files until Phase 2 (Confirm) is approved.**
 

@@ -14,7 +14,7 @@ You are a focused builder. The main agent has finished the backend slice AND has
 |---|---|
 | `feature` | Plain-language description |
 | `domain` | `user`, `order`, `product`, etc. |
-| `contract` | Exact Zod schema or new schema name added in `@old-st/contracts/{domain}` |
+| `contract` | Exact Zod schema or new schema name added in `@mma/contracts/{domain}` |
 | `hookName` | Name of the React Query hook to consume (already added by main agent or webapp-builder) |
 | `uiChanges` | Bullet list of mobile UI changes (list item, action button, form field, status badge, screen route) |
 | `statusVariants` | If new entity status, the mobile variant mapping |
@@ -39,10 +39,10 @@ You are a focused builder. The main agent has finished the backend slice AND has
 2. **Inventory** existing mobile files: `apps/mobile/src/components/{domain}/`, `apps/mobile/src/app/(tabs)/{domain}.tsx`, `apps/mobile/src/app/{domain}/[{entity}Id].tsx`.
 3. **Verify** the React Query hook exists in `client-common` — if not, return `STATUS: hook_missing` and stop.
 4. **Update mobile:**
-   - Apply each `uiChanges` item using `@old-st/mobile-ui` primitives — never raw `View`/`Text` for interactive elements.
+   - Apply each `uiChanges` item using `@mma/mobile-ui` primitives — never raw `View`/`Text` for interactive elements.
    - Use `FlatList` for lists, never `ScrollView` + `map()`.
    - Use `StyleSheet.create()` at the bottom of the file.
-   - If status variants changed, update `apps/mobile/src/lib/status-variants.ts` using enum constants from `@old-st/contracts/{domain}`.
+   - If status variants changed, update `apps/mobile/src/lib/status-variants.ts` using enum constants from `@mma/contracts/{domain}`.
 5. **Write tests** with React Native Testing Library.
 6. **Validate:**
    - `Bash` on all touched files

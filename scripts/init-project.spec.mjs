@@ -71,12 +71,12 @@ check('root package.json renamed', () => {
 // 2. tsconfig.base.json: paths use new scope
 check('tsconfig.base.json paths use @acme/', () => {
   const content = readFileSync(join(tmp, 'tsconfig.base.json'), 'utf-8');
-  if (content.includes('@old-st/')) throw new Error('tsconfig.base.json still contains @old-st/');
+  if (content.includes('@mma/')) throw new Error('tsconfig.base.json still contains @mma/');
   if (!content.includes('@acme/')) throw new Error('tsconfig.base.json missing @acme/');
 });
 
-// 3. No source file imports @old-st/
-check('no source files import @old-st/', () => {
+// 3. No source file imports @mma/
+check('no source files import @mma/', () => {
   const matches = [];
   function scan(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -85,12 +85,12 @@ check('no source files import @old-st/', () => {
       if (entry.isDirectory()) scan(full);
       else if (entry.isFile() && /\.(ts|tsx|mjs|js)$/.test(entry.name)) {
         const c = readFileSync(full, 'utf-8');
-        if (/@old-st\//.test(c)) matches.push(full.replace(tmp, ''));
+        if (/@mma\//.test(c)) matches.push(full.replace(tmp, ''));
       }
     }
   }
   scan(tmp);
-  if (matches.length) throw new Error(`${matches.length} files still reference @old-st/:\n      ${matches.slice(0, 5).join('\n      ')}`);
+  if (matches.length) throw new Error(`${matches.length} files still reference @mma/:\n      ${matches.slice(0, 5).join('\n      ')}`);
 });
 
 // 4. examples/ deleted (default behavior)
@@ -101,20 +101,20 @@ check('examples/ removed', () => {
 // 5. CODEOWNERS rewritten
 check('CODEOWNERS team rewritten', () => {
   const content = readFileSync(join(tmp, '.github', 'CODEOWNERS'), 'utf-8');
-  if (content.includes('@Old-St-Labs/senior-devs')) throw new Error('CODEOWNERS still references @Old-St-Labs/senior-devs');
+  if (content.includes('@xnnx-c-xrxnxs/senior-devs')) throw new Error('CODEOWNERS still references @xnnx-c-xrxnxs/senior-devs');
   if (!content.includes('@acme/platform')) throw new Error('CODEOWNERS missing @acme/platform');
 });
 
 // 6. .code-workspace renamed
 check('.code-workspace renamed', () => {
-  if (existsSync(join(tmp, 'old-st-template.code-workspace'))) throw new Error('old-st-template.code-workspace still exists');
+  if (existsSync(join(tmp, 'mma.code-workspace'))) throw new Error('mma.code-workspace still exists');
   if (!existsSync(join(tmp, 'acmeapp.code-workspace'))) throw new Error('acmeapp.code-workspace not created');
 });
 
 // 7. README.md mentions new name (sanity)
 check('README.md references new project name', () => {
   const readme = readFileSync(join(tmp, 'README.md'), 'utf-8');
-  if (readme.includes('old-st-template')) throw new Error('README.md still references old-st-template');
+  if (readme.includes('mma')) throw new Error('README.md still references mma');
 });
 
 // 8. Self-delete: init-project.mjs gone
@@ -138,12 +138,12 @@ check('tmp/ directory removed', () => {
   if (existsSync(join(tmp, 'tmp'))) throw new Error('tmp/ still exists');
 });
 
-// 11. "Old-St-Labs" rewritten when --org passed
-check('Old-St-Labs replaced with --org value in issue templates', () => {
+// 11. "xnnx-c-xrxnxs" rewritten when --org passed
+check('xnnx-c-xrxnxs replaced with --org value in issue templates', () => {
   const cfg = join(tmp, '.github', 'ISSUE_TEMPLATE', 'config.yml');
   if (!existsSync(cfg)) return;
   const c = readFileSync(cfg, 'utf-8');
-  if (/Old-St-Labs/.test(c)) throw new Error(`config.yml still references Old-St-Labs`);
+  if (/xnnx-c-xrxnxs/.test(c)) throw new Error(`config.yml still references xnnx-c-xrxnxs`);
   if (!/Acme-Inc/.test(c)) throw new Error(`config.yml missing Acme-Inc`);
 });
 
@@ -165,12 +165,12 @@ check('mobile dashboard "Welcome to ..." rewritten', () => {
   if (!/Welcome to Acme Mobile/.test(c)) throw new Error('mobile index.tsx missing "Welcome to Acme Mobile"');
 });
 
-// 14. terraform monitoring tfvars project_name rewritten (bare "old-st" handling)
+// 14. terraform monitoring tfvars project_name rewritten (bare "mma" handling)
 check('terraform monitoring tfvars project_name rewritten', () => {
   const p = join(tmp, 'infra', 'environments', 'monitoring', 'terraform.tfvars');
   if (!existsSync(p)) return;
   const c = readFileSync(p, 'utf-8');
-  if (/project_name\s*=\s*"old-st"/.test(c)) throw new Error('monitoring/terraform.tfvars still has project_name = "old-st"');
+  if (/project_name\s*=\s*"mma"/.test(c)) throw new Error('monitoring/terraform.tfvars still has project_name = "mma"');
   if (!/project_name\s*=\s*"acmeapp"/.test(c)) throw new Error('monitoring/terraform.tfvars missing project_name = "acmeapp"');
 });
 

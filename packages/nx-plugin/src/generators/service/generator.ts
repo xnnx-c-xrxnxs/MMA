@@ -65,8 +65,8 @@ export default async function serviceGenerator(
   }
 
   const headerOpts = {
-    generator: '@old-st/nx-plugin:service',
-    command: `nx g @old-st/nx-plugin:service --domain=${n.domain.kebab}${
+    generator: '@mma/nx-plugin:service',
+    command: `nx g @mma/nx-plugin:service --domain=${n.domain.kebab}${
       schema.entity ? ` --entity=${n.entity.kebab}` : ''
     }${schema.publishesEvents ? ' --publishesEvents' : ''}`,
   };
@@ -194,7 +194,7 @@ export default async function serviceGenerator(
   }
 
   logger.info(
-    `\n[@old-st/nx-plugin:service] Generated ${n.serviceName}\n` +
+    `\n[@mma/nx-plugin:service] Generated ${n.serviceName}\n` +
       `  → ${root}/\n` +
       `  → port: ${port}\n\n` +
       `Next steps:\n` +

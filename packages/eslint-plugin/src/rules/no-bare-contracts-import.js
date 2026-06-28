@@ -1,5 +1,5 @@
 /**
- * @fileoverview Bans importing from the bare `@old-st/contracts` root.
+ * @fileoverview Bans importing from the bare `@mma/contracts` root.
  * All contract imports must use domain-scoped subpaths.
  *
  * Standard: A11, B1 — Prevents transitive type coupling between domains.
@@ -10,7 +10,7 @@ module.exports = {
     type: 'problem',
     docs: {
       description:
-        'Disallow importing from bare @old-st/contracts root. Use domain-scoped subpaths instead.',
+        'Disallow importing from bare @mma/contracts root. Use domain-scoped subpaths instead.',
     },
     schema: [
       {
@@ -27,7 +27,7 @@ module.exports = {
     ],
     messages: {
       noBareImport:
-        "Do not import from '@old-st/contracts' directly. Use a domain-scoped subpath: '@old-st/contracts/user', '@old-st/contracts/order', '@old-st/contracts/product', or '@old-st/contracts/common'.",
+        "Do not import from '@mma/contracts' directly. Use a domain-scoped subpath: '@mma/contracts/user', '@mma/contracts/order', '@mma/contracts/product', or '@mma/contracts/common'.",
     },
   },
   create(context) {
@@ -39,7 +39,7 @@ module.exports = {
         const source = node.source.value;
         if (typeof source !== 'string') return;
 
-        if (source === '@old-st/contracts' && !allowed.includes(source)) {
+        if (source === '@mma/contracts' && !allowed.includes(source)) {
           context.report({ node: node.source, messageId: 'noBareImport' });
         }
       },

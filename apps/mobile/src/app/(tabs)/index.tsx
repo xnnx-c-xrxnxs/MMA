@@ -1,13 +1,13 @@
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, CardHeader, CardTitle, CardContent } from '@old-st/mobile-ui';
+import { Text, Card, CardHeader, CardTitle, CardContent } from '@mma/mobile-ui';
 
 export default function DashboardScreen() {
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <View style={styles.content}>
         <Text variant="heading">Dashboard</Text>
-        <Text variant="muted" style={styles.subtitle}>Welcome to Old ST Mobile</Text>
+        <Text variant="muted" style={styles.subtitle}>Welcome to Mma Mobile</Text>
 
         <View style={styles.cards}>
           <Card>

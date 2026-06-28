@@ -244,7 +244,7 @@ pnpm nx test webapp
 pnpm nx test mobile
 ```
 
-**Shared Data-Access Layer (`@old-st/client-common`):**
+**Shared Data-Access Layer (`@mma/client-common`):**
 - API clients: mock `globalThis.fetch`, verify URL construction and Zod parsing
 - React Query hooks: `renderHook()` + `QueryClientProvider` wrapper
 

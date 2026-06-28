@@ -1,6 +1,6 @@
 ---
 name: webapp-optimistic-mutations
-description: Apply optimistic updates to React Query mutations using the `optimisticMutation` helper from `@old-st/client-common` or hand-rolled `onMutate`/`onError`/`onSettled`. Use this when a mutation should make the UI feel instant (status toggles, like buttons, inline edits) and rollback if the API rejects.
+description: Apply optimistic updates to React Query mutations using the `optimisticMutation` helper from `@mma/client-common` or hand-rolled `onMutate`/`onError`/`onSettled`. Use this when a mutation should make the UI feel instant (status toggles, like buttons, inline edits) and rollback if the API rejects.
 ---
 
 # Webapp Optimistic Mutations
@@ -24,7 +24,7 @@ Source: `packages/client-common/src/hooks/optimistic-mutation.ts`.
 
 ```ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { optimisticMutation } from '@old-st/client-common';
+import { optimisticMutation } from '@mma/client-common';
 
 export function useToggleFavorite() {
   const queryClient = useQueryClient();

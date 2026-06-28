@@ -313,7 +313,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
   <div class="panel-header">
     <span class="icon">💻</span>
     <span class="title">Implementation</span>
-    <span class="subtitle">@old-st/common + directory layout</span>
+    <span class="subtitle">@mma/common + directory layout</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="com">// packages/common/src/interfaces/use-case.interface.ts</span>
 <span class="kw">export</span> <span class="kw">interface</span> <span class="ty">IUseCase</span>&lt;TInput, TOutput&gt; {
@@ -404,7 +404,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">user-repository.interface.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">UserRole</span>, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../domain/constants'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
 
@@ -579,7 +579,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">create-user.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { <span class="ty">UserRole</span>, UserRoleEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
@@ -663,7 +663,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">get-user-by-id.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
@@ -732,7 +732,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">update-user-profile.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
@@ -820,7 +820,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="subtitle">delete-user.use-case.ts + delete-order.use-case.ts</span>
   </div>
   <div class="panel-body code-body"><pre><code><span class="com">// ── Soft Delete (User) ────────────────────────────────────────────────────</span>
-<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
@@ -923,7 +923,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">activate-user.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
 <span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
@@ -999,7 +999,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">list-users-by-status.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
 <span class="kw">import</span> { USER_STATUSES, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
 <span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
@@ -1445,7 +1445,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">create-order.use-case.ts (with ACL)</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
 <span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
@@ -1560,7 +1560,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">add-order-item.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
 <span class="kw">import</span> { <span class="ty">OrderItem</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order-item.entity'</span>;
@@ -1651,7 +1651,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">confirm-order.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
 <span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
 <span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
@@ -1732,7 +1732,7 @@ code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padd
     <span class="title">Implementation</span>
     <span class="subtitle">update-item-latest-price.use-case.ts</span>
   </div>
-  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@mma/common'</span>;
 <span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
 <span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
 

@@ -3,7 +3,7 @@
 // Narrowed for the base template: only universal hooks (auth, file upload,
 // optimistic mutation helper) are exported. Example-domain hooks (use-users,
 // use-products, use-orders, use-infinite for users/products) live in
-// `@old-st/client-common-examples` (see [examples/packages/client-common-examples](examples/packages/client-common-examples)).
+// `@mma/client-common-examples` (see [examples/packages/client-common-examples](examples/packages/client-common-examples)).
 export {
   useChangePassword,
   useCompleteNewPassword,

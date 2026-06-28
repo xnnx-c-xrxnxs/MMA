@@ -3,7 +3,7 @@ import {
   CognitoAuthProvider,
   LocalAuthProvider,
   type IAuthProvider,
-} from '@old-st/aws-cognito';
+} from '@mma/aws-cognito';
 import { AuthApplicationService } from '../application/services/auth-application.service';
 import { AuthController } from '../presentation/controllers/auth.controller';
 

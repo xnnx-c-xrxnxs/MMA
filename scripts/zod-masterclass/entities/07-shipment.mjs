@@ -45,7 +45,7 @@ export const recordExceptionSchema = z.object({
     {
       title: 'Response Schema',
       subtitle: 'shipmentResponseSchema (event log)',
-      code: `import { SHIPMENT_STATUSES, SHIPMENT_EVENT_TYPES } from '@old-st/shipping-domain';
+      code: `import { SHIPMENT_STATUSES, SHIPMENT_EVENT_TYPES } from '@mma/shipping-domain';
 
 const shipmentEventSchema = z.object({
   type:       z.enum(SHIPMENT_EVENT_TYPES),  // 'PICKED_UP' | 'IN_TRANSIT' | ...

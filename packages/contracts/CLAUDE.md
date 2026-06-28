@@ -1,4 +1,4 @@
-# @old-st/contracts Package Context
+# @mma/contracts Package Context
 
 This file loads automatically for any file inside `packages/contracts/`. The package is the **API surface contract** between backend services, the webapp, and the mobile app — Zod schemas + TypeScript types + event schemas + domain enum re-exports.
 
@@ -11,12 +11,12 @@ Each domain has its **own independent package** under `packages/contracts/{domai
 ```
 packages/contracts/
   common/        ← shared pagination interfaces (cursor + offset)
-  auth/          ← @old-st/contracts/auth
-  {domain}/      ← @old-st/contracts/{domain}
+  auth/          ← @mma/contracts/auth
+  {domain}/      ← @mma/contracts/{domain}
 ```
 
 Every domain folder contains:
-- `package.json` (depends on `@old-st/{domain}-domain` + `zod`)
+- `package.json` (depends on `@mma/{domain}-domain` + `zod`)
 - `project.json` (Nx tags `scope:{domain}` + `type:contracts`)
 - `tsconfig.json`
 - `src/index.ts` — barrel
@@ -27,13 +27,13 @@ Every domain folder contains:
 
 ## Architectural Rules (Strictly Enforced)
 
-1. **Never import from the bare `@old-st/contracts` root** (Golden Rule #11). Always use a domain subpath: `@old-st/contracts/{domain}` (or `@old-st/contracts/common`). Enforced by the `no-bare-contracts-import` lint check (`scripts/lint-standards.ts`).
+1. **Never import from the bare `@mma/contracts` root** (Golden Rule #11). Always use a domain subpath: `@mma/contracts/{domain}` (or `@mma/contracts/common`). Enforced by the `no-bare-contracts-import` lint check (`scripts/lint-standards.ts`).
 
-2. **A contracts package only depends on its OWN domain package.** `@old-st/contracts/{domain}` may depend on `@old-st/{domain}-domain` but NEVER on another domain's package. Cross-domain coupling is forbidden — that is the entire reason contracts are split per-domain.
+2. **A contracts package only depends on its OWN domain package.** `@mma/contracts/{domain}` may depend on `@mma/{domain}-domain` but NEVER on another domain's package. Cross-domain coupling is forbidden — that is the entire reason contracts are split per-domain.
 
 3. **Zod schemas are the single source of truth for runtime validation.** Both the backend (`ZodValidationPipe`) and the frontend (`apiRequest({ schema })` + `react-hook-form` resolver) consume the same schema. Never duplicate validation logic.
 
-4. **Re-export domain enum constants** (`UserStatusEnum`, `OrderStatusEnum`, etc.) from contracts so frontend code can use enums without depending on the domain package. The enum object lives in `@old-st/{domain}-domain/domain/constants` and is re-exported as a value from the contracts package.
+4. **Re-export domain enum constants** (`UserStatusEnum`, `OrderStatusEnum`, etc.) from contracts so frontend code can use enums without depending on the domain package. The enum object lives in `@mma/{domain}-domain/domain/constants` and is re-exported as a value from the contracts package.
 
 5. **Types are inferred from schemas** via `z.infer<typeof xxxSchema>` — never hand-written interfaces.
 

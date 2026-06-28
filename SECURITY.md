@@ -6,8 +6,8 @@
 
 If you discover a security issue in this template (or in a downstream project bootstrapped from it), report it privately:
 
-- Use **GitHub Security Advisories**: https://github.com/Old-St-Labs/old-st-template/security/advisories/new
-- Or email the maintainers at: **security@old-st-labs.example** _(replace with your team's contact when bootstrapping)_
+- Use **GitHub Security Advisories**: https://github.com/xnnx-c-xrxnxs/mma/security/advisories/new
+- Or email the maintainers at: **security@mma-labs.example** _(replace with your team's contact when bootstrapping)_
 
 Please include:
 - A clear description of the vulnerability
@@ -47,7 +47,7 @@ This template ships with the following security controls enabled by default:
 | **API Gateway JWT authorizer** | `infra/modules/api-gateway` | Two-tier auth (gateway + NestJS guard) |
 | **Refresh tokens as httpOnly cookies** | `apps/auth/auth-api-service` | Never readable from JS |
 | **AWS OIDC for CD** | `infra/bootstrap` | No long-lived AWS credentials in GitHub secrets |
-| **`@old-st/eslint-plugin`** custom rules | `packages/eslint-plugin` | Bans `process.env.NODE_ENV === 'development'` etc. |
+| **`@mma/eslint-plugin`** custom rules | `packages/eslint-plugin` | Bans `process.env.NODE_ENV === 'development'` etc. |
 | **Structural lint** | `scripts/lint-standards.ts` | Enforces Clean Architecture boundaries |
 
 ## After Bootstrapping a New Project

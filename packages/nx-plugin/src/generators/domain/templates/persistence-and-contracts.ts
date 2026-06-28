@@ -130,11 +130,11 @@ export const renderDynamoRepository = (ctx: DomainContext): string => {
     : '';
 
   return `import { Table } from 'dynamodb-onetable';
-import { IPaginatedResponse } from '@old-st/common';
+import { IPaginatedResponse } from '@mma/common';
 import {
   pageRecordHandler,
   createDynamoDbOptionWithPKSKIndex,
-} from '@old-st/dynamodb-onetable';
+} from '@mma/dynamodb-onetable';
 ${statusImport}import { I${entity.pascal}Repository } from '../../application/interfaces/${entity.kebab}-repository.interface';
 import { ${entity.pascal} } from '../../domain/entities';
 import { ${entity.pascal}DataType } from '../schemas/${entity.pascal}Schema';
@@ -209,15 +209,15 @@ export * from './schemas/${ctx.entity.pascal}Schema';
 export const renderDomainPackageJson = (ctx: DomainContext): string =>
   JSON.stringify(
     {
-      name: `@old-st/${ctx.domain.kebab}-domain`,
+      name: `@mma/${ctx.domain.kebab}-domain`,
       version: '1.0.0',
       type: 'module',
       main: './src/index.ts',
       types: './src/index.ts',
       scripts: {},
       dependencies: {
-        '@old-st/common': 'workspace:*',
-        '@old-st/dynamodb-onetable': 'workspace:*',
+        '@mma/common': 'workspace:*',
+        '@mma/dynamodb-onetable': 'workspace:*',
         'dynamodb-onetable': '^2.7.7',
       },
     },
@@ -275,7 +275,7 @@ export const renderDomainRootBarrel = (): string =>
   `export * from './domain';
 export * from './application';
 // Infrastructure intentionally NOT exported here.
-// Import from '@old-st/{domain}-domain/infrastructure' in the composition root only.
+// Import from '@mma/{domain}-domain/infrastructure' in the composition root only.
 `;
 
 // ── Contracts package ───────────────────────────────────────────────────────
@@ -283,14 +283,14 @@ export * from './application';
 export const renderContractsPackageJson = (ctx: DomainContext): string =>
   JSON.stringify(
     {
-      name: `@old-st/contracts-${ctx.domain.kebab}`,
+      name: `@mma/contracts-${ctx.domain.kebab}`,
       version: '1.0.0',
       type: 'module',
       main: './src/index.ts',
       types: './src/index.ts',
       scripts: {},
       dependencies: {
-        [`@old-st/${ctx.domain.kebab}-domain`]: 'workspace:*',
+        [`@mma/${ctx.domain.kebab}-domain`]: 'workspace:*',
       },
       peerDependencies: { zod: '>=4.0.0' },
     },
@@ -329,7 +329,7 @@ export const renderContractsSchemas = (ctx: DomainContext): string => {
   const { entity, fields, statuses } = ctx;
   const hasStatuses = statuses.length > 0;
   const statusImport = hasStatuses
-    ? `import { ${entity.constant}_STATUSES, ${entity.pascal}StatusEnum } from '@old-st/${ctx.domain.kebab}-domain';\n`
+    ? `import { ${entity.constant}_STATUSES, ${entity.pascal}StatusEnum } from '@mma/${ctx.domain.kebab}-domain';\n`
     : '';
   const statusReExport = hasStatuses
     ? `\nexport { ${entity.constant}_STATUSES, ${entity.pascal}StatusEnum };\nexport const ${entity.camel}StatusSchema = z.enum(${entity.constant}_STATUSES);\n`

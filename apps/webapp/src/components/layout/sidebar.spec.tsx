@@ -2,7 +2,7 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
 }));
 
-jest.mock('@old-st/client-common', () => ({
+jest.mock('@mma/client-common', () => ({
   useAuth: jest.fn(),
 }));
 
@@ -10,7 +10,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Sidebar } from './sidebar';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@old-st/client-common';
+import { useAuth } from '@mma/client-common';
 
 const mockUsePathname = usePathname as jest.Mock;
 const mockUseAuth = useAuth as jest.Mock;

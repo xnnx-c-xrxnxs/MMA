@@ -1,7 +1,7 @@
 ---
 name: story-parity-auditor
 tools: Read, Glob, Grep, Write, Edit
-description: Read-only semantic story-parity auditor for a project migration. Diffs each source component's Story Matrix (harvested by source-component-inventory) against the target story surface — the ported `@old-st/ui` primitive `.stories.tsx` for BUILD items, or the existing primitive's stories for REUSE items — using the classifier's Story Delta as the allowed-transform map. Every source variant/state must map to a target story OR carry a recorded transform (rename | merge | split | add | drop+reason); any unmapped + unexplained variant is a `parity-gap` and FAILS the gate. This is a SEMANTIC matrix diff, NOT a visual/pixel comparison. Writes STORY_PARITY.md. Spawned by /migrate-build-ui at the story-parity gate.
+description: Read-only semantic story-parity auditor for a project migration. Diffs each source component's Story Matrix (harvested by source-component-inventory) against the target story surface — the ported `@mma/ui` primitive `.stories.tsx` for BUILD items, or the existing primitive's stories for REUSE items — using the classifier's Story Delta as the allowed-transform map. Every source variant/state must map to a target story OR carry a recorded transform (rename | merge | split | add | drop+reason); any unmapped + unexplained variant is a `parity-gap` and FAILS the gate. This is a SEMANTIC matrix diff, NOT a visual/pixel comparison. Writes STORY_PARITY.md. Spawned by /migrate-build-ui at the story-parity gate.
 ---
 
 # Story Parity Auditor Subagent

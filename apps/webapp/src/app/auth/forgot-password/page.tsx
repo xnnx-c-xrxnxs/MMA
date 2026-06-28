@@ -7,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   useForgotPassword,
   useConfirmForgotPassword,
-} from '@old-st/client-common';
+} from '@mma/client-common';
 import {
   forgotPasswordRequestSchema,
   confirmForgotPasswordRequestSchema,
   type ForgotPasswordRequest,
   type ConfirmForgotPasswordRequest,
-} from '@old-st/contracts/auth';
+} from '@mma/contracts/auth';
 import {
   Button,
   Card,
@@ -29,7 +29,7 @@ import {
   FormMessage,
   Input,
   toast,
-} from '@old-st/ui';
+} from '@mma/ui';
 
 function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
   const forgotPassword = useForgotPassword();

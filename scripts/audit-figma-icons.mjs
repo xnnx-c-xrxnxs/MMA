@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * audit-figma-icons.mjs — Figma icon usage auditor for @old-st/ui
+ * audit-figma-icons.mjs — Figma icon usage auditor for @mma/ui
  * ═══════════════════════════════════════════════════════════════════
  * Scans one or more Figma design files for icon component instances,
- * then diffs them against the current @old-st/ui icon barrel.
+ * then diffs them against the current @mma/ui icon barrel.
  *
  * ── Usage ────────────────────────────────────────────────────────────────────
  *   pnpm figma:audit-icons
@@ -16,7 +16,7 @@
  *   FIGMA_AUDIT_FILES   in .env.local  (comma-separated file keys, optional — overridden by --files)
  *
  * ── Output ───────────────────────────────────────────────────────────────────
- *   ✓ already in barrel   — used in Figma AND exported from @old-st/ui ✓
+ *   ✓ already in barrel   — used in Figma AND exported from @mma/ui ✓
  *   ✗ missing from barrel — used in Figma but NOT in the barrel (add these)
  *   ~ unused in Figma     — in the barrel but not found in any scanned file
  */

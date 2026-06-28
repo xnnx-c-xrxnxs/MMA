@@ -51,14 +51,14 @@ Before writing any code, confirm:
 
 ### Step 1 — Verify Hooks + API Client Exist
 
-The mobile app shares its data-access layer with the webapp via `@old-st/client-common`.
+The mobile app shares its data-access layer with the webapp via `@mma/client-common`.
 
 Check:
 - **API client method** exists in `packages/client-common/src/infrastructure/api-clients/{domain}-api.client.ts`
 - **React Query hook** exists in `packages/client-common/src/hooks/use-{domain}.ts`
 - **Hook is exported** from `packages/client-common/src/hooks/index.ts`
 
-If the hook or API method is missing, follow the **`webapp-api-client-hooks`** skill to add them. Once added, both the webapp and mobile app can use them immediately via `@old-st/client-common`.
+If the hook or API method is missing, follow the **`webapp-api-client-hooks`** skill to add them. Once added, both the webapp and mobile app can use them immediately via `@mma/client-common`.
 
 **Key rule:** Never create mobile-only API clients or hooks. The `client-common` package is the single data-access layer shared across all frontends.
 
@@ -74,7 +74,7 @@ If the feature introduces new entity statuses or a new entity type:
 
 Follow the `mobile-new-screen` skill (Step 2) for the exact pattern.
 
-**Rule:** Import enum constants from `@old-st/contracts/{domain}` — never hardcode strings.
+**Rule:** Import enum constants from `@mma/contracts/{domain}` — never hardcode strings.
 
 ---
 
@@ -87,9 +87,9 @@ For **new fields**: add the field to the `{Entity}ListItem` component's Card mar
 For **new domain**: create the full list component following the `mobile-new-screen` skill (Step 3).
 
 **Rules:**
-- List items use `FlatList` with `Card` from `@old-st/mobile-ui`.
+- List items use `FlatList` with `Card` from `@mma/mobile-ui`.
 - Each item is wrapped in `Pressable` for tap navigation.
-- Use `@old-st/contracts/{domain}` types for the entity response.
+- Use `@mma/contracts/{domain}` types for the entity response.
 
 ---
 
@@ -103,7 +103,7 @@ For **existing domain**: update the existing tab screen if the feature changes t
 
 **Rules:**
 - Tab screens are thin orchestrators — no card/item markup.
-- Filter buttons use domain constants from `@old-st/contracts/{domain}`.
+- Filter buttons use domain constants from `@mma/contracts/{domain}`.
 - Wrap in `SafeAreaView edges={['bottom']}`.
 
 ---
@@ -115,7 +115,7 @@ File: `apps/mobile/src/app/{domain}/[{entity}Id].tsx`
 For a **new action**: add the mutation hook import + conditional button to the Actions card.
 
 ```typescript
-import { useNew{Action} } from '@old-st/client-common';
+import { useNew{Action} } from '@mma/client-common';
 
 // Inside the component:
 const newActionMutation = useNew{Action}();
@@ -163,9 +163,9 @@ File: `apps/mobile/src/app/{domain}/create-{entity}.tsx`
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Text, Button, Input, Card, CardHeader, CardTitle, CardContent } from '@old-st/mobile-ui';
-import { useCreate{Entity} } from '@old-st/client-common';
-import type { Create{Entity}Input } from '@old-st/contracts/{domain}';
+import { Text, Button, Input, Card, CardHeader, CardTitle, CardContent } from '@mma/mobile-ui';
+import { useCreate{Entity} } from '@mma/client-common';
+import type { Create{Entity}Input } from '@mma/contracts/{domain}';
 
 export default function Create{Entity}Screen() {
   const router = useRouter();
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
 **Rules:**
 - Form screens use `ScrollView` (not `FlatList`).
 - Navigate back on success via `router.back()`.
-- Use `Input` from `@old-st/mobile-ui` for text fields.
+- Use `Input` from `@mma/mobile-ui` for text fields.
 - Form state uses `useState` with the contract input type.
 - Error display uses `createMutation.isError` + `.error.message`.
 
@@ -295,11 +295,11 @@ The mobile app and webapp share **everything below the component layer**: hooks,
 
 ## Common Mistakes to Avoid
 
-- **Creating mobile-only API clients or hooks** — always use `@old-st/client-common`. The data-access layer is shared.
+- **Creating mobile-only API clients or hooks** — always use `@mma/client-common`. The data-access layer is shared.
 - **Hardcoding status strings** — use `{Entity}StatusEnum.VALUE` from contracts.
 - **Using `ScrollView` + `map()` for lists** — use `FlatList` for virtualization.
 - **Forgetting `export default function`** — Expo Router requires default exports.
 - **Forgetting to register a new tab** — check `(tabs)/_layout.tsx`.
 - **Forgetting `SafeAreaView`** — tab screens need safe area wrapping.
 - **Inline styles for non-trivial styling** — use `StyleSheet.create()`.
-- **Importing from `@old-st/ui` in mobile** — use `@old-st/mobile-ui` for React Native components.
+- **Importing from `@mma/ui` in mobile** — use `@mma/mobile-ui` for React Native components.
