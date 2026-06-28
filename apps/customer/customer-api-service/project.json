@@ -1,0 +1,72 @@
+{
+  "name": "customer-api-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/customer/customer-api-service/src",
+  "projectType": "application",
+  "tags": ["scope:customer", "type:app", "type:api-service"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"],
+        "cwd": "apps/customer/customer-api-service"
+      },
+      "configurations": {
+        "development": {
+          "args": ["--node-env=development"]
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/customer/customer-api-service/package.json",
+        "{workspaceRoot}/dist/apps/customer/customer-api-service/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/dist/apps/customer/customer-api-service/workspace_modules"
+      ],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "customer-api-service:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "customer-api-service:build:development"
+        },
+        "production": {
+          "buildTarget": "customer-api-service:build:production"
+        }
+      }
+    },
+    "test": {
+      "options": {
+        "passWithNoTests": true
+      }
+    }
+  }
+}

@@ -613,6 +613,27 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
 
+  packages/contracts/customer:
+    dependencies:
+      '@mma/customer-domain':
+        specifier: workspace:*
+        version: link:../../customer-domain
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+
+  packages/customer-domain:
+    dependencies:
+      '@mma/common':
+        specifier: workspace:*
+        version: link:../common
+      '@mma/dynamodb-onetable':
+        specifier: workspace:*
+        version: link:../dynamodb-onetable
+      dynamodb-onetable:
+        specifier: ^2.7.7
+        version: 2.7.7
+
   packages/design-tokens: {}
 
   packages/dynamodb-onetable:
@@ -16597,11 +16618,6 @@ snapshots:
       '@aws-sdk/client-dynamodb': 3.1030.0
       tslib: 2.8.1
 
-  '@aws-sdk/util-dynamodb@3.981.0(@aws-sdk/client-dynamodb@3.981.0)':
-    dependencies:
-      '@aws-sdk/client-dynamodb': 3.981.0
-      tslib: 2.8.1
-
   '@aws-sdk/util-endpoints@3.980.0':
     dependencies:
       '@aws-sdk/types': 3.973.7
@@ -26533,8 +26549,8 @@ snapshots:
 
   dynamodb-onetable@2.7.7:
     dependencies:
-      '@aws-sdk/client-dynamodb': 3.981.0
-      '@aws-sdk/util-dynamodb': 3.981.0(@aws-sdk/client-dynamodb@3.981.0)
+      '@aws-sdk/client-dynamodb': 3.1030.0
+      '@aws-sdk/util-dynamodb': 3.981.0(@aws-sdk/client-dynamodb@3.1030.0)
       custom-metrics: 1.1.0
     transitivePeerDependencies:
       - aws-crt

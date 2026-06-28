@@ -41,6 +41,26 @@
         "AWS_SECRETS_ARN",
         "FE_BASE_URL"
       ]
+    },
+    {
+      "name": "customer-api-service",
+      "distPath": "dist/apps/customer/customer-api-service",
+      "domain": "customer",
+      "type": "api",
+      "handler": "run.sh",
+      "memorySize": 512,
+      "timeout": 30,
+      "envVars": [
+        "CUSTOMERS_DYNAMODB_TABLE_NAME",
+        "AWS_SECRETS_ARN",
+        "STAGE",
+        "DOMAIN_PREFIX",
+        "JWT_JWKS_URI",
+        "JWT_ISSUER",
+        "JWT_USER_ID_CLAIM",
+        "JWT_USER_ROLE_CLAIM",
+        "FE_BASE_URL"
+      ]
     }
   ],
   "eventHandlerServices": [],
@@ -55,13 +75,41 @@
       "staging": "static",
       "prod": "static"
     },
-    "envVars": [
-      "NEXT_PUBLIC_API_AUTH_URL",
-      "NEXT_PUBLIC_API_FILE_URL"
-    ]
+    "envVars": ["NEXT_PUBLIC_API_AUTH_URL", "NEXT_PUBLIC_API_FILE_URL"]
   },
   "infrastructure": {
-    "dynamodbTables": [],
+    "dynamodbTables": [
+      {
+        "envVar": "CUSTOMERS_DYNAMODB_TABLE_NAME",
+        "domain": "customer",
+        "gsis": [
+          {
+            "indexName": "GSI1",
+            "hashKey": "GSI1PK",
+            "hashKeyType": "S",
+            "sortKey": "GSI1SK",
+            "sortKeyType": "S"
+          },
+          {
+            "indexName": "GSI2",
+            "hashKey": "GSI2PK",
+            "hashKeyType": "S",
+            "sortKey": "GSI2SK",
+            "sortKeyType": "S"
+          },
+          {
+            "indexName": "GSI3",
+            "hashKey": "GSI3PK",
+            "hashKeyType": "S"
+          },
+          {
+            "indexName": "GSI4",
+            "hashKey": "GSI4PK",
+            "hashKeyType": "S"
+          }
+        ]
+      }
+    ],
     "sqsQueues": [],
     "s3Buckets": [
       {
@@ -79,28 +127,103 @@
       "name": "seed-admin",
       "type": "custom-script",
       "script": "seed-admin.mjs",
-      "secretEnvVars": ["COGNITO_USER_POOL_ID", "SEED_ADMIN_EMAIL", "SEED_ADMIN_USER_ID"],
+      "secretEnvVars": [
+        "COGNITO_USER_POOL_ID",
+        "SEED_ADMIN_EMAIL",
+        "SEED_ADMIN_USER_ID"
+      ],
       "envVars": ["AWS_SECRETS_ARN"]
     }
   ],
-
   "_gatewayAuthComment": "API Gateway-side JWT authorizer config. When enabled=true, Terraform attaches the Cognito JWT authorizer to every route on the shared HTTP API EXCEPT those listed in publicRoutes (Option B — per-route declarations). Each entry's full path on the gateway is /{service.domain}{path}. Routes here MUST stay in sync with @Public() decorators on the corresponding controllers — enforced by the gateway-public-routes-sync lint check in scripts/lint-standards.ts. The `path` field is the gateway-side path AFTER the domain prefix is stripped — i.e. exactly what NestJS sees (always starts with /api).",
   "gatewayAuth": {
     "enabled": true,
     "publicRoutes": [
-      { "service": "file-api-service",    "method": "GET",  "path": "/api/health" },
-      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger" },
-      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger-json" },
-      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger/{proxy+}" },
-      { "service": "auth-api-service",    "method": "GET",  "path": "/api/health" },
-      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger" },
-      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger-json" },
-      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger/{proxy+}" },
-      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/sign-in" },
-      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/new-password" },
-      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/refresh-session" },
-      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/forgot-password" },
-      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/confirm-forgot-password" }
+      {
+        "service": "file-api-service",
+        "method": "GET",
+        "path": "/api/health"
+      },
+      {
+        "service": "file-api-service",
+        "method": "GET",
+        "path": "/api/swagger"
+      },
+      {
+        "service": "file-api-service",
+        "method": "GET",
+        "path": "/api/swagger-json"
+      },
+      {
+        "service": "file-api-service",
+        "method": "GET",
+        "path": "/api/swagger/{proxy+}"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "GET",
+        "path": "/api/health"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "GET",
+        "path": "/api/swagger"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "GET",
+        "path": "/api/swagger-json"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "GET",
+        "path": "/api/swagger/{proxy+}"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "POST",
+        "path": "/api/auth/sign-in"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "POST",
+        "path": "/api/auth/new-password"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "POST",
+        "path": "/api/auth/refresh-session"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "POST",
+        "path": "/api/auth/forgot-password"
+      },
+      {
+        "service": "auth-api-service",
+        "method": "POST",
+        "path": "/api/auth/confirm-forgot-password"
+      },
+      {
+        "service": "customer-api-service",
+        "method": "GET",
+        "path": "/api/health"
+      },
+      {
+        "service": "customer-api-service",
+        "method": "GET",
+        "path": "/api/swagger"
+      },
+      {
+        "service": "customer-api-service",
+        "method": "GET",
+        "path": "/api/swagger-json"
+      },
+      {
+        "service": "customer-api-service",
+        "method": "GET",
+        "path": "/api/swagger/{proxy+}"
+      }
     ]
   }
 }

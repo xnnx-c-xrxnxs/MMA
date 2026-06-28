@@ -1,7 +1,6 @@
 {
   "version": "2.0.0",
   "tasks": [
-    // ── Validation ────────────────────────────────────────────────────────────
     {
       "label": "Node: Validate Version",
       "type": "shell",
@@ -28,8 +27,6 @@
         }
       }
     },
-
-    // ── Docker / LocalStack ───────────────────────────────────────────────────
     {
       "label": "Docker: Start LocalStack",
       "type": "shell",
@@ -93,10 +90,7 @@
     },
     {
       "label": "LocalStack: Start + Setup",
-      "dependsOn": [
-        "Docker: Start LocalStack",
-        "LocalStack: Create Tables"
-      ],
+      "dependsOn": ["Docker: Start LocalStack", "LocalStack: Create Tables"],
       "dependsOrder": "sequence",
       "presentation": {
         "reveal": "always",
@@ -114,10 +108,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── Infra: Start All ──────────────────────────────────────────────────────
-    // Validates Node version, starts Docker/LocalStack, runs DB migrations.
-    // Safe to run multiple times — all steps are idempotent.
     {
       "label": "Infra: Start All",
       "dependsOn": [
@@ -132,11 +122,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── Microservices ─────────────────────────────────────────────────────────
-    // Add one "Service: Serve {service-name}" task per microservice.
-    // Command pattern: npx nx serve {service-name}
-    // Claim port in §7.1 of CLAUDE.md before adding.
     {
       "label": "Service: Serve auth-api-service",
       "type": "shell",
@@ -203,8 +188,6 @@
         }
       ]
     },
-
-    // ── Frontend ──────────────────────────────────────────────────────────────
     {
       "label": "Service: Serve webapp",
       "type": "shell",
@@ -238,8 +221,6 @@
         }
       ]
     },
-
-    // ── Mobile ─────────────────────────────────────────────────────────────
     {
       "label": "Service: Serve mobile",
       "type": "shell",
@@ -257,18 +238,9 @@
       },
       "problemMatcher": []
     },
-
-    // ── Domain-Specific Compound Tasks ────────────────────────────────────────
-    // Domain tasks only start services — no infra.
-    // Run "Infra: Start All" once per dev session before using these.
-    //
-    // Example domain compounds (Domain: Start User / Product / Order) live
-    // in [examples/.vscode/tasks.json](examples/.vscode/tasks.json) or in git history.
     {
       "label": "Domain: Start Auth",
-      "dependsOn": [
-        "Service: Serve auth-api-service"
-      ],
+      "dependsOn": ["Service: Serve auth-api-service"],
       "dependsOrder": "parallel",
       "presentation": {
         "reveal": "silent",
@@ -278,9 +250,7 @@
     },
     {
       "label": "Domain: Start Files",
-      "dependsOn": [
-        "Service: Serve file-api-service"
-      ],
+      "dependsOn": ["Service: Serve file-api-service"],
       "dependsOrder": "parallel",
       "presentation": {
         "reveal": "silent",
@@ -288,8 +258,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── Monitoring (separate concern — not part of Services: Start All) ────────
     {
       "label": "Service: Serve monitoring-api-service",
       "type": "shell",
@@ -354,17 +322,14 @@
       },
       "problemMatcher": []
     },
-
-    // ── Full Stack ────────────────────────────────────────────────────────────
-    // "Services: Start All" launches every service in parallel (no infra).
-    // "Dev: Start All" runs infra first, then all services.
     {
       "label": "Services: Start All",
       "dependsOn": [
         "Service: Serve auth-api-service",
         "Service: Serve file-api-service",
         "Service: Serve webapp",
-        "Service: Serve mobile"
+        "Service: Serve mobile",
+        "Service: Serve customer-api-service"
       ],
       "dependsOrder": "parallel",
       "presentation": {
@@ -375,10 +340,7 @@
     },
     {
       "label": "Dev: Start All",
-      "dependsOn": [
-        "Infra: Start All",
-        "Services: Start All"
-      ],
+      "dependsOn": ["Infra: Start All", "Services: Start All"],
       "dependsOrder": "sequence",
       "presentation": {
         "reveal": "silent",
@@ -386,8 +348,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── E2E Testing ──────────────────────────────────────────────────────────
     {
       "label": "E2E: Setup Infrastructure",
       "type": "shell",
@@ -482,24 +442,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── AWS Bootstrap (One-Time Account Setup) ────────────────────────────────
-    // Run these tasks once per AWS account to create shared infra (S3 state
-    // bucket, ECR, GitHub OIDC, IAM deploy role). Requires Terraform CLI.
-    //
-    // Setup:
-    //   Single-account:
-    //     1. cp infra/bootstrap/aws-credentials.example infra/bootstrap/aws-credentials
-    //     2. Fill in terraform.tfvars + aws-credentials
-    //     3. Run "AWS: Bootstrap Apply"
-    //
-    //   Multi-account (per environment):
-    //     1. cp infra/bootstrap/aws-credentials.example infra/bootstrap/aws-credentials.dev
-    //     2. Fill aws-credentials.dev with DEV account credentials
-    //     3. Repeat for staging/prod
-    //     4. Run bootstrap tasks (they prompt for which credential file to use)
-    //
-    // All credential files are gitignored — they never leave your machine.
     {
       "label": "AWS: Bootstrap Init",
       "type": "shell",
@@ -598,10 +540,6 @@
       },
       "problemMatcher": []
     },
-
-    // ── Deploy ─────────────────────────────────────────────────────────────────
-    // Trigger CD pipeline from the IDE.
-    // Requires: gh CLI authenticated (gh auth login) + repo variables set.
     {
       "label": "Deploy: Trigger",
       "detail": "Trigger a CD deployment to the selected environment",
@@ -636,10 +574,6 @@
       "problemMatcher": [],
       "isBackground": true
     },
-
-    // ── Monitoring Deploy ──────────────────────────────────────────────────────
-    // Deploy monitoring services independently from the main CD pipeline.
-    // Requires: gh CLI authenticated + MONITORING_DEPLOY_ROLE_ARN variable set.
     {
       "label": "Monitoring Deploy: Trigger",
       "detail": "Trigger monitoring service deployment (infra + API + webapp)",
@@ -674,10 +608,6 @@
       "problemMatcher": [],
       "isBackground": true
     },
-
-    // ── Preview Environments ──────────────────────────────────────────────────
-    // Create/destroy preview environments from the IDE.
-    // Requires: gh CLI authenticated (gh auth login) + repo variables set.
     {
       "label": "Preview: Create",
       "detail": "Deploy a full-stack preview environment to AWS",
@@ -777,6 +707,17 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Service: Serve customer-api-service",
+      "type": "shell",
+      "command": "pnpm nx run customer-api-service:serve",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     }
   ],
   "inputs": [

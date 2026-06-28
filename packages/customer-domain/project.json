@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "customer-domain",
+  "sourceRoot": "packages/customer-domain/src",
+  "projectType": "library",
+  "tags": ["scope:customer", "type:domain-logic"]
+}
