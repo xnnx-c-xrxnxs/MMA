@@ -6,7 +6,7 @@ import {
   EmptyStateDescription,
   EmptyStateIcon,
   EmptyStateTitle,
-  FolderIcon,
+  FileIcon,
 } from '@mma/ui';
 import { PreviewSection, PreviewCell, UnmappedItem } from './_shell';
 import manifestJson from './figma-library-manifest.json';
@@ -65,7 +65,7 @@ export function FullLibrary() {
     return (
       <EmptyState>
         <EmptyStateIcon>
-          <FolderIcon />
+          <FileIcon />
         </EmptyStateIcon>
         <EmptyStateTitle>No library imported yet</EmptyStateTitle>
         <EmptyStateDescription>

@@ -1,11 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
+  CardIcon,
   CardKeycap,
   CardRow,
+  CardSection,
   CardShortcutRow,
   CardTitle,
 } from './card';
@@ -61,5 +64,31 @@ describe('Card', () => {
     const keycap = screen.getByText('I');
     expect(keycap).toHaveClass('bg-success-bg');
     expect(keycap).toHaveClass('text-success-text');
+  });
+
+  it('renders the leading icon in a CardRow when provided', () => {
+    render(<CardRow label="With icon" value="42" icon={<span data-testid="row-icon">★</span>} />);
+    expect(screen.getByTestId('row-icon')).toBeInTheDocument();
+    expect(screen.getByText('With icon')).toBeInTheDocument();
+  });
+
+  it('renders CardAction as a button with a default type', () => {
+    render(<CardAction>Save</CardAction>);
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'button');
+  });
+
+  it('honors an explicit CardAction type', () => {
+    render(<CardAction type="submit">Submit</CardAction>);
+    expect(screen.getByRole('button', { name: 'Submit' })).toHaveAttribute('type', 'submit');
+  });
+
+  it('renders CardSection and CardIcon', () => {
+    render(
+      <CardSection data-testid="section">
+        <CardIcon data-testid="icon">★</CardIcon>
+      </CardSection>,
+    );
+    expect(screen.getByTestId('section')).toBeInTheDocument();
+    expect(screen.getByTestId('icon')).toBeInTheDocument();
   });
 });
