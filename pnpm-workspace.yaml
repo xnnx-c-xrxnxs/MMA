@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'apps/*/*'
+  - 'packages/*'
+  - 'packages/aws/*'
+  - 'packages/contracts/*'
+
+autoInstallPeers: true

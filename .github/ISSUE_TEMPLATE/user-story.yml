@@ -1,0 +1,269 @@
+name: "📋 User Story"
+description: "Create a user story for feature development. Optimized for AI-assisted coding via the workflow commands in .claude/commands/."
+title: "[PREFIX]-[##] "
+labels: ["user-story", "needs-refinement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📋 User Story Submission
+
+        Complete all required fields. This template is optimized for AI-assisted development with our `/triage-sprint`, `/new-feature`, `/full-stack-feature`, `/webapp-feature`, and other workflow prompts.
+
+        **Ticket Format:** `PREFIX-##` (e.g. `OST-01`, `ORDER-15`).
+        **Tip for batch creation:** see [docs/AI_ISSUE_CREATOR_PROMPT.md](../../docs/AI_ISSUE_CREATOR_PROMPT.md) for CSV bulk mode.
+
+  - type: input
+    id: ticket-number
+    attributes:
+      label: "Ticket Number"
+      description: "Format: PREFIX-## (2-10 char project prefix + hyphen + zero-padded number)"
+      placeholder: "e.g. OST-01, ORDER-15, AUTH-03"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: story-type
+    attributes:
+      label: "Story Type"
+      description: "Primary scope of this story. Drives the recommended workflow prompt."
+      options:
+        - "Full Stack (Backend + Webapp)"
+        - "Full Stack (Backend + Webapp + Mobile)"
+        - "Backend Only"
+        - "Webapp Only"
+        - "Mobile Only"
+        - "Infrastructure / CD"
+        - "Cross-Domain Integration (ACL or Saga)"
+        - "Event-Driven (SQS Consumer)"
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: domain
+    attributes:
+      label: "Domain"
+      description: "Which bounded context does this touch? See `.github/issue-config.json` for valid values. The AI Issue Creator validates this and applies the matching `domain-*` label. (After running `/sync-notebooklm-output`, this field becomes a dropdown auto-populated from your project's domains.)"
+      placeholder: "e.g. user, order, webapp, cross-domain"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      description: "P0 = blocking release. P1 = sprint-critical. P2 = nice-to-have. P3 = backlog."
+      options:
+        - "Critical (P0)"
+        - "High (P1)"
+        - "Medium (P2)"
+        - "Low (P3)"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: "Effort"
+      description: "Rough sizing — drives sprint capacity and triage bundling. xs ≤ 2h · s ≤ 8h · m ≤ 16h · l ≤ 32h · xl > 32h."
+      options:
+        - "XS (≤ 2h)"
+        - "S (≤ 8h)"
+        - "M (≤ 16h)"
+        - "L (≤ 32h)"
+        - "XL (> 32h)"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: workflow-hint
+    attributes:
+      label: "Recommended Workflow Prompt"
+      description: "Which `/command` from .claude/commands/ should the developer run? Pick the most specific match — `/triage-sprint` will respect this hint."
+      options:
+        - "/new-feature (single backend domain)"
+        - "/full-stack-feature (backend + webapp + mobile slice)"
+        - "/webapp-feature (webapp only)"
+        - "/new-domain (new bounded context)"
+        - "/quick-crud-domain (minimal CRUD)"
+        - "/new-domain-dynamo (DynamoDB-backed domain)"
+        - "/new-service (new microservice)"
+        - "/new-event-service (SQS publisher / consumer / saga)"
+        - "/new-use-case (single use case)"
+        - "/new-e2e-tests"
+        - "/new-ui-primitive (shared UI component)"
+        - "/fe-accessibility-pass"
+        - "/mobile-release"
+        - "/add-push-notifications"
+        - "/add-monitoring-feature"
+        - "/add-alerting"
+        - "Direct work (no orchestrator — use individual skills)"
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: estimated-effort-detail
+    attributes:
+      label: "Estimated Effort (detail)"
+      description: "Optional human-readable breakdown."
+      placeholder: "e.g. 4h backend, 2h webapp"
+    validations:
+      required: false
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: "User Story"
+      description: "What the user wants to accomplish."
+      value: |
+        As a [user role],
+        I want to [action],
+        so that [outcome].
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-results
+    attributes:
+      label: "Expected Results"
+      description: "Detailed expected behaviours, states, and outputs."
+      placeholder: |
+        - User behaviours and workflows
+        - System responses
+        - Data changes
+        - UI states (loading, empty, error)
+        - Error states and edge cases
+    validations:
+      required: true
+
+  - type: input
+    id: design-link
+    attributes:
+      label: "Design"
+      description: "Figma or design link (Webapp / Mobile / Full Stack)."
+      placeholder: "https://figma.com/file/... or 'Follow existing patterns'"
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance Criteria"
+      description: "Gherkin scenarios. Adapt sections based on Story Type."
+      value: |
+        <!--
+        BACKEND scenarios: API endpoints, request/response, validation, error codes, domain invariants.
+        WEBAPP / MOBILE scenarios: UI elements, states, interactions.
+        EVENT-DRIVEN scenarios: queue → handler → state transition.
+        SAGA scenarios: initiator state, responder action, resolver outcome.
+        -->
+
+        **[Feature / Endpoint Group]**
+        - **Scenario: [Scenario Name]**
+          - Given [precondition]
+          - When [action]
+          - Then
+            - [Expected outcome 1]
+            - [Expected outcome 2]
+
+        **[Validation / Error Handling]**
+        - **Scenario: [Validation Scenario]**
+          - Given [precondition]
+          - When [invalid action]
+          - Then [error behaviour]
+
+        **[Loading / Empty States]** (Webapp / Mobile only)
+        - **Scenario: Loading data**
+          - Given [data is being fetched]
+          - When [user navigates to page]
+          - Then [loading skeleton displayed]
+    validations:
+      required: true
+
+  - type: textarea
+    id: touches
+    attributes:
+      label: "Touches (file globs)"
+      description: "Paths this story is expected to modify. Used by `/triage-sprint` to bundle related issues. One glob per line."
+      placeholder: |
+        packages/{domain}-domain/**
+        apps/{domain}/{domain}-api-service/**
+        apps/webapp/src/app/{domain}/**
+    validations:
+      required: false
+
+  - type: textarea
+    id: blocked-by
+    attributes:
+      label: "Blocked by"
+      description: "Other issue numbers that must be merged before this one. One per line — `#123` format. `/triage-sprint` will skip this issue while any blocker is open."
+      placeholder: |
+        #123
+        #145
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "Assumptions & Cross-Service Dependencies"
+      description: "External dependencies, ACL calls to other services, third-party integrations, assumptions."
+      placeholder: |
+        **Cross-service:**
+        - Validates against User API (sync ACL)
+        - Publishes ORDER_CREATED to product-events queue
+        - Reacts to PRODUCT_VALIDATION_SUCCEEDED from order-events queue
+
+        **Third-party:**
+        - AWS Cognito, SES, Stripe, etc.
+
+        **Assumptions:**
+        - User authenticated before access
+        - Data already seeded
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: "Out of Scope"
+      description: "Explicitly state what this story does NOT include."
+      placeholder: |
+        - Mobile UI for this flow (separate ticket)
+        - Bulk operations
+        - Admin override
+    validations:
+      required: false
+
+  - type: input
+    id: related-tickets
+    attributes:
+      label: "Related Tickets"
+      description: "Linked Frontend / Backend / Integration tickets if this story is split into parent + sub-issues."
+      placeholder: "e.g. Parent: OST-12, Webapp: OST-13, Mobile: OST-14"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: definition-of-done
+    attributes:
+      label: "Definition of Done"
+      description: "Check items as completed during development."
+      options:
+        - label: "All acceptance criteria met"
+        - label: "Code reviewed and approved (CODEOWNERS)"
+        - label: "Unit tests written and passing (≥80% domain, ≥70% service/webapp/mobile)"
+        - label: "API E2E tests passing (if backend endpoint added)"
+        - label: "Webapp Playwright E2E passing (if user flow added)"
+        - label: "Structural lint (`pnpm tsx scripts/lint-standards.ts`) passes"
+        - label: "OpenAPI / Swagger updated (Backend)"
+        - label: "Storybook / shared UI primitive added (if new `@old-st/ui` or `@old-st/mobile-ui` component)"
+        - label: "Functionality matches designs (Webapp / Mobile)"
+        - label: "Accessibility pass — `axe` clean for new pages (Webapp)"
+        - label: "Structured logging via `createLogger()` (Backend)"
+        - label: "CloudWatch alarms wired (if new service)"
+        - label: "Merged to develop (auto-deploys to dev environment)"

@@ -1,0 +1,23 @@
+{
+  "dev": {
+    "emails": ["dennis@old.st"],
+    "slack": {
+      "workspaceId": "T0YQ3UEUT",
+      "channelId": "C0AUXJHKGJG"
+    }
+  },
+  "staging": {
+    "emails": [],
+    "slack": {
+      "workspaceId": "",
+      "channelId": ""
+    }
+  },
+  "prod": {
+    "emails": [],
+    "slack": {
+      "workspaceId": "",
+      "channelId": ""
+    }
+  }
+}

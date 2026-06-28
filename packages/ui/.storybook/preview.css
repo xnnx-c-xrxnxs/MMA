@@ -1,0 +1,22 @@
+﻿/* Storybook preview stylesheet for @old-st/ui.
+ *
+ * All @import rules MUST come before other at-rules (CSS spec). */
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;800&display=swap');
+@import 'tailwindcss';
+@import '../../design-tokens/src/lib/tokens.css';
+
+/* Storybook does not use next/font, so we bind the same CSS variable
+ * expected by design tokens here. */
+:root {
+	--font-sans: 'Mulish';
+}
+
+/* Tailwind v4 only auto-scans the project root by default. Opt-in the
+ * package's source files so cva() utility classes inside @old-st/ui get
+ * picked up by the candidate scanner. Mirror webapp/globals.css. */
+@source "../src";
+
+/* Mirror the next-themes class-based dark variant so `dark:*` utilities
+ * resolve identically to apps/webapp/src/app/globals.css. The
+ * `@storybook/addon-themes` toggle adds `class="dark"` to <html>. */
+@custom-variant dark (&:where(.dark, .dark *));

@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/old-st/old-st-template/.specs/schemas/domain-spec.schema.json",
+  "title": "Domain Spec",
+  "description": "Declarative spec for /new-domain, /new-domain-dynamo, and /quick-crud-domain orchestrators. Replaces the inline interview phase with a reviewable, autocompleted YAML file.",
+  "type": "object",
+  "required": ["domain", "persistence", "entity"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Lowercase, kebab-case domain name. Becomes packages/{domain}-domain. Examples: invoice, payment-method, shipping-rate."
+    },
+    "persistence": {
+      "type": "string",
+      "enum": ["dynamodb", "prisma"],
+      "description": "Persistence strategy. dynamodb = OneTable + cursor pagination. prisma = Postgres + offset pagination + migrations."
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional service-app metadata. If omitted, /new-domain will infer { type: api, name: {domain}-api-service }.",
+      "properties": {
+        "type": { "type": "string", "enum": ["api", "event-handler"] },
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*-(api-service|event-handler-service)$" }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "required": ["name", "fields"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$",
+          "description": "PascalCase entity class name. Examples: Invoice, PaymentMethod, ShippingRate."
+        },
+        "description": {
+          "type": "string",
+          "description": "One-line description of what this entity represents in the business domain."
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Domain entity attributes. Map 1:1 to entity properties + persistence columns/attributes + Zod schema fields.",
+          "items": { "$ref": "#/definitions/Field" }
+        }
+      }
+    },
+    "businessRules": {
+      "type": "array",
+      "description": "Free-form list of business invariants and state transition rules. Drives the domain-business-rules skill.",
+      "items": { "type": "string" }
+    },
+    "events": {
+      "type": "array",
+      "description": "Domain event type names this entity emits. Use SCREAMING_SNAKE_CASE. Triggers sqs-event-publisher skill if non-empty.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*$"
+      }
+    },
+    "indexes": {
+      "type": "array",
+      "description": "Additional access patterns beyond the primary key. DynamoDB → GSI definitions. Prisma → composite/unique indexes.",
+      "items": { "$ref": "#/definitions/Index" }
+    },
+    "useCases": {
+      "type": "array",
+      "description": "Optional explicit list of use cases to scaffold. If omitted, the orchestrator infers a sensible default set (create, get, list, update, delete + transitions per state machine).",
+      "items": { "$ref": "#/definitions/UseCase" }
+    }
+  },
+  "definitions": {
+    "Field": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase field name. Examples: id, customerId, dateOfBirth, totalAmount."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ulid", "string", "number", "integer", "boolean", "date", "datetime", "enum", "json", "email", "url"],
+          "description": "Logical type. Maps to Zod + DynamoDB attribute type / Prisma column type."
+        },
+        "values": {
+          "type": "array",
+          "description": "REQUIRED when type=enum. List of allowed string values in SCREAMING_SNAKE_CASE.",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        },
+        "labels": {
+          "type": "object",
+          "description": "OPTIONAL when type=enum. Maps each enum value to a user-friendly display label rendered by the frontend `format{Entity}Status()` helper. Keys MUST be a subset of `values`. Values not listed here fall back to Title Case (e.g. `PAST_DUE → \"Past Due\"`). Provide labels for any enum value where Title Case alone is wrong (acronyms like `API_KEY → \"API Key\"`, abbreviations, branded terms).",
+          "additionalProperties": { "type": "string" }
+        },
+        "default": {
+          "description": "Optional default value. For enum fields, must be one of `values`. For booleans, true/false. For numbers, the number."
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "If true, field is nullable in persistence and .optional() in Zod. Default: false."
+        },
+        "pk": {
+          "type": "boolean",
+          "description": "True if this field is the primary key. Exactly one field per entity must have pk:true. Use type:ulid for new entities."
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Adds a uniqueness constraint. Prisma → @unique. DynamoDB → backed by a dedicated GSI; specify which one in `gsi`."
+        },
+        "gsi": {
+          "type": "string",
+          "pattern": "^GSI[1-9][0-9]*$",
+          "description": "DynamoDB-only. Marks this field as participating in a GSI partition key. Examples: GSI1, GSI2."
+        },
+        "index": {
+          "type": "boolean",
+          "description": "Prisma-only. Adds a non-unique @@index([field]) for query performance."
+        },
+        "min": { "type": "number", "description": "Numeric minimum (Zod .min()). For strings, minimum length." },
+        "max": { "type": "number", "description": "Numeric maximum (Zod .max()). For strings, maximum length." },
+        "description": {
+          "type": "string",
+          "description": "Optional description — used in generated JSDoc and Swagger docs."
+        }
+      }
+    },
+    "Index": {
+      "type": "object",
+      "required": ["name", "fields"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "DynamoDB GSI name (GSI1, GSI2, ...) OR Prisma index name."
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Field names participating in this index (PK first, then SK if composite)."
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Prisma-only. Creates @@unique([fields]) instead of @@index."
+        },
+        "description": {
+          "type": "string",
+          "description": "Why this access pattern exists (e.g. 'list invoices by customer')."
+        }
+      }
+    },
+    "UseCase": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]*$",
+          "description": "camelCase use case name. Examples: createInvoice, sendInvoice, voidInvoice, listInvoicesByStatus."
+        },
+        "description": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["create", "read", "update", "delete", "list", "transition"],
+          "description": "Helps the orchestrator pick the right scaffolding template."
+        }
+      }
+    }
+  }
+}

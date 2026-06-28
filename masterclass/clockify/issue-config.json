@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Masterclass project B — Clockify (time tracking). DynamoDB OneTable.",
+    "Copy this to .github/issue-config.json before running /import-estimate-csv."
+  ],
+
+  "projectName": "clockify",
+
+  "ticketPrefix": "TRK",
+
+  "domains": [
+    { "name": "workspace", "description": "workspace-api-service / workspaces + membership (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "project",   "description": "project-api-service / projects + budgets (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "timeentry", "description": "timeentry-api-service / time entries + timesheets (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "task",      "description": "task-api-service / tasks under a project (stretch, DynamoDB)", "persistence": "dynamodb" },
+    { "name": "invoice",   "description": "invoice-api-service / bills from billable time (stretch, DynamoDB)", "persistence": "dynamodb" },
+    { "name": "auth",      "description": "auth-api-service / Cognito / JWT", "persistence": "none" }
+  ],
+
+  "crossCutting": [
+    { "name": "webapp",       "description": "apps/webapp (Next.js)", "color": "0366d6" },
+    { "name": "mobile",       "description": "apps/mobile (Expo)", "color": "0366d6" },
+    { "name": "infra",        "description": "Terraform / CD / AWS resources", "color": "5319e7" },
+    { "name": "cross-domain", "description": "Spans 2+ bounded contexts (sync ACL or async saga)", "color": "ff6b6b" },
+    { "name": "new-domain",   "description": "New bounded context to be scaffolded", "color": "b60205" }
+  ]
+}

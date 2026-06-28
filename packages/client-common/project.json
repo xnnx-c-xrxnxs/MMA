@@ -1,0 +1,7 @@
+{
+  "name": "client-common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/client-common/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:data-access"]
+}

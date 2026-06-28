@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Masterclass project A — HR Leave Management. Prisma + PostgreSQL.",
+    "Copy this to .github/issue-config.json before running /import-estimate-csv."
+  ],
+
+  "projectName": "hr-leave",
+
+  "ticketPrefix": "HRL",
+
+  "domains": [
+    { "name": "employee",     "description": "employee-api-service / employees + leave balances (Prisma)", "persistence": "prisma" },
+    { "name": "leave",        "description": "leave-api-service / leave requests + approvals (Prisma)", "persistence": "prisma" },
+    { "name": "holiday",      "description": "holiday-api-service / public-holiday calendar (Prisma)", "persistence": "prisma" },
+    { "name": "department",   "description": "department-api-service / org units + approvers (stretch, Prisma)", "persistence": "prisma" },
+    { "name": "notification", "description": "notification-event-handler-service / email on status change (stretch)", "persistence": "prisma" },
+    { "name": "auth",         "description": "auth-api-service / Cognito / JWT", "persistence": "none" }
+  ],
+
+  "crossCutting": [
+    { "name": "webapp",       "description": "apps/webapp (Next.js)", "color": "0366d6" },
+    { "name": "mobile",       "description": "apps/mobile (Expo)", "color": "0366d6" },
+    { "name": "infra",        "description": "Terraform / CD / AWS resources", "color": "5319e7" },
+    { "name": "cross-domain", "description": "Spans 2+ bounded contexts (sync ACL or async saga)", "color": "ff6b6b" },
+    { "name": "new-domain",   "description": "New bounded context to be scaffolded", "color": "b60205" }
+  ]
+}

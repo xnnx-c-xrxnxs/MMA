@@ -1,0 +1,32 @@
+/* All @import rules MUST come before other at-rules (CSS spec). */
+@import "tailwindcss";
+
+/* The @theme + .dark blocks live in a separate file so Storybook
+ * (`packages/ui/.storybook/preview.css`) can `@import` the same source of
+ * truth without dragging in this file's `@source` / `@custom-variant`
+ * declarations (Tailwind v4 errors with "@source cannot be nested" if those
+ * are inside an imported file).
+ *
+ * The imported file is GENERATED from `packages/ui/src/lib/tokens.ts` by
+ * `pnpm tokens:gen`. CI fails if you edit it by hand and forget to re-run
+ * the script. */
+@import "../../../../packages/ui/src/lib/tokens.css";
+
+/* Tailwind v4 only auto-scans `apps/webapp/src/`. Workspace packages that
+ * use cva() (e.g. @old-st/ui) are excluded by default — utility classes
+ * inside cva() strings would be silently dropped, causing primitives to
+ * render as 0×0 boxes. The @source directive below opts the package in. */
+@source "../../../../packages/ui/src";
+
+/* next-themes injects `class="dark"` on <html>. We use the @custom-variant
+ * directive so Tailwind v4 utilities like `dark:bg-card` work. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

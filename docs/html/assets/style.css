@@ -1,0 +1,418 @@
+/* ============================================================
+   Old ST Template — Architecture Documentation
+   Plain HTML docs — no build tool required
+   ============================================================ */
+
+/* ---------- Reset & Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Light theme */
+  --bg: #ffffff;
+  --bg-sidebar: #f8f9fb;
+  --bg-code: #f3f4f6;
+  --bg-card: #f8f9fb;
+  --bg-table-head: #f1f3f5;
+  --bg-table-stripe: #fafbfc;
+  --border: #e2e5e9;
+  --text: #1a1d23;
+  --text-muted: #5c6370;
+  --text-sidebar: #3b4252;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #dbeafe;
+  --tag-bg: #e0e7ff;
+  --tag-text: #3730a3;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0284c7;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --radius: 6px;
+  --sidebar-width: 260px;
+  --max-content: 960px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1d23;
+    --bg-sidebar: #21242b;
+    --bg-code: #282c34;
+    --bg-card: #21242b;
+    --bg-table-head: #282c34;
+    --bg-table-stripe: #1e2128;
+    --border: #3b4252;
+    --text: #d8dee9;
+    --text-muted: #8892a4;
+    --text-sidebar: #c8cdd5;
+    --accent: #5b9cf6;
+    --accent-hover: #7eb5fa;
+    --accent-light: #1e3a5f;
+    --tag-bg: #2e3450;
+    --tag-text: #93a3f8;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --info: #38bdf8;
+    --shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Layout ---------- */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  z-index: 100;
+}
+
+.sidebar-brand {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.sidebar-brand h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.sidebar-brand small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sidebar nav ul {
+  list-style: none;
+}
+
+.sidebar nav ul li a {
+  display: block;
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  color: var(--text-sidebar);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sidebar nav ul li a:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.sidebar nav ul li a.active {
+  background: var(--accent-light);
+  border-left-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar nav .nav-section {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 16px 20px 6px;
+}
+
+/* ---------- Main Content ---------- */
+.main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  padding: 48px 40px 80px;
+  max-width: calc(var(--max-content) + var(--sidebar-width) + 80px);
+}
+
+.content {
+  max-width: var(--max-content);
+}
+
+/* ---------- Typography ---------- */
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+p {
+  margin-bottom: 16px;
+}
+
+strong {
+  font-weight: 600;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Lists ---------- */
+ul, ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+li > ul, li > ol {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+/* ---------- Code ---------- */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+/* ---------- Tables ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+
+th {
+  background: var(--bg-table-head);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tr:nth-child(even) td {
+  background: var(--bg-table-stripe);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Card Grid ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.card-grid .card {
+  margin-bottom: 0;
+}
+
+.card-grid .card a {
+  font-weight: 600;
+}
+
+/* ---------- Tags / Badges ---------- */
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--tag-text);
+}
+
+.tag.dynamo { background: #fef3c7; color: #92400e; }
+.tag.prisma { background: #dbeafe; color: #1e40af; }
+.tag.sync   { background: #dcfce7; color: #166534; }
+.tag.async  { background: #fce7f3; color: #9d174d; }
+.tag.saga   { background: #f3e8ff; color: #6b21a8; }
+
+@media (prefers-color-scheme: dark) {
+  .tag.dynamo { background: #78350f; color: #fef3c7; }
+  .tag.prisma { background: #1e3a5f; color: #93c5fd; }
+  .tag.sync   { background: #14532d; color: #bbf7d0; }
+  .tag.async  { background: #831843; color: #fbcfe8; }
+  .tag.saga   { background: #581c87; color: #e9d5ff; }
+}
+
+/* ---------- Callouts ---------- */
+.callout {
+  border-left: 4px solid var(--info);
+  background: var(--bg-card);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.callout.info    { border-left-color: var(--info); }
+.callout.warning { border-left-color: var(--warning); }
+.callout.success { border-left-color: var(--success); }
+.callout.danger  { border-left-color: var(--danger); }
+
+.callout strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ---------- Mermaid Diagrams ---------- */
+.mermaid {
+  margin: 24px 0;
+  text-align: center;
+}
+
+/* Override Mermaid default text for dark mode compat */
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- Horizontal Rule ---------- */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+/* ---------- File Path Blocks ---------- */
+.file-path {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-code);
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .layout {
+    flex-direction: column;
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 24px 20px 60px;
+  }
+}

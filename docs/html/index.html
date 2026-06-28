@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Docs — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html" class="active">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main class="main">
+    <div class="content">
+
+      <h1>Old ST Template</h1>
+      <p class="subtitle">
+        A <strong>full-stack Clean Architecture monorepo</strong> template demonstrating domain-driven design,
+        dual persistence (DynamoDB + PostgreSQL), event-driven communication, cross-domain integration patterns,
+        and a Next.js frontend with typed API clients and React Query.
+        This documentation explains <em>how</em> and <em>why</em> the architecture works — use it as a guide when
+        building new services, extending existing domains, or adding frontend features.
+      </p>
+
+      <hr>
+
+      <h2>What This Template Demonstrates</h2>
+
+      <ul>
+        <li><strong>Clean Architecture</strong> with strict layer separation — presentation, application, domain, infrastructure</li>
+        <li><strong>Five backend bounded contexts</strong> (User, Product, Order, Auth, Files) plus an internal monitoring tool, with independent domain models and persistence</li>
+        <li><strong>Dual persistence:</strong> DynamoDB OneTable (User, Product) and Prisma + PostgreSQL (Order)</li>
+        <li><strong>Four inter-service communication patterns:</strong> synchronous ACL, cross-domain events, intra-domain events, and choreography sagas</li>
+        <li><strong>SQS event-driven services</strong> with local polling and Lambda-ready handlers</li>
+        <li><strong>Shared contracts package</strong> with Zod validation, subpath imports, and discriminated union event schemas</li>
+        <li><strong>Next.js App Router frontend</strong> with React Query hooks, typed API clients, and shared UI primitives</li>
+        <li><strong>Expo / React Native mobile app</strong> sharing the same data-access hooks and API clients as the webapp</li>
+        <li><strong>Full local development stack</strong> via Docker, LocalStack, and VS Code tasks</li>
+      </ul>
+
+      <hr>
+
+      <h2>Documentation Map</h2>
+
+      <div class="card-grid">
+
+        <div class="card">
+          <h3><a href="architecture.html">Clean Architecture</a></h3>
+          <p>Layer hierarchy, dependency rule, request lifecycle from HTTP to DB and back, and the golden rules that govern every service.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="domains.html">Bounded Contexts</a></h3>
+          <p>The three domains (User, Product, Order) — their entities, state machines, business rules, and how DDD concepts map to the codebase.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="domain-interactions.html">Domain Interactions</a></h3>
+          <p>How domains communicate — synchronous ACL calls, cross-domain events, choreography sagas. Includes the full order creation saga flow.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="persistence.html">Persistence Patterns</a></h3>
+          <p>DynamoDB OneTable vs Prisma + PostgreSQL — when to pick each, repository pattern, pagination styles, and data mapping.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="contracts.html">Contracts &amp; Types</a></h3>
+          <p>The shared contracts package — Zod schemas, TypeScript types, subpath imports, and the DTO mapping pipeline.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="event-driven.html">Event-Driven (SQS)</a></h3>
+          <p>SQS event architecture — publishers, consumers, NormalizedSqsRecord, handler dispatch, and how to add new event types.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="webapp.html">Webapp (Next.js)</a></h3>
+          <p>The Next.js frontend — page patterns, API clients, React Query hooks, UI primitives, and how the webapp consumes backend APIs.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="mobile.html">Mobile (Expo)</a></h3>
+          <p>The Expo / React Native mobile app — screen orchestrators, Expo Router navigation, shared data-access hooks, and mobile UI primitives.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="infrastructure.html">Local Infrastructure</a></h3>
+          <p>Docker Compose, LocalStack, PostgreSQL, environment variables, VS Code task chain, and port registry.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="testing.html">Testing Strategy</a></h3>
+          <p>Test pyramid, per-layer conventions, coverage thresholds, Jest configuration, and how to run tests with Nx.</p>
+        </div>
+
+        <div class="card">
+          <h3><a href="ai-workflows.html">Workflow Orchestrators</a></h3>
+          <p>AI-guided multi-step workflows &mdash; orchestrator prompts that interview, plan, execute, and validate across all architecture layers.</p>
+        </div>
+
+      </div>
+
+      <hr>
+
+      <h2>Where to Start</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>If you are…</th>
+            <th>Start here</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Evaluating the template's architecture</td>
+            <td><a href="architecture.html">Clean Architecture</a> → <a href="domain-interactions.html">Domain Interactions</a></td>
+          </tr>
+          <tr>
+            <td>Setting up the project locally</td>
+            <td><a href="../README.md">README.md</a> (setup guide) → <a href="infrastructure.html">Local Infrastructure</a></td>
+          </tr>
+          <tr>
+            <td>Adding a feature to an existing domain</td>
+            <td><a href="domains.html">Bounded Contexts</a> → <a href="contracts.html">Contracts</a> → <a href="persistence.html">Persistence</a></td>
+          </tr>
+          <tr>
+            <td>Adding cross-domain communication</td>
+            <td><a href="domain-interactions.html">Domain Interactions</a> → <a href="event-driven.html">Event-Driven</a></td>
+          </tr>
+          <tr>
+            <td>Building a frontend feature</td>
+            <td><a href="webapp.html">Webapp</a> → <a href="contracts.html">Contracts</a></td>
+          </tr>
+          <tr>
+            <td>Building a mobile feature</td>
+            <td><a href="mobile.html">Mobile</a> → <a href="webapp.html">Webapp</a> (shared hooks) → <a href="contracts.html">Contracts</a></td>
+          </tr>
+          <tr>
+            <td>Writing tests</td>
+            <td><a href="testing.html">Testing Strategy</a></td>
+          </tr>
+          <tr>
+            <td>Creating a brand-new domain from scratch</td>
+            <td><a href="architecture.html">Clean Architecture</a> → <a href="domains.html">Bounded Contexts</a> → <a href="persistence.html">Persistence</a> → <a href="contracts.html">Contracts</a></td>
+          </tr>          <tr>
+            <td>Using AI to scaffold or extend the project</td>
+            <td><a href="ai-workflows.html">Workflow Orchestrators</a> &rarr; AI Agent Skills (&sect;12 in README)</td>
+          </tr>        </tbody>
+      </table>
+
+      <hr>
+
+      <h2>Quick Reference</h2>
+
+      <h3>Services</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Type</th>
+            <th>Port</th>
+            <th>Persistence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>user-api-service</code></td>
+            <td>HTTP API</td>
+            <td>3000</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+          </tr>
+          <tr>
+            <td><code>user-event-handler-service</code></td>
+            <td>SQS Consumer</td>
+            <td>—</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+          </tr>
+          <tr>
+            <td><code>product-api-service</code></td>
+            <td>HTTP API</td>
+            <td>3001</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+          </tr>
+          <tr>
+            <td><code>product-event-handler-service</code></td>
+            <td>SQS Consumer</td>
+            <td>—</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+          </tr>
+          <tr>
+            <td><code>order-api-service</code></td>
+            <td>HTTP API</td>
+            <td>3002</td>
+            <td><span class="tag prisma">PostgreSQL</span></td>
+          </tr>
+          <tr>
+            <td><code>order-event-handler-service</code></td>
+            <td>SQS Consumer</td>
+            <td>—</td>
+            <td><span class="tag prisma">PostgreSQL</span></td>
+          </tr>
+          <tr>
+            <td><code>auth-api-service</code></td>
+            <td>HTTP API</td>
+            <td>3003</td>
+            <td><span class="tag">Cognito / LocalAuth</span></td>
+          </tr>
+          <tr>
+            <td><code>file-api-service</code></td>
+            <td>HTTP API</td>
+            <td>3004</td>
+            <td><span class="tag">S3 (presigned URLs)</span></td>
+          </tr>
+          <tr>
+            <td><code>webapp</code></td>
+            <td>Frontend (Next.js)</td>
+            <td>4200</td>
+            <td>— (consumes APIs)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>SQS Queues</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Queue</th>
+            <th>Publishers</th>
+            <th>Consumer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>users-events</code></td>
+            <td>user-api-service</td>
+            <td>user-event-handler-service</td>
+          </tr>
+          <tr>
+            <td><code>product-events</code></td>
+            <td>order-api-service</td>
+            <td>product-event-handler-service</td>
+          </tr>
+          <tr>
+            <td><code>order-events</code></td>
+            <td>product-api-service, product-event-handler-service</td>
+            <td>order-event-handler-service</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

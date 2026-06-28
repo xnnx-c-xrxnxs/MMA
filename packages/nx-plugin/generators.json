@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "name": "@old-st/nx-plugin",
+  "version": "1.0.0",
+  "generators": {
+    "use-case": {
+      "factory": "./src/generators/use-case/generator",
+      "schema": "./src/generators/use-case/schema.json",
+      "description": "Add a new use case to an existing domain package and wire it into the service module + application service."
+    },
+    "service": {
+      "factory": "./src/generators/service/generator",
+      "schema": "./src/generators/service/schema.json",
+      "description": "Scaffold a new NestJS HTTP API microservice (apps/{domain}/{domain}-api-service) wired into Nx, the service registry, and local dev tasks."
+    },
+    "domain": {
+      "factory": "./src/generators/domain/generator",
+      "schema": "./src/generators/domain/schema.json",
+      "description": "Scaffold a complete new domain: domain package, contracts package, API service, and standard CRUD use cases."
+    },
+    "event-handler": {
+      "factory": "./src/generators/event-handler/generator",
+      "schema": "./src/generators/event-handler/schema.json",
+      "description": "Scaffold an SQS-consumer event-handler microservice (apps/{domain}/{domain}-event-handler-service). No HTTP layer — produces dispatcher, per-event handler stubs, local poller, and workspace wiring."
+    },
+    "ui-primitive": {
+      "factory": "./src/generators/ui-primitive/generator",
+      "schema": "./src/generators/ui-primitive/schema.json",
+      "description": "Scaffold a new @old-st/ui primitive: component.tsx + index.ts + component.stories.tsx + component.spec.tsx, and add the export to packages/ui/src/index.ts."
+    }
+  }
+}

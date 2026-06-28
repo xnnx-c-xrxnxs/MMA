@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zod Masterclass — Schema Validation for TypeScript</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#fff; --bg-alt:#f7f8fa; --bg-card:#fff;
+  --bg-code:#1e1e2e; --bg-code-text:#cdd6f4;
+  --bg-nav:rgba(255,255,255,0.92); --border:#e4e7ec;
+  --text:#111827; --text-muted:#6b7280; --text-light:#9ca3af;
+  --accent:#6366f1; --accent-hover:#4f46e5; --accent-light:#eef2ff;
+  --accent-gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);
+  --hero-gradient:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 70%,#4c1d95 100%);
+  --success:#10b981; --success-bg:#ecfdf5;
+  --warning:#f59e0b; --warning-bg:#fffbeb;
+  --danger:#ef4444;  --danger-bg:#fef2f2;
+  --info:#3b82f6;    --info-bg:#eff6ff;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08);
+  --radius:12px; --radius-sm:8px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace;
+  --transition:0.2s ease;
+}
+[data-theme="dark"] {
+  --bg:#0f1117; --bg-alt:#161922; --bg-card:#1a1d28;
+  --bg-nav:rgba(15,17,23,0.92); --border:#2d3148;
+  --text:#e5e7eb; --text-muted:#9ca3af; --text-light:#6b7280;
+  --accent:#818cf8; --accent-hover:#a5b4fc; --accent-light:#1e1b4b;
+  --success-bg:#064e3b; --warning-bg:#451a03;
+  --danger-bg:#450a0a;  --info-bg:#172554;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+  --shadow:0 4px 6px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 25px rgba(0,0,0,0.4);
+}
+html { font-size:16px; scroll-behavior:smooth; scroll-padding-top:80px; }
+body { font-family:var(--font); color:var(--text); background:var(--bg); line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+.scroll-progress { position:fixed; top:0; left:0; height:3px; z-index:1001; background:var(--accent-gradient); width:0%; transition:width 0.1s linear; }
+
+.top-nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; transition:box-shadow var(--transition); }
+.top-nav.scrolled { box-shadow:var(--shadow); }
+.nav-brand { font-weight:800; font-size:1rem; color:var(--accent); text-decoration:none; white-space:nowrap; }
+.nav-links { display:flex; gap:4px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.nav-links a { padding:8px 14px; font-size:0.8rem; font-weight:600; color:var(--text-muted); text-decoration:none; border-radius:8px; white-space:nowrap; transition:background var(--transition), color var(--transition); }
+.nav-links a:hover, .nav-links a.active { background:var(--accent-light); color:var(--accent); }
+.nav-controls { display:flex; gap:8px; align-items:center; }
+.theme-toggle { width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition:background var(--transition), border-color var(--transition); }
+.theme-toggle:hover { background:var(--accent-light); border-color:var(--accent); }
+.hamburger { display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.2rem; align-items:center; justify-content:center; }
+
+.hero { background:var(--hero-gradient); padding:140px 24px 80px; text-align:center; color:#fff; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%), radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%); }
+.hero-content { position:relative; z-index:1; max-width:800px; margin:0 auto; }
+.hero h1 { font-size:3rem; font-weight:900; letter-spacing:-0.04em; line-height:1.1; margin-bottom:16px; }
+.hero .lead { font-size:1.25rem; color:rgba(255,255,255,0.8); margin-bottom:32px; line-height:1.6; }
+.hero-meta { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+.hero-meta span { font-size:0.85rem; color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:6px; }
+.hero-meta span strong { color:rgba(255,255,255,0.9); }
+
+.module { padding:64px 24px; }
+.module:nth-child(even) { background:var(--bg-alt); }
+.module-inner { max-width:1280px; margin:0 auto; }
+.module-header { margin-bottom:32px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.module-header .module-meta { flex:1; min-width:280px; }
+.module-label { display:inline-flex; align-items:center; gap:8px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-bottom:12px; background:var(--accent-light); padding:4px 12px; border-radius:20px; }
+.module-header h2 { font-size:1.85rem; font-weight:800; letter-spacing:-0.03em; margin-bottom:8px; }
+.module-header .module-desc { font-size:1rem; color:var(--text-muted); max-width:680px; }
+.complexity { display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:20px; }
+.complexity.l1 { background:#dcfce7; color:#166534; }
+.complexity.l2 { background:#dbeafe; color:#1e40af; }
+.complexity.l3 { background:#fef3c7; color:#92400e; }
+.complexity.l4 { background:#ffedd5; color:#9a3412; }
+.complexity.l5 { background:#f3e8ff; color:#6b21a8; }
+.complexity.l6 { background:#fce7f3; color:#9d174d; }
+[data-theme="dark"] .complexity.l1 { background:#14532d; color:#bbf7d0; }
+[data-theme="dark"] .complexity.l2 { background:#1e3a5f; color:#93c5fd; }
+[data-theme="dark"] .complexity.l3 { background:#78350f; color:#fef3c7; }
+[data-theme="dark"] .complexity.l4 { background:#7c2d12; color:#fed7aa; }
+[data-theme="dark"] .complexity.l5 { background:#581c87; color:#e9d5ff; }
+[data-theme="dark"] .complexity.l6 { background:#831843; color:#fbcfe8; }
+
+/* Side-by-side spec & code */
+.split { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; margin:24px 0; align-items:stretch; }
+.split > .panel { display:flex; flex-direction:column; }
+.panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); }
+.panel-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--bg-alt); }
+.panel-header .icon { font-size:1rem; }
+.panel-header .title { font-weight:700; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text); }
+.panel-header .subtitle { font-size:0.75rem; color:var(--text-muted); margin-left:auto; font-family:var(--mono); }
+.panel-body { padding:20px 24px; flex:1; overflow:auto; }
+.panel-body.code-body { padding:0; background:var(--bg-code); }
+.panel-body.code-body pre { margin:0; padding:18px 20px; background:transparent; border-radius:0; font-size:0.78rem; line-height:1.55; max-height:680px; }
+.spec-title { font-size:1.05rem; font-weight:700; margin-bottom:12px; color:var(--text); }
+.spec-body { font-size:0.92rem; }
+.spec-body p { margin-bottom:12px; }
+.spec-body ul { padding-left:22px; margin-bottom:12px; }
+.spec-body li { margin-bottom:6px; }
+.spec-body strong { color:var(--text); font-weight:700; }
+.spec-body em { color:var(--accent); font-style:normal; font-weight:600; background:var(--accent-light); padding:1px 6px; border-radius:4px; }
+
+/* Concepts strip */
+.concepts { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 8px; }
+.concept-pill { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:600; padding:6px 12px; border-radius:20px; background:var(--accent-light); color:var(--accent); border:1px solid var(--accent); }
+
+/* Exceptions block */
+.exceptions { margin-top:20px; }
+.exceptions-header { display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--danger); margin-bottom:12px; }
+.exceptions pre { font-size:0.76rem; max-height:320px; }
+
+/* Pitfalls callout */
+.pitfalls { background:var(--warning-bg); border-left:4px solid var(--warning); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; margin-top:20px; }
+.pitfalls-title { font-weight:700; font-size:0.85rem; margin-bottom:6px; color:#92400e; display:flex; align-items:center; gap:6px; }
+[data-theme="dark"] .pitfalls-title { color:#fef3c7; }
+.pitfalls ul { padding-left:20px; margin:0; font-size:0.86rem; }
+.pitfalls li { margin-bottom:4px; }
+
+/* Code highlighting (super-light, additive only) */
+pre code { background:none; padding:0; color:inherit; font-family:var(--mono); }
+pre .kw  { color:#c084fc; }
+pre .str { color:#a7f3d0; }
+pre .com { color:#64748b; font-style:italic; }
+pre .ty  { color:#7dd3fc; }
+pre .fn  { color:#fde68a; }
+pre .num { color:#fda4af; }
+
+code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padding:2px 7px; border-radius:5px; }
+
+.fade-in { opacity:0; transform:translateY(20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+.fade-in.visible { opacity:1; transform:translateY(0); }
+
+/* Intro module */
+.intro-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; margin-top:24px; }
+.intro-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; }
+.intro-card .num { font-size:0.7rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.intro-card .name { font-weight:700; font-size:0.95rem; margin-bottom:4px; }
+.intro-card .desc { font-size:0.82rem; color:var(--text-muted); }
+
+@media print {
+  .top-nav, .scroll-progress, .theme-toggle, .hamburger { display:none !important; }
+  .hero { padding-top:40px; }
+  .module { padding:32px 0; break-inside:avoid; }
+  .split { grid-template-columns:1fr; }
+}
+@media (max-width:1024px) {
+  .split { grid-template-columns:1fr; }
+}
+@media (max-width:768px) {
+  .nav-links { display:none; }
+  .nav-links.open { display:flex; flex-direction:column; position:absolute; top:60px; left:0; right:0; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:12px; z-index:999; }
+  .hamburger { display:flex; }
+  .hero h1 { font-size:2rem; }
+  .hero .lead { font-size:1rem; }
+  .hero-meta { flex-direction:column; gap:8px; }
+  .module { padding:40px 16px; }
+}
+
+/* Right column = three stacked schema panels */
+.schemas-stack { display:flex; flex-direction:column; gap:14px; }
+.schemas-stack .panel { box-shadow:none; }
+.schemas-stack .panel-header { padding:10px 16px; }
+.schemas-stack .panel-body.code-body pre { font-size:0.74rem; max-height:340px; }
+
+/* Discussion / topic block */
+.discussion { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px 26px; margin-top:24px; }
+.discussion h4 { font-size:1.05rem; font-weight:700; margin:18px 0 8px; color:var(--text); }
+.discussion h4:first-child { margin-top:0; }
+.discussion p { font-size:0.94rem; margin-bottom:10px; }
+.discussion ul { padding-left:20px; margin-bottom:12px; font-size:0.92rem; }
+.discussion li { margin-bottom:4px; }
+.discussion code { font-size:0.84em; }
+
+/* Topic callouts */
+.callout { padding:14px 18px; border-radius:var(--radius-sm); border-left:4px solid var(--info); background:var(--info-bg); margin:14px 0; font-size:0.92rem; }
+.callout.success { border-left-color:var(--success); background:var(--success-bg); }
+.callout.warning { border-left-color:var(--warning); background:var(--warning-bg); }
+.callout strong { display:block; margin-bottom:4px; }
+
+/* Cheat sheet */
+.cheat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:16px; }
+.cheat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; }
+.cheat-card h4 { font-size:0.9rem; font-weight:700; margin-bottom:10px; color:var(--accent); }
+.cheat-card pre { background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.74rem; overflow-x:auto; }
+.cheat-card code { background:none; padding:0; color:inherit; }
+
+/* Foundations / vs panels */
+.vs { display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:stretch; margin:16px 0; }
+.vs-side .panel-header { font-size:0.78rem; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--text-muted); font-size:0.85rem; padding:0 6px; }
+@media (max-width:900px) { .vs { grid-template-columns:1fr; } .vs-divider { padding:6px 0; } }
+</style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">Zod Masterclass</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#overview">Overview</a>
+    <a href="#foundations">Foundations</a>
+    <a href="#01-category">1. Category</a>
+    <a href="#02-product-basic">2. Product (basic)</a>
+    <a href="#03-user">3. User</a>
+    <a href="#04-product-lifecycle">4. Product (with lifecycle)</a>
+    <a href="#05-customer-address">5. Customer (with Address)</a>
+    <a href="#06-order-items">6. Order (draft + items)</a>
+    <a href="#07-shipment">7. Shipment</a>
+    <a href="#08-order-aggregate">8. Order (full aggregate)</a>
+    <a href="#09-subscription">9. Subscription</a>
+    <a href="#cheat-sheet">Cheat Sheet</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+    <button class="hamburger" id="hamburger" title="Menu">☰</button>
+  </div>
+</nav>
+<header class="hero">
+  <div class="hero-content">
+    <h1>Zod Masterclass<br>One schema, every layer</h1>
+    <p class="lead">Nine real entities from this codebase, each with its three production Zod schemas — create, update, response — alongside the domain entity they validate. Zod patterns layer up from primitives to discriminated unions.</p>
+    <div class="hero-meta"><span>🛡️ <strong>Runtime validation · Compile-time types</strong></span>
+      <span>📈 <strong>9 Entities · Simple → Complex</strong></span>
+      <span>🔄 <strong>Same schema on backend & frontend</strong></span></div>
+  </div>
+</header>
+<section class="module" id="overview">
+    <div class="module-inner">
+      <div class="module-header fade-in">
+        <div class="module-meta">
+          <div class="module-label">Overview</div>
+          <h2>Real entities, real schemas</h2>
+          <p class="module-desc">Each module pairs a production domain entity with the three Zod schemas the API exposes for it: <code>create</code>, <code>update</code>, and <code>response</code>. Zod patterns layer up alongside entity complexity — primitives → enums → arrays → discriminated unions → cross-field refinements.</p>
+        </div>
+      </div>
+      <div class="intro-grid">
+    <a class="intro-card" href="#01-category" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 1 · #01</div>
+      <div class="name">Category</div>
+      <div class="desc">A name and an optional description. The simplest possible entity.</div>
+    </a>
+    <a class="intro-card" href="#02-product-basic" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 2 · #02</div>
+      <div class="name">Product (basic)</div>
+      <div class="desc">Adds field-level validation: max length, positive price, non-blank name.</div>
+    </a>
+    <a class="intro-card" href="#03-user" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 3 · #03</div>
+      <div class="name">User</div>
+      <div class="desc">Adds a status field, role enum, and conditional state transitions.</div>
+    </a>
+    <a class="intro-card" href="#04-product-lifecycle" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 4 · #04</div>
+      <div class="name">Product (with lifecycle)</div>
+      <div class="desc">A multi-state lifecycle: DRAFT → ACTIVE → DISCONTINUED, with guards.</div>
+    </a>
+    <a class="intro-card" href="#05-customer-address" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 5 · #05</div>
+      <div class="name">Customer (with Address)</div>
+      <div class="desc">Introduces an immutable Value Object that the entity composes.</div>
+    </a>
+    <a class="intro-card" href="#06-order-items" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 5 · #06</div>
+      <div class="name">Order (draft + items)</div>
+      <div class="desc">An aggregate root that owns a collection of child entities.</div>
+    </a>
+    <a class="intro-card" href="#07-shipment" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 6 · #07</div>
+      <div class="name">Shipment</div>
+      <div class="desc">Each transition records actor + timestamp inside the entity.</div>
+    </a>
+    <a class="intro-card" href="#08-order-aggregate" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 6 · #08</div>
+      <div class="name">Order (full aggregate)</div>
+      <div class="desc">Items + payment + coupon, with cross-cutting invariants &amp; two status fields.</div>
+    </a>
+    <a class="intro-card" href="#09-subscription" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 6 · #09</div>
+      <div class="name">Subscription</div>
+      <div class="desc">Date-driven invariants: trial windows, period boundaries, downgrades.</div>
+    </a></div>
+    </div>
+  </section>
+
+<section class="module" id="foundations">
+    <div class="module-inner">
+      <div class="module-header fade-in">
+        <div class="module-meta">
+          <div class="module-label">Foundations</div>
+          <h2>Zod in 60 seconds</h2>
+          <p class="module-desc">The whole story before we walk the 9 entities.</p>
+        </div>
+      </div>
+      <div class="discussion fade-in">
+  <h4>Why Zod, and why three schemas per entity?</h4>
+  <p>
+    Every entity in this codebase exposes <strong>three Zod schemas</strong>:
+    one for <code>POST</code> (<em>create</em>), one for <code>PATCH</code> (<em>update</em>),
+    and one for the API <em>response</em>. They are the contract between client and server —
+    the same file is imported by the backend pipe that validates the incoming request and by
+    the frontend API client that validates the outgoing response. One source of truth, runtime
+    checks at both ends, TypeScript types derived for free via <code>z.infer</code>.
+  </p>
+
+  <h4>Manual validation vs Zod</h4>
+  <div class="vs">
+    <div class="vs-side"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🛠️</span>
+    <span class="title">Manual — fragile, redundant</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">interface</span> CreateUserInput {
+  email: <span class="ty">string</span>;
+  firstName: <span class="ty">string</span>;
+}
+
+<span class="kw">function</span> validate(body: any): CreateUserInput {
+  <span class="kw">if</span> (!body.email) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'email required'</span>);
+  <span class="kw">if</span> (<span class="kw">typeof</span> body.email !== <span class="str">'string'</span>) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'...'</span>);
+  <span class="kw">if</span> (!body.email.includes(<span class="str">'@'</span>)) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'invalid email'</span>);
+  <span class="kw">if</span> (!body.firstName) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'firstName required'</span>);
+  <span class="kw">if</span> (body.firstName.length &gt; <span class="num">100</span>) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'too long'</span>);
+  <span class="com">// ...20 more lines, then:</span>
+  <span class="kw">return</span> body <span class="kw">as</span> CreateUserInput;          <span class="com">// 😱 unsafe cast</span>
+}</code></pre></div>
+</div></div>
+    <div class="vs-divider">vs</div>
+    <div class="vs-side"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">⚡</span>
+    <span class="title">Zod — schema is the type AND the validator</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">const</span> createUserSchema = z.object({
+  email: z.<span class="ty">string</span>().email(),
+  firstName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+});
+
+<span class="kw">type</span> CreateUserInput = z.infer&lt;<span class="kw">typeof</span> createUserSchema&gt;;
+
+<span class="kw">const</span> input = createUserSchema.parse(body);
+<span class="com">// fully typed, fully validated, structured error on failure:</span>
+<span class="com">// [{ code: 'invalid_string', validation: 'email', path: ['email'], message: '...' }]</span></code></pre></div>
+</div></div>
+  </div>
+
+  <h4><code>parse</code> vs <code>safeParse</code></h4>
+  <ul>
+    <li><strong><code>schema.parse(data)</code></strong> — throws <code>ZodError</code> on failure. Use in application services that map entities → DTOs (a malformed entity is a bug; crash and let <code>DomainExceptionFilter</code> turn it into a 500).</li>
+    <li><strong><code>schema.safeParse(data)</code></strong> — returns <code>{ success, data | error }</code>. Use in <code>ZodValidationPipe</code> (return 400) and SQS event handlers (skip malformed messages, keep processing the batch).</li>
+  </ul>
+
+  <h4>Where Zod fits in the layered architecture</h4>
+  <ul>
+    <li><strong>Presentation</strong> — <code>ZodValidationPipe</code> validates request bodies and query strings; throws <code>BadRequestException</code> (400) on invalid input.</li>
+    <li><strong>Application service</strong> — <code>schema.parse(entity)</code> guarantees the response shape; surfaces accidental field drift immediately.</li>
+    <li><strong>Frontend API client</strong> — <code>schema.parse(json)</code> on every response so a backend bug never produces silently broken UI state.</li>
+    <li><strong>Domain layer</strong> — <em>no Zod</em>. Domain entities use real domain methods and throw typed domain exceptions. Zod is the perimeter, the entity is the core.</li>
+  </ul>
+
+  <div class="callout success">
+    <strong>Read the side-by-side modules below as a teaching ladder.</strong>
+    Module 1 introduces <code>z.object</code>; module 3 enums from constants; module 6 arrays with bounds; module 8 cross-field <code>.refine()</code>; module 9 discriminated unions. Each entity adds exactly one new Zod pattern.
+  </div>
+</div>
+    </div>
+  </section>
+
+<section class="module" id="01-category">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Catalog Domain</div>
+        <h2>Category</h2>
+        <p class="module-desc">A Category is a label used to group products. It has a name and an optional description — that is the entire model. The point of this example is to introduce the entity skeleton: private constructor, two factories (create / reconstitute), getters.</p>
+      </div>
+      <span class="complexity l1">L1 · Pure Data</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">category.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { CategoryNameRequiredError, CategoryNameTooLongError } <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Category {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> categoryId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> name: <span class="ty">string</span>,
+    <span class="kw">private</span> description: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { name: <span class="ty">string</span>; description?: <span class="ty">string</span> }): Category {
+    <span class="kw">const</span> name = props.name.trim();
+    <span class="kw">if</span> (name.length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CategoryNameRequiredError();
+    <span class="kw">if</span> (name.length &gt; <span class="num">60</span>) <span class="kw">throw</span> <span class="kw">new</span> CategoryNameTooLongError();
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Category(<span class="kw">null</span>, name, props.description?.trim() ?? <span class="kw">null</span>, now, now);
+  }
+
+  <span class="kw">static</span> reconstitute(props: {
+    categoryId: <span class="ty">string</span>;
+    name: <span class="ty">string</span>;
+    description: <span class="ty">string</span> | <span class="kw">null</span>;
+    dateCreated: <span class="ty">string</span>;
+    updatedAt: <span class="ty">string</span>;
+  }): Category {
+    <span class="kw">return</span> <span class="kw">new</span> Category(props.categoryId, props.name, props.description, props.dateCreated, props.updatedAt);
+  }
+
+  rename(newName: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">const</span> name = newName.trim();
+    <span class="kw">if</span> (name.length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CategoryNameRequiredError();
+    <span class="kw">if</span> (name.length &gt; <span class="num">60</span>) <span class="kw">throw</span> <span class="kw">new</span> CategoryNameTooLongError();
+    <span class="kw">this</span>.name = name;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  updateDescription(description: <span class="ty">string</span> | <span class="kw">null</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.description = description?.trim() ?? <span class="kw">null</span>;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  <span class="com">// Getters</span>
+  getCategoryId(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.categoryId; }
+  getName(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.name; }
+  getDescription(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.description; }
+  getDateCreated(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.dateCreated; }
+  getUpdatedAt(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.updatedAt; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createCategorySchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> createCategorySchema = z.object({
+  name: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+});
+
+<span class="kw">export</span> <span class="kw">type</span> CreateCategoryInput = z.infer&lt;<span class="kw">typeof</span> createCategorySchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">updateCategorySchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// PATCH — every field optional. .partial() derives this from createCategorySchema</span>
+<span class="kw">export</span> <span class="kw">const</span> updateCategorySchema = createCategorySchema.partial();
+<span class="com">// → { name?: string }</span>
+<span class="kw">export</span> <span class="kw">type</span> UpdateCategoryInput = z.infer&lt;<span class="kw">typeof</span> updateCategorySchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">categoryResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// API response — adds server-managed fields the client cannot send</span>
+<span class="kw">export</span> <span class="kw">const</span> categoryResponseSchema = z.object({
+  categoryId: z.<span class="ty">string</span>(),
+  name: z.<span class="ty">string</span>(),
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt: z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CategoryResponse = z.infer&lt;<span class="kw">typeof</span> categoryResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ z.object</span><span class="concept-pill">✦ z.string().min/max</span><span class="concept-pill">✦ .partial()</span><span class="concept-pill">✦ z.infer</span></div>
+    <div class="discussion fade-in">
+    <h4>Three schemas, one entity</h4>
+    <p>Every domain entity exposes <strong>three</strong> Zod schemas to the outside world:</p>
+    <ul>
+      <li><code>createCategorySchema</code> — what the API accepts on <code>POST</code>. Strict; rejects unknown fields.</li>
+      <li><code>updateCategorySchema</code> — what <code>PATCH</code> accepts. Derived via <code>.partial()</code> so we never restate the rules.</li>
+      <li><code>categoryResponseSchema</code> — what the API returns. Adds server-managed fields (<code>categoryId</code>, <code>dateCreated</code>, <code>updatedAt</code>).</li>
+    </ul>
+
+    <h4><code>z.infer&lt;typeof schema&gt;</code> — schema is the type</h4>
+    <p>You never hand-write <code>interface CreateCategoryInput</code>. The schema both <em>validates at runtime</em> and <em>generates the TypeScript type at compile time</em>. Add a field to the schema → the type updates automatically → every consumer gets a compile error until they handle it. Single source of truth.</p>
+
+    <div class="callout success">
+      <strong>Mapping to the entity</strong>
+      Notice the create schema only has <code>name</code> — the same fields <code>Category.create()</code> requires. Server-managed fields (<code>categoryId</code>, timestamps) appear only in the response. The schemas mirror what each side of the wire actually owns.
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="02-product-basic">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Catalog Domain</div>
+        <h2>Product (basic)</h2>
+        <p class="module-desc">A basic Product introduces input validation in the create() factory. The same rules also apply when fields are updated — every mutating method funnels through the same guards. This is the simplest example of a typed domain exception per failure mode.</p>
+      </div>
+      <span class="complexity l2">L2 · Validation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">product.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> {
+  ProductNameRequiredError,
+  ProductNameTooLongError,
+  InvalidProductPriceError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Product {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> productId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> name: <span class="ty">string</span>,
+    <span class="kw">private</span> price: <span class="ty">number</span>,
+    <span class="kw">private</span> description: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { name: <span class="ty">string</span>; price: <span class="ty">number</span>; description?: <span class="ty">string</span> }): Product {
+    Product.validateName(props.name);
+    Product.validatePrice(props.price);
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Product(
+      <span class="kw">null</span>,
+      props.name.trim(),
+      props.price,
+      props.description?.trim() ?? <span class="kw">null</span>,
+      now,
+      now
+    );
+  }
+
+  <span class="kw">static</span> reconstitute(props: {
+    productId: <span class="ty">string</span>;
+    name: <span class="ty">string</span>;
+    price: <span class="ty">number</span>;
+    description: <span class="ty">string</span> | <span class="kw">null</span>;
+    dateCreated: <span class="ty">string</span>;
+    updatedAt: <span class="ty">string</span>;
+  }): Product {
+    <span class="kw">return</span> <span class="kw">new</span> Product(
+      props.productId, props.name, props.price, props.description,
+      props.dateCreated, props.updatedAt
+    );
+  }
+
+  rename(newName: <span class="ty">string</span>): <span class="kw">void</span> {
+    Product.validateName(newName);
+    <span class="kw">this</span>.name = newName.trim();
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  changePrice(newPrice: <span class="ty">number</span>): <span class="kw">void</span> {
+    Product.validatePrice(newPrice);
+    <span class="kw">this</span>.price = newPrice;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  updateDescription(description: <span class="ty">string</span> | <span class="kw">null</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.description = description?.trim() ?? <span class="kw">null</span>;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  <span class="com">// Reusable invariants — same rule applies on create and on update.</span>
+  <span class="kw">private</span> <span class="kw">static</span> validateName(name: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">const</span> trimmed = name.trim();
+    <span class="kw">if</span> (trimmed.length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> ProductNameRequiredError();
+    <span class="kw">if</span> (trimmed.length &gt; <span class="num">100</span>) <span class="kw">throw</span> <span class="kw">new</span> ProductNameTooLongError();
+  }
+
+  <span class="kw">private</span> <span class="kw">static</span> validatePrice(price: <span class="ty">number</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (!Number.isFinite(price) || price &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidProductPriceError();
+  }
+
+  <span class="com">// Getters</span>
+  getProductId(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.productId; }
+  getName(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.name; }
+  getPrice(): <span class="ty">number</span> { <span class="kw">return</span> <span class="kw">this</span>.price; }
+  getDescription(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.description; }
+  getDateCreated(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.dateCreated; }
+  getUpdatedAt(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.updatedAt; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createProductSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> createProductSchema = z.object({
+  name: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">200</span>),
+  description: z.<span class="ty">string</span>().max(<span class="num">2000</span>).optional(),
+  price: z.<span class="ty">number</span>().positive(),       <span class="com">// &gt; 0</span>
+  stock: z.<span class="ty">number</span>().int().min(<span class="num">0</span>),     <span class="com">// 0 or more, integer</span>
+  categoryId: z.<span class="ty">string</span>(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateProductInput = z.infer&lt;<span class="kw">typeof</span> createProductSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">updateProductSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// PATCH — partial, but we further restrict what can change after creation</span>
+<span class="kw">export</span> <span class="kw">const</span> updateProductSchema = createProductSchema
+  .partial()
+  .omit({ categoryId: <span class="kw">true</span> });        <span class="com">// categoryId is immutable after creation</span>
+<span class="kw">export</span> <span class="kw">type</span> UpdateProductInput = z.infer&lt;<span class="kw">typeof</span> updateProductSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">productResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">export</span> <span class="kw">const</span> productResponseSchema = z.object({
+  productId: z.<span class="ty">string</span>(),
+  name: z.<span class="ty">string</span>(),
+  description: z.<span class="ty">string</span>().nullable(),  <span class="com">// null when omitted on create</span>
+  price: z.<span class="ty">number</span>(),
+  stock: z.<span class="ty">number</span>().int(),
+  categoryId: z.<span class="ty">string</span>(),
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt: z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> ProductResponse = z.infer&lt;<span class="kw">typeof</span> productResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ z.number().positive()</span><span class="concept-pill">✦ .int()</span><span class="concept-pill">✦ .optional() vs .nullable()</span><span class="concept-pill">✦ .omit()</span></div>
+    <div class="discussion fade-in">
+    <h4>Numbers: <code>positive()</code>, <code>int()</code>, <code>min(0)</code></h4>
+    <p>Zod number validators stack: <code>z.number().int().min(0)</code> means "an integer ≥ 0". <code>positive()</code> is strict (<code>&gt; 0</code>); use <code>min(0)</code> for "≥ 0". The entity also enforces these rules — Zod is the <strong>perimeter</strong>, the entity is the <strong>core</strong>.</p>
+
+    <h4><code>.optional()</code> vs <code>.nullable()</code></h4>
+    <ul>
+      <li><code>z.string().optional()</code> → <code>string | undefined</code> — field can be missing from input.</li>
+      <li><code>z.string().nullable()</code> → <code>string | null</code> — field is present but explicitly null.</li>
+    </ul>
+    <p>Convention here: <strong>inputs use <code>.optional()</code></strong> (clients omit fields they don't want to send); <strong>responses use <code>.nullable()</code></strong> (the API always returns the field, sometimes as null).</p>
+
+    <h4>Deriving update from create</h4>
+    <p><code>createProductSchema.partial().omit({ categoryId: true })</code> says: "all fields optional, except <code>categoryId</code> which can't be changed at all." Two operators express a real business rule. No hand-maintained second schema.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="03-user">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Identity Domain</div>
+        <h2>User</h2>
+        <p class="module-desc">A User introduces a status field and the first conditional transitions: a user must verify their email before they can become ACTIVE; an ADMIN can suspend an active user. Status comparisons go through an enum constant — never a hardcoded string (Golden Rule #8).</p>
+      </div>
+      <span class="complexity l3">L3 · Simple Status</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">user.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { UserRole, UserRoleEnum, UserStatus, UserStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  InvalidEmailFormatError, InvalidNameError, EmailAlreadyVerifiedError,
+  CannotActivateNonPendingUserError, CannotActivateUnverifiedEmailError,
+  CannotDeactivateDeletedUserError, UserAlreadyInactiveError,
+  UserAlreadyDeletedError, CannotUpdateDeletedUserError,
+  CannotChangeRoleOfDeletedUserError, UserAlreadyHasRoleError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> User {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> userId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> email: <span class="ty">string</span>,
+    <span class="kw">private</span> firstName: <span class="ty">string</span>,
+    <span class="kw">private</span> lastName: <span class="ty">string</span>,
+    <span class="kw">private</span> emailVerified: <span class="ty">boolean</span>,
+    <span class="kw">private</span> userRole: UserRole,
+    <span class="kw">private</span> userStatus: UserStatus,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: {
+    email: <span class="ty">string</span>; firstName: <span class="ty">string</span>; lastName: <span class="ty">string</span>; userRole?: UserRole;
+  }): User {
+    <span class="kw">const</span> emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    <span class="kw">if</span> (!emailRegex.test(props.email)) <span class="kw">throw</span> <span class="kw">new</span> InvalidEmailFormatError();
+    <span class="kw">if</span> (props.firstName.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'First name'</span>);
+    <span class="kw">if</span> (props.lastName.trim().length === <span class="num">0</span>)  <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'Last name'</span>);
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> User(
+      <span class="kw">null</span>,
+      props.email.toLowerCase().trim(),
+      props.firstName.trim(),
+      props.lastName.trim(),
+      <span class="kw">false</span>,                                    <span class="com">// unverified</span>
+      props.userRole ?? UserRoleEnum.USER,
+      UserStatusEnum.PENDING,                   <span class="com">// new users start pending</span>
+      now, now
+    );
+  }
+
+  <span class="com">// ── Lifecycle transitions ────────────────────────────────────────────────</span>
+
+  verifyEmail(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.emailVerified) <span class="kw">throw</span> <span class="kw">new</span> EmailAlreadyVerifiedError();
+    <span class="kw">this</span>.emailVerified = <span class="kw">true</span>;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">/** Rules: can only activate PENDING users whose email is verified. */</span>
+  activate(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus !== UserStatusEnum.PENDING) <span class="kw">throw</span> <span class="kw">new</span> CannotActivateNonPendingUserError();
+    <span class="kw">if</span> (!<span class="kw">this</span>.emailVerified) <span class="kw">throw</span> <span class="kw">new</span> CannotActivateUnverifiedEmailError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.ACTIVE;
+    <span class="kw">this</span>.touch();
+  }
+
+  deactivate(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED)  <span class="kw">throw</span> <span class="kw">new</span> CannotDeactivateDeletedUserError();
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.INACTIVE) <span class="kw">throw</span> <span class="kw">new</span> UserAlreadyInactiveError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.INACTIVE;
+    <span class="kw">this</span>.touch();
+  }
+
+  markAsDeleted(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> UserAlreadyDeletedError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.DELETED;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Profile / role ───────────────────────────────────────────────────────</span>
+
+  updateProfile(firstName: <span class="ty">string</span>, lastName: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> CannotUpdateDeletedUserError(<span class="str">'profile'</span>);
+    <span class="kw">if</span> (firstName.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'First name'</span>);
+    <span class="kw">if</span> (lastName.trim().length === <span class="num">0</span>)  <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'Last name'</span>);
+    <span class="kw">this</span>.firstName = firstName.trim();
+    <span class="kw">this</span>.lastName  = lastName.trim();
+    <span class="kw">this</span>.touch();
+  }
+
+  changeRole(newRole: UserRole): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> CannotChangeRoleOfDeletedUserError();
+    <span class="kw">if</span> (<span class="kw">this</span>.userRole === newRole) <span class="kw">throw</span> <span class="kw">new</span> UserAlreadyHasRoleError();
+    <span class="kw">this</span>.userRole = newRole;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="kw">private</span> touch(): <span class="kw">void</span> { <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+
+  <span class="com">// Predicates + getters</span>
+  isActive():  <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.userStatus === UserStatusEnum.ACTIVE; }
+  isPending(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.userStatus === UserStatusEnum.PENDING; }
+  isDeleted(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.userStatus === UserStatusEnum.DELETED; }
+  isAdmin():   <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.userRole === UserRoleEnum.ADMIN; }
+
+  getEmail(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.email; }
+  getFullName(): <span class="ty">string</span> { <span class="kw">return</span> <span class="str">`${this.firstName} ${this.lastName}`</span>; }
+  getUserStatus(): UserStatus { <span class="kw">return</span> <span class="kw">this</span>.userStatus; }
+  getUserRole():   UserRole   { <span class="kw">return</span> <span class="kw">this</span>.userRole; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createUserSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { USER_ROLES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+
+<span class="com">// Re-export so the frontend doesn't import @old-st/user-domain directly</span>
+<span class="kw">export</span> <span class="kw">const</span> userRoleSchema = z.<span class="kw">enum</span>(USER_ROLES);
+
+<span class="kw">export</span> <span class="kw">const</span> createUserSchema = z.object({
+  email: z.<span class="ty">string</span>().email(),
+  firstName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  lastName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  userRole: userRoleSchema.optional().<span class="kw">default</span>(<span class="str">'USER'</span>),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateUserInput = z.infer&lt;<span class="kw">typeof</span> createUserSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">updateUserSchema + query params</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// PATCH /users/:userId — only profile fields are mutable here.</span>
+<span class="com">// Status changes go through dedicated routes (see action endpoints below).</span>
+<span class="kw">export</span> <span class="kw">const</span> updateUserSchema = z.object({
+  firstName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+  lastName:  z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+});
+<span class="kw">export</span> <span class="kw">type</span> UpdateUserInput = z.infer&lt;<span class="kw">typeof</span> updateUserSchema&gt;;
+
+<span class="com">// Query params arrive as STRINGS over HTTP — z.coerce converts before validating</span>
+<span class="kw">export</span> <span class="kw">const</span> listUsersByStatusQuerySchema = z.object({
+  userStatus: z.<span class="kw">enum</span>(USER_STATUSES),
+  limit:     z.coerce.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">100</span>).optional().<span class="kw">default</span>(<span class="num">20</span>),
+  cursor:    z.<span class="ty">string</span>().optional(),
+  direction: z.<span class="kw">enum</span>([<span class="str">'next'</span>, <span class="str">'prev'</span>]).optional().<span class="kw">default</span>(<span class="str">'next'</span>),
+});</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">userResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+<span class="kw">export</span> <span class="kw">const</span> userStatusSchema = z.<span class="kw">enum</span>(USER_STATUSES);
+
+<span class="kw">export</span> <span class="kw">const</span> userResponseSchema = z.object({
+  userId: z.<span class="ty">string</span>(),
+  email: z.<span class="ty">string</span>().email(),
+  firstName: z.<span class="ty">string</span>(),
+  lastName: z.<span class="ty">string</span>(),
+  emailVerified: z.<span class="ty">boolean</span>(),
+  userRole: userRoleSchema,
+  userStatus: userStatusSchema,        <span class="com">// type-narrowed: 'PENDING' | 'ACTIVE' | ...</span>
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt: z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> UserResponse = z.infer&lt;<span class="kw">typeof</span> userResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ z.enum(USER_STATUSES)</span><span class="concept-pill">✦ z.coerce.number()</span><span class="concept-pill">✦ .default()</span><span class="concept-pill">✦ z.string().email()</span></div>
+    <div class="discussion fade-in">
+    <h4>Enums from domain constants — never inline strings</h4>
+    <p>The entity uses <code>UserStatusEnum.PENDING</code> for status comparisons (Golden Rule #8). The schema mirrors that:</p>
+    <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>// ✅ Correct — single source of truth
+import { USER_STATUSES } from '@old-st/user-domain';
+const userStatusSchema = z.enum(USER_STATUSES);
+
+// ❌ Wrong — duplicates the source of truth
+const userStatusSchema = z.enum(['PENDING','ACTIVE','INACTIVE','DELETED']);</code></pre>
+    <p>Add a new status to the domain constants → the schema picks it up automatically → every <code>switch (userStatus)</code> in the codebase becomes a TypeScript exhaustiveness error until you handle it.</p>
+
+    <h4><code>z.coerce</code> — for query params and form data</h4>
+    <p>Browsers send everything as strings: <code>?limit=20</code> arrives as <code>"20"</code>, not <code>20</code>. <code>z.coerce.number()</code> calls <code>Number(value)</code> first, then validates. Without it, every query-string number must be parsed manually.</p>
+
+    <h4>Action endpoints have no body schema</h4>
+    <p>State transitions like <code>POST /users/:userId/activate</code> take no input — the actor is the JWT, the subject is the URL param. No <code>body</code>, no schema. Use a <code>z.object({}).strict()</code> only if you want to actively reject anything in the body.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="04-product-lifecycle">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Catalog Domain</div>
+        <h2>Product (with lifecycle)</h2>
+        <p class="module-desc">A real Product has a lifecycle. It starts as DRAFT (editable, hidden), can become ACTIVE (visible to customers), and can be DISCONTINUED (terminal — cannot be re-listed). Each transition has its own guard, and one transition (publish) requires a precondition (price &gt; 0).</p>
+      </div>
+      <span class="complexity l4">L4 · State Machine</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">product.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { ProductStatus, ProductStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  ProductNameRequiredError, InvalidProductPriceError,
+  CannotPublishWithoutPriceError, CannotPublishDiscontinuedProductError,
+  ProductAlreadyActiveError, ProductAlreadyDiscontinuedError,
+  CannotEditDiscontinuedProductError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Product {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> productId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> name: <span class="ty">string</span>,
+    <span class="kw">private</span> price: <span class="ty">number</span>,
+    <span class="kw">private</span> description: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> productStatus: ProductStatus,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { name: <span class="ty">string</span>; price: <span class="ty">number</span>; description?: <span class="ty">string</span> }): Product {
+    <span class="kw">if</span> (props.name.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> ProductNameRequiredError();
+    <span class="kw">if</span> (!Number.isFinite(props.price) || props.price &lt; <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidProductPriceError();
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Product(
+      <span class="kw">null</span>,
+      props.name.trim(),
+      props.price,
+      props.description?.trim() ?? <span class="kw">null</span>,
+      ProductStatusEnum.DRAFT,
+      now, now
+    );
+  }
+
+  <span class="com">// ── State transitions ────────────────────────────────────────────────────</span>
+
+  publish(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.productStatus === ProductStatusEnum.DISCONTINUED) <span class="kw">throw</span> <span class="kw">new</span> CannotPublishDiscontinuedProductError();
+    <span class="kw">if</span> (<span class="kw">this</span>.productStatus === ProductStatusEnum.ACTIVE) <span class="kw">throw</span> <span class="kw">new</span> ProductAlreadyActiveError();
+    <span class="kw">if</span> (<span class="kw">this</span>.price &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CannotPublishWithoutPriceError();
+
+    <span class="kw">this</span>.productStatus = ProductStatusEnum.ACTIVE;
+    <span class="kw">this</span>.touch();
+  }
+
+  discontinue(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.productStatus === ProductStatusEnum.DISCONTINUED) <span class="kw">throw</span> <span class="kw">new</span> ProductAlreadyDiscontinuedError();
+    <span class="kw">this</span>.productStatus = ProductStatusEnum.DISCONTINUED;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">/** Pre-flight predicate so callers don't need try/catch. */</span>
+  canPublish(): <span class="ty">boolean</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.productStatus === ProductStatusEnum.DRAFT &amp;&amp; <span class="kw">this</span>.price &gt; <span class="num">0</span>;
+  }
+
+  <span class="com">// ── Edits ────────────────────────────────────────────────────────────────</span>
+
+  rename(newName: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardEditable();
+    <span class="kw">if</span> (newName.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> ProductNameRequiredError();
+    <span class="kw">this</span>.name = newName.trim();
+    <span class="kw">this</span>.touch();
+  }
+
+  changePrice(newPrice: <span class="ty">number</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardEditable();
+    <span class="kw">if</span> (!Number.isFinite(newPrice) || newPrice &lt; <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidProductPriceError();
+    <span class="kw">this</span>.price = newPrice;
+    <span class="kw">this</span>.touch();
+  }
+
+  updateDescription(description: <span class="ty">string</span> | <span class="kw">null</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardEditable();
+    <span class="kw">this</span>.description = description?.trim() ?? <span class="kw">null</span>;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="kw">private</span> guardEditable(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.productStatus === ProductStatusEnum.DISCONTINUED) {
+      <span class="kw">throw</span> <span class="kw">new</span> CannotEditDiscontinuedProductError();
+    }
+  }
+  <span class="kw">private</span> touch(): <span class="kw">void</span> { <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+
+  <span class="com">// Predicates + getters</span>
+  isDraft():        <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.productStatus === ProductStatusEnum.DRAFT; }
+  isActive():       <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.productStatus === ProductStatusEnum.ACTIVE; }
+  isDiscontinued(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.productStatus === ProductStatusEnum.DISCONTINUED; }
+
+  getProductId(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.productId; }
+  getName(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.name; }
+  getPrice(): <span class="ty">number</span> { <span class="kw">return</span> <span class="kw">this</span>.price; }
+  getProductStatus(): ProductStatus { <span class="kw">return</span> <span class="kw">this</span>.productStatus; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createProductSchema (with status)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { PRODUCT_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/product-domain'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> productStatusSchema = z.<span class="kw">enum</span>(PRODUCT_STATUSES);
+
+<span class="kw">export</span> <span class="kw">const</span> createProductSchema = z.object({
+  name: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">200</span>),
+  description: z.<span class="ty">string</span>().max(<span class="num">2000</span>).optional(),
+  price: z.<span class="ty">number</span>().positive(),
+  stock: z.<span class="ty">number</span>().int().min(<span class="num">0</span>),
+  categoryId: z.<span class="ty">string</span>(),
+  <span class="com">// status is NOT in the input — new products always start as DRAFT (entity invariant)</span>
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateProductInput = z.infer&lt;<span class="kw">typeof</span> createProductSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">updateProductSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Profile-only updates. Status changes go through dedicated action endpoints.</span>
+<span class="kw">export</span> <span class="kw">const</span> updateProductSchema = createProductSchema
+  .omit({ categoryId: <span class="kw">true</span> })
+  .partial();
+
+<span class="com">// Action endpoints — no body, just the URL: POST /products/:id/publish</span>
+<span class="com">// POST /products/:id/discontinue</span>
+<span class="com">// PATCH /products/:id/price  ← takes only the new price</span>
+<span class="kw">export</span> <span class="kw">const</span> updateProductPriceSchema = z.object({
+  price: z.<span class="ty">number</span>().positive(),
+});</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">productResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">export</span> <span class="kw">const</span> productResponseSchema = z.object({
+  productId: z.<span class="ty">string</span>(),
+  name: z.<span class="ty">string</span>(),
+  description: z.<span class="ty">string</span>().nullable(),
+  price: z.<span class="ty">number</span>(),
+  stock: z.<span class="ty">number</span>().int(),
+  categoryId: z.<span class="ty">string</span>(),
+  status: productStatusSchema,           <span class="com">// 'DRAFT' | 'ACTIVE' | 'DISCONTINUED'</span>
+  publishedAt: z.<span class="ty">string</span>().datetime().nullable(),
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt: z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> ProductResponse = z.infer&lt;<span class="kw">typeof</span> productResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Status NOT in input</span><span class="concept-pill">✦ Action endpoints</span><span class="concept-pill">✦ Schema reuse via .omit/.partial</span></div>
+    <div class="discussion fade-in">
+    <h4>State machines: status leaves the input schema</h4>
+    <p>Once an entity has lifecycle rules (DRAFT → ACTIVE → DISCONTINUED), the <code>status</code> field <strong>disappears</strong> from create and update schemas. Why?</p>
+    <ul>
+      <li>The entity decides the initial status: <code>Product.create()</code> always returns DRAFT.</li>
+      <li>Each transition has its own rules: a discontinued product can't be republished. Encoding that in a single PATCH would require <code>.refine()</code> chains that re-implement the entity.</li>
+      <li>Each transition gets a <strong>dedicated route</strong>: <code>POST /products/:id/publish</code>, <code>POST /products/:id/discontinue</code>. Each route's schema is the empty body or the minimal input it needs.</li>
+    </ul>
+
+    <h4>Composing schemas: <code>.omit().partial()</code></h4>
+    <p>The update schema is one line: <code>createProductSchema.omit({ categoryId: true }).partial()</code>. Read it as: "everything you can create, except <code>categoryId</code>, all optional." Two operators encode two business rules. The day someone adds a new field to <code>createProductSchema</code>, the update schema auto-includes it — opt-out, not opt-in.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="05-customer-address">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">CRM Domain</div>
+        <h2>Customer (with Address)</h2>
+        <p class="module-desc">Some concepts are defined by their attributes, not their identity — an Address is the canonical example. Two addresses with identical fields are the same address. We model it as an immutable Value Object with its own validation, and the Customer entity holds one.</p>
+      </div>
+      <span class="complexity l5">L5 · Value Object</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">customer.entity.ts (+ address.value.ts)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// ── address.value.ts ─────────────────────────────────────────────────────</span>
+<span class="kw">import</span> { InvalidPostalCodeError, InvalidCountryCodeError } <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="com">/** Immutable Value Object — equality is by value, not identity. */</span>
+<span class="kw">export</span> <span class="kw">class</span> Address {
+  <span class="kw">private</span> constructor(
+    <span class="kw">public</span> <span class="kw">readonly</span> street: <span class="ty">string</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> city: <span class="ty">string</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> country: <span class="ty">string</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> postalCode: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: {
+    street: <span class="ty">string</span>; city: <span class="ty">string</span>; country: <span class="ty">string</span>; postalCode: <span class="ty">string</span>;
+  }): Address {
+    <span class="kw">if</span> (!/^[A-Z]{<span class="num">2</span>}$/.test(props.country)) <span class="kw">throw</span> <span class="kw">new</span> InvalidCountryCodeError();
+    <span class="kw">if</span> (!/^[A-Z0-<span class="num">9</span>]{<span class="num">5</span>,<span class="num">10</span>}$/i.test(props.postalCode)) <span class="kw">throw</span> <span class="kw">new</span> InvalidPostalCodeError();
+
+    <span class="kw">return</span> <span class="kw">new</span> Address(
+      props.street.trim(),
+      props.city.trim(),
+      props.country.toUpperCase(),
+      props.postalCode.toUpperCase()
+    );
+  }
+
+  <span class="com">/** Value equality — same fields ⇒ same Address. */</span>
+  equals(other: Address): <span class="ty">boolean</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.street === other.street
+        &amp;&amp; <span class="kw">this</span>.city === other.city
+        &amp;&amp; <span class="kw">this</span>.country === other.country
+        &amp;&amp; <span class="kw">this</span>.postalCode === other.postalCode;
+  }
+}
+
+<span class="com">// ── customer.entity.ts ───────────────────────────────────────────────────</span>
+<span class="kw">import</span> { Address } <span class="kw">from</span> <span class="str">'./address.value'</span>;
+<span class="kw">import</span> { CustomerNameRequiredError, InvalidEmailFormatError } <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Customer {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> customerId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> name: <span class="ty">string</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> email: <span class="ty">string</span>,
+    <span class="kw">private</span> shippingAddress: Address,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { name: <span class="ty">string</span>; email: <span class="ty">string</span>; shippingAddress: Address }): Customer {
+    <span class="kw">if</span> (props.name.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CustomerNameRequiredError();
+    <span class="kw">if</span> (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(props.email)) <span class="kw">throw</span> <span class="kw">new</span> InvalidEmailFormatError();
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Customer(
+      <span class="kw">null</span>,
+      props.name.trim(),
+      props.email.toLowerCase().trim(),
+      props.shippingAddress,
+      now, now
+    );
+  }
+
+  <span class="com">/** The address is replaced wholesale — never mutated in place. */</span>
+  changeShippingAddress(newAddress: Address): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.shippingAddress.equals(newAddress)) <span class="kw">return</span>;   <span class="com">// no-op</span>
+    <span class="kw">this</span>.shippingAddress = newAddress;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  rename(newName: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (newName.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CustomerNameRequiredError();
+    <span class="kw">this</span>.name = newName.trim();
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+  }
+
+  <span class="com">// Getters</span>
+  getCustomerId(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.customerId; }
+  getName(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.name; }
+  getEmail(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.email; }
+  getShippingAddress(): Address { <span class="kw">return</span> <span class="kw">this</span>.shippingAddress; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createCustomerSchema (nested Address)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="com">// Value object — its own schema, reusable across customer + order</span>
+<span class="kw">export</span> <span class="kw">const</span> addressSchema = z.object({
+  street:     z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">200</span>),
+  city:       z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  postalCode: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">20</span>),
+  country:    z.<span class="ty">string</span>().length(<span class="num">2</span>),     <span class="com">// ISO 3166-1 alpha-2: "US", "GB", ...</span>
+});
+<span class="kw">export</span> <span class="kw">type</span> AddressInput = z.infer&lt;<span class="kw">typeof</span> addressSchema&gt;;
+
+<span class="kw">export</span> <span class="kw">const</span> createCustomerSchema = z.object({
+  email:           z.<span class="ty">string</span>().email(),
+  firstName:       z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  lastName:        z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  shippingAddress: addressSchema,         <span class="com">// nested object, all fields required</span>
+  billingAddress:  addressSchema.optional(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateCustomerInput = z.infer&lt;<span class="kw">typeof</span> createCustomerSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">updateCustomerSchema (nested .partial)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Update an address: replace the whole object, not individual fields.</span>
+<span class="com">// (Address is a value object — partial updates would create invalid intermediate states.)</span>
+<span class="kw">export</span> <span class="kw">const</span> updateCustomerSchema = z.object({
+  firstName:       z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+  lastName:        z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+  shippingAddress: addressSchema.optional(),  <span class="com">// full replacement only</span>
+  billingAddress:  addressSchema.nullable().optional(),
+});
+<span class="kw">export</span> <span class="kw">type</span> UpdateCustomerInput = z.infer&lt;<span class="kw">typeof</span> updateCustomerSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">customerResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">export</span> <span class="kw">const</span> customerResponseSchema = z.object({
+  customerId:      z.<span class="ty">string</span>(),
+  email:           z.<span class="ty">string</span>().email(),
+  firstName:       z.<span class="ty">string</span>(),
+  lastName:        z.<span class="ty">string</span>(),
+  shippingAddress: addressSchema,
+  billingAddress:  addressSchema.nullable(),
+  dateCreated:     z.<span class="ty">string</span>().datetime(),
+  updatedAt:       z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CustomerResponse = z.infer&lt;<span class="kw">typeof</span> customerResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Nested objects</span><span class="concept-pill">✦ Reusable schemas</span><span class="concept-pill">✦ Value object → atomic replacement</span><span class="concept-pill">✦ .length(2)</span></div>
+    <div class="discussion fade-in">
+    <h4>Value objects get their own schema</h4>
+    <p><code>addressSchema</code> is defined once and reused in <code>createCustomerSchema</code>, <code>updateCustomerSchema</code>, the order shipping address, and anywhere else an address surfaces. The same single source of truth principle that applies to enums applies to nested object shapes.</p>
+
+    <h4>Partial updates and value objects don't mix</h4>
+    <p>The entity's <code>Address</code> value object is <strong>immutable</strong> — you replace it whole, you don't mutate individual fields. The schema matches: <code>shippingAddress: addressSchema.optional()</code> accepts either a complete address or nothing — never a half-address. If you let clients send <code>{ shippingAddress: { city: 'Berlin' } }</code>, you'd build invalid Address instances.</p>
+
+    <div class="callout">
+      <strong>Field-level constraints carry semantic meaning</strong>
+      <code>z.string().length(2)</code> is more than a length check — it documents that this is an ISO country code. Pair with <code>.regex(/^[A-Z]{2}$/)</code> for stronger enforcement, or build an <code>isoCountrySchema</code> alongside <code>addressSchema</code>.
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="06-order-items">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Sales Domain</div>
+        <h2>Order (draft + items)</h2>
+        <p class="module-desc">A draft Order owns a list of OrderItems. The aggregate root is responsible for invariants that span the collection: items can only be modified while DRAFT, the same product cannot be added twice, and the total is always recomputed from items. Children are never modified directly from outside.</p>
+      </div>
+      <span class="complexity l5">L6 · Collection</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">order.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { OrderStatus, OrderStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  CustomerIdRequiredError, CannotModifyNonDraftOrderError,
+  OrderItemNotFoundError, DuplicateOrderItemError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+<span class="kw">import</span> { OrderItem } <span class="kw">from</span> <span class="str">'./order-item.entity'</span>;
+
+<span class="com">/** Aggregate root. Owns its OrderItems. */</span>
+<span class="kw">export</span> <span class="kw">class</span> Order {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerId: <span class="ty">string</span>,
+    <span class="kw">private</span> items: OrderItem[],
+    <span class="kw">private</span> orderStatus: OrderStatus,
+    <span class="kw">private</span> totalAmount: <span class="ty">number</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { customerId: <span class="ty">string</span> }): Order {
+    <span class="kw">if</span> (!props.customerId.trim()) <span class="kw">throw</span> <span class="kw">new</span> CustomerIdRequiredError();
+
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Order(<span class="kw">null</span>, props.customerId, [], OrderStatusEnum.DRAFT, <span class="num">0</span>, now, now);
+  }
+
+  <span class="com">// ── Collection mutators ─────────────────────────────────────────────────</span>
+
+  addItem(item: OrderItem): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardDraft(<span class="str">'add'</span>);
+    <span class="kw">if</span> (<span class="kw">this</span>.items.some((i) =&gt; i.getProductId() === item.getProductId())) {
+      <span class="kw">throw</span> <span class="kw">new</span> DuplicateOrderItemError(item.getProductId());
+    }
+    <span class="kw">this</span>.items.push(item);
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  removeItem(itemId: <span class="ty">string</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardDraft(<span class="str">'remove'</span>);
+    <span class="kw">const</span> before = <span class="kw">this</span>.items.length;
+    <span class="kw">this</span>.items = <span class="kw">this</span>.items.filter((i) =&gt; i.getItemId() !== itemId);
+    <span class="kw">if</span> (<span class="kw">this</span>.items.length === before) <span class="kw">throw</span> <span class="kw">new</span> OrderItemNotFoundError(itemId);
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  updateItemQuantity(itemId: <span class="ty">string</span>, newQuantity: <span class="ty">number</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.guardDraft(<span class="str">'update'</span>);
+    <span class="kw">const</span> item = <span class="kw">this</span>.items.find((i) =&gt; i.getItemId() === itemId);
+    <span class="kw">if</span> (!item) <span class="kw">throw</span> <span class="kw">new</span> OrderItemNotFoundError(itemId);
+    item.updateQuantity(newQuantity);   <span class="com">// child enforces "quantity &gt; 0"</span>
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="kw">private</span> guardDraft(op: <span class="str">'add'</span> | <span class="str">'remove'</span> | <span class="str">'update'</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) {
+      <span class="kw">throw</span> <span class="kw">new</span> CannotModifyNonDraftOrderError(op);
+    }
+  }
+
+  <span class="com">/** Total is derived state — only the entity computes it. */</span>
+  <span class="kw">private</span> recalculateTotal(): <span class="kw">void</span> {
+    <span class="kw">this</span>.totalAmount = <span class="kw">this</span>.items.reduce((sum, i) =&gt; sum + i.getSubtotal(), <span class="num">0</span>);
+  }
+
+  <span class="kw">private</span> touch(): <span class="kw">void</span> { <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+
+  <span class="com">// Getters return defensive copies of mutable collections</span>
+  getItems(): <span class="kw">readonly</span> OrderItem[] { <span class="kw">return</span> [...<span class="kw">this</span>.items]; }
+  getTotalAmount(): <span class="ty">number</span> { <span class="kw">return</span> <span class="kw">this</span>.totalAmount; }
+  getOrderStatus(): OrderStatus { <span class="kw">return</span> <span class="kw">this</span>.orderStatus; }
+  getCustomerId(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.customerId; }
+}
+
+<span class="com">// ── order-item.entity.ts (child) ─────────────────────────────────────────</span>
+<span class="kw">export</span> <span class="kw">class</span> OrderItem {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> itemId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> productId: <span class="ty">string</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> productName: <span class="ty">string</span>,
+    <span class="kw">private</span> quantity: <span class="ty">number</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> unitPrice: <span class="ty">number</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: {
+    productId: <span class="ty">string</span>; productName: <span class="ty">string</span>; quantity: <span class="ty">number</span>; unitPrice: <span class="ty">number</span>;
+  }): OrderItem {
+    <span class="kw">if</span> (props.quantity &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidQuantityError();
+    <span class="kw">if</span> (props.unitPrice &lt; <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidPriceError();
+    <span class="kw">if</span> (!props.productName.trim()) <span class="kw">throw</span> <span class="kw">new</span> ProductNameRequiredError();
+    <span class="kw">return</span> <span class="kw">new</span> OrderItem(<span class="kw">null</span>, props.productId, props.productName.trim(), props.quantity, props.unitPrice);
+  }
+
+  updateQuantity(newQuantity: <span class="ty">number</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (newQuantity &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidQuantityError();
+    <span class="kw">this</span>.quantity = newQuantity;
+  }
+
+  getSubtotal(): <span class="ty">number</span> { <span class="kw">return</span> <span class="kw">this</span>.quantity * <span class="kw">this</span>.unitPrice; }
+  getItemId(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.itemId; }
+  getProductId(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.productId; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createOrderSchema (array of items)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="com">// Each item is its own schema — reused in create, response, and even SQS events</span>
+<span class="kw">export</span> <span class="kw">const</span> orderItemInputSchema = z.object({
+  productId: z.<span class="ty">string</span>(),
+  quantity:  z.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">1000</span>),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> createOrderSchema = z.object({
+  customerId: z.<span class="ty">string</span>(),
+  items: z.array(orderItemInputSchema)
+    .min(<span class="num">1</span>, { message: <span class="str">'Order must have at least one item'</span> })
+    .max(<span class="num">50</span>, { message: <span class="str">'Order cannot exceed 50 line items'</span> }),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateOrderInput = z.infer&lt;<span class="kw">typeof</span> createOrderSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Update Schema</span>
+    <span class="subtitle">addItem / removeItem / updateQuantity</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// You don't PATCH the entire array — too many invariants to re-validate.</span>
+<span class="com">// Instead, dedicated routes for each item-level operation.</span>
+
+<span class="kw">export</span> <span class="kw">const</span> addOrderItemSchema = z.object({
+  productId: z.<span class="ty">string</span>(),
+  quantity:  z.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">1000</span>),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> updateItemQuantitySchema = z.object({
+  quantity: z.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">1000</span>),
+});
+
+<span class="com">// removeItem: no body — DELETE /orders/:orderId/items/:itemId</span></code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">orderResponseSchema (with computed totals)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Response items have an itemId + line total — server computed</span>
+<span class="kw">export</span> <span class="kw">const</span> orderItemResponseSchema = z.object({
+  itemId:    z.<span class="ty">string</span>(),
+  productId: z.<span class="ty">string</span>(),
+  productName: z.<span class="ty">string</span>(),                 <span class="com">// snapshotted at order time</span>
+  quantity:  z.<span class="ty">number</span>().int(),
+  unitPrice: z.<span class="ty">number</span>(),                   <span class="com">// snapshotted at order time</span>
+  lineTotal: z.<span class="ty">number</span>(),                   <span class="com">// quantity * unitPrice</span>
+});
+
+<span class="kw">export</span> <span class="kw">const</span> orderResponseSchema = z.object({
+  orderId: z.<span class="ty">string</span>(),
+  customerId: z.<span class="ty">string</span>(),
+  items: z.array(orderItemResponseSchema),
+  itemCount:    z.<span class="ty">number</span>().int(),          <span class="com">// items.length</span>
+  totalAmount:  z.<span class="ty">number</span>(),                <span class="com">// sum(lineTotal)</span>
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt:   z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> OrderResponse = z.infer&lt;<span class="kw">typeof</span> orderResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ z.array().min(1).max(50)</span><span class="concept-pill">✦ Custom error messages</span><span class="concept-pill">✦ Input vs response item</span><span class="concept-pill">✦ Aggregate totals</span></div>
+    <div class="discussion fade-in">
+    <h4>Arrays carry size invariants too</h4>
+    <p>An order without items is meaningless; an order with 10,000 items will time out the database. The schema enforces both:</p>
+    <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>z.array(orderItemInputSchema)
+  .min(1, { message: 'Order must have at least one item' })
+  .max(50, { message: 'Order cannot exceed 50 line items' });</code></pre>
+    <p>Custom messages travel into the <code>ZodError.issues[].message</code> field and bubble out as the 400 response body — actionable feedback for the client.</p>
+
+    <h4>Two item schemas, not one</h4>
+    <p><code>orderItemInputSchema</code> (just <code>productId</code> + <code>quantity</code>) and <code>orderItemResponseSchema</code> (adds <code>itemId</code>, <code>productName</code>, <code>unitPrice</code>, <code>lineTotal</code>) are <strong>different shapes</strong> — clients don't get to set the price; servers always populate snapshot fields. Mixing them into one optional-everything schema would let a client send <code>{ unitPrice: 0.01 }</code>.</p>
+
+    <h4>Don't PATCH the whole items array</h4>
+    <p>Replacing the array means re-validating the entire aggregate. Instead, expose item operations as routes: <code>POST /orders/:id/items</code>, <code>PATCH /orders/:id/items/:itemId/quantity</code>, <code>DELETE /orders/:id/items/:itemId</code>. Each route's schema is tiny; each maps to one entity method that runs only the relevant invariants.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="07-shipment">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Logistics Domain</div>
+        <h2>Shipment</h2>
+        <p class="module-desc">A Shipment moves through a real-world physical workflow. Operators need to know not just the current state but who moved it there, when, and from which location. The entity owns an internal append-only event log; outside code can read it but cannot tamper with it.</p>
+      </div>
+      <span class="complexity l6">L7 · Audit Log</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">shipment.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { ShipmentStatus, ShipmentStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  TrackingNumberRequiredError, InvalidShipmentTransitionError,
+  ShipmentAlreadyTerminalError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> ShipmentEvent {
+  <span class="kw">readonly</span> action: <span class="str">'CREATED'</span> | <span class="str">'DISPATCHED'</span> | <span class="str">'TRANSIT_UPDATE'</span> | <span class="str">'DELIVERED'</span> | <span class="str">'FAILED'</span>;
+  <span class="kw">readonly</span> actorId: <span class="ty">string</span>;
+  <span class="kw">readonly</span> at: <span class="ty">string</span>;
+  <span class="kw">readonly</span> note?: <span class="ty">string</span>;
+  <span class="kw">readonly</span> location?: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> Shipment {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> shipmentId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> orderId: <span class="ty">string</span>,
+    <span class="kw">private</span> shipmentStatus: ShipmentStatus,
+    <span class="kw">private</span> trackingNumber: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> events: ShipmentEvent[],
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { orderId: <span class="ty">string</span>; createdBy: <span class="ty">string</span> }): Shipment {
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">const</span> initial: ShipmentEvent = { action: <span class="str">'CREATED'</span>, actorId: props.createdBy, at: now };
+    <span class="kw">return</span> <span class="kw">new</span> Shipment(
+      <span class="kw">null</span>, props.orderId, ShipmentStatusEnum.PREPARING,
+      <span class="kw">null</span>, [initial], now, now
+    );
+  }
+
+  <span class="com">// ── Transitions ─────────────────────────────────────────────────────────</span>
+
+  dispatch(props: { trackingNumber: <span class="ty">string</span>; actorId: <span class="ty">string</span>; note?: <span class="ty">string</span> }): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.shipmentStatus !== ShipmentStatusEnum.PREPARING) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidShipmentTransitionError(<span class="str">'dispatch'</span>, <span class="kw">this</span>.shipmentStatus);
+    }
+    <span class="kw">if</span> (props.trackingNumber.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> TrackingNumberRequiredError();
+
+    <span class="kw">this</span>.trackingNumber  = props.trackingNumber.trim();
+    <span class="kw">this</span>.shipmentStatus  = ShipmentStatusEnum.DISPATCHED;
+    <span class="kw">this</span>.appendEvent({ action: <span class="str">'DISPATCHED'</span>, actorId: props.actorId, at: <span class="kw">this</span>.now(), note: props.note });
+  }
+
+  recordTransitLocation(props: { location: <span class="ty">string</span>; actorId: <span class="ty">string</span> }): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.shipmentStatus === ShipmentStatusEnum.DISPATCHED) {
+      <span class="kw">this</span>.shipmentStatus = ShipmentStatusEnum.IN_TRANSIT;          <span class="com">// first scan promotes status</span>
+    } <span class="kw">else</span> <span class="kw">if</span> (<span class="kw">this</span>.shipmentStatus !== ShipmentStatusEnum.IN_TRANSIT) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidShipmentTransitionError(<span class="str">'transit-update'</span>, <span class="kw">this</span>.shipmentStatus);
+    }
+    <span class="kw">this</span>.appendEvent({
+      action: <span class="str">'TRANSIT_UPDATE'</span>, actorId: props.actorId, at: <span class="kw">this</span>.now(), location: props.location,
+    });
+  }
+
+  deliver(props: { actorId: <span class="ty">string</span>; note?: <span class="ty">string</span> }): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.isTerminal()) <span class="kw">throw</span> <span class="kw">new</span> ShipmentAlreadyTerminalError();
+    <span class="kw">if</span> (<span class="kw">this</span>.shipmentStatus !== ShipmentStatusEnum.IN_TRANSIT) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidShipmentTransitionError(<span class="str">'deliver'</span>, <span class="kw">this</span>.shipmentStatus);
+    }
+    <span class="kw">this</span>.shipmentStatus = ShipmentStatusEnum.DELIVERED;
+    <span class="kw">this</span>.appendEvent({ action: <span class="str">'DELIVERED'</span>, actorId: props.actorId, at: <span class="kw">this</span>.now(), note: props.note });
+  }
+
+  fail(props: { actorId: <span class="ty">string</span>; note: <span class="ty">string</span> }): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.isTerminal()) <span class="kw">throw</span> <span class="kw">new</span> ShipmentAlreadyTerminalError();
+    <span class="kw">this</span>.shipmentStatus = ShipmentStatusEnum.FAILED;
+    <span class="kw">this</span>.appendEvent({ action: <span class="str">'FAILED'</span>, actorId: props.actorId, at: <span class="kw">this</span>.now(), note: props.note });
+  }
+
+  <span class="com">// ── Internals ───────────────────────────────────────────────────────────</span>
+
+  <span class="kw">private</span> appendEvent(e: ShipmentEvent): <span class="kw">void</span> {
+    <span class="kw">this</span>.events.push(e);
+    <span class="kw">this</span>.updatedAt = e.at;
+  }
+  <span class="kw">private</span> isTerminal(): <span class="ty">boolean</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.shipmentStatus === ShipmentStatusEnum.DELIVERED
+        || <span class="kw">this</span>.shipmentStatus === ShipmentStatusEnum.FAILED;
+  }
+  <span class="kw">private</span> now(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+
+  <span class="com">// Audit log is exposed as readonly — outside code cannot tamper with it.</span>
+  getEvents(): <span class="kw">readonly</span> ShipmentEvent[] { <span class="kw">return</span> [...<span class="kw">this</span>.events]; }
+  getShipmentStatus(): ShipmentStatus { <span class="kw">return</span> <span class="kw">this</span>.shipmentStatus; }
+  getTrackingNumber(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.trackingNumber; }
+  getOrderId(): <span class="ty">string</span> { <span class="kw">return</span> <span class="kw">this</span>.orderId; }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createShipmentSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { addressSchema } <span class="kw">from</span> <span class="str">'./customer.schemas'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> createShipmentSchema = z.object({
+  orderId:   z.<span class="ty">string</span>(),
+  carrier:   z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">50</span>),
+  toAddress: addressSchema,
+  estimatedDelivery: z.<span class="ty">string</span>().datetime().optional(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateShipmentInput = z.infer&lt;<span class="kw">typeof</span> createShipmentSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Action Schemas</span>
+    <span class="subtitle">event-recording endpoints</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Each event maps to ONE action endpoint. No "update shipment" route exists.</span>
+
+<span class="kw">export</span> <span class="kw">const</span> recordPickupSchema = z.object({
+  carrierTrackingId: z.<span class="ty">string</span>().min(<span class="num">1</span>),
+  occurredAt:        z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> recordInTransitSchema = z.object({
+  location:   z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">200</span>),
+  occurredAt: z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> recordDeliveredSchema = z.object({
+  signedBy:   z.<span class="ty">string</span>().min(<span class="num">1</span>).optional(),
+  occurredAt: z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> recordExceptionSchema = z.object({
+  reason:     z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">500</span>),
+  occurredAt: z.<span class="ty">string</span>().datetime(),
+});</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">shipmentResponseSchema (event log)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { SHIPMENT_STATUSES, SHIPMENT_EVENT_TYPES } <span class="kw">from</span> <span class="str">'@old-st/shipping-domain'</span>;
+
+<span class="kw">const</span> shipmentEventSchema = z.object({
+  <span class="kw">type</span>:       z.<span class="kw">enum</span>(SHIPMENT_EVENT_TYPES),  <span class="com">// 'PICKED_UP' | 'IN_TRANSIT' | ...</span>
+  occurredAt: z.<span class="ty">string</span>().datetime(),
+  <span class="com">// payload differs per event — use discriminated union if you need strict typing</span>
+  payload:    z.record(z.unknown()).optional(),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> shipmentResponseSchema = z.object({
+  shipmentId: z.<span class="ty">string</span>(),
+  orderId:    z.<span class="ty">string</span>(),
+  carrier:    z.<span class="ty">string</span>(),
+  status:     z.<span class="kw">enum</span>(SHIPMENT_STATUSES),
+  toAddress:  addressSchema,
+  events:     z.array(shipmentEventSchema),  <span class="com">// append-only log, oldest first</span>
+  createdAt:  z.<span class="ty">string</span>().datetime(),
+  updatedAt:  z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> ShipmentResponse = z.infer&lt;<span class="kw">typeof</span> shipmentResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Append-only events</span><span class="concept-pill">✦ z.record() for open payloads</span><span class="concept-pill">✦ datetime() everywhere</span></div>
+    <div class="discussion fade-in">
+    <h4>Append-only entities reshape the API</h4>
+    <p>A Shipment never gets "updated" — it gets <em>events appended</em>. So the API surface is a set of action endpoints (one per event type), not a single PATCH. Each action endpoint has its own tiny schema describing only the data that event carries.</p>
+
+    <h4><code>z.string().datetime()</code> for timestamps</h4>
+    <p>Every event's <code>occurredAt</code> uses <code>z.string().datetime()</code>, which validates ISO 8601 strings (e.g. <code>"2026-05-08T14:30:00.000Z"</code>). The entity stores them as strings; the response returns them as strings; the client parses to <code>Date</code> only at display time. No timezone confusion across the wire.</p>
+
+    <h4><code>z.record(z.unknown())</code> for heterogeneous payloads</h4>
+    <p>If you need a strictly-typed events array, use a discriminated union (see Module 8). For internal monitoring or admin views where the payload shape varies and isn't safety-critical, <code>z.record(z.unknown())</code> accepts an object with arbitrary keys. Use sparingly — it's an escape hatch.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="08-order-aggregate">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Sales Domain</div>
+        <h2>Order (full aggregate)</h2>
+        <p class="module-desc">The full Order aggregate composes everything from levels 1–7: child collection, value object (Coupon), payment sub-entity, two orthogonal status fields, and several cross-invariants the entity enforces atomically (discount cannot make total negative, payment amount must match total, cannot apply coupon after confirmation).</p>
+      </div>
+      <span class="complexity l6">L8 · Full Aggregate</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">order.entity.ts (excerpt)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { OrderStatus, OrderStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> { Coupon } <span class="kw">from</span> <span class="str">'./coupon.value'</span>;
+<span class="kw">import</span> { OrderItem } <span class="kw">from</span> <span class="str">'./order-item.entity'</span>;
+<span class="kw">import</span> { OrderPayment } <span class="kw">from</span> <span class="str">'./order-payment.entity'</span>;
+<span class="kw">import</span> {
+  CannotModifyNonDraftOrderError, CannotApplyCouponError,
+  CannotConfirmEmptyOrderError, PaymentRequiredForConfirmationError,
+  PaymentAmountMismatchError, OrderAlreadyHasPaymentError,
+  InvalidOrderStatusTransitionError, CannotCancelOrderError,
+  CannotRefundOrderError, InvalidPaymentStateForConfirmationError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Order {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerId: <span class="ty">string</span>,
+    <span class="kw">private</span> items: OrderItem[],
+    <span class="kw">private</span> coupon: Coupon | <span class="kw">null</span>,
+    <span class="kw">private</span> payment: OrderPayment | <span class="kw">null</span>,
+    <span class="kw">private</span> orderStatus: OrderStatus,
+    <span class="kw">private</span> totalAmount: <span class="ty">number</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> create(props: { customerId: <span class="ty">string</span> }): Order {
+    <span class="kw">if</span> (!props.customerId.trim()) <span class="kw">throw</span> <span class="kw">new</span> CustomerIdRequiredError();
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> Order(<span class="kw">null</span>, props.customerId, [], <span class="kw">null</span>, <span class="kw">null</span>, OrderStatusEnum.DRAFT, <span class="num">0</span>, now, now);
+  }
+
+  <span class="com">// ── Items (delegated to draft pattern from #6) ──────────────────────────</span>
+  addItem(item: OrderItem): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) <span class="kw">throw</span> <span class="kw">new</span> CannotModifyNonDraftOrderError(<span class="str">'add'</span>);
+    <span class="kw">if</span> (<span class="kw">this</span>.items.some((i) =&gt; i.getProductId() === item.getProductId())) {
+      <span class="kw">throw</span> <span class="kw">new</span> DuplicateOrderItemError(item.getProductId());
+    }
+    <span class="kw">this</span>.items.push(item);
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Coupon ──────────────────────────────────────────────────────────────</span>
+  applyCoupon(coupon: Coupon): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) <span class="kw">throw</span> <span class="kw">new</span> CannotApplyCouponError(<span class="str">'order is not draft'</span>);
+    <span class="kw">if</span> (coupon.isExpired()) <span class="kw">throw</span> <span class="kw">new</span> CannotApplyCouponError(<span class="str">'coupon expired'</span>);
+    <span class="kw">this</span>.coupon = coupon;
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  removeCoupon(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) <span class="kw">throw</span> <span class="kw">new</span> CannotApplyCouponError(<span class="str">'order is not draft'</span>);
+    <span class="kw">if</span> (!<span class="kw">this</span>.coupon) <span class="kw">return</span>;
+    <span class="kw">this</span>.coupon = <span class="kw">null</span>;
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Payment ─────────────────────────────────────────────────────────────</span>
+  addPayment(payment: OrderPayment): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.payment !== <span class="kw">null</span>) <span class="kw">throw</span> <span class="kw">new</span> OrderAlreadyHasPaymentError();
+    <span class="kw">if</span> (payment.getAmount() !== <span class="kw">this</span>.totalAmount) <span class="kw">throw</span> <span class="kw">new</span> PaymentAmountMismatchError();
+    <span class="kw">this</span>.payment = payment;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Lifecycle ───────────────────────────────────────────────────────────</span>
+  confirm(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidOrderStatusTransitionError(<span class="str">'confirm'</span>, <span class="str">'draft'</span>);
+    }
+    <span class="kw">if</span> (<span class="kw">this</span>.items.length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CannotConfirmEmptyOrderError();
+    <span class="kw">if</span> (!<span class="kw">this</span>.payment) <span class="kw">throw</span> <span class="kw">new</span> PaymentRequiredForConfirmationError();
+    <span class="kw">if</span> (!<span class="kw">this</span>.payment.isSuccessful() &amp;&amp; !<span class="kw">this</span>.payment.isPending()) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidPaymentStateForConfirmationError();
+    }
+    <span class="kw">this</span>.orderStatus = OrderStatusEnum.CONFIRMED;
+    <span class="kw">this</span>.touch();
+  }
+
+  cancel(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus === OrderStatusEnum.DELIVERED || <span class="kw">this</span>.orderStatus === OrderStatusEnum.REFUNDED) {
+      <span class="kw">throw</span> <span class="kw">new</span> CannotCancelOrderError();
+    }
+    <span class="kw">this</span>.orderStatus = OrderStatusEnum.CANCELLED;
+    <span class="kw">if</span> (<span class="kw">this</span>.payment?.isPending()) <span class="kw">this</span>.payment.fail();   <span class="com">// cascade</span>
+    <span class="kw">this</span>.touch();
+  }
+
+  refund(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DELIVERED) {
+      <span class="kw">throw</span> <span class="kw">new</span> CannotRefundOrderError(<span class="str">'can only refund delivered orders'</span>);
+    }
+    <span class="kw">if</span> (!<span class="kw">this</span>.payment?.isSuccessful()) <span class="kw">throw</span> <span class="kw">new</span> CannotRefundOrderError(<span class="str">'no successful payment'</span>);
+    <span class="kw">this</span>.payment.refund();
+    <span class="kw">this</span>.orderStatus = OrderStatusEnum.REFUNDED;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">/** Cross-invariant: total = items_total - coupon_discount, floored at 0. */</span>
+  <span class="kw">private</span> recalculateTotal(): <span class="kw">void</span> {
+    <span class="kw">const</span> itemsTotal = <span class="kw">this</span>.items.reduce((s, i) =&gt; s + i.getSubtotal(), <span class="num">0</span>);
+    <span class="kw">const</span> discount   = <span class="kw">this</span>.coupon ? <span class="kw">this</span>.coupon.discountFor(itemsTotal) : <span class="num">0</span>;
+    <span class="kw">this</span>.totalAmount = Math.max(<span class="num">0</span>, itemsTotal - discount);
+  }
+  <span class="kw">private</span> touch(): <span class="kw">void</span> { <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+}
+
+<span class="com">// ── coupon.value.ts ─────────────────────────────────────────────────────</span>
+<span class="kw">export</span> <span class="kw">class</span> Coupon {
+  <span class="kw">private</span> constructor(
+    <span class="kw">public</span> <span class="kw">readonly</span> code: <span class="ty">string</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> kind: <span class="str">'FIXED'</span> | <span class="str">'PERCENT'</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> value: <span class="ty">number</span>,
+    <span class="kw">public</span> <span class="kw">readonly</span> expiresAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> fixed(code: <span class="ty">string</span>, amount: <span class="ty">number</span>, expiresAt: <span class="ty">string</span>): Coupon {
+    <span class="kw">if</span> (amount &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidCouponError();
+    <span class="kw">return</span> <span class="kw">new</span> Coupon(code, <span class="str">'FIXED'</span>, amount, expiresAt);
+  }
+  <span class="kw">static</span> percent(code: <span class="ty">string</span>, percent: <span class="ty">number</span>, expiresAt: <span class="ty">string</span>): Coupon {
+    <span class="kw">if</span> (percent &lt; <span class="num">5</span> || percent &gt; <span class="num">50</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidCouponError();
+    <span class="kw">return</span> <span class="kw">new</span> Coupon(code, <span class="str">'PERCENT'</span>, percent, expiresAt);
+  }
+
+  isExpired(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">new</span> <span class="ty">Date</span>(<span class="kw">this</span>.expiresAt).getTime() &lt; <span class="ty">Date</span>.now(); }
+
+  <span class="com">/** Pure function — same inputs always yield the same discount. */</span>
+  discountFor(itemsTotal: <span class="ty">number</span>): <span class="ty">number</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.kind === <span class="str">'FIXED'</span> ? <span class="kw">this</span>.value : itemsTotal * (<span class="kw">this</span>.value / <span class="num">100</span>);
+  }
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createOrderSchema (with optional coupon + .refine)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { PAYMENT_METHODS } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> couponInputSchema = z.object({
+  code:    z.<span class="ty">string</span>().regex(/^[A-Z0-<span class="num">9</span>]{<span class="num">4</span>,<span class="num">16</span>}$/),  <span class="com">// uppercase alphanumeric</span>
+  percent: z.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">100</span>),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> orderItemInputSchema = z.object({
+  productId: z.<span class="ty">string</span>(),
+  quantity:  z.<span class="ty">number</span>().int().min(<span class="num">1</span>).max(<span class="num">1000</span>),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> createOrderSchema = z.object({
+  customerId: z.<span class="ty">string</span>(),
+  items: z.array(orderItemInputSchema).min(<span class="num">1</span>).max(<span class="num">50</span>),
+  coupon: couponInputSchema.optional(),
+  paymentMethod: z.<span class="kw">enum</span>(PAYMENT_METHODS),         <span class="com">// 'CARD' | 'PAYPAL' | 'BANK'</span>
+})
+.refine(
+  (o) =&gt; <span class="kw">new</span> Set(o.items.map((i) =&gt; i.productId)).size === o.items.length,
+  { message: <span class="str">'Duplicate productIds — combine into one line item'</span>, path: [<span class="str">'items'</span>] },
+);
+<span class="kw">export</span> <span class="kw">type</span> CreateOrderInput = z.infer&lt;<span class="kw">typeof</span> createOrderSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Action Schemas</span>
+    <span class="subtitle">apply / pay / cancel</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// applyCoupon: replace existing coupon (or set first time)</span>
+<span class="kw">export</span> <span class="kw">const</span> applyCouponSchema = couponInputSchema;
+
+<span class="kw">export</span> <span class="kw">const</span> recordPaymentSchema = z.object({
+  paymentMethod: z.<span class="kw">enum</span>(PAYMENT_METHODS),
+  amount:        z.<span class="ty">number</span>().positive(),
+  externalRef:   z.<span class="ty">string</span>().min(<span class="num">1</span>),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> cancelOrderSchema = z.object({
+  reason: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">500</span>),
+});
+
+<span class="com">// confirm: no body — POST /orders/:id/confirm</span></code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema</span>
+    <span class="subtitle">orderResponseSchema (full aggregate)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { ORDER_STATUSES, PAYMENT_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+
+<span class="kw">const</span> couponResponseSchema = z.object({
+  code: z.<span class="ty">string</span>(), percent: z.<span class="ty">number</span>().int(),
+});
+<span class="kw">const</span> paymentResponseSchema = z.object({
+  paymentMethod: z.<span class="kw">enum</span>(PAYMENT_METHODS),
+  status:        z.<span class="kw">enum</span>(PAYMENT_STATUSES),
+  amount:        z.<span class="ty">number</span>(),
+  paidAt:        z.<span class="ty">string</span>().datetime().nullable(),
+});
+
+<span class="kw">export</span> <span class="kw">const</span> orderResponseSchema = z.object({
+  orderId:     z.<span class="ty">string</span>(),
+  customerId:  z.<span class="ty">string</span>(),
+  status:      z.<span class="kw">enum</span>(ORDER_STATUSES),
+  items:       z.array(orderItemResponseSchema),
+  coupon:      couponResponseSchema.nullable(),
+  payment:     paymentResponseSchema.nullable(),
+  subtotal:    z.<span class="ty">number</span>(),
+  discount:    z.<span class="ty">number</span>(),
+  totalAmount: z.<span class="ty">number</span>(),
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt:   z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> OrderResponse = z.infer&lt;<span class="kw">typeof</span> orderResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ .refine() cross-field</span><span class="concept-pill">✦ Nested schemas as objects</span><span class="concept-pill">✦ .regex() for codes</span></div>
+    <div class="discussion fade-in">
+    <h4><code>.refine()</code> for cross-field rules</h4>
+    <p>Field-level validators (<code>.min()</code>, <code>.email()</code>) check one field at a time. <strong>Cross-field</strong> rules — "no duplicate <code>productId</code>s across the items array", "shipping date must be after order date" — need <code>.refine()</code>:</p>
+    <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>createOrderSchema.refine(
+  (o) =&gt; new Set(o.items.map((i) =&gt; i.productId)).size === o.items.length,
+  { message: 'Duplicate productIds', path: ['items'] },
+);</code></pre>
+    <p>The <code>path</code> matters — it tells the client <em>which field</em> the error attaches to, so a form library (react-hook-form, etc.) can show the message under the right input.</p>
+
+    <h4>Aggregates: the response schema reads like a tree</h4>
+    <p>Order has items, an optional coupon, an optional payment, and computed totals. The response schema mirrors that tree — each nested type has its own schema (<code>couponResponseSchema</code>, <code>paymentResponseSchema</code>) so they can be reused independently and tested in isolation.</p>
+
+    <div class="callout warning">
+      <strong>Don't try to encode <em>all</em> aggregate invariants in Zod.</strong>
+      "Total = subtotal × (1 − discount)" lives in the <code>Order</code> entity. The schema validates <em>shape</em>; the entity validates <em>business correctness</em>. Trying to express the second in Zod ends in unreadable <code>.refine()</code> chains and duplicates the rule across two layers.
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="09-subscription">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Billing Domain</div>
+        <h2>Subscription</h2>
+        <p class="module-desc">A Subscription weaves business time into its invariants. A trial expires after a fixed window, downgrades only land at period end, and pause/resume must respect billing boundaries. The entity owns all date math so the application layer stays a thin coordinator.</p>
+      </div>
+      <span class="complexity l6">L9 · Time-Driven</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Domain Entity</span>
+    <span class="subtitle">subscription.entity.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { Plan, PlanRank, SubStatus, SubStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  CannotActivateNonTrialError, TrialAlreadyExpiredError,
+  InvalidSubscriptionTransitionError, CannotReinstateInSameCycleError,
+  SamePlanError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">const</span> TRIAL_DAYS = <span class="num">14</span>;
+<span class="kw">const</span> PERIOD_DAYS = <span class="num">30</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Subscription {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> subId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> userId: <span class="ty">string</span>,
+    <span class="kw">private</span> plan: Plan,
+    <span class="kw">private</span> pendingDowngrade: Plan | <span class="kw">null</span>,
+    <span class="kw">private</span> subStatus: SubStatus,
+    <span class="kw">private</span> <span class="kw">readonly</span> trialEndsAt: <span class="ty">string</span>,
+    <span class="kw">private</span> currentPeriodEnd: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> cancelledInCycle: <span class="ty">boolean</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>
+  ) {}
+
+  <span class="kw">static</span> startTrial(props: { userId: <span class="ty">string</span>; plan: Plan }): Subscription {
+    <span class="kw">const</span> now = <span class="kw">new</span> <span class="ty">Date</span>();
+    <span class="kw">return</span> <span class="kw">new</span> Subscription(
+      <span class="kw">null</span>, props.userId, props.plan, <span class="kw">null</span>,
+      SubStatusEnum.TRIAL,
+      addDays(now, TRIAL_DAYS).toISOString(),
+      <span class="kw">null</span>, <span class="kw">false</span>,
+      now.toISOString(), now.toISOString()
+    );
+  }
+
+  <span class="com">// ── Lifecycle ───────────────────────────────────────────────────────────</span>
+
+  activate(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.TRIAL) <span class="kw">throw</span> <span class="kw">new</span> CannotActivateNonTrialError();
+    <span class="kw">if</span> (<span class="kw">this</span>.isTrialExpired()) {
+      <span class="kw">this</span>.subStatus = SubStatusEnum.EXPIRED;
+      <span class="kw">this</span>.touch();
+      <span class="kw">throw</span> <span class="kw">new</span> TrialAlreadyExpiredError();
+    }
+    <span class="kw">this</span>.subStatus = SubStatusEnum.ACTIVE;
+    <span class="kw">this</span>.currentPeriodEnd = addDays(<span class="kw">new</span> <span class="ty">Date</span>(), PERIOD_DAYS).toISOString();
+    <span class="kw">this</span>.touch();
+  }
+
+  pause(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.ACTIVE) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidSubscriptionTransitionError(<span class="str">'pause'</span>, <span class="kw">this</span>.subStatus);
+    }
+    <span class="kw">this</span>.subStatus = SubStatusEnum.PAUSED;
+    <span class="kw">this</span>.touch();
+  }
+
+  resume(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.PAUSED) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidSubscriptionTransitionError(<span class="str">'resume'</span>, <span class="kw">this</span>.subStatus);
+    }
+    <span class="kw">if</span> (<span class="kw">this</span>.cancelledInCycle) <span class="kw">throw</span> <span class="kw">new</span> CannotReinstateInSameCycleError();
+    <span class="kw">this</span>.subStatus = SubStatusEnum.ACTIVE;
+    <span class="kw">this</span>.touch();
+  }
+
+  cancel(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.ACTIVE &amp;&amp; <span class="kw">this</span>.subStatus !== SubStatusEnum.PAUSED) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidSubscriptionTransitionError(<span class="str">'cancel'</span>, <span class="kw">this</span>.subStatus);
+    }
+    <span class="kw">this</span>.subStatus = SubStatusEnum.CANCELLED;
+    <span class="kw">this</span>.cancelledInCycle = <span class="kw">true</span>;
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Plan changes (with deferred-downgrade rule) ─────────────────────────</span>
+
+  changePlan(newPlan: Plan): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.ACTIVE &amp;&amp; <span class="kw">this</span>.subStatus !== SubStatusEnum.TRIAL) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidSubscriptionTransitionError(<span class="str">'changePlan'</span>, <span class="kw">this</span>.subStatus);
+    }
+    <span class="kw">if</span> (newPlan === <span class="kw">this</span>.plan &amp;&amp; !<span class="kw">this</span>.pendingDowngrade) <span class="kw">throw</span> <span class="kw">new</span> SamePlanError();
+
+    <span class="kw">const</span> isUpgrade = PlanRank[newPlan] &gt; PlanRank[<span class="kw">this</span>.plan];
+
+    <span class="kw">if</span> (isUpgrade) {
+      <span class="kw">this</span>.plan = newPlan;
+      <span class="kw">this</span>.pendingDowngrade = <span class="kw">null</span>;     <span class="com">// any pending downgrade is voided by an upgrade</span>
+    } <span class="kw">else</span> {
+      <span class="kw">this</span>.pendingDowngrade = newPlan;  <span class="com">// applied at next renewal</span>
+    }
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">/** Called by the billing scheduler. Rolls the period and applies pending downgrades. */</span>
+  renewPeriod(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.subStatus !== SubStatusEnum.ACTIVE) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidSubscriptionTransitionError(<span class="str">'renew'</span>, <span class="kw">this</span>.subStatus);
+    }
+    <span class="kw">if</span> (<span class="kw">this</span>.pendingDowngrade) {
+      <span class="kw">this</span>.plan = <span class="kw">this</span>.pendingDowngrade;
+      <span class="kw">this</span>.pendingDowngrade = <span class="kw">null</span>;
+    }
+    <span class="kw">this</span>.currentPeriodEnd = addDays(<span class="kw">new</span> <span class="ty">Date</span>(), PERIOD_DAYS).toISOString();
+    <span class="kw">this</span>.cancelledInCycle = <span class="kw">false</span>;       <span class="com">// new cycle resets the reinstate guard</span>
+    <span class="kw">this</span>.touch();
+  }
+
+  <span class="com">// ── Predicates ──────────────────────────────────────────────────────────</span>
+  isTrialExpired(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">new</span> <span class="ty">Date</span>(<span class="kw">this</span>.trialEndsAt).getTime() &lt; <span class="ty">Date</span>.now(); }
+  isActive(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.subStatus === SubStatusEnum.ACTIVE; }
+  hasPendingDowngrade(): <span class="ty">boolean</span> { <span class="kw">return</span> <span class="kw">this</span>.pendingDowngrade !== <span class="kw">null</span>; }
+
+  <span class="kw">private</span> touch(): <span class="kw">void</span> { <span class="kw">this</span>.updatedAt = <span class="kw">new</span> <span class="ty">Date</span>().toISOString(); }
+
+  <span class="com">// Getters</span>
+  getPlan(): Plan { <span class="kw">return</span> <span class="kw">this</span>.plan; }
+  getStatus(): SubStatus { <span class="kw">return</span> <span class="kw">this</span>.subStatus; }
+  getCurrentPeriodEnd(): <span class="ty">string</span> | <span class="kw">null</span> { <span class="kw">return</span> <span class="kw">this</span>.currentPeriodEnd; }
+}
+
+<span class="kw">function</span> addDays(date: <span class="ty">Date</span>, days: <span class="ty">number</span>): <span class="ty">Date</span> {
+  <span class="kw">const</span> d = <span class="kw">new</span> <span class="ty">Date</span>(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  <span class="kw">return</span> d;
+}</code></pre></div>
+</div>
+      <div class="schemas-stack"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Create Schema</span>
+    <span class="subtitle">createSubscriptionSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { SUBSCRIPTION_PLANS } <span class="kw">from</span> <span class="str">'@old-st/billing-domain'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> planSchema = z.<span class="kw">enum</span>(SUBSCRIPTION_PLANS);  <span class="com">// 'FREE' | 'PRO' | 'ENTERPRISE'</span>
+
+<span class="kw">export</span> <span class="kw">const</span> createSubscriptionSchema = z.object({
+  customerId:   z.<span class="ty">string</span>(),
+  plan:         planSchema,
+  trialDays:    z.<span class="ty">number</span>().int().min(<span class="num">0</span>).max(<span class="num">30</span>).optional().<span class="kw">default</span>(<span class="num">14</span>),
+  startedAt:    z.<span class="ty">string</span>().datetime().optional(),
+});
+<span class="kw">export</span> <span class="kw">type</span> CreateSubscriptionInput = z.infer&lt;<span class="kw">typeof</span> createSubscriptionSchema&gt;;</code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Action Schemas</span>
+    <span class="subtitle">upgrade / downgrade / cancel</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Upgrades take effect immediately; downgrades are deferred to period end</span>
+<span class="kw">export</span> <span class="kw">const</span> changePlanSchema = z.object({
+  newPlan: planSchema,
+});
+
+<span class="kw">export</span> <span class="kw">const</span> cancelSubscriptionSchema = z.object({
+  immediate: z.<span class="ty">boolean</span>().optional().<span class="kw">default</span>(<span class="kw">false</span>),
+  reason:    z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">500</span>).optional(),
+});
+
+<span class="com">// resumeTrial / endTrialNow: no body</span></code></pre></div>
+</div>
+<div class="panel">
+  <div class="panel-header">
+    <span class="icon">🔍</span>
+    <span class="title">Response Schema (Discriminated Union)</span>
+    <span class="subtitle">subscriptionResponseSchema</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// Different states carry different fields — a discriminated union models this exactly</span>
+<span class="kw">const</span> trialingSubscriptionSchema = z.object({
+  status:        z.literal(<span class="str">'TRIALING'</span>),
+  plan:          planSchema,
+  trialEndsAt:   z.<span class="ty">string</span>().datetime(),
+  startedAt:     z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="kw">const</span> activeSubscriptionSchema = z.object({
+  status:           z.literal(<span class="str">'ACTIVE'</span>),
+  plan:             planSchema,
+  currentPeriodEnd: z.<span class="ty">string</span>().datetime(),
+  pendingDowngrade: planSchema.nullable(),    <span class="com">// set if downgrade scheduled</span>
+  startedAt:        z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="kw">const</span> cancelledSubscriptionSchema = z.object({
+  status:      z.literal(<span class="str">'CANCELLED'</span>),
+  plan:        planSchema,
+  cancelledAt: z.<span class="ty">string</span>().datetime(),
+  reason:      z.<span class="ty">string</span>().nullable(),
+});
+
+<span class="kw">const</span> subscriptionStateSchema = z.discriminatedUnion(<span class="str">'status'</span>, [
+  trialingSubscriptionSchema,
+  activeSubscriptionSchema,
+  cancelledSubscriptionSchema,
+]);
+
+<span class="kw">export</span> <span class="kw">const</span> subscriptionResponseSchema = z.object({
+  subscriptionId: z.<span class="ty">string</span>(),
+  customerId:     z.<span class="ty">string</span>(),
+  state:          subscriptionStateSchema,    <span class="com">// ← narrows by 'status'</span>
+  dateCreated:    z.<span class="ty">string</span>().datetime(),
+  updatedAt:      z.<span class="ty">string</span>().datetime(),
+});
+<span class="kw">export</span> <span class="kw">type</span> SubscriptionResponse = z.infer&lt;<span class="kw">typeof</span> subscriptionResponseSchema&gt;;</code></pre></div>
+</div></div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ z.discriminatedUnion()</span><span class="concept-pill">✦ z.literal()</span><span class="concept-pill">✦ State-shape correlation</span><span class="concept-pill">✦ Type narrowing</span></div>
+    <div class="discussion fade-in">
+    <h4>Discriminated unions: status drives shape</h4>
+    <p>A trialing subscription has <code>trialEndsAt</code>; a cancelled one has <code>cancelledAt</code> and <code>reason</code>. Modelling them as one fat optional-everything object makes the consumer write <code>state.trialEndsAt!</code> everywhere — defeating both Zod and TypeScript.</p>
+    <p><code>z.discriminatedUnion('status', [...])</code> tells Zod to look at the <code>status</code> literal and pick the matching variant. TypeScript narrows automatically:</p>
+    <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>const sub = subscriptionResponseSchema.parse(json);
+if (sub.state.status === 'TRIALING') {
+  sub.state.trialEndsAt;     // ✅ TypeScript knows this exists
+  sub.state.cancelledAt;     // ❌ Compile error — wrong variant
+}</code></pre>
+
+    <h4><code>parse</code> vs <code>safeParse</code> — when to crash</h4>
+    <ul>
+      <li><strong><code>schema.parse(data)</code></strong> — throws <code>ZodError</code>. Use in <strong>application services</strong> mapping entities to DTOs (a malformed entity = bug = crash, then <code>DomainExceptionFilter</code> turns it into 500).</li>
+      <li><strong><code>schema.safeParse(data)</code></strong> — returns <code>{ success, data | error }</code>. Use in <strong>NestJS pipes</strong> (turn errors into 400) and <strong>SQS handlers</strong> (skip malformed messages, let the rest of the batch succeed).</li>
+    </ul>
+
+    <h4>Where it all comes together — <code>ZodValidationPipe</code></h4>
+    <pre style="background:var(--bg-code); color:var(--bg-code-text); padding:12px; border-radius:8px; font-size:0.78rem;"><code>// presentation/pipes/zod-validation.pipe.ts
+export class ZodValidationPipe implements PipeTransform {
+  constructor(private schema: ZodSchema) {}
+  transform(value: unknown) {
+    const result = this.schema.safeParse(value);
+    if (!result.success) throw new BadRequestException(result.error.issues);
+    return result.data;
+  }
+}
+
+// controller
+@Post()
+createSubscription(
+  @Body(new ZodValidationPipe(createSubscriptionSchema))
+  body: CreateSubscriptionInput,
+) { return this.appService.create(body); }</code></pre>
+    <p>One pipe, every endpoint. The schema is the contract; the pipe enforces it; the type flows into the controller method signature. End of validation story.</p>
+  </div>
+  </div>
+</section>
+
+<section class="module" id="cheat-sheet">
+    <div class="module-inner">
+      <div class="module-header fade-in">
+        <div class="module-meta">
+          <div class="module-label">Reference</div>
+          <h2>Cheat sheet</h2>
+          <p class="module-desc">Every Zod construct used across the 9 entity modules, in one place.</p>
+        </div>
+      </div>
+      <div class="cheat-grid fade-in">
+<div class="cheat-card"><h4>Primitives</h4><pre><code>z.<span class="ty">string</span>()
+z.<span class="ty">number</span>()
+z.<span class="ty">boolean</span>()
+z.date()
+z.literal(<span class="str">'SUCCESS'</span>)
+z.unknown()                  <span class="com">// safer than z.any()</span></code></pre></div>
+<div class="cheat-card"><h4>String validators</h4><pre><code>z.<span class="ty">string</span>().email()
+z.<span class="ty">string</span>().uuid()
+z.<span class="ty">string</span>().url()
+z.<span class="ty">string</span>().datetime()        <span class="com">// ISO 8601</span>
+z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">200</span>)
+z.<span class="ty">string</span>().regex(/^[A-Z]/)</code></pre></div>
+<div class="cheat-card"><h4>Number validators</h4><pre><code>z.<span class="ty">number</span>().int()
+z.<span class="ty">number</span>().positive()        <span class="com">// &gt; 0</span>
+z.<span class="ty">number</span>().min(<span class="num">0</span>)            <span class="com">// &gt;= 0</span>
+z.<span class="ty">number</span>().min(<span class="num">1</span>).max(<span class="num">100</span>)
+z.coerce.<span class="ty">number</span>()            <span class="com">// "42" -&gt; 42 (query params!)</span></code></pre></div>
+<div class="cheat-card"><h4>Objects</h4><pre><code>z.object({ id: z.<span class="ty">string</span>() })
+schema.optional()            <span class="com">// T | undefined</span>
+schema.nullable()            <span class="com">// T | null</span>
+schema.<span class="kw">default</span>(<span class="str">'USER'</span>)
+schema.partial()             <span class="com">// all fields optional</span>
+schema.pick({ a: <span class="kw">true</span> })
+schema.omit({ b: <span class="kw">true</span> })
+schema.extend({ age: z.<span class="ty">number</span>() })</code></pre></div>
+<div class="cheat-card"><h4>Arrays &amp; tuples</h4><pre><code>z.array(itemSchema)
+z.array(itemSchema).min(<span class="num">1</span>)   <span class="com">// non-empty</span>
+z.array(itemSchema).max(<span class="num">50</span>)
+z.tuple([z.<span class="ty">string</span>(), z.<span class="ty">number</span>()])</code></pre></div>
+<div class="cheat-card"><h4>Enums (from domain)</h4><pre><code><span class="kw">import</span> { USER_STATUSES } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+
+z.<span class="kw">enum</span>(USER_STATUSES)        <span class="com">// 'PENDING' | 'ACTIVE' | ...</span>
+<span class="com">// NOT z.enum(['PENDING','ACTIVE',...])  &lt;- duplicates source of truth</span></code></pre></div>
+<div class="cheat-card"><h4>Discriminated unions</h4><pre><code>z.discriminatedUnion(<span class="str">'type'</span>, [
+  z.object({ <span class="kw">type</span>: z.literal(<span class="str">'SUCCESS'</span>), tokens: tokensSchema }),
+  z.object({ <span class="kw">type</span>: z.literal(<span class="str">'NEW_PASSWORD_REQUIRED'</span>), session: z.<span class="ty">string</span>() }),
+])</code></pre></div>
+<div class="cheat-card"><h4>Cross-field refinements</h4><pre><code>createOrderSchema.refine(
+  (o) =&gt; o.items.every((i) =&gt; i.quantity &gt; <span class="num">0</span>),
+  { message: <span class="str">'Quantities must be positive'</span>, path: [<span class="str">'items'</span>] },
+)</code></pre></div>
+<div class="cheat-card"><h4>Type inference</h4><pre><code><span class="kw">type</span> CreateUserInput = z.infer&lt;<span class="kw">typeof</span> createUserSchema&gt;;
+<span class="kw">type</span> UserResponse  = z.infer&lt;<span class="kw">typeof</span> userResponseSchema&gt;;
+<span class="com">// schema is the single source of truth — no hand-written interface</span></code></pre></div>
+<div class="cheat-card"><h4>Parsing</h4><pre><code>schema.parse(data)         <span class="com">// throws ZodError on failure</span>
+schema.safeParse(data)     <span class="com">// { success, data | error }</span>
+<span class="com">// parse: DTO mapping in app services</span>
+<span class="com">// safeParse: validation pipes, SQS handlers</span></code></pre></div>
+<div class="cheat-card"><h4>Composition (generic)</h4><pre><code><span class="kw">const</span> paginated = &lt;T <span class="kw">extends</span> z.ZodType&gt;(item: T) =&gt;
+  z.object({
+    items: z.array(item),
+    nextCursorPointer: z.<span class="ty">string</span>().optional(),
+  });
+
+<span class="kw">const</span> paginatedUsers = paginated(userResponseSchema);</code></pre></div>
+<div class="cheat-card"><h4>NestJS pipe</h4><pre><code>@Post()
+createUser(
+  @Body(<span class="kw">new</span> ZodValidationPipe(createUserSchema))
+  body: CreateUserInput,
+) { ... }</code></pre></div>
+      </div>
+    </div>
+  </section>
+<script>
+(function () {
+  const toggle = document.getElementById('themeToggle');
+  const setTheme = (dark) => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('entity-masterclass-theme', dark ? 'dark' : 'light');
+  };
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(!isDark);
+  });
+  const saved = localStorage.getItem('entity-masterclass-theme');
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+
+  const progressBar = document.getElementById('scrollProgress');
+  const topNav = document.getElementById('topNav');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const sections = document.querySelectorAll('.module');
+
+  const update = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = docHeight > 0 ? (scrollTop / docHeight * 100) + '%' : '0%';
+    topNav.classList.toggle('scrolled', scrollTop > 10);
+    let current = '';
+    sections.forEach(s => { if (scrollTop >= s.offsetTop - 120) current = s.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  };
+  window.addEventListener('scroll', update, { passive: true });
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinksEl = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinksEl.classList.toggle('open'));
+  navLinksEl.addEventListener('click', (e) => { if (e.target.tagName === 'A') navLinksEl.classList.remove('open'); });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+})();
+</script>
+</body>
+</html>

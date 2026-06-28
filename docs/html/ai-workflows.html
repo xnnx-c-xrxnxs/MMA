@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Orchestrators — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html" class="active">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main class="main">
+    <div class="content">
+
+      <h1>Workflow Orchestrators</h1>
+      <p class="subtitle">
+        AI-guided multi-step workflows that <strong>interview</strong> you first, <strong>plan</strong> the work,
+        <strong>execute</strong> each phase in order (loading the correct skills), and <strong>validate</strong> between steps.
+        Orchestrators ensure nothing is missed when working across multiple architecture layers.
+      </p>
+
+      <hr>
+
+      <h2>Overview</h2>
+
+      <p>
+        The template ships <strong>40 individual skills</strong> (single-layer instructions) and
+        <strong>5 workflow orchestrator prompts</strong> (multi-layer workflows). Skills tell Claude Code
+        <em>how</em> to build one thing correctly; orchestrators tell Claude Code <em>what order</em> to build
+        things in and <em>what to ask</em> before starting.
+      </p>
+
+      <p>
+        Orchestrator prompts live in <code>.claude/commands/</code> and are invoked as slash commands. You can
+        also describe what you want in plain English &mdash; Claude Code will read the decision tree in
+        <code>CLAUDE.md</code> §11.1 and propose the appropriate workflow.
+      </p>
+
+      <hr>
+
+      <h2>How It Works</h2>
+
+      <p>Every orchestrator follows a four-stage lifecycle:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Stage</th>
+            <th>What happens</th>
+            <th>Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Interview</strong></td>
+            <td>Claude Code asks structured questions about the domain, entity, persistence, endpoints, and frontend needs.</td>
+            <td>Prevents assumptions. Ensures all required information is gathered before any code is written.</td>
+          </tr>
+          <tr>
+            <td><strong>Plan</strong></td>
+            <td>Based on answers, the orchestrator determines which phases to execute and which skills to load.</td>
+            <td>Skips inapplicable layers (e.g. no Prisma steps for a DynamoDB domain). Optimises the workflow for each specific request.</td>
+          </tr>
+          <tr>
+            <td><strong>Execute</strong></td>
+            <td>Phases run sequentially. Each phase loads its skill(s), generates code, and runs a validation gate (<code>get_errors</code>).</td>
+            <td>Inner layers are built before outer layers consume them. Errors are caught and fixed before they cascade.</td>
+          </tr>
+          <tr>
+            <td><strong>Verify</strong></td>
+            <td>Final step: <code>nx test</code> + <code>nx build</code> for all affected projects.</td>
+            <td>Guarantees the code compiles, tests pass, and the workspace is in a clean state.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr>
+
+      <h2>Available Workflows</h2>
+
+      <div class="card-grid">
+
+        <div class="card">
+          <h3>New Domain</h3>
+          <p><code>.claude/commands/new-domain.md</code></p>
+          <p>
+            Scaffold a complete new domain from scratch &mdash; domain package, contracts, microservice, and infrastructure.
+            Orchestrates 8+ skills across 10 phases.
+          </p>
+          <p><strong>Trigger:</strong> &ldquo;I want to add a new payments domain&rdquo;</p>
+        </div>
+
+        <div class="card">
+          <h3>New Feature</h3>
+          <p><code>.claude/commands/new-feature.md</code></p>
+          <p>
+            Add a capability to an existing domain &mdash; endpoint, business rule, state transition, or query.
+            Skips unchanged layers automatically.
+          </p>
+          <p><strong>Trigger:</strong> &ldquo;Add a suspend feature to the user domain&rdquo;</p>
+        </div>
+
+        <div class="card">
+          <h3>New Service</h3>
+          <p><code>.claude/commands/new-service.md</code></p>
+          <p>
+            Register a new NestJS microservice (HTTP API or SQS event handler) in the Nx workspace.
+            Covers project scaffold, service layers, and infrastructure.
+          </p>
+          <p><strong>Trigger:</strong> &ldquo;Create a notifications API service&rdquo;</p>
+        </div>
+
+        <div class="card">
+          <h3>Full-Stack Feature</h3>
+          <p><code>.claude/commands/full-stack-feature.md</code></p>
+          <p>
+            Add a feature across backend, webapp, and mobile &mdash; the full vertical slice.
+            Orchestrates 10+ skills from contracts to mobile components.
+          </p>
+          <p><strong>Trigger:</strong> &ldquo;Add order discount support end-to-end&rdquo;</p>
+        </div>
+
+        <div class="card">
+          <h3>Event Service</h3>
+          <p><code>.claude/commands/new-event-service.md</code></p>
+          <p>
+            Add event publishing, consuming, or a choreography saga.
+            Detects the pattern (intra-domain, cross-domain, saga) from your description.
+          </p>
+          <p><strong>Trigger:</strong> &ldquo;When a product is discontinued, cancel pending orders&rdquo;</p>
+        </div>
+
+      </div>
+
+      <hr>
+
+      <h2>Skills vs Orchestrators</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Individual Skill</th>
+            <th>Workflow Orchestrator</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Scope</strong></td>
+            <td>Single layer (e.g. &ldquo;create a DynamoDB schema&rdquo;)</td>
+            <td>Multiple layers in sequence (e.g. &ldquo;create an entire domain&rdquo;)</td>
+          </tr>
+          <tr>
+            <td><strong>Interview</strong></td>
+            <td>Minimal &mdash; asks only what that layer needs</td>
+            <td>Comprehensive &mdash; gathers all information upfront</td>
+          </tr>
+          <tr>
+            <td><strong>Validation</strong></td>
+            <td>None between phases (single phase)</td>
+            <td>Validation gate after every phase</td>
+          </tr>
+          <tr>
+            <td><strong>When to use</strong></td>
+            <td>Targeted changes to one layer</td>
+            <td>Multi-layer changes where ordering and completeness matter</td>
+          </tr>
+          <tr>
+            <td><strong>File location</strong></td>
+            <td><code>.claude/skills/{name}/SKILL.md</code></td>
+            <td><code>.claude/commands/{name}.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        You do not need to choose between them &mdash; Claude Code activates the right one based on your request.
+        A simple &ldquo;add a Zod schema for orders&rdquo; uses the <code>add-contracts</code> skill directly.
+        A complex &ldquo;scaffold a notifications domain end-to-end&rdquo; activates the <code>new-domain</code> orchestrator.
+      </p>
+
+      <hr>
+
+      <h2>Example Walkthrough: Adding a New Domain</h2>
+
+      <p>Here is what happens when you say: <em>&ldquo;I want to add a new payments domain with Prisma persistence&rdquo;</em></p>
+
+      <h3>1. Interview</h3>
+      <p>Claude Code asks 10 structured questions about the entity, fields, statuses, business rules, access patterns, endpoints, cross-service communication, and frontend visibility.</p>
+
+      <h3>2. Phase 1 &mdash; Domain Package</h3>
+      <p>
+        Loads <code>new-domain-package</code>, <code>new-domain-entity</code>, and <code>domain-business-rules</code> skills.
+        Creates <code>packages/payment-domain/</code> with entity, constants, exceptions, use cases, repository interface.
+        Runs <code>get_errors</code> &mdash; fixes any TypeScript issues.
+      </p>
+
+      <h3>3. Phase 2 &mdash; Persistence</h3>
+      <p>
+        Loads <code>new-prisma-schema</code> and <code>prisma-repository</code> skills.
+        Creates the Prisma schema, generates the client, implements the repository.
+        Validates.
+      </p>
+
+      <h3>4. Phase 3 &mdash; Contracts</h3>
+      <p>
+        Loads <code>add-contracts</code> and <code>contracts-subpath-imports</code> skills.
+        Creates <code>packages/contracts/payment/</code> with Zod schemas.
+        Validates.
+      </p>
+
+      <h3>5. Phases 4&ndash;7 &mdash; Service + API + Infrastructure</h3>
+      <p>
+        Registers the Nx project, scaffolds NestJS layers, implements controller routes with Swagger,
+        adds env vars, VS Code tasks, and database config.
+        Validates after each phase.
+      </p>
+
+      <h3>6. Phase 8 &mdash; Tests</h3>
+      <p>Writes and runs domain entity + use case tests. All must pass.</p>
+
+      <h3>7. Final Verification</h3>
+      <p><code>nx test payment-domain</code> + <code>nx build payment-api-service</code> &mdash; zero errors.</p>
+
+      <hr>
+
+      <h2>Creating Custom Orchestrators</h2>
+
+      <p>
+        Teams cloning this template can add their own workflow orchestrators for project-specific patterns.
+        Create a <code>.md</code> file in <code>.claude/commands/</code> with this structure:
+      </p>
+
+      <pre><code>---
+description: "Trigger phrases for when this workflow should activate."
+---
+
+# Workflow Name &mdash; Guided Workflow
+
+## Phase 0 &mdash; Interview
+[Structured questions to collect before any code]
+
+## Phase 1 &mdash; [Layer Name]
+**Load skill:** `.claude/skills/{skill}/SKILL.md`
+[What to create/modify]
+**Validation gate:** Run `get_errors` on affected files.
+
+## Phase N &mdash; ...
+
+## Final Verification
+[nx test + nx build commands]</code></pre>
+
+      <p>
+        The <code>description</code> field in the YAML frontmatter controls when the orchestrator activates.
+        Include multiple trigger phrases separated by commas.
+        Each phase should load specific skills, produce valid code, and validate before proceeding.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

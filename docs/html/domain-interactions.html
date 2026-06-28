@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Interactions — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html" class="active">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Domain Interactions</h1>
+      <p class="subtitle">
+        How the three bounded contexts (User, Product, Order) communicate with each other — synchronous ACL calls,
+        cross-domain events, intra-domain events, and the choreography saga for order validation.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>System Overview</h2>
+
+      <p>
+        The big picture: three domains, six services, three SQS queues, and one synchronous HTTP call.
+      </p>
+
+      <div class="mermaid">
+flowchart TB
+    subgraph UserDomain["User Domain"]
+        UAP["user-api-service<br/>(HTTP :3000)"]
+        UEH["user-event-handler-service<br/>(SQS consumer)"]
+    end
+
+    subgraph ProductDomain["Product Domain"]
+        PAP["product-api-service<br/>(HTTP :3001)"]
+        PEH["product-event-handler-service<br/>(SQS consumer)"]
+    end
+
+    subgraph OrderDomain["Order Domain"]
+        OAP["order-api-service<br/>(HTTP :3002)"]
+        OEH["order-event-handler-service<br/>(SQS consumer)"]
+    end
+
+    subgraph Queues["SQS Queues"]
+        Q1["users-events"]
+        Q2["product-events"]
+        Q3["order-events"]
+    end
+
+    %% Sync ACL
+    OAP -->|"HTTP GET /users/:id<br/>(ACL: ICustomerValidator)"| UAP
+
+    %% Intra-domain events
+    UAP -->|"USER_DELETED"| Q1
+    Q1 --> UEH
+
+    %% Order → Product saga
+    OAP -->|"ORDER_CREATED"| Q2
+    Q2 --> PEH
+
+    %% Product lifecycle → Order
+    PAP -->|"PRODUCT_DEACTIVATED<br/>PRODUCT_DISCONTINUED<br/>PRODUCT_DELETED<br/>PRODUCT_PRICE_CHANGED"| Q3
+
+    %% Saga response → Order
+    PEH -->|"PRODUCT_VALIDATION_SUCCEEDED<br/>PRODUCT_VALIDATION_FAILED"| Q3
+    Q3 --> OEH
+
+    style UAP fill:#dbeafe,stroke:#2563eb
+    style PAP fill:#dcfce7,stroke:#16a34a
+    style OAP fill:#fef3c7,stroke:#d97706
+    style UEH fill:#dbeafe,stroke:#2563eb
+    style PEH fill:#dcfce7,stroke:#16a34a
+    style OEH fill:#fef3c7,stroke:#d97706
+    style Q1 fill:#f3e8ff,stroke:#7c3aed
+    style Q2 fill:#f3e8ff,stroke:#7c3aed
+    style Q3 fill:#f3e8ff,stroke:#7c3aed
+      </div>
+
+      <h3>Queue Topology</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Queue Name</th>
+            <th>Env Var</th>
+            <th>Publisher(s)</th>
+            <th>Consumer</th>
+            <th>Pattern</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>users-events</code></td>
+            <td><code>USERS_SQS_QUEUE_URL</code></td>
+            <td>user-api-service</td>
+            <td>user-event-handler-service</td>
+            <td><span class="tag async">Intra-domain</span></td>
+          </tr>
+          <tr>
+            <td><code>product-events</code></td>
+            <td><code>PRODUCT_EVENTS_SQS_QUEUE_URL</code></td>
+            <td>order-api-service</td>
+            <td>product-event-handler-service</td>
+            <td><span class="tag saga">Saga request</span></td>
+          </tr>
+          <tr>
+            <td><code>order-events</code></td>
+            <td><code>ORDER_EVENTS_SQS_QUEUE_URL</code></td>
+            <td>product-api-service, product-event-handler-service</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag async">Cross-domain</span> + <span class="tag saga">Saga response</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Consumer-owned inbox pattern.</strong>
+        Queues are named after the consuming domain: <code>order-events</code> is the inbox for the order domain.
+        Multiple publishers can send to the same inbox. The consumer decides how to handle each event type.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Four Communication Patterns</h2>
+
+      <p>The template demonstrates four distinct inter-service patterns. Each has specific rules about when to use it and how to implement it.</p>
+
+      <!-- ──────────────────────────────────────────── -->
+      <h3>Pattern 1 — Synchronous ACL Call <span class="tag sync">Sync</span></h3>
+
+      <p>
+        <strong>When:</strong> A use case needs a real-time yes/no answer from another service before proceeding (gate check).
+        The operation <em>cannot proceed</em> without the answer.
+      </p>
+
+      <p>
+        <strong>Example:</strong> Order API validates that the customer exists and is <code>ACTIVE</code> by calling User API
+        before creating or confirming an order.
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    UC["CreateOrderUseCase\n(Order Domain)"]:::blue
+    ACL["ICustomerValidator\n(ACL Port — abstract)"]:::purple
+    Adapter["UserApiClient\n(Infrastructure HTTP Adapter)"]:::yellow
+    UserAPI["User API Service\nGET /users/customerId"]:::green
+
+    UC -->|"validate(customerId)"| ACL
+    ACL -->|"delegates to adapter"| Adapter
+    Adapter -->|"HTTP GET"| UserAPI
+
+    UserAPI --> R1{"Response?"}
+    R1 -->|"200 + ACTIVE"| OK["ValidatedCustomer\n→ proceed with order"]:::green
+    R1 -->|"404"| E1["CustomerNotFoundError"]:::red
+    R1 -->|"200 + INACTIVE"| E2["CustomerInvalidStatusError"]:::red
+    R1 -->|"5xx / timeout"| E3["CustomerServiceUnavailableError"]:::red
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+      </div>
+
+      <h4>Architecture</h4>
+
+      <table>
+        <thead><tr><th>Component</th><th>Location</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Port</strong> (abstract class)</td>
+            <td><code>packages/order-domain/src/application/interfaces/customer-validator.interface.ts</code></td>
+            <td>Defines what the order domain needs: <code>validate(customerId): Promise&lt;ValidatedCustomer&gt;</code></td>
+          </tr>
+          <tr>
+            <td><strong>Adapter</strong> (HTTP client)</td>
+            <td><code>apps/orders/order-api-service/src/infrastructure/clients/user-api.client.ts</code></td>
+            <td>Implements the port using HTTP. Maps HTTP errors to domain exceptions. 5-second timeout.</td>
+          </tr>
+          <tr>
+            <td><strong>Wiring</strong></td>
+            <td>NestJS module: <code>HttpModule</code> import + <code>useClass</code> provider for <code>ICustomerValidator</code></td>
+            <td>Injects the adapter wherever the port is needed.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Key Rules</h4>
+      <ul>
+        <li>The consuming domain defines its <strong>own interface and response type</strong> — it never imports from the upstream domain package.</li>
+        <li>The use case receives <code>ICustomerValidator</code> via constructor injection alongside the repository.</li>
+        <li>HTTP error mapping (404 → domain not found, 409 → invalid state, 5xx → service unavailable) happens <strong>in the adapter</strong>, not the use case.</li>
+        <li>Always set a <strong>timeout</strong> on cross-service calls (5 seconds in this template).</li>
+        <li>Uses <code>API_USER_URL</code> from <code>.env.local</code>.</li>
+      </ul>
+
+      <!-- ──────────────────────────────────────────── -->
+      <h3>Pattern 2 — Cross-Domain Async Events <span class="tag async">Async</span></h3>
+
+      <p>
+        <strong>When:</strong> One domain needs to react to lifecycle events from another domain, with eventual consistency being acceptable.
+        The publishing domain <em>doesn't wait</em> for the consumer's response.
+      </p>
+
+      <p>
+        <strong>Example:</strong> Product API publishes <code>PRODUCT_PRICE_CHANGED</code> → Order Event Handler updates <code>latestKnownPrice</code> on draft order items containing that product.
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph PUB ["Publishing Side — product-api-service"]
+        P1["updatePrice(productId, newPrice)"]:::yellow
+        P2["Publish PRODUCT_PRICE_CHANGED\n{ productId, oldPrice, newPrice }"]:::yellow
+        P3["Return 200 to client"]:::green
+        P1 --> P2 --> P3
+    end
+
+    P2 -->|"SQS message"| Q["order-events queue"]:::purple
+
+    subgraph CON ["Consuming Side — order-event-handler-service"]
+        C1["Receive message"]:::blue
+        C2["Parse with productDomainEventSchema"]:::blue
+        C3["switch(event.type)\n→ PRODUCT_PRICE_CHANGED"]:::blue
+        C4["UpdateOrderItemPriceUseCase"]:::blue
+        C5["Find DRAFT orders with product"]:::blue
+        C6["Update latestKnownPrice\non matching items"]:::green
+        C7["Delete message from queue"]:::green
+        C1 --> C2 --> C3 --> C4 --> C5 --> C6 --> C7
+    end
+
+    Q -->|"eventually delivered"| C1
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+      </div>
+
+      <h4>All Cross-Domain Events (Product → Order)</h4>
+
+      <table>
+        <thead><tr><th>Event</th><th>Trigger</th><th>Order Domain Reaction</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>PRODUCT_DEACTIVATED</code></td>
+            <td>Product deactivated</td>
+            <td>Cancel draft orders containing this product</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DISCONTINUED</code></td>
+            <td>Product discontinued</td>
+            <td>Cancel draft orders containing this product</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DELETED</code></td>
+            <td>Product deleted</td>
+            <td>Cancel draft orders containing this product</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_PRICE_CHANGED</code></td>
+            <td>Product price updated</td>
+            <td>Update <code>latestKnownPrice</code> on draft order items (enables price drift detection)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Key Rules</h4>
+      <ul>
+        <li>The consumer imports event schemas from <code>@old-st/contracts/product</code> only — <strong>never</strong> from <code>@old-st/product-domain</code>.</li>
+        <li>Handlers write to the consuming domain's own repository — never to the publishing domain's data.</li>
+        <li>Fire-and-forget: the publisher returns immediately after queuing the message.</li>
+      </ul>
+
+      <!-- ──────────────────────────────────────────── -->
+      <h3>Pattern 3 — Intra-Domain Events <span class="tag async">Async</span></h3>
+
+      <p>
+        <strong>When:</strong> A service within the same bounded context reacts to its own domain events.
+        Both publisher and consumer share the same domain package.
+      </p>
+
+      <p>
+        <strong>Example:</strong> User API publishes <code>USER_DELETED</code> → User Event Handler archives the user data (e.g., to S3 for compliance).
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph PUB ["Publishing — user-api-service"]
+        U1["deleteUser(userId)"]:::yellow
+        U2["Publish USER_DELETED\n{ user snapshot + deletedAt }"]:::yellow
+        U1 --> U2
+    end
+
+    U2 -->|"SQS message"| Q["users-events queue"]:::purple
+
+    subgraph CON ["Consuming — user-event-handler-service"]
+        E1["Receive message"]:::blue
+        E2["Parse with userDomainEventSchema"]:::blue
+        E3["switch(event.type)\n→ USER_DELETED"]:::blue
+        E4["UserDeletedHandler\nArchive user data to S3"]:::green
+        E5["Delete message from queue"]:::green
+        E1 --> E2 --> E3 --> E4 --> E5
+    end
+
+    Q -->|"eventually delivered"| E1
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+      </div>
+
+      <h4>Key Difference from Cross-Domain</h4>
+      <ul>
+        <li>Both publisher and consumer import from <code>@old-st/contracts/user</code> <strong>and</strong> <code>@old-st/user-domain</code> — no ACL boundary needed since they're in the same bounded context.</li>
+      </ul>
+
+      <!-- ──────────────────────────────────────────── -->
+      <h3>Pattern 4 — Choreography Saga <span class="tag saga">Saga</span></h3>
+
+      <p>
+        <strong>When:</strong> An operation requires asynchronous coordination between two bounded contexts with a
+        request → response cycle and <em>eventual state resolution</em>. The operation cannot succeed without the
+        other domain's answer, but the answer arrives asynchronously.
+      </p>
+
+      <p>
+        <strong>Example:</strong> Order creation triggers product validation. The order starts in <code>DRAFT</code>
+        and waits for the product domain to confirm that all items are valid before moving to <code>PENDING</code>.
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph INIT ["Step 1 — Initiator: order-api-service"]
+        A1["Client: POST /orders\n{ customerId, items }"]:::purple
+        A2["Validate customer via ACL"]:::yellow
+        A3["Order.create()\nstatus → DRAFT"]:::yellow
+        A4["Save order to DB"]:::yellow
+        A5["Publish ORDER_CREATED\nto product-events queue"]:::yellow
+        A6["Return 201\n{ orderId, status: DRAFT }"]:::green
+        A1 --> A2 --> A3 --> A4 --> A5 --> A6
+    end
+
+    A5 -->|"SQS"| PQ["product-events queue"]:::purple
+
+    subgraph RESP ["Step 2 — Responder: product-event-handler-service"]
+        B1["Receive ORDER_CREATED"]:::blue
+        B2["Check each product:\nexists? active? price match?"]:::blue
+        B3{"All valid?"}
+        B4["Publish\nPRODUCT_VALIDATION_SUCCEEDED"]:::green
+        B5["Publish\nPRODUCT_VALIDATION_FAILED\n{ reason, failedProducts }"]:::red
+        B1 --> B2 --> B3
+        B3 -->|"Yes"| B4
+        B3 -->|"No"| B5
+    end
+
+    PQ -->|"async delivery"| B1
+    B4 -->|"SQS"| OQ["order-events queue"]:::purple
+    B5 -->|"SQS"| OQ
+
+    subgraph RESOLVE ["Step 3 — Resolver: order-event-handler-service"]
+        C1["Receive validation result"]:::blue
+        C2{"Event type?"}
+        C3["order.approveProductValidation()\nstatus → PENDING"]:::green
+        C4["order.failValidation()\nstatus → VALIDATION_FAILED"]:::red
+        C1 --> C2
+        C2 -->|"SUCCEEDED"| C3
+        C2 -->|"FAILED"| C4
+    end
+
+    OQ -->|"async delivery"| C1
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+      </div>
+
+      <h4>Saga Participants</h4>
+
+      <table>
+        <thead><tr><th>Role</th><th>Service</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Initiator</strong></td>
+            <td>order-api-service</td>
+            <td>Creates order in <code>DRAFT</code>, publishes <code>ORDER_CREATED</code> to product-events queue</td>
+          </tr>
+          <tr>
+            <td><strong>Responder</strong></td>
+            <td>product-event-handler-service</td>
+            <td>Validates all products (exist, active, price match), publishes result to order-events queue</td>
+          </tr>
+          <tr>
+            <td><strong>Resolver</strong></td>
+            <td>order-event-handler-service</td>
+            <td>Receives validation result, transitions order: DRAFT → PENDING or DRAFT → VALIDATION_FAILED</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Saga Rules</h4>
+      <ul>
+        <li><strong>Provisional state:</strong> The initiating domain starts in <code>DRAFT</code> — not the final state. The client sees <code>DRAFT</code> immediately.</li>
+        <li><strong>Result event, not command:</strong> The responding domain publishes a result (<code>SUCCEEDED</code>/<code>FAILED</code>), not a command. The consuming domain decides how to interpret it.</li>
+        <li><strong>Idempotent handlers:</strong> The resolver checks the order status before transitioning. If the order has already moved out of <code>DRAFT</code> (e.g., duplicate message delivery), the handler catches the typed domain exception (<code>CannotApproveProductValidationError</code> / <code>CannotFailValidationError</code>) and skips — it does not rethrow.</li>
+        <li><strong>Each participant writes to its own repository only.</strong> The product handler reads products from the product repo. The order handler writes to the order repo. No cross-writing.</li>
+        <li><strong>Event publishing happens in the use case</strong>, not the application service — keeps the use case self-contained.</li>
+      </ul>
+
+      <h4>What Happens to the Order Item Prices?</h4>
+
+      <p>
+        The saga validates that product prices at order creation match the current catalog prices.
+        After validation succeeds, the order moves to <code>PENDING</code>. But prices can still change before
+        the customer confirms — that's where the <strong>price drift guard</strong> comes in:
+      </p>
+
+      <ol>
+        <li>Cross-domain <code>PRODUCT_PRICE_CHANGED</code> events update <code>latestKnownPrice</code> on draft order items.</li>
+        <li>When the customer calls <code>confirmOrder()</code>, the entity checks if <code>latestKnownPrice !== unitPrice</code> for any item.</li>
+        <li>If drift is detected, <code>PriceDriftDetectedError</code> is thrown — the customer must re-create the order.</li>
+      </ol>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Decision Matrix</h2>
+
+      <p>Use this table to pick the right pattern for a new integration:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th><span class="tag sync">Sync ACL</span></th>
+            <th><span class="tag async">Cross-Domain Async</span></th>
+            <th><span class="tag async">Intra-Domain Async</span></th>
+            <th><span class="tag saga">Choreography Saga</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Can the operation proceed without the answer?</td>
+            <td>No</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>No (deferred)</td>
+          </tr>
+          <tr>
+            <td>Different bounded contexts?</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>No</td>
+            <td>Yes (both directions)</td>
+          </tr>
+          <tr>
+            <td>Import from publisher's domain package?</td>
+            <td>Never</td>
+            <td>Never</td>
+            <td>Yes (same domain)</td>
+            <td>Never</td>
+          </tr>
+          <tr>
+            <td>ACL adapter needed?</td>
+            <td>Yes (HTTP client)</td>
+            <td>No</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Queue ownership</td>
+            <td>N/A</td>
+            <td>Consumer inbox</td>
+            <td>Publisher's own</td>
+            <td>Consumer inbox</td>
+          </tr>
+          <tr>
+            <td>State resolution</td>
+            <td>Immediate</td>
+            <td>Fire-and-forget</td>
+            <td>Fire-and-forget</td>
+            <td>Eventual (request→response)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Complete Event Flow Summary</h2>
+
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Publisher</th><th>Queue</th><th>Consumer</th><th>Pattern</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>USER_DELETED</code></td>
+            <td>user-api-service</td>
+            <td>users-events</td>
+            <td>user-event-handler-service</td>
+            <td><span class="tag async">Intra-domain</span></td>
+          </tr>
+          <tr>
+            <td><code>ORDER_CREATED</code></td>
+            <td>order-api-service</td>
+            <td>product-events</td>
+            <td>product-event-handler-service</td>
+            <td><span class="tag saga">Saga request</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_VALIDATION_SUCCEEDED</code></td>
+            <td>product-event-handler-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag saga">Saga response</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_VALIDATION_FAILED</code></td>
+            <td>product-event-handler-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag saga">Saga response</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DEACTIVATED</code></td>
+            <td>product-api-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag async">Cross-domain</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DISCONTINUED</code></td>
+            <td>product-api-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag async">Cross-domain</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DELETED</code></td>
+            <td>product-api-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag async">Cross-domain</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_PRICE_CHANGED</code></td>
+            <td>product-api-service</td>
+            <td>order-events</td>
+            <td>order-event-handler-service</td>
+            <td><span class="tag async">Cross-domain</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="persistence.html">Persistence Patterns</a> — DynamoDB vs Prisma implementation details and repository patterns.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

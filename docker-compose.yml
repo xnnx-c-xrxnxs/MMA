@@ -1,0 +1,66 @@
+version: '3.8'
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Local development infrastructure
+#
+# LocalStack replaces real AWS services during local development.
+# All services in this monorepo target the same LocalStack Gateway on port 4566.
+#
+# Usage:
+#   Start:  docker compose up -d
+#   Stop:   docker compose down
+#   Logs:   docker compose logs -f localstack
+#   Status: docker compose ps
+#
+# After starting, create tables and queues by running:
+#   pnpm run localstack:setup
+#   or: npx ts-node --project scripts/tsconfig.json scripts/setup-localstack.ts
+#
+# Requires .env.local at the workspace root (see §7.1 in docs/engineering-handbook.md).
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack_old_st
+    ports:
+      - "4566:4566"            # LocalStack Gateway — all AWS services (DynamoDB, S3, SQS, etc.)
+    environment:
+      - DEBUG=1
+      - SERVICES=dynamodb,sqs,s3  # Activate only the services we use — keeps startup fast
+      - DATA_DIR=/var/lib/localstack
+      - DYNAMODB_SHARE_DB=1    # Share a single DynamoDB store across all regions
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ── PostgreSQL (uncomment when adding a Prisma-backed domain) ──────────────
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: postgres_old_st
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=dev
+  #     - POSTGRES_PASSWORD=dev
+  #     - POSTGRES_DB=app_dev
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U dev"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 10s
+
+volumes:
+  localstack_data:
+    # Named volume — DynamoDB data persists across `docker compose down / up` restarts.
+    # Use `docker compose down -v` to wipe all local data and start fresh.
+  # postgres_data:
+    # Uncomment alongside the postgres service above when adding a Prisma-backed domain.

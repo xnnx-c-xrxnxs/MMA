@@ -1,0 +1,90 @@
+# Spectral API Design Ruleset — Old St Labs Template
+#
+# Validates REST API conventions defined in docs/engineering-handbook.md §5.
+# Run: npx spectral lint <swagger.json> --ruleset .spectral.yml
+# CI: Standalone step in ci-fast-check.yml — extracts Swagger JSON from built services.
+#
+# Per-project customization: extend or override rules in a project-level .spectral.yml
+#   extends: ["../../.spectral.yml"]
+
+extends: ["spectral:oas"]
+
+rules:
+  # C2 — Kebab-case, lowercase only in paths
+  paths-kebab-case:
+    description: "Path segments must be lowercase kebab-case."
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z][a-z0-9]*(-[a-z0-9]+)*|/\\{[a-zA-Z][a-zA-Z0-9]*\\})+$"
+
+  # C1 — Plural nouns for collection endpoints
+  paths-no-singular-resources:
+    description: "Resource names in paths should be plural nouns (e.g. /users not /user)."
+    severity: warn
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        # Flag common singular patterns — this is advisory, not perfect
+        notMatch: "/(^|/)(?:user|order|product|item|event|file|role|status)(/|$|\\{)/"
+
+  # C3 — No verbs in resource names
+  paths-no-verbs:
+    description: "Do not use verbs in resource path segments. Use nouns + HTTP methods instead."
+    severity: warn
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/(get|create|update|delete|fetch|list|find|search|remove|add|set|make|do|run|execute|process|handle|manage)([-/A-Z]|$)/i"
+
+  # C4 — POST must return 201 for resource creation
+  response-post-201:
+    description: "POST endpoints creating resources should return 201, not 200."
+    severity: info
+    given: "$.paths[*].post.responses"
+    then:
+      - field: "201"
+        function: truthy
+
+  # C7 — Error response shape validation
+  error-response-shape:
+    description: "Error responses (4xx, 5xx) must include statusCode, error, and message fields."
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property >= '400' && @property < '600')].content.application/json.schema.properties"
+    then:
+      - field: "statusCode"
+        function: truthy
+      - field: "error"
+        function: truthy
+      - field: "message"
+        function: truthy
+
+  # C7 — No timestamp in error responses
+  error-no-timestamp:
+    description: "Error responses must not include a 'timestamp' field."
+    severity: error
+    given: "$.paths[*][*].responses[?(@property >= '400' && @property < '600')].content.application/json.schema.properties"
+    then:
+      field: "timestamp"
+      function: falsy
+
+  # Swagger docs completeness
+  operation-description:
+    description: "Every operation should have a description or summary."
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete]"
+    then:
+      - field: "summary"
+        function: truthy
+
+  operation-operationId:
+    description: "Every operation must have a unique operationId."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete]"
+    then:
+      - field: "operationId"
+        function: truthy

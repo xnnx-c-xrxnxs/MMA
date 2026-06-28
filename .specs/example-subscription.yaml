@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Worked example — a fictional Subscription domain on DynamoDB OneTable.
+# Demonstrates: ULID PK, GSI access patterns, unique-via-GSI, status enum
+# with transitions, intra-domain events, cursor-paginated list use cases.
+#
+# Compare with example-invoice.yaml (Prisma) to see how the same shape adapts
+# across persistence strategies.
+
+domain: subscription
+persistence: dynamodb   # OneTable + cursor pagination, single-table design
+
+entity:
+  name: Subscription
+  description: "Recurring billing subscription a customer attaches to a plan."
+
+  fields:
+    # ─── Primary key ───────────────────────────────────────────────────────
+    - { name: id,             type: ulid,  pk: true }
+
+    # ─── Foreign keys → backed by GSIs for list-by-X access patterns ──────
+    - { name: customerId,     type: ulid,  gsi: GSI1, description: "list subscriptions per customer" }
+    - { name: planId,         type: ulid,  gsi: GSI2, description: "list subscriptions per plan (analytics)" }
+
+    # ─── Unique field — DynamoDB enforces uniqueness via its own GSI ──────
+    - { name: externalRef,    type: string, unique: true, gsi: GSI3, min: 1, max: 64,
+        description: "Stripe/PayPal external subscription ID — must be globally unique" }
+
+    # ─── Lifecycle status — drives state transitions + events ─────────────
+    - name: status
+      type: enum
+      values: [TRIALING, ACTIVE, PAST_DUE, CANCELLED, EXPIRED]
+      default: TRIALING
+      # OPTIONAL: per-value display labels for the FE `formatSubscriptionStatus()` helper.
+      # Title Case fallback ("Past Due") would already be correct here, but listing them
+      # makes intent explicit and forces a TS error if a new enum value is added without a label.
+      labels:
+        TRIALING: "Trialing"
+        ACTIVE: "Active"
+        PAST_DUE: "Past Due"
+        CANCELLED: "Cancelled"
+        EXPIRED: "Expired"
+
+    # ─── Billing fields ───────────────────────────────────────────────────
+    - { name: priceCents,     type: integer, min: 0 }
+    - { name: currency,       type: string,  min: 3, max: 3, description: "ISO 4217" }
+    - { name: billingInterval, type: enum, values: [MONTHLY, QUARTERLY, YEARLY], default: MONTHLY }
+
+    # ─── Lifecycle timestamps ─────────────────────────────────────────────
+    - { name: trialEndsAt,    type: datetime, optional: true }
+    - { name: currentPeriodStart, type: datetime }
+    - { name: currentPeriodEnd,   type: datetime }
+    - { name: cancelledAt,    type: datetime, optional: true }
+    - { name: cancelReason,   type: string,   optional: true, max: 500 }
+
+    # ─── Optional metadata ────────────────────────────────────────────────
+    - { name: metadata,       type: json,     optional: true }
+
+    # ─── Audit fields (always include — managed automatically) ────────────
+    - { name: dateCreated,    type: datetime }
+    - { name: updatedAt,      type: datetime }
+
+businessRules:
+  - "Status transitions: TRIALING → ACTIVE, ACTIVE → PAST_DUE, PAST_DUE → ACTIVE, ACTIVE|PAST_DUE → CANCELLED, ACTIVE|TRIALING → EXPIRED"
+  - "CANCELLED and EXPIRED are terminal — no transitions out"
+  - "trialEndsAt is required when status=TRIALING and forbidden otherwise"
+  - "cancelledAt and cancelReason are required when transitioning to CANCELLED"
+  - "currentPeriodEnd must be after currentPeriodStart"
+  - "currency is immutable after creation"
+  - "priceCents > 0 for any non-CANCELLED subscription"
+
+# Intra-domain events — published to subscription-events SQS queue.
+# Cross-domain consumers (billing, notifications) subscribe via @old-st/contracts/subscription.
+events:
+  - SUBSCRIPTION_CREATED
+  - SUBSCRIPTION_ACTIVATED
+  - SUBSCRIPTION_PAST_DUE
+  - SUBSCRIPTION_CANCELLED
+  - SUBSCRIPTION_EXPIRED
+
+# DynamoDB GSIs — referenced by the `gsi:` attribute on individual fields above.
+# OneTable schema generation reads these to define indexes + access patterns.
+indexes:
+  - { name: GSI1, fields: [customerId],          description: "list subscriptions for a customer (cursor-paginated)" }
+  - { name: GSI2, fields: [planId, status],      description: "list subscriptions per plan filtered by status" }
+  - { name: GSI3, fields: [externalRef],         description: "uniqueness enforcement + lookup by external provider ID" }
+
+# Explicit use cases — omit this section to let the orchestrator infer defaults
+# (create, get, list, update, delete + one transition per status pair).
+useCases:
+  - { name: createSubscription,            type: create }
+  - { name: getSubscription,               type: read }
+  - { name: getSubscriptionByExternalRef,  type: read,       description: "lookup via GSI3" }
+  - { name: listSubscriptionsByCustomer,   type: list,       description: "cursor-paginated via GSI1" }
+  - { name: listSubscriptionsByPlanAndStatus, type: list,    description: "cursor-paginated via GSI2" }
+  - { name: activateSubscription,          type: transition, description: "TRIALING → ACTIVE" }
+  - { name: markSubscriptionPastDue,       type: transition, description: "ACTIVE → PAST_DUE" }
+  - { name: recoverSubscription,           type: transition, description: "PAST_DUE → ACTIVE" }
+  - { name: cancelSubscription,            type: transition, description: "ACTIVE|PAST_DUE → CANCELLED" }
+  - { name: expireSubscription,            type: transition, description: "ACTIVE|TRIALING → EXPIRED (cron-driven)" }

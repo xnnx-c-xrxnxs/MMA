@@ -1,0 +1,141 @@
+name: CI - Test All
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - "infra/bootstrap/**"
+      - "**.md"
+      - ".github/CODEOWNERS"
+      - 'examples/**'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # Job 1: Fast unit tests (no database needed)
+  unit-tests:
+    name: Unit Tests (All Domains & Services)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Run unit tests (all projects)
+        # Confirms all tests pass on the merged state of main/develop.
+        # Coverage threshold enforcement happens in ci-test-affected.yml on PRs —
+        # running it here again would fail on projects not changed by this push.
+        run: pnpm nx run-many --target=test --all --exclude='*integration*' --exclude='*e2e*' --coverage
+
+  # Job 2: Integration tests (with DynamoDB Local + Postgres)
+  integration-tests:
+    name: Integration Tests (All Domains)
+    runs-on: ubuntu-latest
+    
+    # LocalStack as a service container (provides DynamoDB and other AWS services)
+    services:
+      localstack:
+        image: localstack/localstack:3.8
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb,sqs
+          DYNAMODB_SHARE_DB: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 15s
+
+      # When adding a Prisma-backed domain, add a postgres service container here
+      # and set the corresponding {DOMAIN}_DATABASE_URL env var on the test step below.
+      # See examples/.github/workflows/ for the full reference implementation.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        # When adding a Prisma-backed domain, add its {DOMAIN}_DATABASE_URL here
+        # and re-enable the postgres service container above.
+
+  # Job 3: Lint and type check
+  # E2E tests are handled exclusively by ci-e2e.yml which manages webapp startup correctly
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Derive SHAs for nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Lint
+        run: pnpm nx affected --target=lint --parallel=3
+
+      - name: Type check
+        run: pnpm nx run-many --target=build --all --exclude=mobile --parallel=3

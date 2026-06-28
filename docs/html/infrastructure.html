@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Infrastructure — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html" class="active">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Local Infrastructure</h1>
+      <p class="subtitle">
+        Docker Compose stack, environment variables, setup scripts, and the VS Code task chain
+        that orchestrates everything for local development.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Docker Compose Stack</h2>
+
+      <p>
+        A <code>docker-compose.yml</code> at the workspace root provides all local infrastructure:
+      </p>
+
+      <div class="mermaid">
+flowchart LR
+    subgraph Docker["Docker Compose"]
+        LS["LocalStack<br/>:4566<br/>(DynamoDB + SQS)"]
+        PG["PostgreSQL 16<br/>:5432<br/>(orders_db)"]
+    end
+
+    UAP["user-api-service :3000"] --> LS
+    PAP["product-api-service :3001"] --> LS
+    OAP["order-api-service :3002"] --> PG
+    OAP --> LS
+    UEH["user-event-handler"] --> LS
+    PEH["product-event-handler"] --> LS
+    OEH["order-event-handler"] --> PG
+    OEH --> LS
+
+    style LS fill:#f3e8ff,stroke:#7c3aed
+    style PG fill:#dbeafe,stroke:#2563eb
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Image</th><th>Port</th><th>Purpose</th><th>Persistence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>LocalStack</strong></td>
+            <td><code>localstack/localstack</code></td>
+            <td><code>4566</code></td>
+            <td>DynamoDB + SQS (Gateway mode)</td>
+            <td><code>localstack_data</code> volume</td>
+          </tr>
+          <tr>
+            <td><strong>PostgreSQL</strong></td>
+            <td><code>postgres:16-alpine</code></td>
+            <td><code>5432</code></td>
+            <td>Order domain (Prisma)</td>
+            <td><code>postgres_data</code> volume</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Common Commands</h3>
+
+      <pre><code># Start all infrastructure (run once per dev session)
+docker compose up -d
+
+# Check health
+docker compose ps
+
+# View LocalStack logs
+docker compose logs -f localstack
+
+# Stop (data persists in named volumes)
+docker compose down
+
+# Stop AND wipe all data (fresh start)
+docker compose down -v</code></pre>
+
+      <div class="callout info">
+        <strong>Credentials.</strong> LocalStack accepts any non-empty credentials.
+        <code>.env.local</code> provides <code>AWS_ACCESS_KEY_ID=test</code> and
+        <code>AWS_SECRET_ACCESS_KEY=test</code> so the AWS SDK resolves credentials
+        without a real AWS profile.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Setup Scripts</h2>
+
+      <h3><code>scripts/setup-localstack.ts</code></h3>
+
+      <p>Creates DynamoDB tables and SQS queues in LocalStack. Reads <code>.env.local</code> automatically.</p>
+
+      <table>
+        <thead>
+          <tr><th>Resource Type</th><th>Name</th><th>Env Var</th><th>Domain</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="2"><strong>DynamoDB Tables</strong></td>
+            <td><code>USERS</code></td>
+            <td><code>USERS_DYNAMODB_TABLE_NAME</code></td>
+            <td><span class="tag dynamo">User</span></td>
+          </tr>
+          <tr>
+            <td><code>PRODUCTS</code></td>
+            <td><code>PRODUCTS_DYNAMODB_TABLE_NAME</code></td>
+            <td><span class="tag dynamo">Product</span></td>
+          </tr>
+          <tr><td rowspan="3"><strong>SQS Queues</strong></td>
+            <td><code>users-events</code></td>
+            <td><code>USERS_SQS_QUEUE_NAME</code></td>
+            <td><span class="tag dynamo">User</span></td>
+          </tr>
+          <tr>
+            <td><code>order-events</code></td>
+            <td><code>ORDER_EVENTS_SQS_QUEUE_NAME</code></td>
+            <td><span class="tag prisma">Order</span></td>
+          </tr>
+          <tr>
+            <td><code>product-events</code></td>
+            <td><code>PRODUCT_EVENTS_SQS_QUEUE_NAME</code></td>
+            <td><span class="tag dynamo">Product</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Create tables + queues (idempotent — skips if they exist)
+pnpm run localstack:setup
+
+# Force recreate (delete + create)
+pnpm run localstack:setup:force
+
+# Check existing resources
+pnpm run localstack:setup -- --status</code></pre>
+
+      <h3><code>scripts/prisma-migrate-all.ts</code></h3>
+
+      <p>Runs Prisma migrations for all registered domains. Currently:</p>
+
+      <table>
+        <thead><tr><th>Domain</th><th>Schema Path</th><th>Env Var</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>order-domain</td>
+            <td><code>packages/order-domain/src/infrastructure/prisma/schema.prisma</code></td>
+            <td><code>ORDERS_DATABASE_URL</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Run all pending migrations
+pnpm run prisma:migrate:all</code></pre>
+
+      <div class="callout info">
+        <strong>Adding a new Prisma domain.</strong> Register it in the <code>PRISMA_DOMAINS</code> array
+        in <code>scripts/prisma-migrate-all.ts</code>. No new VS Code task needed — <code>DB: Migrate All</code>
+        handles all domains automatically.
+      </div>
+
+      <h3><code>scripts/ensure-node.js</code></h3>
+
+      <p>
+        Cross-platform Node version resolver. Reads <code>.nvmrc</code> (pins Node 24), finds the correct
+        Node binary in nvm directories, and spawns the given command with the right version. All VS Code tasks
+        use this wrapper to guarantee the correct Node version.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Environment Variables</h2>
+
+      <p>
+        A <code>.env.local</code> file at the workspace root is required for all local development.
+        It is gitignored and must never be committed. Copy <code>.env.local.example</code> to get started.
+      </p>
+
+      <h3>Complete Reference</h3>
+
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Local Value</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>STAGE</code></td>
+            <td><code>local</code></td>
+            <td>Single source of truth for local mode. Controls <code>main.ts</code> bootstrap path, DynamoDB client selection, and SQS client selection.</td>
+          </tr>
+          <tr>
+            <td><code>NODE_ENV</code></td>
+            <td><code>production</code></td>
+            <td>Matches webpack/NestJS production build. Does <strong>not</strong> control local-vs-AWS routing.</td>
+          </tr>
+          <tr>
+            <td><code>DEFAULT_REGION</code></td>
+            <td><code>eu-west-2</code></td>
+            <td>AWS region for all SDK clients. Used in SQS queue URL construction.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">AWS / LocalStack</td></tr>
+          <tr>
+            <td><code>LOCALSTACK_ENDPOINT</code></td>
+            <td><code>http://localhost:4566</code></td>
+            <td>LocalStack Gateway. Consumed by SQS client factory and setup scripts.</td>
+          </tr>
+          <tr>
+            <td><code>DYNAMODB_ENDPOINT</code></td>
+            <td><code>http://localhost:4566</code></td>
+            <td>DynamoDB endpoint override in <code>DynamoDBConfig.getClient()</code>.</td>
+          </tr>
+          <tr>
+            <td><code>AWS_ACCESS_KEY_ID</code></td>
+            <td><code>test</code></td>
+            <td>Fake credential for LocalStack. Remove for AWS deployment.</td>
+          </tr>
+          <tr>
+            <td><code>AWS_SECRET_ACCESS_KEY</code></td>
+            <td><code>test</code></td>
+            <td>Fake credential for LocalStack. Remove for AWS deployment.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">DynamoDB Tables</td></tr>
+          <tr>
+            <td><code>USERS_DYNAMODB_TABLE_NAME</code></td>
+            <td><code>USERS</code></td>
+            <td>User domain table name.</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCTS_DYNAMODB_TABLE_NAME</code></td>
+            <td><code>PRODUCTS</code></td>
+            <td>Product domain table name.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">PostgreSQL</td></tr>
+          <tr>
+            <td><code>ORDERS_DATABASE_URL</code></td>
+            <td><code>postgresql://dev:dev@localhost:5432/orders_db</code></td>
+            <td>Order domain Prisma connection string.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">Service Ports</td></tr>
+          <tr>
+            <td><code>USER_SERVICE_PORT</code></td>
+            <td><code>3000</code></td>
+            <td>user-api-service HTTP port.</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_SERVICE_PORT</code></td>
+            <td><code>3001</code></td>
+            <td>product-api-service HTTP port.</td>
+          </tr>
+          <tr>
+            <td><code>ORDER_SERVICE_PORT</code></td>
+            <td><code>3002</code></td>
+            <td>order-api-service HTTP port.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">API URLs</td></tr>
+          <tr>
+            <td><code>API_USER_URL</code></td>
+            <td><code>http://localhost:3000/api</code></td>
+            <td>Used by frontend and cross-service ACL calls.</td>
+          </tr>
+          <tr>
+            <td><code>API_PRODUCT_URL</code></td>
+            <td><code>http://localhost:3001/api</code></td>
+            <td>Used by frontend.</td>
+          </tr>
+          <tr>
+            <td><code>API_ORDER_URL</code></td>
+            <td><code>http://localhost:3002/api</code></td>
+            <td>Used by frontend.</td>
+          </tr>
+          <tr>
+            <td><code>FE_BASE_URL</code></td>
+            <td><code>http://localhost:4200</code></td>
+            <td>Frontend URL for CORS, OAuth redirects.</td>
+          </tr>
+          <tr><td colspan="3" style="background:var(--bg-secondary);font-weight:600;">SQS Queues</td></tr>
+          <tr>
+            <td><code>USERS_SQS_QUEUE_NAME</code></td>
+            <td><code>users-events</code></td>
+            <td>Physical queue name (used by setup script).</td>
+          </tr>
+          <tr>
+            <td><code>USERS_SQS_QUEUE_URL</code></td>
+            <td><code>http://sqs.eu-west-2.localhost.localstack.cloud:4566/000000000000/users-events</code></td>
+            <td>Full SQS URL (consumed by SqsLocalService).</td>
+          </tr>
+          <tr>
+            <td><code>ORDER_EVENTS_SQS_QUEUE_NAME</code></td>
+            <td><code>order-events</code></td>
+            <td>Physical queue name.</td>
+          </tr>
+          <tr>
+            <td><code>ORDER_EVENTS_SQS_QUEUE_URL</code></td>
+            <td><code>http://sqs.eu-west-2.localhost.localstack.cloud:4566/000000000000/order-events</code></td>
+            <td>Full SQS URL.</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_EVENTS_SQS_QUEUE_NAME</code></td>
+            <td><code>product-events</code></td>
+            <td>Physical queue name.</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_EVENTS_SQS_QUEUE_URL</code></td>
+            <td><code>http://sqs.eu-west-2.localhost.localstack.cloud:4566/000000000000/product-events</code></td>
+            <td>Full SQS URL.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <strong><code>STAGE=local</code> is the only env var for local-vs-AWS branching.</strong>
+        Never use <code>NODE_ENV === 'development'</code> for this — <code>NODE_ENV=production</code>
+        is correct locally (matches the webpack build).
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>VS Code Task Chain</h2>
+
+      <p>
+        The <code>.vscode/tasks.json</code> provides compound tasks at three levels. One keystroke starts everything.
+      </p>
+
+      <h3><code>Dev: Start All</code> (Full Stack)</h3>
+
+      <div class="mermaid">
+flowchart TB
+    DevAll["Dev: Start All"]
+
+    subgraph InfraPhase["Infra: Start All (sequential)"]
+        NV["Node: Validate Version<br/>(check .nvmrc)"]
+        subgraph LSPhase["LocalStack: Start + Setup (sequential)"]
+            DC["Docker: Start LocalStack<br/>(docker compose up -d)"]
+            CT["LocalStack: Create Tables<br/>(pnpm run localstack:setup)"]
+        end
+        DM["DB: Migrate All<br/>(pnpm run prisma:migrate:all)"]
+    end
+
+    subgraph ServicesPhase["Services: Start All (parallel)"]
+        S1["user-api-service<br/>:3000"]
+        S2["user-event-handler"]
+        S3["product-api-service<br/>:3001"]
+        S4["product-event-handler"]
+        S5["order-api-service<br/>:3002"]
+        S6["order-event-handler"]
+    end
+
+    DevAll --> InfraPhase
+    InfraPhase --> ServicesPhase
+    NV --> LSPhase
+    LSPhase --> DM
+    DC --> CT
+
+    style DevAll fill:#fef3c7,stroke:#d97706
+    style InfraPhase fill:#dbeafe,stroke:#2563eb
+    style ServicesPhase fill:#dcfce7,stroke:#16a34a
+      </div>
+
+      <h3>Per-Domain Tasks</h3>
+
+      <p>Each domain has a compound task that starts only its services:</p>
+
+      <table>
+        <thead>
+          <tr><th>Task</th><th>Starts</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Domain: Start User</code></td>
+            <td>user-api-service + user-event-handler-service</td>
+          </tr>
+          <tr>
+            <td><code>Domain: Start Product</code></td>
+            <td>product-api-service + product-event-handler-service</td>
+          </tr>
+          <tr>
+            <td><code>Domain: Start Order</code></td>
+            <td>order-api-service + order-event-handler-service</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Infrastructure-Only Task</h3>
+
+      <p><code>Infra: Start All</code> can be run standalone — useful when you're only working on backend code without running services.</p>
+
+      <h3>Adding a New Service Task</h3>
+
+      <ol>
+        <li>Add a <code>Service: Serve {name}</code> shell task with <code>npx nx serve {project}</code>.</li>
+        <li>Set <code>isBackground: true</code> with the appropriate problem matcher.</li>
+        <li>Append to <code>Services: Start All</code> → <code>dependsOn</code> array.</li>
+        <li>Append to the appropriate <code>Domain: Start {Domain}</code> → <code>dependsOn</code> array.</li>
+      </ol>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Port Registry</h2>
+
+      <p>Claim the next available port when adding a new HTTP API service:</p>
+
+      <table>
+        <thead>
+          <tr><th>Port</th><th>Service</th><th>Env Var</th><th>API URL Env Var</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>3000</code></td>
+            <td>user-api-service</td>
+            <td><code>USER_SERVICE_PORT</code></td>
+            <td><code>API_USER_URL</code></td>
+          </tr>
+          <tr>
+            <td><code>3001</code></td>
+            <td>product-api-service</td>
+            <td><code>PRODUCT_SERVICE_PORT</code></td>
+            <td><code>API_PRODUCT_URL</code></td>
+          </tr>
+          <tr>
+            <td><code>3002</code></td>
+            <td>order-api-service</td>
+            <td><code>ORDER_SERVICE_PORT</code></td>
+            <td><code>API_ORDER_URL</code></td>
+          </tr>
+          <tr>
+            <td><code>3003</code></td>
+            <td>auth-api-service</td>
+            <td><code>AUTH_SERVICE_PORT</code></td>
+            <td><code>API_AUTH_URL</code></td>
+          </tr>
+          <tr>
+            <td><code>3004</code></td>
+            <td>file-api-service</td>
+            <td><code>FILE_SERVICE_PORT</code></td>
+            <td><code>API_FILE_URL</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Event-driven services don't register ports.</strong> They have no HTTP server —
+        don't add <code>{DOMAIN}_SERVICE_PORT</code> or <code>API_{DOMAIN}_URL</code> entries
+        for SQS consumer services.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Node.js Version</h2>
+
+      <p>Required: <strong>Node.js 24</strong> (pinned in <code>.nvmrc</code>). Run <code>nvm use</code> after cloning.</p>
+
+      <p>
+        All VS Code tasks are wrapped with <code>scripts/ensure-node.js</code>, which reads <code>.nvmrc</code>
+        and spawns the command with the correct Node version from nvm — even if you haven't run <code>nvm use</code>
+        in your terminal.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Getting Started Checklist</h2>
+
+      <ol>
+        <li>Clone the repository.</li>
+        <li>Run <code>nvm use</code> (or ensure Node 24 is active).</li>
+        <li>Run <code>pnpm install</code>.</li>
+        <li>Copy <code>.env.local.example</code> → <code>.env.local</code>.</li>
+        <li>Start Docker: <code>docker compose up -d</code>.</li>
+        <li>Create LocalStack resources: <code>pnpm run localstack:setup</code>.</li>
+        <li>Run Prisma migrations: <code>pnpm run prisma:migrate:all</code>.</li>
+        <li>Start all services: run VS Code task <code>Dev: Start All</code> (or <code>Domain: Start {Domain}</code>).</li>
+      </ol>
+
+      <p>Or simply run the <code>Dev: Start All</code> VS Code task — it does steps 5–8 automatically.</p>
+
+      <hr>
+
+      <p>
+        <strong>Back to:</strong> <a href="index.html">Home</a> — navigation and documentation map.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

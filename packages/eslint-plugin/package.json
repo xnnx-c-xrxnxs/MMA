@@ -1,0 +1,10 @@
+{
+  "name": "@old-st/eslint-plugin",
+  "version": "1.0.0",
+  "description": "Shared ESLint plugin enforcing Old St Labs coding standards for Clean Architecture monorepos",
+  "main": "src/index.js",
+  "keywords": ["eslint", "eslintplugin", "clean-architecture", "coding-standards"],
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  }
+}

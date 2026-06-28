@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Masterclass project C — Helpdesk / Ticketing. Prisma + PostgreSQL.",
+    "Copy this to .github/issue-config.json before running /import-estimate-csv."
+  ],
+
+  "projectName": "helpdesk",
+
+  "ticketPrefix": "HLP",
+
+  "domains": [
+    { "name": "ticket",         "description": "ticket-api-service / tickets + comments + SLA (Prisma)", "persistence": "prisma" },
+    { "name": "agent",          "description": "agent-api-service / agents + availability + capacity (Prisma)", "persistence": "prisma" },
+    { "name": "customer",       "description": "customer-api-service / requesters + tier (Prisma)", "persistence": "prisma" },
+    { "name": "team",           "description": "team-api-service / agent teams + routing queues (stretch, Prisma)", "persistence": "prisma" },
+    { "name": "knowledge-base", "description": "kb-api-service / suggested articles (stretch, Prisma)", "persistence": "prisma" },
+    { "name": "auth",           "description": "auth-api-service / Cognito / JWT", "persistence": "none" }
+  ],
+
+  "crossCutting": [
+    { "name": "webapp",       "description": "apps/webapp (Next.js)", "color": "0366d6" },
+    { "name": "mobile",       "description": "apps/mobile (Expo)", "color": "0366d6" },
+    { "name": "infra",        "description": "Terraform / CD / AWS resources", "color": "5319e7" },
+    { "name": "cross-domain", "description": "Spans 2+ bounded contexts (sync ACL or async saga)", "color": "ff6b6b" },
+    { "name": "new-domain",   "description": "New bounded context to be scaffolded", "color": "b60205" }
+  ]
+}

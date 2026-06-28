@@ -1,0 +1,209 @@
+name: "CD: Destroy Environment"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      confirm_environment:
+        description: "Type the environment name to confirm (must match exactly)"
+        required: true
+        type: string
+      confirm_prod_destroy:
+        description: "For PROD only: set to true to confirm production destruction"
+        required: false
+        type: boolean
+        default: false
+      aws_account_id:
+        description: "AWS Account ID (auto-resolved from GitHub env vars if blank)"
+        required: false
+        type: string
+      aws_region:
+        description: "AWS Region"
+        required: false
+        type: string
+        default: "eu-west-2"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  AWS_REGION: ${{ github.event.inputs.aws_region }}
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_environment }}" != "${{ github.event.inputs.environment }}" ]; then
+            echo "::error::Confirmation mismatch: you typed '${{ github.event.inputs.confirm_environment }}' but selected '${{ github.event.inputs.environment }}'"
+            exit 1
+          fi
+
+      - name: Block unconfirmed prod destroy
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          if [ "${{ github.event.inputs.confirm_prod_destroy }}" != "true" ]; then
+            echo "::error::Production destruction requires 'confirm_prod_destroy' to be set to true"
+            exit 1
+          fi
+          echo "⚠️ PRODUCTION DESTROY CONFIRMED — proceeding with destruction of all prod resources"
+
+      - uses: actions/checkout@v4
+
+      - name: Resolve AWS Account ID
+        id: account
+        run: |
+          ACCOUNT_ID="${{ github.event.inputs.aws_account_id }}"
+          if [ -z "$ACCOUNT_ID" ]; then
+            ACCOUNT_ID="${{ vars.AWS_ACCOUNT_ID }}"
+          fi
+          if [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::AWS Account ID not provided and not found in GitHub environment variables"
+            exit 1
+          fi
+          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ steps.account.outputs.account_id }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TFSTATE_BUCKET || format('{0}-tfstate', env.PROJECT_NAME) }}" \
+            -backend-config="key=${{ env.ENVIRONMENT }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TFSTATE_LOCK_TABLE || format('{0}-tflock', env.PROJECT_NAME) }}"
+
+      - name: Upload placeholder ZIPs for Lambda
+        run: |
+          REGISTRY=$(cat .github/service-registry.json)
+          mkdir -p /tmp/placeholder
+          echo 'exports.handler = async () => ({ statusCode: 503, body: "Destroying..." });' > /tmp/placeholder/main.js
+          (cd /tmp/placeholder && zip -j /tmp/placeholder.zip main.js)
+          for svc in $(echo "$REGISTRY" | jq -r '.apiServices[].name, .eventHandlerServices[].name'); do
+            S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/${svc}/destroy.zip"
+            aws s3 cp /tmp/placeholder.zip "s3://${{ vars.ARTIFACT_BUCKET || format('{0}-deploy-artifacts', env.PROJECT_NAME) }}/$S3_KEY" --quiet
+          done
+
+      - name: Delete RDS instances directly
+        # Delete all RDS instances for this environment via AWS CLI before Terraform
+        # runs. This avoids two failure modes:
+        # 1. skip_final_snapshot=false in state → Terraform tries CreateDBSnapshot → 403
+        # 2. Deletion protection propagation delay → Terraform delete fails with 400
+        # After CLI deletion, instances are removed from Terraform state so the
+        # subsequent terraform destroy doesn't attempt to re-delete them.
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          INSTANCES=$(aws rds describe-db-instances \
+            --query "DBInstances[?starts_with(DBInstanceIdentifier, '${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-')].DBInstanceIdentifier" \
+            --output text --region "${{ env.AWS_REGION }}" 2>/dev/null || echo "")
+
+          if [ -z "$(echo "$INSTANCES" | tr -d '[:space:]')" ]; then
+            echo "No RDS instances found for ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-* — skipping."
+          else
+            for db in $INSTANCES; do
+              echo "Removing deletion protection: $db"
+              aws rds modify-db-instance \
+                --db-instance-identifier "$db" \
+                --no-deletion-protection \
+                --apply-immediately \
+                --region "${{ env.AWS_REGION }}" 2>/dev/null || true
+
+              echo "Waiting for $db to be available after modification..."
+              aws rds wait db-instance-available \
+                --db-instance-identifier "$db" \
+                --region "${{ env.AWS_REGION }}" 2>/dev/null || true
+
+              echo "Deleting $db (skip final snapshot)..."
+              aws rds delete-db-instance \
+                --db-instance-identifier "$db" \
+                --skip-final-snapshot \
+                --region "${{ env.AWS_REGION }}" \
+                && echo "Deletion initiated for $db" \
+                || echo "$db already deleted or not found"
+            done
+          fi
+
+          # Remove all RDS module instances from Terraform state so destroy doesn't re-attempt
+          while IFS= read -r resource; do
+            echo "Removing from Terraform state: $resource"
+            terraform state rm "$resource" || true
+          done < <(terraform state list 2>/dev/null | grep '^module\.rds\[' | grep '\.aws_db_instance\.' || true)
+
+      - name: Disable deletion protection
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          echo "Disabling deletion protection and final snapshot requirements..."
+          terraform apply -auto-approve \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ env.ENVIRONMENT }}" \
+            -var="artifact_bucket=${{ vars.ARTIFACT_BUCKET || format('{0}-deploy-artifacts', env.PROJECT_NAME) }}" \
+            -var="deploy_sha=destroy" \
+            -var="ecr_repo_url=${{ vars.ECR_REPO_URL || format('{0}.dkr.ecr.{1}.amazonaws.com/{0}-webapp', steps.account.outputs.account_id, env.AWS_REGION) }}" \
+            -var="webapp_image_tag=destroy" \
+            -var="force_destroy=true"
+
+      - name: Terraform Destroy Plan
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          echo "## Resources to destroy:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          terraform plan -destroy \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ env.ENVIRONMENT }}" \
+            -var="artifact_bucket=${{ vars.ARTIFACT_BUCKET || format('{0}-deploy-artifacts', env.PROJECT_NAME) }}" \
+            -var="deploy_sha=destroy" \
+            -var="ecr_repo_url=${{ vars.ECR_REPO_URL || format('{0}.dkr.ecr.{1}.amazonaws.com/{0}-webapp', steps.account.outputs.account_id, env.AWS_REGION) }}" \
+            -var="webapp_image_tag=destroy" \
+            -var="force_destroy=true" \
+            -out=tfplan-destroy
+
+      - name: Terraform Destroy
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: terraform apply -auto-approve tfplan-destroy
+
+      - name: Post destruction summary
+        if: always()
+        run: |
+          echo "## Environment Destroyed: ${{ env.ENVIRONMENT }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ job.status }}" = "Success" ] || [ "${{ job.status }}" = "success" ]; then
+            echo "All resources for **${{ env.ENVIRONMENT }}** have been destroyed." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Destruction **failed** — some resources may still exist. Check the logs above." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Detail | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Environment | \`${{ env.ENVIRONMENT }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Project | \`${{ env.PROJECT_NAME }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| AWS Account | \`${{ steps.account.outputs.account_id }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Region | \`${{ env.AWS_REGION }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Triggered by | @${{ github.actor }} |" >> "$GITHUB_STEP_SUMMARY"

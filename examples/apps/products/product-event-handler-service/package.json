@@ -1,0 +1,14 @@
+{
+  "name": "product-event-handler-service",
+  "version": "0.0.1",
+  "description": "Product domain cross-domain SQS event consumer — reacts to order events (product validation)",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.0.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0"
+  }
+}

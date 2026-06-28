@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "UseCaseGenerator",
+  "title": "Add a new use case to an existing domain package",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Domain name (singular, kebab-case). Example: shipping",
+      "x-prompt": "What domain does this use case belong to (e.g. shipping)?"
+    },
+    "verb": {
+      "type": "string",
+      "description": "Verb describing the operation (kebab-case). Example: cancel, dispatch, mark-failed",
+      "x-prompt": "What is the verb for this use case (e.g. cancel)?"
+    },
+    "entity": {
+      "type": "string",
+      "description": "Entity name (defaults to domain). Used for class names and parameters."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["create", "get-by-id", "update", "delete", "action", "list"],
+      "description": "Use case shape. action = state transition (e.g. cancel, activate). list = filtered list with cursor pagination.",
+      "x-prompt": {
+        "message": "Which use-case shape?",
+        "type": "list",
+        "items": [
+          { "value": "create", "label": "create — uniqueness check + Entity.create() + save" },
+          { "value": "get-by-id", "label": "get-by-id — findById + throw if missing" },
+          { "value": "update", "label": "update — load + entity update method + save" },
+          { "value": "delete", "label": "delete — load + entity.markAsDeleted() + save" },
+          { "value": "action", "label": "action — load + entity action method + save (e.g. cancel, activate)" },
+          { "value": "list", "label": "list — repository.listByX() with pagination" }
+        ]
+      }
+    },
+    "filterField": {
+      "type": "string",
+      "description": "For type=list only: the field name to filter by (default: status)."
+    },
+    "actionMethod": {
+      "type": "string",
+      "description": "For type=action only: the entity method to call (default: derived from verb, e.g. cancel → cancel())."
+    },
+    "fields": {
+      "type": "string",
+      "description": "Optional entity field spec (used when invoked by the domain generator). Example: 'orderId:string,weight:number,address:string?'. When omitted, create/update emit TODO placeholders the developer must fill in."
+    }
+  },
+  "required": ["domain", "verb", "type"]
+}

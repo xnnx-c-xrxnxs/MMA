@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Service Implementation Masterclass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg-alt: #f7f8fa; --bg-card: #ffffff; --bg-code: #1e1e2e; --bg-code-text: #cdd6f4;
+  --bg-nav: rgba(255,255,255,0.92); --border: #e4e7ec; --text: #111827; --text-muted: #6b7280;
+  --text-light: #9ca3af; --accent: #6366f1; --accent-hover: #4f46e5; --accent-light: #eef2ff;
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+  --hero-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #4c1d95 100%);
+  --success: #10b981; --success-bg: #ecfdf5; --warning: #f59e0b; --warning-bg: #fffbeb;
+  --danger: #ef4444; --danger-bg: #fef2f2; --info: #3b82f6; --info-bg: #eff6ff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08);
+  --radius: 12px; --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  --transition: 0.2s ease;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161922; --bg-card: #1a1d28; --bg-nav: rgba(15,17,23,0.92);
+  --border: #2d3148; --text: #e5e7eb; --text-muted: #9ca3af; --text-light: #6b7280;
+  --accent: #818cf8; --accent-hover: #a5b4fc; --accent-light: #1e1b4b;
+  --success-bg: #064e3b; --warning-bg: #451a03; --danger-bg: #450a0a; --info-bg: #172554;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3); --shadow: 0 4px 6px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+}
+html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+/* Nav */
+.scroll-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 1001; background: var(--accent-gradient); width: 0%; transition: width 0.1s linear; }
+.top-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--bg-nav); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+.top-nav.scrolled { box-shadow: var(--shadow); }
+.nav-brand { font-weight: 800; font-size: 1rem; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.nav-links { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.nav-links a { padding: 6px 12px; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-decoration: none; border-radius: 8px; white-space: nowrap; transition: background var(--transition), color var(--transition); }
+.nav-links a:hover, .nav-links a.active { background: var(--accent-light); color: var(--accent); }
+.theme-toggle { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: background var(--transition), border-color var(--transition); }
+.theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); }
+
+/* Hero */
+.hero { background: var(--hero-gradient); padding: 130px 24px 80px; text-align: center; color: #fff; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%), radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%); }
+.hero-content { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; }
+.hero h1 { font-size: 2.8rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 16px; }
+.hero .lead { font-size: 1.15rem; color: rgba(255,255,255,0.8); margin-bottom: 32px; line-height: 1.6; }
+.hero-chips { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+.hero-chip { font-size: 0.78rem; font-weight: 700; padding: 5px 14px; border-radius: 20px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2); }
+.hero-meta { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.hero-meta span { font-size: 0.82rem; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
+.hero-meta span strong { color: rgba(255,255,255,0.9); }
+
+/* Sections */
+.section { padding: 64px 24px; }
+.section:nth-child(even) { background: var(--bg-alt); }
+.section-inner { max-width: 980px; margin: 0 auto; }
+.section-header { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 2px solid var(--border); }
+.section-num { width: 48px; height: 48px; border-radius: 12px; background: var(--accent-gradient); color: #fff; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.section-header h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+.section-desc { font-size: 1rem; color: var(--text-muted); }
+
+/* Layer Diagram */
+.layer-diagram { margin: 24px 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.layer { padding: 14px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.layer-presentation { background: linear-gradient(90deg, rgba(99,102,241,0.08), transparent); border-bottom: 1px solid var(--border); }
+.layer-application { background: linear-gradient(90deg, rgba(139,92,246,0.08), transparent); border-bottom: 1px solid var(--border); }
+.layer-domain { background: linear-gradient(90deg, rgba(236,72,153,0.08), transparent); border-bottom: 1px solid var(--border); }
+.layer-infra { background: linear-gradient(90deg, rgba(59,130,246,0.08), transparent); }
+.layer-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); min-width: 100px; }
+.layer-items { display: flex; gap: 8px; flex-wrap: wrap; }
+.layer-items span { font-size: 0.8rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-family: var(--mono); color: var(--text-muted); }
+.layer-arrow { text-align: center; padding: 6px; font-size: 0.78rem; color: var(--text-light); background: var(--bg-alt); font-style: italic; border-bottom: 1px solid var(--border); }
+
+/* Code */
+.code-wrap { margin: 16px 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.code-label { background: #2a2a3e; color: #888cb0; font-family: var(--mono); font-size: 0.72rem; padding: 6px 16px; letter-spacing: 0.04em; border-bottom: 1px solid #3a3a5a; }
+pre { background: var(--bg-code); padding: 20px; overflow-x: auto; }
+code { font-family: var(--mono); font-size: 0.82rem; line-height: 1.7; color: var(--bg-code-text); }
+.kw  { color: #c792ea; }
+.ty  { color: #82aaff; }
+.str { color: #c3e88d; }
+.num { color: #f78c6c; }
+.com { color: #546e7a; font-style: italic; }
+.dec { color: #ffcb6b; }
+
+/* Callouts */
+.callout { border-left: 4px solid var(--info); background: var(--info-bg); padding: 14px 20px; margin: 18px 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.callout-success { border-left-color: var(--success); background: var(--success-bg); }
+.callout-warning { border-left-color: var(--warning); background: var(--warning-bg); }
+.callout-danger  { border-left-color: var(--danger); background: var(--danger-bg); }
+.callout-title { font-weight: 700; margin-bottom: 4px; font-size: 0.88rem; }
+.callout p, .callout ul { margin: 0; }
+.callout li { margin: 4px 0; }
+
+/* Badges */
+.badge { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.badge-accent { background: var(--accent-light); color: var(--accent); }
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: #92400e; }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+
+/* Cards */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; font-weight: 700; }
+.card p { font-size: 0.88rem; color: var(--text-muted); margin: 0; }
+.card-icon { font-size: 1.5rem; margin-bottom: 10px; }
+
+/* Two-col */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Rule cards */
+.rule-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin: 12px 0; }
+.rule-num { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 4px; }
+.rule-card h4 { margin: 0 0 8px; font-size: 0.95rem; }
+.rule-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+.rule-card code { background: var(--bg-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.82rem; }
+.rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 20px 0; }
+
+/* Step list */
+.step-list { list-style: none; margin: 16px 0; padding: 0; }
+.step-list li { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+.step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.step-list p { margin: 0; font-size: 0.92rem; }
+
+/* Flow chart */
+.flow-chart { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 20px 0; }
+.flow-item { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 700px; }
+.flow-box { width: 100%; text-align: center; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 600; border: 1px solid var(--border); background: var(--bg-card); }
+.flow-box.presentation { border-color: #6366f1; background: #eef2ff; color: #3730a3; }
+.flow-box.application { border-color: #8b5cf6; background: #f5f3ff; color: #5b21b6; }
+.flow-box.domain { border-color: #ec4899; background: #fdf2f8; color: #9d174d; }
+.flow-box.infra { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
+[data-theme="dark"] .flow-box.presentation { background: #1e1b4b; color: #a5b4fc; }
+[data-theme="dark"] .flow-box.application { background: #2e1065; color: #c4b5fd; }
+[data-theme="dark"] .flow-box.domain { background: #500724; color: #f9a8d4; }
+[data-theme="dark"] .flow-box.infra { background: #172554; color: #93c5fd; }
+.flow-arrow { font-size: 1.3rem; color: var(--text-light); padding: 2px 0; }
+
+/* Error table */
+.error-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 16px 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.error-table th { background: var(--bg-alt); padding: 10px 14px; text-align: left; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.error-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+.error-table tr:last-child td { border-bottom: none; }
+.error-table code { background: var(--bg-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; }
+.status-ok { color: var(--success); font-weight: 700; }
+.status-bad { color: var(--warning); font-weight: 700; }
+.status-conflict { color: #8b5cf6; font-weight: 700; }
+.status-err { color: var(--danger); font-weight: 700; }
+
+/* Inline code */
+p code, li code, h4 code { background: var(--bg-alt); padding: 2px 6px; border-radius: 4px; font-size: 0.84em; font-family: var(--mono); border: 1px solid var(--border); }
+
+/* Topic separator */
+.topic { margin-top: 48px; }
+.topic > h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+.topic p { margin-bottom: 14px; }
+.topic ul, .topic ol { padding-left: 22px; margin-bottom: 14px; }
+.topic li { margin-bottom: 6px; }
+
+/* Comparison table */
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 16px 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.cmp-table th { background: var(--accent); color: #fff; padding: 10px 14px; text-align: left; font-weight: 700; }
+.cmp-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table .yes { color: var(--success); font-weight: 700; }
+.cmp-table .no { color: var(--danger); font-weight: 700; }
+
+/* Footer */
+footer { background: #0f1117; color: rgba(255,255,255,0.5); text-align: center; padding: 40px 24px; font-size: 0.82rem; }
+footer strong { color: rgba(255,255,255,0.8); }
+
+/* Animations */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-up { opacity: 0; transform: translateY(16px); transition: opacity 0.4s ease, transform 0.4s ease; }
+  .fade-up.visible { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="scroll-progress"></div>
+
+<nav class="top-nav">
+  <a class="nav-brand" href="#">⚡ API Masterclass</a>
+  <div class="nav-links"><a href="#architecture">🏛️ Architecture</a><a href="#constants">🔢 Constants</a><a href="#entity">🧬 Entity</a><a href="#repository">📦 Repository</a><a href="#usecases">⚙️ Use Cases</a><a href="#contracts">📋 Contracts</a><a href="#appservice">🔀 App Service</a><a href="#controller">🌐 Controller</a><a href="#module">🔌 Module</a><a href="#exceptions">🚦 Exceptions</a><a href="#patterns">🔗 Patterns</a></div>
+  <button class="theme-toggle" title="Toggle theme">🌙</button>
+</nav>
+
+<header class="hero">
+  <div class="hero-content">
+    <h1>API Service Implementation<br>Masterclass</h1>
+    <p class="lead">End-to-end guide to building production-grade NestJS microservices using Clean Architecture — from domain constants to module wiring, with real code from our codebase.</p>
+    <div class="hero-chips">
+      <span class="hero-chip">NestJS + TypeScript</span>
+      <span class="hero-chip">Clean Architecture</span>
+      <span class="hero-chip">DynamoDB OneTable</span>
+      <span class="hero-chip">Prisma + PostgreSQL</span>
+      <span class="hero-chip">SQS Events</span>
+      <span class="hero-chip">Zod Validation</span>
+    </div>
+    <div class="hero-meta">
+      <span>📦 <strong>11 layers covered</strong></span>
+      <span>🔢 <strong>Real examples from user, order &amp; product domains</strong></span>
+      <span>⚙️ <strong>Golden Rules enforced</strong></span>
+    </div>
+  </div>
+</header>
+
+
+<section class="section" id="architecture" data-section="architecture">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">01</div>
+  <div>
+    <h2>🏛️ Clean Architecture Overview</h2>
+    <p class="section-desc">The dependency rule: inner layers never import outer layers. Infrastructure adapts to the domain — not the other way around.</p>
+  </div>
+</div>
+
+
+<div class="layer-diagram">
+  <div class="layer layer-presentation">
+    <div class="layer-label">Presentation</div>
+    <div class="layer-items">
+      <span>Controller</span><span>ZodValidationPipe</span><span>DomainExceptionFilter</span><span>JwtAuthGuard</span><span>@CurrentUser()</span>
+    </div>
+  </div>
+  <div class="layer-arrow">↓ calls Application Service (never Use Cases directly)</div>
+  <div class="layer layer-application">
+    <div class="layer-label">Application</div>
+    <div class="layer-items">
+      <span>ApplicationService</span><span>Use Cases</span><span>IEventPublisher</span>
+    </div>
+  </div>
+  <div class="layer-arrow">↓ calls Domain Entities + Repository Interface</div>
+  <div class="layer layer-domain">
+    <div class="layer-label">Domain</div>
+    <div class="layer-items">
+      <span>Entities</span><span>Constants</span><span>Domain Exceptions</span><span>Domain Events</span>
+    </div>
+  </div>
+  <div class="layer-arrow">↓ implemented by Infrastructure</div>
+  <div class="layer layer-infra">
+    <div class="layer-label">Infrastructure</div>
+    <div class="layer-items">
+      <span>DynamoRepository</span><span>PrismaRepository</span><span>DynamoDBConfig</span><span>PrismaConfig</span><span>SqsEventPublisher</span>
+    </div>
+  </div>
+</div>
+
+<div class="topic">
+<h3>The Golden Rules</h3>
+<div class="rules-grid">
+<div class="rule-card"><div class="rule-num">Rule #1</div><h4>Controllers never call Use Cases directly</h4><p>Controllers call the <code>ApplicationService</code>. The service orchestrates use cases and transforms domain entities to DTOs.</p></div>
+<div class="rule-card"><div class="rule-num">Rule #2</div><h4>Application Services are always present</h4><p>Even for simple pass-throughs. They are the boundary between presentation concerns (HTTP) and domain concerns.</p></div>
+<div class="rule-card"><div class="rule-num">Rule #3</div><h4>Use Cases return Domain Entities</h4><p>Use cases return <code>User</code>, <code>Order</code>, <code>Product</code> — never DTOs, never plain objects. Transformation is the App Service's job.</p></div>
+<div class="rule-card"><div class="rule-num">Rule #4</div><h4>Domain layer has zero NestJS imports</h4><p>No <code>@nestjs/*</code> inside <code>packages/{domain}-domain/src/domain/</code> or <code>application/</code>. Pure TypeScript only.</p></div>
+<div class="rule-card"><div class="rule-num">Rule #5</div><h4>Repository interfaces live in Application layer</h4><p>The port (<code>IUserRepository</code>) lives in <code>application/interfaces/</code>. The adapter (<code>DynamoUserRepository</code>) lives in <code>infrastructure/</code>.</p></div>
+<div class="rule-card"><div class="rule-num">Rule #10</div><h4>Never trust userId from client input</h4><p>Actor identity always comes from the JWT via <code>@CurrentUser('userId') actorId: string</code>. Never from <code>@Body()</code> or <code>@Param()</code>.</p></div>
+</div>
+</div>
+
+<div class="topic">
+<h3>File Layout: User Service Example</h3>
+<div class="code-wrap"><div class="code-label">Directory structure</div><pre><code>apps/users/user-api-service/src/
+  main.ts                           ← Bootstrap + STAGE branch
+  app/                              ← AppModule (root)
+  application/
+    services/
+      user-application.service.ts   ← Orchestration + DTO transform
+  infrastructure/
+    config/
+      dynamodb.config.ts            ← Singleton DynamoDB client
+  modules/
+    user.module.ts                  ← NestJS DI wiring
+  presentation/
+    controllers/
+      user.controller.ts            ← HTTP endpoints
+    pipes/
+      zod-validation.pipe.ts        ← Zod request parsing
+    filters/
+      domain-exception.filter.ts    ← Exception → HTTP status
+    guards/
+      jwt-auth.guard.ts             ← JWT verification
+    decorators/
+      current-user.decorator.ts     ← Actor extraction
+    interceptors/
+      http-logging.interceptor.ts   ← Request/response logging
+
+packages/user-domain/src/
+  domain/
+    constants/                      ← USER_STATUSES, USER_ROLES
+    entities/
+      user.entity.ts                ← Business logic lives here
+    exceptions/                     ← Domain rule violations
+    events/                         ← Event <span class="kw">type</span> constants
+  application/
+    use-cases/                      ← One folder per operation
+    interfaces/
+      user-repository.<span class="kw">interface</span>.ts  ← Port (<span class="kw">abstract</span> <span class="kw">class</span>)
+    exceptions/                     ← Input validation errors
+  infrastructure/
+    repositories/
+      dynamo-user.repository.ts     ← DynamoDB adapter
+    schemas/
+      UserSchema.ts                 ← OneTable schema</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="constants" data-section="constants">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">02</div>
+  <div>
+    <h2>🔢 Domain Constants — Single Source of Truth</h2>
+    <p class="section-desc">Constants are defined once in the domain package. Contracts re-export them. Never hardcode string literals in entity methods.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>The Derived-Enum Pattern</h3>
+<p>Use a <code>const</code> tuple array as the source of truth. Derive both the TypeScript union type <em>and</em> an enum-style object from it — no duplication, no drift between the two.</p>
+
+<div class="code-wrap"><div class="code-label">user-statuses.ts</div><pre><code><span class="com">// packages/user-domain/src/domain/constants/user-statuses.ts</span>
+
+<span class="kw">export</span> <span class="kw">const</span> USER_STATUSES = [<span class="str">'PENDING'</span>, <span class="str">'ACTIVE'</span>, <span class="str">'INACTIVE'</span>, <span class="str">'DELETED'</span>] as <span class="kw">const</span>;
+
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">UserStatus</span> = (typeof USER_STATUSES)[<span class="ty">number</span>];
+<span class="com">// → 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'DELETED'</span>
+
+<span class="com">// Derive enum object from array — one source of truth, no duplication</span>
+<span class="kw">export</span> <span class="kw">const</span> UserStatusEnum = USER_STATUSES.reduce(
+  (acc, status) =&gt; ({ ...acc, [status]: status }),
+  {} as { [K <span class="kw">in</span> <span class="ty">UserStatus</span>]: K }
+);
+<span class="com">// UserStatusEnum.ACTIVE  → 'ACTIVE'</span>
+<span class="com">// UserStatusEnum.PENDING → 'PENDING'</span></code></pre></div>
+
+<div class="code-wrap"><div class="code-label">user-roles.ts</div><pre><code><span class="com">// packages/user-domain/src/domain/constants/user-roles.ts</span>
+
+<span class="kw">export</span> <span class="kw">const</span> USER_ROLES = [<span class="str">'USER'</span>, <span class="str">'ADMIN'</span>] as <span class="kw">const</span>;
+
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">UserRole</span> = (typeof USER_ROLES)[<span class="ty">number</span>];
+
+<span class="kw">export</span> <span class="kw">const</span> UserRoleEnum = USER_ROLES.reduce(
+  (acc, role) =&gt; ({ ...acc, [role]: role }),
+  {} as { [K <span class="kw">in</span> <span class="ty">UserRole</span>]: K }
+);</code></pre></div>
+
+<div class="callout callout-warning"><div class="callout-title">⚠️ Never hardcode status strings in entity methods</div><p>Do this: <code>userStatus === UserStatusEnum.ACTIVE</code><br>Not this: <code>userStatus === 'ACTIVE'</code></p><p>The domain constant is the only place the string value exists. This prevents typos and makes renaming safe.</p></div>
+
+<h3>Order Status — More Complex Lifecycle</h3>
+<div class="code-wrap"><div class="code-label">order-statuses.ts</div><pre><code><span class="com">// packages/order-domain/src/domain/constants/order-statuses.ts</span>
+
+<span class="kw">export</span> <span class="kw">const</span> ORDER_STATUSES = [
+  <span class="str">'DRAFT'</span>,               <span class="com">// Created, items being added</span>
+  <span class="str">'PENDING'</span>,             <span class="com">// Submitted, awaiting validation</span>
+  <span class="str">'VALIDATION_FAILED'</span>,   <span class="com">// Product validation failed</span>
+  <span class="str">'CONFIRMED'</span>,           <span class="com">// Validated, payment captured</span>
+  <span class="str">'PROCESSING'</span>,          <span class="com">// Being fulfilled</span>
+  <span class="str">'SHIPPED'</span>,             <span class="com">// In transit</span>
+  <span class="str">'DELIVERED'</span>,           <span class="com">// Received by customer</span>
+  <span class="str">'CANCELLED'</span>,           <span class="com">// Cancelled before ship</span>
+  <span class="str">'REFUNDED'</span>,            <span class="com">// Payment refunded post-delivery</span>
+] as <span class="kw">const</span>;
+
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">OrderStatus</span> = (typeof ORDER_STATUSES)[<span class="ty">number</span>];
+<span class="kw">export</span> <span class="kw">const</span> OrderStatusEnum = ORDER_STATUSES.reduce(
+  (acc, s) =&gt; ({ ...acc, [s]: s }),
+  {} as { [K <span class="kw">in</span> <span class="ty">OrderStatus</span>]: K }
+);</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="entity" data-section="entity">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">03</div>
+  <div>
+    <h2>🧬 Domain Entity</h2>
+    <p class="section-desc">Private constructor. Two factory methods: create() for new, reconstitute() from DB. All business rules live here.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>User Entity — Core Pattern</h3>
+<div class="code-wrap"><div class="code-label">user.entity.ts</div><pre><code><span class="com">// packages/user-domain/src/domain/entities/user.entity.ts</span>
+
+<span class="kw">import</span> { <span class="ty">UserRole</span>, UserRoleEnum, <span class="ty">UserStatus</span>, UserStatusEnum } <span class="kw">from</span> <span class="str">'../constants'</span>;
+<span class="kw">import</span> {
+  InvalidEmailFormatError, InvalidNameError,
+  EmailAlreadyVerifiedError, CannotActivateNonPendingUserError,
+  CannotActivateUnverifiedEmailError, CannotDeactivateDeletedUserError,
+  UserAlreadyDeletedError, CannotUpdateDeletedUserError,
+} <span class="kw">from</span> <span class="str">'../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">User</span> {
+  <span class="com">// ─── Private constructor enforces factory usage ──────────────────</span>
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> userId: <span class="ty">string</span> | <span class="kw">null</span>,  <span class="com">// null until persisted</span>
+    <span class="kw">private</span> <span class="kw">readonly</span> email: <span class="ty">string</span>,
+    <span class="kw">private</span> firstName: <span class="ty">string</span>,
+    <span class="kw">private</span> lastName: <span class="ty">string</span>,
+    <span class="kw">private</span> emailVerified: <span class="ty">boolean</span>,
+    <span class="kw">private</span> userRole: <span class="ty">UserRole</span>,
+    <span class="kw">private</span> userStatus: <span class="ty">UserStatus</span>,
+    <span class="kw">private</span> data: { country?: <span class="ty">string</span> },
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>,
+  ) {}
+
+  <span class="com">// ─── Factory: new user (not yet persisted) ───────────────────────</span>
+  <span class="kw">static</span> create(props: {
+    email: <span class="ty">string</span>; firstName: <span class="ty">string</span>; lastName: <span class="ty">string</span>;
+    userRole?: <span class="ty">UserRole</span>; data?: { country?: <span class="ty">string</span> };
+  }): <span class="ty">User</span> {
+    <span class="kw">const</span> emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
+    <span class="kw">if</span> (!emailRegex.test(props.email)) <span class="kw">throw</span> <span class="kw">new</span> InvalidEmailFormatError();
+    <span class="kw">if</span> (props.firstName.trim().length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'First name'</span>);
+    <span class="kw">if</span> (props.lastName.trim().length === <span class="num">0</span>)  <span class="kw">throw</span> <span class="kw">new</span> InvalidNameError(<span class="str">'Last name'</span>);
+
+    <span class="kw">const</span> now = <span class="kw">new</span> Date().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> <span class="ty">User</span>(
+      <span class="kw">null</span>,                           <span class="com">// userId generated by DB</span>
+      props.email.toLowerCase().trim(),
+      props.firstName.trim(),
+      props.lastName.trim(),
+      <span class="kw">false</span>,                          <span class="com">// new users start unverified</span>
+      props.userRole || UserRoleEnum.USER,
+      UserStatusEnum.PENDING,         <span class="com">// new users start PENDING</span>
+      props.data || {},
+      now, now,
+    );
+  }
+
+  <span class="com">// ─── Factory: reconstitute from DB record ────────────────────────</span>
+  <span class="kw">static</span> reconstitute(props: {
+    userId: <span class="ty">string</span>; email: <span class="ty">string</span>; firstName: <span class="ty">string</span>; lastName: <span class="ty">string</span>;
+    emailVerified: <span class="ty">boolean</span>; userRole: <span class="ty">UserRole</span>; userStatus: <span class="ty">UserStatus</span>;
+    data: { country?: <span class="ty">string</span> }; dateCreated: <span class="ty">string</span>; updatedAt: <span class="ty">string</span>;
+  }): <span class="ty">User</span> {
+    <span class="kw">return</span> <span class="kw">new</span> <span class="ty">User</span>(
+      props.userId, props.email, props.firstName, props.lastName,
+      props.emailVerified, props.userRole, props.userStatus,
+      props.data, props.dateCreated, props.updatedAt,
+    );
+  }
+
+  <span class="com">// ─── Business methods (enforce invariants) ───────────────────────</span>
+  verifyEmail(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.emailVerified) <span class="kw">throw</span> <span class="kw">new</span> EmailAlreadyVerifiedError();
+    <span class="kw">this</span>.emailVerified = <span class="kw">true</span>;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  activate(): <span class="kw">void</span> {
+    <span class="kw">if</span> (!<span class="kw">this</span>.emailVerified) <span class="kw">throw</span> <span class="kw">new</span> CannotActivateUnverifiedEmailError();
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> CannotActivateNonPendingUserError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.ACTIVE;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  deactivate(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> CannotDeactivateDeletedUserError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.INACTIVE;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  delete(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> UserAlreadyDeletedError();
+    <span class="kw">this</span>.userStatus = UserStatusEnum.DELETED;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  updateProfile(firstName?: <span class="ty">string</span>, lastName?: <span class="ty">string</span>, data?: { country?: <span class="ty">string</span> }): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.userStatus === UserStatusEnum.DELETED) <span class="kw">throw</span> <span class="kw">new</span> CannotUpdateDeletedUserError();
+    <span class="kw">if</span> (firstName !== <span class="kw">undefined</span>) <span class="kw">this</span>.firstName = firstName.trim();
+    <span class="kw">if</span> (lastName  !== <span class="kw">undefined</span>) <span class="kw">this</span>.lastName  = lastName.trim();
+    <span class="kw">if</span> (data      !== <span class="kw">undefined</span>) <span class="kw">this</span>.data      = data;
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  <span class="com">// ─── Getters (read-only access) ──────────────────────────────────</span>
+  getUserId()     { <span class="kw">return</span> <span class="kw">this</span>.userId; }
+  getEmail()      { <span class="kw">return</span> <span class="kw">this</span>.email; }
+  getFirstName()  { <span class="kw">return</span> <span class="kw">this</span>.firstName; }
+  getLastName()   { <span class="kw">return</span> <span class="kw">this</span>.lastName; }
+  getUserRole()   { <span class="kw">return</span> <span class="kw">this</span>.userRole; }
+  getUserStatus() { <span class="kw">return</span> <span class="kw">this</span>.userStatus; }
+  getData()       { <span class="kw">return</span> <span class="kw">this</span>.data; }
+  getDateCreated(){ <span class="kw">return</span> <span class="kw">this</span>.dateCreated; }
+  getUpdatedAt()  { <span class="kw">return</span> <span class="kw">this</span>.updatedAt; }
+}</code></pre></div>
+
+<div class="callout callout-danger"><div class="callout-title">🚫 Never add toObject() to entities</div><p>Serialisation is handled by the Application Service → <code>userResponseSchema.parse()</code> pipeline. Entities expose getters, not serialisation methods (Golden Rule #13).</p></div>
+</div>
+
+<div class="topic">
+<h3>Order Entity — Aggregate Root with Child Entities</h3>
+<div class="code-wrap"><div class="code-label">order.entity.ts (aggregate root)</div><pre><code><span class="com">// packages/order-domain/src/domain/entities/order.entity.ts</span>
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">Order</span> {
+  <span class="kw">private</span> constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderId: <span class="ty">string</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> customerId: <span class="ty">string</span>,
+    <span class="kw">private</span> items: <span class="ty">OrderItem</span>[],              <span class="com">// Value objects</span>
+    <span class="kw">private</span> payment: <span class="ty">OrderPayment</span> | <span class="kw">null</span>,
+    <span class="kw">private</span> orderStatus: <span class="ty">OrderStatus</span>,
+    <span class="kw">private</span> totalAmount: <span class="ty">number</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> dateCreated: <span class="ty">string</span>,
+    <span class="kw">private</span> updatedAt: <span class="ty">string</span>,
+  ) {}
+
+  <span class="kw">static</span> create(props: { customerId: <span class="ty">string</span> }): <span class="ty">Order</span> {
+    <span class="kw">if</span> (!props.customerId.trim()) <span class="kw">throw</span> <span class="kw">new</span> CustomerIdRequiredError();
+    <span class="kw">const</span> now = <span class="kw">new</span> Date().toISOString();
+    <span class="kw">return</span> <span class="kw">new</span> <span class="ty">Order</span>(<span class="kw">null</span>, props.customerId, [], <span class="kw">null</span>, OrderStatusEnum.DRAFT, <span class="num">0</span>, now, now);
+  }
+
+  <span class="com">// ─── Add item — only allowed on DRAFT orders ─────────────────────</span>
+  addItem(item: <span class="ty">OrderItem</span>): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.orderStatus !== OrderStatusEnum.DRAFT) {
+      <span class="kw">throw</span> <span class="kw">new</span> CannotModifyNonDraftOrderError();
+    }
+    <span class="kw">this</span>.items.push(item);
+    <span class="kw">this</span>.recalculateTotal();
+    <span class="kw">this</span>.updatedAt = <span class="kw">new</span> Date().toISOString();
+  }
+
+  <span class="com">// ─── Confirm — requires payment and items ────────────────────────</span>
+  confirm(): <span class="kw">void</span> {
+    <span class="kw">if</span> (<span class="kw">this</span>.items.length === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> CannotConfirmEmptyOrderError();
+    <span class="kw">if</span> (!<span class="kw">this</span>.payment)           <span class="kw">throw</span> <span class="kw">new</span> PaymentRequiredForConfirmationError();
+    <span class="kw">if</span> (!<span class="kw">this</span>.payment.isAuthorized()) <span class="kw">throw</span> <span class="kw">new</span> InvalidPaymentStateForConfirmationError();
+    <span class="kw">this</span>.orderStatus = OrderStatusEnum.CONFIRMED;
+    <span class="kw">this</span>.updatedAt   = <span class="kw">new</span> Date().toISOString();
+  }
+
+  <span class="com">// ─── State transition guard ──────────────────────────────────────</span>
+  cancel(): <span class="kw">void</span> {
+    <span class="kw">const</span> cancellable = [OrderStatusEnum.DRAFT, OrderStatusEnum.PENDING, OrderStatusEnum.CONFIRMED];
+    <span class="kw">if</span> (!cancellable.includes(<span class="kw">this</span>.orderStatus)) <span class="kw">throw</span> <span class="kw">new</span> CannotCancelOrderError(<span class="kw">this</span>.orderStatus);
+    <span class="kw">this</span>.orderStatus = OrderStatusEnum.CANCELLED;
+    <span class="kw">this</span>.updatedAt   = <span class="kw">new</span> Date().toISOString();
+  }
+
+  <span class="kw">private</span> recalculateTotal(): <span class="kw">void</span> {
+    <span class="kw">this</span>.totalAmount = <span class="kw">this</span>.items.reduce((sum, i) =&gt; sum + i.getSubtotal(), <span class="num">0</span>);
+  }
+}</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="repository" data-section="repository">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">04</div>
+  <div>
+    <h2>📦 Repository Interface & DynamoDB Implementation</h2>
+    <p class="section-desc">The interface is the port (application layer). The DynamoDB class is the adapter (infrastructure layer). They never cross.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>Repository Interface (Port)</h3>
+<div class="code-wrap"><div class="code-label">user-repository.interface.ts</div><pre><code><span class="com">// packages/user-domain/src/application/interfaces/user-repository.interface.ts</span>
+
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">UserRole</span>, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../domain/constants'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
+
+<span class="com">// Abstract CLASS (not TS interface) — enables NestJS DI token injection</span>
+<span class="kw">export</span> <span class="kw">abstract</span> <span class="kw">class</span> <span class="ty">IUserRepository</span> {
+  <span class="com">// Save: entity.getUserId() === null → INSERT; otherwise UPSERT</span>
+  <span class="kw">abstract</span> save(user: <span class="ty">User</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt;;
+
+  <span class="com">// Single-record lookups return null (never throw) if not found</span>
+  <span class="kw">abstract</span> findById(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt;;
+  <span class="kw">abstract</span> findByEmail(email: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt;;
+
+  <span class="com">// Paginated list queries — cursor-based for DynamoDB domains</span>
+  <span class="kw">abstract</span> listByStatus(
+    userStatus: <span class="ty">UserStatus</span>,
+    limit?: <span class="ty">number</span>,
+    direction?: <span class="ty">string</span>,
+    nextCursorPointer?: <span class="ty">string</span>,
+    prevCursorPointer?: <span class="ty">string</span>,
+  ): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt;;
+
+  <span class="kw">abstract</span> listByRoleAndStatus(
+    userRole: <span class="ty">UserRole</span>,
+    userStatus: <span class="ty">UserStatus</span>,
+    limit?: <span class="ty">number</span>,
+    direction?: <span class="ty">string</span>,
+    nextCursorPointer?: <span class="ty">string</span>,
+    prevCursorPointer?: <span class="ty">string</span>,
+  ): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt;;
+}</code></pre></div>
+
+<div class="callout callout-info"><div class="callout-title">Why abstract class instead of interface?</div><p>TypeScript interfaces are erased at runtime. NestJS DI tokens must exist at runtime. Using <code>abstract class IUserRepository</code> gives you both: a compile-time contract <em>and</em> a runtime token for <code>inject: [USER_REPOSITORY]</code>.</p></div>
+</div>
+
+<div class="topic">
+<h3>DynamoDB Repository (Adapter)</h3>
+<div class="code-wrap"><div class="code-label">dynamo-user.repository.ts</div><pre><code><span class="com">// packages/user-domain/src/infrastructure/repositories/dynamo-user.repository.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { pageRecordHandler } <span class="kw">from</span> <span class="str">'@old-st/dynamodb-onetable'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../application/interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
+<span class="kw">import</span> { UserDataType } <span class="kw">from</span> <span class="str">'../schemas/UserSchema'</span>;
+
+<span class="com">// Local structural interface — avoids OneTable generic type explosions</span>
+<span class="kw">interface</span> IUserModel {
+  create(props: object): <span class="ty">Promise</span>&lt;UserDataType&gt;;
+  upsert(props: object): <span class="ty">Promise</span>&lt;UserDataType&gt;;
+  get(props: object, opts?: object): <span class="ty">Promise</span>&lt;UserDataType | <span class="kw">undefined</span>&gt;;
+  find(props: object, opts?: object): <span class="ty">Promise</span>&lt;UserDataType[]&gt;;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> DynamoUserRepository <span class="kw">implements</span> <span class="ty">IUserRepository</span> {
+  <span class="kw">private</span> <span class="kw">readonly</span> UserModel: IUserModel;
+
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> table: <span class="ty">Table</span>) {
+    <span class="kw">this</span>.UserModel = <span class="kw">this</span>.table.getModel(<span class="str">'User'</span>) as unknown as IUserModel;
+  }
+
+  <span class="kw">async</span> save(user: <span class="ty">User</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="kw">const</span> data = <span class="kw">this</span>.toPersistence(user);
+    <span class="kw">if</span> (user.getUserId()) {
+      <span class="kw">const</span> updated = <span class="kw">await</span> <span class="kw">this</span>.UserModel.upsert(data);
+      <span class="kw">return</span> <span class="kw">this</span>.toDomain(updated);
+    }
+    <span class="kw">const</span> created = <span class="kw">await</span> <span class="kw">this</span>.UserModel.create(data);
+    <span class="kw">return</span> <span class="kw">this</span>.toDomain(created);
+  }
+
+  <span class="kw">async</span> findById(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt; {
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="kw">this</span>.UserModel.get({ userId });
+    <span class="kw">return</span> result ? <span class="kw">this</span>.toDomain(result) : <span class="kw">null</span>;
+  }
+
+  <span class="kw">async</span> findByEmail(email: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt; {
+    <span class="kw">const</span> results = <span class="kw">await</span> <span class="kw">this</span>.UserModel.find(
+      { email },
+      { index: <span class="str">'GSI4'</span>, limit: <span class="num">1</span> },
+    );
+    <span class="kw">return</span> results.length &gt; <span class="num">0</span> ? <span class="kw">this</span>.toDomain(results[<span class="num">0</span>]) : <span class="kw">null</span>;
+  }
+
+  <span class="kw">async</span> listByStatus(
+    userStatus: <span class="ty">string</span>,
+    limit = <span class="num">20</span>,
+    direction = <span class="str">'next'</span>,
+    nextCursorPointer?: <span class="ty">string</span>,
+    prevCursorPointer?: <span class="ty">string</span>,
+  ): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt; {
+    <span class="kw">return</span> pageRecordHandler&lt;UserDataType, <span class="ty">User</span>&gt;(
+      (opts) =&gt; <span class="kw">this</span>.UserModel.find({ userStatus }, opts),
+      { limit, direction, nextCursorPointer, prevCursorPointer, index: <span class="str">'GSI5'</span> },
+      (record) =&gt; <span class="kw">this</span>.toDomain(record),
+    );
+  }
+
+  <span class="com">// ─── Private converters (keep inside infrastructure) ─────────────</span>
+  <span class="kw">private</span> toDomain(record: UserDataType): <span class="ty">User</span> {
+    <span class="kw">return</span> <span class="ty">User</span>.reconstitute({
+      userId:        record.userId,
+      email:         record.email,
+      firstName:     record.firstName,
+      lastName:      record.lastName,
+      emailVerified: record.emailVerified,
+      userRole:      record.userRole,
+      userStatus:    record.userStatus,
+      data:          record.data || {},
+      dateCreated:   record.createdAt,  <span class="com">// OneTable auto-field → domain dateCreated</span>
+      updatedAt:     record.updatedAt,
+    });
+  }
+
+  <span class="kw">private</span> toPersistence(user: <span class="ty">User</span>): object {
+    <span class="kw">return</span> {
+      userId:        user.getUserId(),
+      email:         user.getEmail(),
+      firstName:     user.getFirstName(),
+      lastName:      user.getLastName(),
+      emailVerified: <span class="kw">false</span>,
+      userRole:      user.getUserRole(),
+      userStatus:    user.getUserStatus(),
+      data:          user.getData(),
+      updatedAt:     user.getUpdatedAt(),
+    };
+  }
+}</code></pre></div>
+
+<div class="callout callout-warning"><div class="callout-title">createdAt vs dateCreated</div><p>OneTable auto-manages a persistence-level <code>createdAt</code> field (via <code>timestamps: true</code>). The repository reads <code>record.createdAt</code> and maps it to the domain's <code>dateCreated</code>. The domain entity never has a <code>createdAt</code> field (Golden Rule #12).</p></div>
+</div>
+
+<div class="topic">
+<h3>DynamoDB Config — Singleton Client</h3>
+<div class="code-wrap"><div class="code-label">dynamodb.config.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/infrastructure/config/dynamodb.config.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
+<span class="kw">import</span> <span class="kw">type</span> { Dynamo } <span class="kw">from</span> <span class="str">'dynamodb-onetable/Dynamo'</span>;
+<span class="kw">import</span> { createDynamoLocalClient, createAWSClient, createTable } <span class="kw">from</span> <span class="str">'@old-st/dynamodb-onetable'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> DynamoDBConfig {
+  <span class="kw">private</span> <span class="kw">static</span> client: Dynamo;
+  <span class="kw">private</span> <span class="kw">static</span> tables = <span class="kw">new</span> Map&lt;<span class="ty">string</span>, <span class="ty">Table</span>&gt;();
+
+  <span class="kw">static</span> getClient(): Dynamo {
+    <span class="kw">if</span> (!<span class="kw">this</span>.client) {
+      <span class="com">// STAGE=local is the ONLY check for local vs AWS — never NODE_ENV</span>
+      <span class="kw">const</span> isLocal = process.env.STAGE === <span class="str">'local'</span> || !!process.env.DYNAMODB_ENDPOINT;
+      <span class="kw">this</span>.client = isLocal
+        ? createDynamoLocalClient()
+        : createAWSClient(process.env.AWS_REGION || <span class="str">'eu-west-2'</span>);
+    }
+    <span class="kw">return</span> <span class="kw">this</span>.client;
+  }
+
+  <span class="kw">static</span> getTable(name: <span class="ty">string</span>, schema: object): <span class="ty">Table</span> {
+    <span class="kw">if</span> (!<span class="kw">this</span>.tables.has(name)) {
+      <span class="kw">this</span>.tables.set(name, createTable({ client: <span class="kw">this</span>.getClient(), name, schema }));
+    }
+    <span class="kw">const</span> table = <span class="kw">this</span>.tables.get(name);
+    <span class="kw">if</span> (!table) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">`Failed to initialise DynamoDB table: ${name}`</span>);
+    <span class="kw">return</span> table;
+  }
+}</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="usecases" data-section="usecases">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">05</div>
+  <div>
+    <h2>⚙️ Use Cases — Single Responsibility Operations</h2>
+    <p class="section-desc">One use case = one business operation. Each implements IUseCase<TInput, TOutput>. No HTTP, no NestJS, no DTOs.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>CreateUser Use Case</h3>
+<div class="code-wrap"><div class="code-label">create-user.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/create-user/create-user.use-case.ts</span>
+
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { <span class="ty">UserRole</span>, UserRoleEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { EmailAlreadyExistsError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> <span class="ty">CreateUserInput</span> {
+  email: <span class="ty">string</span>;
+  firstName: <span class="ty">string</span>;
+  lastName: <span class="ty">string</span>;
+  userRole?: <span class="ty">UserRole</span>;
+  data?: { country?: <span class="ty">string</span> };
+}
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">CreateUserUseCase</span> <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">CreateUserInput</span>, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: <span class="ty">CreateUserInput</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="com">// 1. Check uniqueness constraint</span>
+    <span class="kw">const</span> existingUser = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findByEmail(input.email);
+    <span class="kw">if</span> (existingUser) {
+      <span class="kw">throw</span> <span class="kw">new</span> EmailAlreadyExistsError(input.email);
+    }
+
+    <span class="com">// 2. Create domain entity — business validation happens here (inside User.create)</span>
+    <span class="kw">const</span> user = <span class="ty">User</span>.create({
+      email:     input.email,
+      firstName: input.firstName,
+      lastName:  input.lastName,
+      userRole:  input.userRole || UserRoleEnum.USER,
+      data:      input.data,
+    });
+
+    <span class="com">// 3. Persist and return entity (NOT a DTO)</span>
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}</code></pre></div>
+
+<h3>CreateOrder Use Case — ACL + Event Publishing</h3>
+<div class="code-wrap"><div class="code-label">create-order.use-case.ts</div><pre><code><span class="com">// packages/order-domain/src/application/use-cases/create-order/create-order.use-case.ts</span>
+
+<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
+<span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
+<span class="kw">import</span> { <span class="ty">OrderItem</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order-item.entity'</span>;
+<span class="kw">import</span> { OrderEventTypeEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { InvalidInputError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> <span class="ty">CreateOrderInput</span> {
+  customerId: <span class="ty">string</span>;
+  items: Array&lt;{ productId: <span class="ty">string</span>; productName: <span class="ty">string</span>; quantity: <span class="ty">number</span>; price: <span class="ty">number</span> }&gt;;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">CreateOrderUseCase</span> <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">CreateOrderInput</span>, <span class="ty">Order</span>&gt; {
+  constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerValidator: <span class="ty">ICustomerValidator</span>,   <span class="com">// ACL — not the User domain directly</span>
+    <span class="kw">private</span> <span class="kw">readonly</span> eventPublisher: <span class="ty">IEventPublisher</span>&lt;unknown&gt;,
+  ) {}
+
+  <span class="kw">async</span> execute(input: <span class="ty">CreateOrderInput</span>): <span class="ty">Promise</span>&lt;<span class="ty">Order</span>&gt; {
+    <span class="kw">if</span> (!input.customerId)        <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Customer ID is required'</span>);
+    <span class="kw">if</span> (!input.items?.length)     <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'At least one item is required'</span>);
+
+    <span class="com">// ─── ACL gate: validate customer exists and is active ────────────</span>
+    <span class="kw">await</span> <span class="kw">this</span>.customerValidator.validate(input.customerId);
+
+    <span class="com">// ─── Create domain entity + add items ───────────────────────────</span>
+    <span class="kw">const</span> order = <span class="ty">Order</span>.create({ customerId: input.customerId });
+    <span class="kw">for</span> (<span class="kw">const</span> i <span class="kw">of</span> input.items) {
+      order.addItem(<span class="ty">OrderItem</span>.create({ ...i }));
+    }
+
+    <span class="com">// ─── Persist ─────────────────────────────────────────────────────</span>
+    <span class="kw">const</span> savedOrder = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+
+    <span class="com">// ─── Publish ORDER_CREATED for async product validation saga ─────</span>
+    <span class="kw">const</span> orderId = savedOrder.getOrderId();
+    <span class="kw">if</span> (orderId) {
+      <span class="kw">await</span> <span class="kw">this</span>.eventPublisher.publish({
+        eventType: OrderEventTypeEnum.ORDER_CREATED,
+        orderId,
+        customerId: input.customerId,
+        items: input.items,
+        occurredAt: <span class="kw">new</span> Date().toISOString(),
+      }, { groupId: orderId });
+    }
+
+    <span class="kw">return</span> savedOrder;
+  }
+}</code></pre></div>
+
+<div class="callout callout-info"><div class="callout-title">Why does the Use Case do event publishing?</div><p>Event publishing is tied to the successful completion of the domain operation — not to the HTTP layer. Placing it in the use case keeps the operation self-contained and ensures the event is published regardless of which transport (HTTP, Lambda, test) invokes the use case.</p></div>
+
+<h3>ActivateUser Use Case — State Transition</h3>
+<div class="code-wrap"><div class="code-label">activate-user.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/activate-user/activate-user.use-case.ts</span>
+
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> ActivateUserInput {
+  userId: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">ActivateUserUseCase</span> <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;ActivateUserInput, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: ActivateUserInput): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="com">// Find user — throw typed exception if not found</span>
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findById(input.userId);
+    <span class="kw">if</span> (!user) <span class="kw">throw</span> <span class="kw">new</span> UserNotFoundError(input.userId);
+
+    <span class="com">// Delegate business logic to entity — it enforces the invariants</span>
+    <span class="com">// entity throws: CannotActivateUnverifiedEmailError, CannotActivateNonPendingUserError</span>
+    user.activate();
+
+    <span class="com">// Persist the state change</span>
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}</code></pre></div>
+
+<h3>ListUsersByStatus Use Case — Cursor Pagination</h3>
+<div class="code-wrap"><div class="code-label">list-users-by-status.use-case.ts</div><pre><code><span class="com">// packages/user-domain/src/application/use-cases/list-users-by-status/list-users-by-status.use-case.ts</span>
+
+<span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { InvalidUserStatusError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> ListUsersByStatusInput {
+  userStatus: <span class="ty">UserStatus</span>;
+  limit?: <span class="ty">number</span>;
+  cursor?: <span class="ty">string</span>;
+  direction?: <span class="str">'next'</span> | <span class="str">'prev'</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> ListUsersByStatusUseCase
+  <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;ListUsersByStatusInput, <span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt;
+{
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: ListUsersByStatusInput): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt; {
+    <span class="kw">const</span> { userStatus, limit, cursor, direction = <span class="str">'next'</span> } = input;
+
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.listByStatus(
+      userStatus,
+      limit,
+      direction,
+      direction === <span class="str">'next'</span>  ? cursor : <span class="kw">undefined</span>,  <span class="com">// nextCursorPointer</span>
+      direction === <span class="str">'prev'</span>  ? cursor : <span class="kw">undefined</span>,  <span class="com">// prevCursorPointer</span>
+    );
+  }
+}</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="contracts" data-section="contracts">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">06</div>
+  <div>
+    <h2>📋 Contracts — Zod Schemas & TypeScript Types</h2>
+    <p class="section-desc">Each domain has its own contracts package. Subpath imports only. Never import from the bare @old-st/contracts root.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>User Contracts Package</h3>
+<div class="code-wrap"><div class="code-label">packages/contracts/user/src/schemas.ts</div><pre><code><span class="com">// packages/contracts/user/src/schemas.ts</span>
+
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+
+<span class="com">// Re-export domain constants so consumers don't need both packages</span>
+<span class="kw">export</span> { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
+
+<span class="com">// Zod schemas from domain constants — one source of truth</span>
+<span class="kw">export</span> <span class="kw">const</span> userRoleSchema   = z.enum(USER_ROLES);
+<span class="kw">export</span> <span class="kw">const</span> userStatusSchema = z.enum(USER_STATUSES);
+
+<span class="com">// ─── Create User (request body validation) ───────────────────────────</span>
+<span class="kw">export</span> <span class="kw">const</span> createUserSchema = z.object({
+  email:     z.email(),
+  firstName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  lastName:  z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>),
+  userRole:  userRoleSchema.optional().default(<span class="str">'USER'</span>),
+  data:      z.object({ country: z.<span class="ty">string</span>().optional() }).optional(),
+});
+
+<span class="com">// ─── Update User ──────────────────────────────────────────────────────</span>
+<span class="kw">export</span> <span class="kw">const</span> updateUserSchema = z.object({
+  firstName: z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+  lastName:  z.<span class="ty">string</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional(),
+  data:      z.object({ country: z.<span class="ty">string</span>().optional() }).optional(),
+});
+
+<span class="com">// ─── Response shape (also used for runtime output validation) ─────────</span>
+<span class="kw">export</span> <span class="kw">const</span> userResponseSchema = z.object({
+  userId:      z.<span class="ty">string</span>(),
+  email:       z.<span class="ty">string</span>().email(),
+  firstName:   z.<span class="ty">string</span>(),
+  lastName:    z.<span class="ty">string</span>(),
+  userRole:    userRoleSchema,
+  userStatus:  userStatusSchema,
+  data:        z.object({ country: z.<span class="ty">string</span>().optional() }),
+  dateCreated: z.<span class="ty">string</span>().datetime(),
+  updatedAt:   z.<span class="ty">string</span>().datetime(),
+});
+
+<span class="com">// ─── TypeScript types inferred from Zod schemas ───────────────────────</span>
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">UserResponse</span>          = z.infer&lt;typeof userResponseSchema&gt;;
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">CreateUserInput</span>       = z.infer&lt;typeof createUserSchema&gt;;
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">UpdateUserInput</span>       = z.infer&lt;typeof updateUserSchema&gt;;</code></pre></div>
+
+<div class="callout callout-danger"><div class="callout-title">⛔ Import Rule — Always use domain-scoped subpaths</div><p>✅ <code>import { createUserSchema } from '@old-st/contracts/user'</code><br>❌ <code>import { createUserSchema } from '@old-st/contracts'</code></p><p>Each domain sub-package compiles independently. A type error in the order contracts cannot break the user service. Golden Rule #11.</p></div>
+
+<h3>Common Pagination Types</h3>
+<div class="code-wrap"><div class="code-label">packages/contracts/common/src/pagination.ts</div><pre><code><span class="com">// packages/contracts/common/src/pagination.ts</span>
+
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="com">// Cursor-based pagination (DynamoDB domains)</span>
+<span class="kw">export</span> <span class="kw">const</span> paginatedResponseSchema = &lt;T <span class="kw">extends</span> z.ZodType&gt;(itemSchema: T) =&gt;
+  z.object({
+    data:               z.array(itemSchema),
+    nextCursorPointer:  z.<span class="ty">string</span>().nullable().optional(),
+    prevCursorPointer:  z.<span class="ty">string</span>().nullable().optional(),
+  });
+
+<span class="kw">export</span> <span class="kw">type</span> PaginatedResponse&lt;T&gt; = {
+  data:               T[];
+  nextCursorPointer?: <span class="ty">string</span> | <span class="kw">null</span>;
+  prevCursorPointer?: <span class="ty">string</span> | <span class="kw">null</span>;
+};
+
+<span class="com">// Offset pagination (Prisma / PostgreSQL domains)</span>
+<span class="kw">export</span> <span class="kw">type</span> OffsetPaginatedResponse&lt;T&gt; = {
+  data:        T[];
+  total:       <span class="ty">number</span>;
+  page:        <span class="ty">number</span>;
+  limit:       <span class="ty">number</span>;
+  totalPages:  <span class="ty">number</span>;
+};</code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="appservice" data-section="appservice">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">07</div>
+  <div>
+    <h2>🔀 Application Service</h2>
+    <p class="section-desc">Orchestrates use cases, transforms domain entities to DTOs, publishes events. The only layer that knows both domain types AND DTO shapes.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>UserApplicationService</h3>
+<div class="code-wrap"><div class="code-label">user-application.service.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/application/services/user-application.service.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Injectable</span>, Inject } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>;
+<span class="kw">import</span> { <span class="ty">IPaginatedResponse</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> {
+  userResponseSchema,
+  <span class="ty">CreateUserInput</span>, <span class="ty">UpdateUserInput</span>, <span class="ty">UserResponse</span>,
+  ListUsersByStatusInput, <span class="ty">UserDomainEvent</span>,
+} <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { PaginatedResponse } <span class="kw">from</span> <span class="str">'@old-st/contracts/common'</span>;
+<span class="kw">import</span> {
+  <span class="ty">User</span>,
+  <span class="ty">CreateUserUseCase</span>, <span class="ty">GetUserByIdUseCase</span>, GetUserByEmailUseCase,
+  UpdateUserProfileUseCase, DeleteUserUseCase,
+  <span class="ty">ActivateUserUseCase</span>, <span class="ty">DeactivateUserUseCase</span>, <span class="ty">VerifyUserEmailUseCase</span>,
+  UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
+} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+
+<span class="com">// Module-level singleton logger — NOT a class property (Golden Rule #35)</span>
+<span class="kw">const</span> logger = createLogger(<span class="str">'user-api-service'</span>);
+
+<span class="dec">@Injectable(</span>)
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">UserApplicationService</span> {
+  constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> createUserUseCase:                <span class="ty">CreateUserUseCase</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> getUserByIdUseCase:               <span class="ty">GetUserByIdUseCase</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> getUserByEmailUseCase:            GetUserByEmailUseCase,
+    <span class="kw">private</span> <span class="kw">readonly</span> updateUserProfileUseCase:         UpdateUserProfileUseCase,
+    <span class="kw">private</span> <span class="kw">readonly</span> deleteUserUseCase:                DeleteUserUseCase,
+    <span class="kw">private</span> <span class="kw">readonly</span> activateUserUseCase:              <span class="ty">ActivateUserUseCase</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> deactivateUserUseCase:            <span class="ty">DeactivateUserUseCase</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> verifyUserEmailUseCase:           <span class="ty">VerifyUserEmailUseCase</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> updateUserRoleUseCase:            UpdateUserRoleUseCase,
+    <span class="kw">private</span> <span class="kw">readonly</span> listUsersByStatusUseCase:         ListUsersByStatusUseCase,
+    <span class="kw">private</span> <span class="kw">readonly</span> listUsersByRoleAndStatusUseCase:  ListUsersByRoleAndStatusUseCase,
+    <span class="dec">@Inject(</span><span class="str">'USER_EVENT_PUBLISHER'</span>)
+    <span class="kw">private</span> <span class="kw">readonly</span> eventPublisher: <span class="ty">IEventPublisher</span>&lt;<span class="ty">UserDomainEvent</span>&gt;,
+  ) {}
+
+  <span class="com">// ─── Private: entity → DTO (uses Zod for output validation) ────────</span>
+  <span class="kw">private</span> toDto(user: <span class="ty">User</span>): <span class="ty">UserResponse</span> {
+    <span class="kw">return</span> userResponseSchema.parse({
+      userId:      user.getUserId(),
+      email:       user.getEmail(),
+      firstName:   user.getFirstName(),
+      lastName:    user.getLastName(),
+      userRole:    user.getUserRole(),
+      userStatus:  user.getUserStatus(),
+      data:        user.getData(),
+      dateCreated: user.getDateCreated(),
+      updatedAt:   user.getUpdatedAt(),
+    });
+  }
+
+  <span class="kw">private</span> toPaginatedDto(result: <span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;): PaginatedResponse&lt;<span class="ty">UserResponse</span>&gt; {
+    <span class="kw">return</span> {
+      data:               result.data.map((u) =&gt; <span class="kw">this</span>.toDto(u)),
+      nextCursorPointer:  result.nextCursorPointer,
+      prevCursorPointer:  result.prevCursorPointer,
+    };
+  }
+
+  <span class="com">// ─── Mutation methods accept actorId (Golden Rule #10a) ─────────────</span>
+  <span class="kw">async</span> createUser(input: <span class="ty">CreateUserInput</span>, actorId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">UserResponse</span>&gt; {
+    logger.info(<span class="str">'Creating user'</span>, { email: input.email, userRole: input.userRole, actorId });
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.createUserUseCase.execute({ ...input });
+    <span class="kw">return</span> <span class="kw">this</span>.toDto(user);
+  }
+
+  <span class="kw">async</span> activateUser(userId: <span class="ty">string</span>, actorId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">UserResponse</span>&gt; {
+    logger.info(<span class="str">'Activating user'</span>, { userId, actorId });
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.activateUserUseCase.execute({ userId });
+    <span class="kw">return</span> <span class="kw">this</span>.toDto(user);
+  }
+
+  <span class="kw">async</span> listUsersByStatus(input: ListUsersByStatusInput): <span class="ty">Promise</span>&lt;PaginatedResponse&lt;<span class="ty">UserResponse</span>&gt;&gt; {
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="kw">this</span>.listUsersByStatusUseCase.execute(input);
+    <span class="kw">return</span> <span class="kw">this</span>.toPaginatedDto(result);
+  }
+
+  <span class="com">// ─── Read methods do NOT need actorId ────────────────────────────────</span>
+  <span class="kw">async</span> getUserById(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">UserResponse</span>&gt; {
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.getUserByIdUseCase.execute({ userId });
+    <span class="kw">return</span> <span class="kw">this</span>.toDto(user);
+  }
+}</code></pre></div>
+
+<div class="callout callout-warning"><div class="callout-title">Application Service responsibilities</div><ul>
+  <li>✅ Calls use cases via <code>this.xyzUseCase.execute({...})</code></li>
+  <li>✅ Transforms domain entities to DTOs via <code>userResponseSchema.parse({...})</code></li>
+  <li>✅ Logs all mutation operations with <code>actorId</code></li>
+  <li>❌ Does NOT contain business logic — that belongs in the entity or use case</li>
+  <li>❌ Does NOT import from <code>@nestjs/*</code> except <code>@Injectable</code>, <code>@Inject</code></li>
+</ul></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="controller" data-section="controller">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">08</div>
+  <div>
+    <h2>🌐 Controller & Presentation Layer</h2>
+    <p class="section-desc">Thin HTTP adapter. Validates input via ZodValidationPipe, extracts actor via @CurrentUser, delegates to ApplicationService.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>REST Naming Conventions</h3>
+<table class="cmp-table">
+<thead><tr><th>Intent</th><th>Method</th><th>Path</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>List with filter</td><td>GET</td><td><code>/users/by-status?userStatus=ACTIVE</code></td><td>200</td></tr>
+<tr><td>Get by ID</td><td>GET</td><td><code>/users/:userId</code></td><td>200</td></tr>
+<tr><td>Create</td><td>POST</td><td><code>/users</code></td><td>201</td></tr>
+<tr><td>Partial update</td><td>PATCH</td><td><code>/users/:userId</code></td><td>200</td></tr>
+<tr><td>Delete</td><td>DELETE</td><td><code>/users/:userId</code></td><td>204</td></tr>
+<tr><td>State transition</td><td>POST</td><td><code>/users/:userId/activate</code></td><td>200</td></tr>
+</tbody>
+</table>
+
+<div class="callout callout-warning"><div class="callout-title">Static paths before dynamic paths</div><p>NestJS routes are matched in declaration order. Declare <code>GET /users/by-status</code> and <code>GET /users/by-role-and-status</code> BEFORE <code>GET /users/:userId</code> — otherwise <code>by-status</code> is treated as a <code>userId</code> parameter.</p></div>
+
+<h3>Controller Implementation</h3>
+<div class="code-wrap"><div class="code-label">user.controller.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/presentation/controllers/user.controller.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Controller</span>, <span class="ty">Get</span>, <span class="ty">Post</span>, <span class="ty">Patch</span>, <span class="ty">Delete</span>, <span class="ty">Body</span>, <span class="ty">Param</span>, <span class="ty">Query</span>, <span class="ty">HttpCode</span>, <span class="ty">HttpStatus</span> } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { createUserSchema, updateUserSchema, userStatusSchema, <span class="ty">CreateUserInput</span>, <span class="ty">UpdateUserInput</span> } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { <span class="ty">UserApplicationService</span> } <span class="kw">from</span> <span class="str">'../../application/services/user-application.service'</span>;
+<span class="kw">import</span> { <span class="ty">ZodValidationPipe</span> } <span class="kw">from</span> <span class="str">'../pipes/zod-validation.pipe'</span>;
+<span class="kw">import</span> { CurrentUser } <span class="kw">from</span> <span class="str">'../decorators/current-user.decorator'</span>;
+
+<span class="com">// Query schemas with coercion — query params arrive as strings</span>
+<span class="kw">const</span> listByStatusQuerySchema = z.object({
+  userStatus: userStatusSchema,
+  limit:      z.coerce.<span class="ty">number</span>().min(<span class="num">1</span>).max(<span class="num">100</span>).optional().default(<span class="num">20</span>),
+  cursor:     z.<span class="ty">string</span>().optional(),
+  direction:  z.enum([<span class="str">'next'</span>, <span class="str">'prev'</span>]).optional().default(<span class="str">'next'</span>),
+});
+
+<span class="dec">@ApiTags(</span><span class="str">'users'</span>)
+<span class="dec">@Controller(</span><span class="str">'users'</span>)
+<span class="kw">export</span> <span class="kw">class</span> UserController {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userApplicationService: <span class="ty">UserApplicationService</span>) {}
+
+  <span class="com">// ─── Static paths FIRST (before /:userId) ──────────────────────────</span>
+  <span class="dec">@Get(</span><span class="str">'by-status'</span>)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'List users by status'</span>, description: <span class="str">'Cursor-paginated list filtered by status.'</span> })
+  <span class="dec">@ApiOkResponse(</span>{ description: <span class="str">'Paginated list of users'</span> })
+  listUsersByStatus(
+    <span class="dec">@Query(</span><span class="kw">new</span> <span class="ty">ZodValidationPipe</span>(listByStatusQuerySchema)) query: any,
+  ) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.listUsersByStatus(query);
+  }
+
+  <span class="com">// ─── Dynamic paths after static ────────────────────────────────────</span>
+  <span class="dec">@Post(</span>)
+  <span class="dec">@HttpCode(</span><span class="ty">HttpStatus</span>.CREATED)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Create a new user'</span> })
+  <span class="dec">@ApiCreatedResponse(</span>{ description: <span class="str">'User created successfully'</span> })
+  createUser(
+    <span class="dec">@Body(</span><span class="kw">new</span> <span class="ty">ZodValidationPipe</span>(createUserSchema)) body: <span class="ty">CreateUserInput</span>,
+    <span class="dec">@CurrentUser(</span><span class="str">'userId'</span>) actorId: <span class="ty">string</span>,   <span class="com">// Actor from JWT — NEVER from @Body</span>
+  ) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.createUser(body, actorId);
+  }
+
+  <span class="dec">@Get(</span><span class="str">':userId'</span>)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Get user by ID'</span> })
+  getUserById(<span class="dec">@Param(</span><span class="str">'userId'</span>) userId: <span class="ty">string</span>) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.getUserById(userId);
+  }
+
+  <span class="dec">@Patch(</span><span class="str">':userId'</span>)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Update user profile'</span> })
+  updateUserProfile(
+    <span class="dec">@Param(</span><span class="str">'userId'</span>) userId: <span class="ty">string</span>,
+    <span class="dec">@Body(</span><span class="kw">new</span> <span class="ty">ZodValidationPipe</span>(updateUserSchema)) body: <span class="ty">UpdateUserInput</span>,
+    <span class="dec">@CurrentUser(</span><span class="str">'userId'</span>) actorId: <span class="ty">string</span>,
+  ) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.updateUserProfile(userId, body, actorId);
+  }
+
+  <span class="dec">@Delete(</span><span class="str">':userId'</span>)
+  <span class="dec">@HttpCode(</span><span class="ty">HttpStatus</span>.NO_CONTENT)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Delete user'</span> })
+  <span class="kw">async</span> deleteUser(
+    <span class="dec">@Param(</span><span class="str">'userId'</span>) userId: <span class="ty">string</span>,
+    <span class="dec">@CurrentUser(</span><span class="str">'userId'</span>) actorId: <span class="ty">string</span>,
+  ) {
+    <span class="kw">await</span> <span class="kw">this</span>.userApplicationService.deleteUser(userId, actorId);
+  }
+
+  <span class="dec">@Post(</span><span class="str">':userId/activate'</span>)
+  <span class="dec">@HttpCode(</span><span class="ty">HttpStatus</span>.OK)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Activate user — transitions PENDING/INACTIVE → ACTIVE'</span> })
+  activateUser(
+    <span class="dec">@Param(</span><span class="str">'userId'</span>) userId: <span class="ty">string</span>,
+    <span class="dec">@CurrentUser(</span><span class="str">'userId'</span>) actorId: <span class="ty">string</span>,
+  ) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.activateUser(userId, actorId);
+  }
+
+  <span class="dec">@Post(</span><span class="str">':userId/deactivate'</span>)
+  <span class="dec">@HttpCode(</span><span class="ty">HttpStatus</span>.OK)
+  <span class="dec">@ApiOperation(</span>{ summary: <span class="str">'Deactivate user — transitions ACTIVE → INACTIVE'</span> })
+  deactivateUser(
+    <span class="dec">@Param(</span><span class="str">'userId'</span>) userId: <span class="ty">string</span>,
+    <span class="dec">@CurrentUser(</span><span class="str">'userId'</span>) actorId: <span class="ty">string</span>,
+  ) {
+    <span class="kw">return</span> <span class="kw">this</span>.userApplicationService.deactivateUser(userId, actorId);
+  }
+}</code></pre></div>
+
+<h3>ZodValidationPipe</h3>
+<div class="code-wrap"><div class="code-label">zod-validation.pipe.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/presentation/pipes/zod-validation.pipe.ts</span>
+
+<span class="kw">import</span> { PipeTransform, BadRequestException } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { ZodSchema } <span class="kw">from</span> <span class="str">'zod'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">ZodValidationPipe</span> <span class="kw">implements</span> PipeTransform {
+  constructor(<span class="kw">private</span> schema: ZodSchema) {}
+
+  transform(value: unknown) {
+    <span class="kw">const</span> result = <span class="kw">this</span>.schema.safeParse(value);
+    <span class="kw">if</span> (!result.success) {
+      <span class="com">// Throw BadRequestException with Zod issue array — DomainExceptionFilter preserves it</span>
+      <span class="kw">throw</span> <span class="kw">new</span> BadRequestException(result.error.issues);
+    }
+    <span class="kw">return</span> result.data;
+  }
+}</code></pre></div>
+
+<h3>@CurrentUser Decorator</h3>
+<div class="code-wrap"><div class="code-label">current-user.decorator.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/presentation/decorators/current-user.decorator.ts</span>
+
+<span class="kw">import</span> { createParamDecorator, ExecutionContext } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { Request } <span class="kw">from</span> <span class="str">'express'</span>;
+
+<span class="kw">export</span> <span class="kw">type</span> <span class="ty">AuthenticatedUser</span> = {
+  userId:   <span class="ty">string</span>;
+  email:    <span class="ty">string</span>;
+  userRole?: <span class="ty">string</span>;
+};
+
+<span class="com">// JwtAuthGuard sets request.user — this decorator extracts from it</span>
+<span class="kw">export</span> <span class="kw">const</span> CurrentUser = createParamDecorator(
+  (field: keyof <span class="ty">AuthenticatedUser</span> | <span class="kw">undefined</span>, ctx: ExecutionContext) =&gt; {
+    <span class="kw">const</span> request = ctx.switchToHttp().getRequest&lt;Request&gt;();
+    <span class="kw">const</span> user = request.user as <span class="ty">AuthenticatedUser</span>;
+    <span class="kw">return</span> field ? user?.[field] : user;
+  },
+);
+
+<span class="com">// Usage:</span>
+<span class="com">// @CurrentUser('userId') actorId: string      — just the ID</span>
+<span class="com">// @CurrentUser() user: AuthenticatedUser      — full user object</span></code></pre></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="module" data-section="module">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">09</div>
+  <div>
+    <h2>🔌 NestJS Module Wiring</h2>
+    <p class="section-desc">Factory providers inject the right implementations. Only the ApplicationService is exported. Use cases and repositories stay private to the module.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>UserModule — Complete Wiring</h3>
+<div class="code-wrap"><div class="code-label">user.module.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/modules/user.module.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Module</span> } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> {
+  <span class="ty">IUserRepository</span>,
+  <span class="ty">CreateUserUseCase</span>, <span class="ty">GetUserByIdUseCase</span>, GetUserByEmailUseCase,
+  UpdateUserProfileUseCase, DeleteUserUseCase,
+  <span class="ty">ActivateUserUseCase</span>, <span class="ty">DeactivateUserUseCase</span>, <span class="ty">VerifyUserEmailUseCase</span>,
+  UpdateUserRoleUseCase, ListUsersByStatusUseCase, ListUsersByRoleAndStatusUseCase,
+} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+<span class="kw">import</span> { DynamoUserRepository, UserSchema } <span class="kw">from</span> <span class="str">'@old-st/user-domain/infrastructure'</span>;
+<span class="kw">import</span> { SqsFifoEventPublisher, createLocalSqsClient, createAwsSqsClient } <span class="kw">from</span> <span class="str">'@old-st/aws-sqs'</span>;
+<span class="kw">import</span> { <span class="ty">Table</span> } <span class="kw">from</span> <span class="str">'dynamodb-onetable'</span>;
+<span class="kw">import</span> { DynamoDBConfig } <span class="kw">from</span> <span class="str">'../infrastructure/config/dynamodb.config'</span>;
+<span class="kw">import</span> { <span class="ty">UserApplicationService</span> } <span class="kw">from</span> <span class="str">'../application/services/user-application.service'</span>;
+<span class="kw">import</span> { UserController } <span class="kw">from</span> <span class="str">'../presentation/controllers/user.controller'</span>;
+
+<span class="com">// String tokens — defined locally, never exported</span>
+<span class="kw">const</span> DYNAMO_TABLE        = <span class="str">'DYNAMO_TABLE'</span>;
+<span class="kw">const</span> USER_REPOSITORY     = <span class="str">'USER_REPOSITORY'</span>;
+<span class="kw">const</span> USER_EVENT_PUBLISHER = <span class="str">'USER_EVENT_PUBLISHER'</span>;
+
+<span class="dec">@Module(</span>{
+  controllers: [UserController],
+  providers: [
+    <span class="com">// ─── 1. DynamoDB Table instance ───────────────────────────────────</span>
+    {
+      provide: DYNAMO_TABLE,
+      useFactory: () =&gt; DynamoDBConfig.getTable(
+        process.env.USERS_DYNAMODB_TABLE_NAME || <span class="str">'OldSTTable'</span>,
+        UserSchema,
+      ),
+    },
+
+    <span class="com">// ─── 2. Repository (adapter) ──────────────────────────────────────</span>
+    {
+      provide: USER_REPOSITORY,
+      useFactory: (table: <span class="ty">Table</span>) =&gt; <span class="kw">new</span> DynamoUserRepository(table),
+      inject: [DYNAMO_TABLE],
+    },
+
+    <span class="com">// ─── 3. Use cases — each wired with only the deps it needs ────────</span>
+    { provide: <span class="ty">CreateUserUseCase</span>,               useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> <span class="ty">CreateUserUseCase</span>(r),               inject: [USER_REPOSITORY] },
+    { provide: <span class="ty">GetUserByIdUseCase</span>,              useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> <span class="ty">GetUserByIdUseCase</span>(r),              inject: [USER_REPOSITORY] },
+    { provide: GetUserByEmailUseCase,           useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> GetUserByEmailUseCase(r),           inject: [USER_REPOSITORY] },
+    { provide: UpdateUserProfileUseCase,        useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> UpdateUserProfileUseCase(r),        inject: [USER_REPOSITORY] },
+    { provide: DeleteUserUseCase,               useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> DeleteUserUseCase(r),               inject: [USER_REPOSITORY] },
+    { provide: <span class="ty">ActivateUserUseCase</span>,             useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> <span class="ty">ActivateUserUseCase</span>(r),             inject: [USER_REPOSITORY] },
+    { provide: <span class="ty">DeactivateUserUseCase</span>,           useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> <span class="ty">DeactivateUserUseCase</span>(r),           inject: [USER_REPOSITORY] },
+    { provide: <span class="ty">VerifyUserEmailUseCase</span>,          useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> <span class="ty">VerifyUserEmailUseCase</span>(r),          inject: [USER_REPOSITORY] },
+    { provide: UpdateUserRoleUseCase,           useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> UpdateUserRoleUseCase(r),           inject: [USER_REPOSITORY] },
+    { provide: ListUsersByStatusUseCase,        useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> ListUsersByStatusUseCase(r),        inject: [USER_REPOSITORY] },
+    { provide: ListUsersByRoleAndStatusUseCase, useFactory: (r: <span class="ty">IUserRepository</span>) =&gt; <span class="kw">new</span> ListUsersByRoleAndStatusUseCase(r), inject: [USER_REPOSITORY] },
+
+    <span class="com">// ─── 4. SQS Event Publisher ──────────────────────────────────────</span>
+    {
+      provide: USER_EVENT_PUBLISHER,
+      useFactory: () =&gt; {
+        <span class="kw">const</span> isLocal = process.env.STAGE === <span class="str">'local'</span>;
+        <span class="kw">const</span> client = isLocal
+          ? createLocalSqsClient()
+          : createAwsSqsClient(process.env.AWS_REGION || <span class="str">'eu-west-2'</span>);
+        <span class="kw">return</span> <span class="kw">new</span> SqsFifoEventPublisher(
+          client,
+          process.env.USER_SQS_QUEUE_URL || <span class="str">''</span>,
+        );
+      },
+    },
+
+    <span class="com">// ─── 5. Application Service ──────────────────────────────────────</span>
+    <span class="ty">UserApplicationService</span>,
+  ],
+  <span class="com">// Only export the Application Service — never use cases or repositories</span>
+  exports: [<span class="ty">UserApplicationService</span>],
+})
+<span class="kw">export</span> <span class="kw">class</span> UserModule {}</code></pre></div>
+
+<div class="callout callout-info"><div class="callout-title">Token naming convention</div><p>Use plain string constants, not enums: <code>const USER_REPOSITORY = 'USER_REPOSITORY'</code>. They are local to the module file and never exported.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="exceptions" data-section="exceptions">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">10</div>
+  <div>
+    <h2>🚦 Exception Strategy & DomainExceptionFilter</h2>
+    <p class="section-desc">Typed domain exceptions map to HTTP status codes. The filter is the only place that knows about HTTP — the domain never does.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>Exception Class Hierarchy</h3>
+<div class="two-col"><div class="card"><div class="card-icon">📐</div><h4>Domain Exceptions</h4><p>Entity rule violations. Thrown by domain entity methods. Always conflict (409) or not-found (404).</p><ul style="font-size:0.85rem;color:var(--text-muted);padding-left:16px;margin:8px 0">
+    <li><code>UserNotFoundError</code> → 404</li>
+    <li><code>EmailAlreadyVerifiedError</code> → 409</li>
+    <li><code>CannotActivateNonPendingUserError</code> → 409</li>
+    <li><code>CannotModifyNonDraftOrderError</code> → 409</li>
+  </ul></div><div class="card"><div class="card-icon">🔍</div><h4>Application Exceptions</h4><p>Input validation failures. Thrown by use cases when business pre-conditions aren't met. Always 400 or 409.</p><ul style="font-size:0.85rem;color:var(--text-muted);padding-left:16px;margin:8px 0">
+    <li><code>EmailAlreadyExistsError</code> → 409</li>
+    <li><code>InvalidInputError</code> → 400</li>
+    <li><code>UserNotFoundError</code> → 404</li>
+    <li><code>InvalidUserStatusError</code> → 400</li>
+  </ul></div></div>
+
+<h3>DomainExceptionFilter</h3>
+<div class="code-wrap"><div class="code-label">domain-exception.filter.ts</div><pre><code><span class="com">// apps/users/user-api-service/src/presentation/filters/domain-exception.filter.ts</span>
+
+<span class="kw">import</span> { ExceptionFilter, Catch, ArgumentsHost, HttpException, <span class="ty">HttpStatus</span> } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { createLogger } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>;
+<span class="kw">import</span> { Response } <span class="kw">from</span> <span class="str">'express'</span>;
+<span class="kw">import</span> {
+  UserNotFoundError, EmailAlreadyExistsError, InvalidEmailFormatError,
+  InvalidNameError, EmailAlreadyVerifiedError,
+  CannotActivateNonPendingUserError, CannotActivateUnverifiedEmailError,
+  CannotDeactivateDeletedUserError, UserAlreadyDeletedError,
+  CannotUpdateDeletedUserError, InvalidInputError,
+} <span class="kw">from</span> <span class="str">'@old-st/user-domain'</span>;
+
+<span class="kw">const</span> logger = createLogger(<span class="str">'user-api-service'</span>);
+
+<span class="kw">type</span> ErrorConstructor = <span class="kw">new</span> (...args: never[]) =&gt; Error;
+
+<span class="com">// Ordered map: exception class → HTTP status code</span>
+<span class="kw">const</span> DOMAIN_ERROR_MAP: Array&lt;[ErrorConstructor, <span class="ty">number</span>]&gt; = [
+  [UserNotFoundError,                   <span class="num">404</span>],
+  [InvalidEmailFormatError,             <span class="num">400</span>],
+  [InvalidNameError,                    <span class="num">400</span>],
+  [InvalidInputError,                   <span class="num">400</span>],
+  [EmailAlreadyExistsError,             <span class="num">409</span>],
+  [EmailAlreadyVerifiedError,           <span class="num">409</span>],
+  [CannotActivateNonPendingUserError,   <span class="num">409</span>],
+  [CannotActivateUnverifiedEmailError,  <span class="num">409</span>],
+  [CannotDeactivateDeletedUserError,    <span class="num">409</span>],
+  [UserAlreadyDeletedError,             <span class="num">409</span>],
+  [CannotUpdateDeletedUserError,        <span class="num">409</span>],
+];
+
+<span class="dec">@Catch(</span>)
+<span class="kw">export</span> <span class="kw">class</span> <span class="ty">DomainExceptionFilter</span> <span class="kw">implements</span> ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost): <span class="kw">void</span> {
+    <span class="kw">const</span> ctx      = host.switchToHttp();
+    <span class="kw">const</span> response = ctx.getResponse&lt;Response&gt;();
+
+    <span class="com">// 1. Handle NestJS built-in HttpExceptions first</span>
+    <span class="com">//    Use getResponse() — NOT .message — to preserve Zod issue arrays</span>
+    <span class="kw">if</span> (exception instanceof HttpException) {
+      <span class="kw">const</span> status = exception.getStatus();
+      <span class="kw">const</span> res    = exception.getResponse();
+      <span class="kw">if</span> (status &gt;= <span class="num">500</span>) logger.error(<span class="str">`[${exception.constructor.name}] ${status}`</span>, {}, exception);
+      <span class="kw">else</span>               logger.warn(<span class="str">`[${exception.constructor.name}] ${status}`</span>);
+      response.status(status).json(
+        typeof res === <span class="str">'string'</span>
+          ? { statusCode: status, error: exception.constructor.name, message: res }
+          : res,
+      );
+      <span class="kw">return</span>;
+    }
+
+    <span class="com">// 2. Map typed domain / application exceptions</span>
+    <span class="kw">if</span> (exception instanceof Error) {
+      <span class="kw">for</span> (<span class="kw">const</span> [ErrorClass, statusCode] <span class="kw">of</span> DOMAIN_ERROR_MAP) {
+        <span class="kw">if</span> (exception instanceof ErrorClass) {
+          logger.warn(<span class="str">`[${exception.constructor.name}] ${exception.message}`</span>);
+          response.status(statusCode).json({
+            statusCode,
+            error:   exception.constructor.name,
+            message: exception.message,
+          });
+          <span class="kw">return</span>;
+        }
+      }
+    }
+
+    <span class="com">// 3. Unexpected errors — include actual class name and message, never generic strings</span>
+    <span class="kw">const</span> errorName    = exception instanceof Error ? exception.constructor.name : <span class="str">'UnknownError'</span>;
+    <span class="kw">const</span> errorMessage = exception instanceof Error ? exception.message : String(exception);
+    logger.error(<span class="str">`[${errorName}] ${errorMessage}`</span>, {}, exception);
+    response.status(<span class="ty">HttpStatus</span>.INTERNAL_SERVER_ERROR).json({
+      statusCode: <span class="ty">HttpStatus</span>.INTERNAL_SERVER_ERROR,
+      error:      errorName,
+      message:    errorMessage,
+    });
+  }
+}</code></pre></div>
+
+<h3>Standardised Error Response Shape</h3>
+<div class="code-wrap"><div class="code-label">error response shape</div><pre><code><span class="com">// Every error response from every service uses this exact shape:</span>
+{
+  <span class="str">"statusCode"</span>: <span class="num">409</span>,
+  <span class="str">"error"</span>: <span class="str">"CannotActivateNonPendingUserError"</span>,
+  <span class="str">"message"</span>: <span class="str">"User must be in PENDING or INACTIVE status to activate"</span>
+}
+
+<span class="com">// Fields:</span>
+<span class="com">//   statusCode — HTTP status code (number)</span>
+<span class="com">//   error      — exception class name (exception.constructor.name)</span>
+<span class="com">//   message    — human-readable error message</span>
+<span class="com">//</span>
+<span class="com">// Never include: timestamp, path, stack</span>
+<span class="com">// Never use generic: "InternalServerError" / "An unexpected error occurred"</span></code></pre></div>
+
+<h3>User Domain Error Map</h3>
+<table class="error-table">
+  <thead><tr><th>Exception Class</th><th>HTTP Status</th><th>Scenario</th></tr></thead>
+  <tbody><tr><td><code>UserNotFoundError</code></td><td class="status-bad">404</td><td>findById / findByEmail returned null</td></tr><tr><td><code>InvalidEmailFormatError</code></td><td class="status-bad">400</td><td>Email does not match regex in User.create()</td></tr><tr><td><code>InvalidNameError</code></td><td class="status-bad">400</td><td>firstName or lastName is empty after trim()</td></tr><tr><td><code>InvalidInputError</code></td><td class="status-bad">400</td><td>Use-case-level validation (missing required field)</td></tr><tr><td><code>EmailAlreadyExistsError</code></td><td class="status-conflict">409</td><td>createUser — email already registered</td></tr><tr><td><code>EmailAlreadyVerifiedError</code></td><td class="status-conflict">409</td><td>verifyEmail — already verified</td></tr><tr><td><code>CannotActivateNonPendingUserError</code></td><td class="status-conflict">409</td><td>activate() called on DELETED user</td></tr><tr><td><code>CannotActivateUnverifiedEmailError</code></td><td class="status-conflict">409</td><td>activate() before email verified</td></tr><tr><td><code>CannotDeactivateDeletedUserError</code></td><td class="status-conflict">409</td><td>deactivate() on DELETED user</td></tr><tr><td><code>UserAlreadyInactiveError</code></td><td class="status-conflict">409</td><td>deactivate() already INACTIVE</td></tr><tr><td><code>UserAlreadyDeletedError</code></td><td class="status-conflict">409</td><td>delete() already DELETED</td></tr><tr><td><code>CannotUpdateDeletedUserError</code></td><td class="status-conflict">409</td><td>updateProfile() on DELETED user</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section class="section" id="patterns" data-section="patterns">
+<div class="section-inner fade-up">
+<div class="section-header">
+  <div class="section-num">11</div>
+  <div>
+    <h2>🔗 Cross-Service Patterns</h2>
+    <p class="section-desc">Three integration patterns: synchronous ACL (real-time gate), async cross-domain events, and choreography sagas.</p>
+  </div>
+</div>
+
+<div class="topic">
+<h3>Pattern 1 — Synchronous ACL (HTTP Gate Check)</h3>
+<p>Used when an operation <em>cannot proceed</em> without a real-time answer from another service. Example: Order service validates customer before creating an order.</p>
+
+<div class="flow-chart">
+  <div class="flow-item">
+    <div class="flow-box presentation">POST /orders  →  CreateOrderUseCase</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box application">ICustomerValidator.validate(customerId)  — abstract interface</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box infra">CustomerApiClient.validate()  — HTTP call to User API</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box domain">User API  →  GET /users/:userId  →  UserApplicationService</div>
+    
+  </div></div>
+
+<div class="code-wrap"><div class="code-label">customer-validator.interface.ts (port — order domain)</div><pre><code><span class="com">// packages/order-domain/src/application/interfaces/customer-validator.interface.ts</span>
+
+<span class="com">// The port — defined in the consuming domain's application layer</span>
+<span class="com">// Never imports from user-domain (no coupling)</span>
+<span class="kw">export</span> <span class="kw">abstract</span> <span class="kw">class</span> <span class="ty">ICustomerValidator</span> {
+  <span class="kw">abstract</span> validate(customerId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt;;
+  <span class="com">// Throws: CustomerNotFoundError | CustomerNotActiveError</span>
+}</code></pre></div>
+
+<div class="code-wrap"><div class="code-label">customer-api.client.ts (adapter — order service)</div><pre><code><span class="com">// apps/orders/order-api-service/src/infrastructure/clients/customer-api.client.ts</span>
+
+<span class="kw">import</span> { <span class="ty">Injectable</span>, HttpException } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { HttpService } <span class="kw">from</span> <span class="str">'@nestjs/axios'</span>;
+<span class="kw">import</span> { firstValueFrom } <span class="kw">from</span> <span class="str">'rxjs'</span>;
+<span class="kw">import</span> { getOutboundHeaders } <span class="kw">from</span> <span class="str">'@old-st/telemetry'</span>; <span class="com">// forwards correlation + Authorization</span>
+<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+<span class="kw">import</span> { CustomerNotFoundError, CustomerNotActiveError } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+
+<span class="com">// The adapter — in the ORDER service infrastructure (not the user-domain)</span>
+<span class="dec">@Injectable(</span>)
+<span class="kw">export</span> <span class="kw">class</span> CustomerApiClient <span class="kw">implements</span> <span class="ty">ICustomerValidator</span> {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> httpService: HttpService) {}
+
+  <span class="kw">async</span> validate(customerId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt; {
+    try {
+      <span class="kw">const</span> response = <span class="kw">await</span> firstValueFrom(
+        <span class="kw">this</span>.httpService.get(<span class="str">`${process.env.API_USER_URL}/users/${customerId}`</span>, {
+          headers: getOutboundHeaders(),  <span class="com">// Propagates correlationId + Authorization JWT</span>
+          timeout: <span class="num">5000</span>,
+        }),
+      );
+      <span class="kw">if</span> (response.data.userStatus !== <span class="str">'ACTIVE'</span>) {
+        <span class="kw">throw</span> <span class="kw">new</span> CustomerNotActiveError(customerId);
+      }
+    } catch (err) {
+      <span class="kw">if</span> (err instanceof HttpException) {
+        <span class="kw">if</span> (err.getStatus() === <span class="num">404</span>) <span class="kw">throw</span> <span class="kw">new</span> CustomerNotFoundError(customerId);
+        <span class="kw">if</span> (err.getStatus() === <span class="num">409</span>) <span class="kw">throw</span> <span class="kw">new</span> CustomerNotActiveError(customerId);
+      }
+      <span class="kw">throw</span> err;
+    }
+  }
+}</code></pre></div>
+</div>
+
+<div class="topic">
+<h3>Pattern 2 — Async Cross-Domain Events (SQS)</h3>
+<p>Used when eventual consistency is acceptable. The publisher doesn't wait for the consumer to process the event.</p>
+
+<div class="code-wrap"><div class="code-label">SQS event publishing + schema</div><pre><code><span class="com">// Publishing side (in the use case — not the app service)</span>
+<span class="kw">await</span> <span class="kw">this</span>.eventPublisher.publish({
+  eventType: OrderEventTypeEnum.ORDER_CREATED,
+  orderId,
+  customerId: input.customerId,
+  items: input.items,
+  occurredAt: <span class="kw">new</span> Date().toISOString(),
+}, { groupId: orderId });
+
+<span class="com">// Consuming side event schema (in contracts/order/src/event-schemas.ts)</span>
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { OrderEventTypeEnum } <span class="kw">from</span> <span class="str">'@old-st/order-domain'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> orderCreatedEventSchema = z.object({
+  eventType:  z.literal(OrderEventTypeEnum.ORDER_CREATED),
+  orderId:    z.<span class="ty">string</span>(),
+  customerId: z.<span class="ty">string</span>(),
+  items:      z.array(z.object({
+    productId:   z.<span class="ty">string</span>(),
+    productName: z.<span class="ty">string</span>(),
+    quantity:    z.<span class="ty">number</span>(),
+    price:       z.<span class="ty">number</span>(),
+  })),
+  occurredAt: z.<span class="ty">string</span>().datetime(),
+  correlationId: z.<span class="ty">string</span>().optional(),
+});
+
+<span class="com">// Discriminated union — the event handler imports THIS, not the domain package</span>
+<span class="kw">export</span> <span class="kw">const</span> orderDomainEventSchema = z.discriminatedUnion(<span class="str">'eventType'</span>, [
+  orderCreatedEventSchema,
+  orderConfirmedEventSchema,
+  orderCancelledEventSchema,
+]);</code></pre></div>
+
+<div class="callout callout-warning"><div class="callout-title">Cross-domain import rule</div><p>A service consuming events from another bounded context imports event schemas from <code>@old-st/contracts/{publishing-domain}</code>. It must <strong>never</strong> import from <code>@old-st/{publishing-domain}-domain</code> (Golden Rule #15).</p></div>
+</div>
+
+<div class="topic">
+<h3>Pattern 3 — Choreography Saga (Order → Product Validation)</h3>
+
+<div class="flow-chart">
+  <div class="flow-item">
+    <div class="flow-box application">1. Order API: CreateOrderUseCase → save DRAFT order + publish ORDER_CREATED to product-events queue</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box domain">2. Product Event Handler: validates products → publishes PRODUCT_VALIDATION_SUCCEEDED or PRODUCT_VALIDATION_FAILED to order-events queue</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box application">3. Order Event Handler: ApproveProductValidationUseCase or FailOrderValidationUseCase (idempotent)</div>
+    <div class="flow-arrow">↓</div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-box infra">4. Final state: order → PENDING (success) or order → VALIDATION_FAILED</div>
+    
+  </div></div>
+
+<div class="code-wrap"><div class="code-label">approve-product-validation.use-case.ts</div><pre><code><span class="com">// packages/order-domain/src/application/use-cases/approve-product-validation/</span>
+<span class="com">// approve-product-validation.use-case.ts</span>
+
+<span class="kw">export</span> <span class="kw">class</span> ApproveProductValidationUseCase {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: { orderId: <span class="ty">string</span> }): <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt; {
+    <span class="kw">const</span> order = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.findById(input.orderId);
+    <span class="kw">if</span> (!order) <span class="kw">throw</span> <span class="kw">new</span> OrderNotFoundError(input.orderId);
+
+    <span class="com">// ─── Idempotency guard — saga handlers MUST be idempotent ────────</span>
+    <span class="kw">if</span> (order.getOrderStatus() !== OrderStatusEnum.DRAFT) {
+      <span class="com">// Already processed — log and skip (do NOT rethrow)</span>
+      <span class="kw">return</span>;
+    }
+
+    order.approveProductValidation();  <span class="com">// DRAFT → PENDING</span>
+    <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+  }
+}</code></pre></div>
+
+<div class="callout callout-danger"><div class="callout-title">Saga idempotency is mandatory</div><p>SQS delivers messages <em>at least once</em>. Every saga handler MUST check the current state before transitioning. If the order is already past DRAFT, log the skip and return — never rethrow the domain exception.</p></div>
+</div>
+
+<div class="topic">
+<h3>Decision Matrix</h3>
+<table class="cmp-table">
+<thead><tr><th>Question</th><th>Sync ACL</th><th>Async Events</th><th>Choreography Saga</th></tr></thead>
+<tbody>
+<tr><td>Can operation proceed without an answer?</td><td class="no">No</td><td class="yes">Yes</td><td class="no">No (deferred)</td></tr>
+<tr><td>Different bounded context?</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes (both ways)</td></tr>
+<tr><td>ACL adapter needed?</td><td class="yes">Yes (HTTP client)</td><td class="no">No</td><td class="no">No</td></tr>
+<tr><td>State resolution</td><td>Immediate</td><td>Fire-and-forget</td><td>Eventual (request→response)</td></tr>
+<tr><td>Consumer imports publisher's domain package?</td><td class="no">Never</td><td class="no">Never</td><td class="no">Never</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<footer>
+  <strong>Old Street Labs — API Service Masterclass</strong><br>
+  Generated from actual domain examples in the monorepo · Use <code>node scripts/generate-api-service-masterclass.mjs</code> to regenerate
+</footer>
+
+<script>
+const html = document.documentElement;
+const bar  = document.querySelector('.scroll-progress');
+const nav  = document.querySelector('.top-nav');
+const navLinks = document.querySelectorAll('.nav-links a');
+const sections = document.querySelectorAll('[data-section]');
+
+window.addEventListener('scroll', () => {
+  const p = (window.scrollY / (document.body.scrollHeight - innerHeight)) * 100;
+  if (bar) bar.style.width = p + '%';
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
+  // Active nav
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.dataset.section; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+}, { passive: true });
+
+document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+});
+
+// Fade-up on scroll
+const observer = new IntersectionObserver(
+  entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
+  { threshold: 0.08 }
+);
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Prefer dark
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  html.setAttribute('data-theme', 'dark');
+  const t = document.querySelector('.theme-toggle');
+  if (t) t.textContent = '☀️';
+}
+</script>
+</body>
+</html>

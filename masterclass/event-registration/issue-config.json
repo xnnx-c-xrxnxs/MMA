@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Masterclass project D — Event / Conference Registration. DynamoDB OneTable.",
+    "Copy this to .github/issue-config.json before running /import-estimate-csv."
+  ],
+
+  "projectName": "event-registration",
+
+  "ticketPrefix": "EVT",
+
+  "domains": [
+    { "name": "event",        "description": "event-api-service / events + capacity + window (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "session",      "description": "session-api-service / talks within an event (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "registration", "description": "registration-api-service / attendee bookings (DynamoDB)", "persistence": "dynamodb" },
+    { "name": "attendee",     "description": "attendee-api-service / attendee profiles (stretch, DynamoDB)", "persistence": "dynamodb" },
+    { "name": "ticket-type",  "description": "ticket-type-api-service / paid/free tiers (stretch, DynamoDB)", "persistence": "dynamodb" },
+    { "name": "auth",         "description": "auth-api-service / Cognito / JWT", "persistence": "none" }
+  ],
+
+  "crossCutting": [
+    { "name": "webapp",       "description": "apps/webapp (Next.js)", "color": "0366d6" },
+    { "name": "mobile",       "description": "apps/mobile (Expo)", "color": "0366d6" },
+    { "name": "infra",        "description": "Terraform / CD / AWS resources", "color": "5319e7" },
+    { "name": "cross-domain", "description": "Spans 2+ bounded contexts (sync ACL or async saga)", "color": "ff6b6b" },
+    { "name": "new-domain",   "description": "New bounded context to be scaffolded", "color": "b60205" }
+  ]
+}

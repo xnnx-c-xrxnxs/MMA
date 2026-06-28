@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "aws-cognito",
+  "sourceRoot": "packages/aws/aws-cognito/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/aws-cognito"],
+      "options": {
+        "jestConfig": "packages/aws/aws-cognito/jest.config.ts",
+        "passWithNoTests": false
+      }
+    }
+  }
+}

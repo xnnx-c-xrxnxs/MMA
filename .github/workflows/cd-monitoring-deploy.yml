@@ -1,0 +1,454 @@
+name: "CD: Monitoring Deploy"
+
+# Manually triggered only — monitoring infrastructure and services deploy
+# independently from the main application CD pipeline.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      aws_account_id:
+        description: "AWS Account ID"
+        required: true
+        type: string
+      aws_region:
+        description: "AWS Region"
+        required: false
+        type: string
+        default: "eu-west-2"
+      deploy_infra:
+        description: "Apply monitoring Terraform (IAM role, state bucket)"
+        required: false
+        type: boolean
+        default: true
+      deploy_api:
+        description: "Build + deploy monitoring-api-service Lambda"
+        required: false
+        type: boolean
+        default: true
+      deploy_webapp:
+        description: "Build + deploy monitoring-webapp Lambda"
+        required: false
+        type: boolean
+        default: true
+      monitoring_ecr_repo_url:
+        description: "ECR repo URL for monitoring-webapp (e.g. 123456789.dkr.ecr.eu-west-2.amazonaws.com/old-st-monitoring-webapp)"
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: monitoring-deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  AWS_REGION: ${{ github.event.inputs.aws_region || 'eu-west-2' }}
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  NODE_VERSION: "24"
+  # Monitoring deploys use a separate OIDC role created by infra/bootstrap
+  MONITORING_ROLE_ARN: ${{ vars.MONITORING_DEPLOY_ROLE_ARN }}
+  MONITORING_ECR_REPO_URL: ${{ github.event.inputs.monitoring_ecr_repo_url || vars.MONITORING_ECR_REPO_URL }}
+
+jobs:
+  # ─── Monitoring Infrastructure (IAM role, state bucket, lock table) ────────
+  infra:
+    if: ${{ github.event.inputs.deploy_infra == 'true' }}
+    name: "Monitoring Infra (Terraform)"
+    # Native ARM64 runner — monitoring-webapp is arm64 (Lambda Graviton2). Avoids QEMU emulation.
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ github.event.inputs.environment }}
+    outputs:
+      monitoring_api_url: ${{ steps.get-url.outputs.url }}
+      monitoring_webapp_url: ${{ steps.get-url.outputs.webapp_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.MONITORING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.6"
+
+      - name: Terraform init
+        working-directory: infra/environments/monitoring
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TFSTATE_BUCKET || format('{0}-tfstate', env.PROJECT_NAME) }}" \
+            -backend-config="key=monitoring/${{ env.ENVIRONMENT }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TFSTATE_LOCK_TABLE || format('{0}-tflock', env.PROJECT_NAME) }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Ensure monitoring-webapp image exists in ECR
+        run: |
+          IMAGE="${{ env.MONITORING_ECR_REPO_URL }}:latest"
+          if [ -z "${{ env.MONITORING_ECR_REPO_URL }}" ]; then
+            echo "⚠️  MONITORING_ECR_REPO_URL not set — skipping placeholder (Terraform will use default)"
+            exit 0
+          fi
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin "$(echo ${{ env.MONITORING_ECR_REPO_URL }} | cut -d/ -f1)"
+          if aws ecr describe-images --repository-name "${IMAGE##*/}" --image-ids imageTag=latest 2>/dev/null; then
+            echo "Image exists — skipping placeholder"
+          else
+            echo "No image found — pushing placeholder..."
+            cat <<'PLACEHOLDER_DOCKERFILE' | docker build -t "$IMAGE" -
+          FROM public.ecr.aws/awsguru/aws-lambda-adapter:1.0.0 AS lwa
+          FROM node:24-alpine
+          COPY --from=lwa /lambda-adapter /opt/extensions/lambda-adapter
+          RUN echo '#!/bin/sh' > /entrypoint.sh && echo 'echo "Placeholder — deploy pending"' >> /entrypoint.sh && chmod +x /entrypoint.sh
+          CMD ["/entrypoint.sh"]
+          PLACEHOLDER_DOCKERFILE
+            docker push "$IMAGE"
+            echo "✅ Pushed placeholder image"
+          fi
+
+      - name: Terraform plan
+        working-directory: infra/environments/monitoring
+        env:
+          TF_VAR_monitoring_api_env_vars: ${{ secrets.MONITORING_OAUTH_VARS || '{}' }}
+        run: |
+          terraform plan \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ env.ENVIRONMENT }}" \
+            -var="aws_region=${{ env.AWS_REGION }}" \
+            -var="aws_account_id=${{ github.event.inputs.aws_account_id }}" \
+            -var="monitoring_ecr_repo_url=${{ env.MONITORING_ECR_REPO_URL }}"
+
+      - name: Terraform apply
+        working-directory: infra/environments/monitoring
+        env:
+          TF_VAR_monitoring_api_env_vars: ${{ secrets.MONITORING_OAUTH_VARS || '{}' }}
+        run: |
+          terraform apply -auto-approve \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ env.ENVIRONMENT }}" \
+            -var="aws_region=${{ env.AWS_REGION }}" \
+            -var="aws_account_id=${{ github.event.inputs.aws_account_id }}" \
+            -var="monitoring_ecr_repo_url=${{ env.MONITORING_ECR_REPO_URL }}"
+
+      - name: Set monitoring URLs from Terraform outputs
+        id: get-url
+        working-directory: infra/environments/monitoring
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          API_URL=$(terraform output -raw monitoring_api_function_url 2>/dev/null | head -n 1 || echo "")
+          if [ -n "$API_URL" ]; then
+            CLEAN_API_URL="${API_URL%/}"
+            echo "url=$CLEAN_API_URL" >> $GITHUB_OUTPUT
+            echo "✅ MONITORING_API_URL: $CLEAN_API_URL"
+            gh variable set MONITORING_API_URL --repo "$GITHUB_REPOSITORY" --body "$CLEAN_API_URL" || true
+          fi
+          WEBAPP_URL=$(terraform output -raw monitoring_webapp_function_url 2>/dev/null | head -n 1 || echo "")
+          if [ -n "$WEBAPP_URL" ]; then
+            CLEAN_WEBAPP_URL="${WEBAPP_URL%/}"
+            echo "webapp_url=$CLEAN_WEBAPP_URL" >> $GITHUB_OUTPUT
+            echo "✅ MONITORING_WEBAPP_URL: $CLEAN_WEBAPP_URL"
+            gh variable set MONITORING_WEBAPP_URL --repo "$GITHUB_REPOSITORY" --body "$CLEAN_WEBAPP_URL" || true
+          fi
+
+  # ─── Build: monitoring-api-service + monitoring-webapp ─────────────────────
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    needs: [infra]
+    if: ${{ always() && github.event.inputs.deploy_api == 'true' && (needs.infra.result == 'success' || needs.infra.result == 'skipped') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --frozen-lockfile
+
+      - name: Build monitoring-api-service
+        if: ${{ github.event.inputs.deploy_api == 'true' }}
+        run: pnpm nx build monitoring-api-service --skip-nx-cache
+
+      - name: Upload monitoring-api-service artifact
+        if: ${{ github.event.inputs.deploy_api == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-api-service-dist
+          path: dist/apps/monitoring/monitoring-api-service
+          retention-days: 1
+
+  # ─── Deploy: monitoring-api-service Lambda ──────────────────────────────────
+  deploy-api:
+    if: ${{ always() && github.event.inputs.deploy_api == 'true' && needs.build.result == 'success' }}
+    name: "Deploy monitoring-api-service"
+    runs-on: ubuntu-latest
+    needs: [infra, build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.MONITORING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: monitoring-api-service-dist
+          path: dist/apps/monitoring/monitoring-api-service
+
+      - name: Package Lambda ZIP
+        run: |
+          cd dist/apps/monitoring/monitoring-api-service
+          # Remove workspace:* dependencies — they are bundled by webpack
+          if [ -f "package.json" ]; then
+            node -e "
+              const pkg = require('./package.json');
+              for (const [k,v] of Object.entries(pkg.dependencies || {})) {
+                if (String(v).startsWith('workspace:')) delete pkg.dependencies[k];
+              }
+              require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+            "
+            npm install --omit=dev --no-audit --no-fund
+          fi
+          # Create run.sh for Lambda Web Adapter
+          printf '#!/bin/bash\nexec node main.js\n' > run.sh
+          chmod +x run.sh
+          zip -r monitoring-api.zip .
+          echo "ZIP_PATH=$(pwd)/monitoring-api.zip" >> $GITHUB_ENV
+
+      - name: Upload ZIP to S3
+        run: |
+          aws s3 cp "${{ env.ZIP_PATH }}" \
+            "s3://${{ vars.ARTIFACT_BUCKET }}/monitoring/monitoring-api-service/${{ github.sha }}.zip"
+
+      - name: Update Lambda function code
+        run: |
+          FUNCTION_NAME="${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-api"
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --s3-bucket "${{ vars.ARTIFACT_BUCKET }}" \
+            --s3-key "monitoring/monitoring-api-service/${{ github.sha }}.zip" \
+            --publish
+
+      - name: Wait for update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-api"
+
+      - name: Smoke test
+        run: |
+          FUNCTION_URL=$(aws lambda get-function-url-config \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-api" \
+            --query 'FunctionUrl' --output text 2>/dev/null || echo "")
+          if [ -n "$FUNCTION_URL" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${FUNCTION_URL}api/health")
+            echo "Health check status: $STATUS"
+            [ "$STATUS" = "200" ] || (echo "Health check failed" && exit 1)
+          else
+            echo "No function URL configured — skipping smoke test"
+          fi
+
+      - name: Inject monitoring URLs into Lambda env vars
+        run: |
+          FUNCTION_NAME="${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-api"
+          API_URL="${{ needs.infra.outputs.monitoring_api_url || vars.MONITORING_API_URL }}"
+          WEBAPP_URL="${{ needs.infra.outputs.monitoring_webapp_url || vars.MONITORING_WEBAPP_URL }}"
+          if [ -n "$API_URL" ] && [ -n "$WEBAPP_URL" ]; then
+            echo "Injecting MONITORING_API_BASE_URL=$API_URL"
+            echo "Injecting MONITORING_WEBAPP_URL=$WEBAPP_URL"
+            # Get current env vars, merge in the URL vars
+            CURRENT=$(aws lambda get-function-configuration \
+              --function-name "$FUNCTION_NAME" \
+              --query 'Environment.Variables' --output json)
+            UPDATED=$(echo "$CURRENT" | node -e "
+              const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+              d.MONITORING_API_BASE_URL = '$API_URL';
+              d.MONITORING_WEBAPP_URL = '$WEBAPP_URL';
+              console.log(JSON.stringify({Variables:d}));
+            ")
+            aws lambda update-function-configuration \
+              --function-name "$FUNCTION_NAME" \
+              --environment "$UPDATED"
+            aws lambda wait function-updated --function-name "$FUNCTION_NAME"
+            echo "✅ URLs injected"
+          else
+            echo "⚠️  URLs not available — set MONITORING_API_URL and MONITORING_WEBAPP_URL GitHub variables"
+          fi
+
+  # ─── Deploy: monitoring-webapp Lambda (Container Image) ──────────────────────
+  deploy-webapp:
+    name: "Deploy monitoring-webapp"
+    # Native ARM64 runner — monitoring-webapp image is arm64 (Lambda Graviton2).
+    runs-on: ubuntu-24.04-arm
+    needs: [infra]
+    if: ${{ always() && github.event.inputs.deploy_webapp == 'true' && (needs.infra.result == 'success' || needs.infra.result == 'skipped') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.MONITORING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve monitoring API URL
+        id: api-url
+        run: |
+          URL="${{ needs.infra.outputs.monitoring_api_url || vars.MONITORING_API_URL }}"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Monitoring API URL: $URL"
+
+      - name: Ensure monitoring-webapp image exists in ECR
+        id: check-image
+        run: |
+          ECR_REPO="${{ env.MONITORING_ECR_REPO_URL }}"
+          TAG="${{ github.sha }}"
+          if aws ecr describe-images --repository-name "${ECR_REPO##*/}" --image-ids imageTag="$TAG" 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Image $TAG already exists — skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push monitoring-webapp Docker image
+        if: steps.check-image.outputs.exists != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/monitoring/monitoring-webapp/Dockerfile
+          # Native arm64 runner — no emulation needed.
+          platforms: linux/arm64
+          push: true
+          # Lambda requires Docker v2 manifests, not OCI. See cd-deploy.yml notes.
+          provenance: false
+          sbom: false
+          tags: ${{ env.MONITORING_ECR_REPO_URL }}:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_MONITORING_API_URL=${{ steps.api-url.outputs.url }}
+          # Registry-backed layer cache — reuses pnpm install + unchanged Next.js layers across runs.
+          cache-from: type=registry,ref=${{ env.MONITORING_ECR_REPO_URL }}:webapp-buildcache
+          cache-to: type=registry,ref=${{ env.MONITORING_ECR_REPO_URL }}:webapp-buildcache,mode=max,image-manifest=true,oci-mediatypes=true
+
+      - name: Update Lambda function code
+        run: |
+          IMAGE="${{ env.MONITORING_ECR_REPO_URL }}:${{ github.sha }}"
+          FUNCTION_NAME="${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-webapp"
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --image-uri "$IMAGE" \
+            --publish
+
+      - name: Wait for update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-webapp"
+
+      - name: Smoke test
+        run: |
+          FUNCTION_URL=$(aws lambda get-function-url-config \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-webapp" \
+            --query 'FunctionUrl' --output text 2>/dev/null || echo "")
+          if [ -n "$FUNCTION_URL" ]; then
+            echo "Webapp URL: $FUNCTION_URL"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${FUNCTION_URL}" --max-time 30)
+            echo "Health check status: $STATUS"
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "308" ]; then
+              echo "✅ Webapp is responding"
+            else
+              echo "❌ Webapp returned $STATUS"
+              exit 1
+            fi
+          else
+            echo "No function URL configured — skipping smoke test"
+          fi
+
+  # ─── Deployment Summary ─────────────────────────────────────────────────────
+  summary:
+    name: "Deployment Summary"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [infra, build, deploy-api, deploy-webapp]
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.MONITORING_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Print deployment summary
+        run: |
+          API_URL=$(aws lambda get-function-url-config \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-api" \
+            --query 'FunctionUrl' --output text 2>/dev/null || echo "N/A")
+          WEBAPP_URL=$(aws lambda get-function-url-config \
+            --function-name "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-monitoring-webapp" \
+            --query 'FunctionUrl' --output text 2>/dev/null || echo "N/A")
+
+          status_icon() {
+            case "$1" in
+              success)  echo "✅";;
+              skipped)  echo "⏭️";;
+              failure)  echo "❌";;
+              *)        echo "⚪";;
+            esac
+          }
+
+          {
+            echo "## 🚀 Monitoring Deployment Summary"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| **Environment** | \`${{ env.ENVIRONMENT }}\` |"
+            echo "| **Commit** | [\`${GITHUB_SHA::7}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |"
+            echo "| **Triggered by** | ${{ github.actor }} |"
+            echo ""
+            echo "### 📡 Monitoring API"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| **Function URL** | ${API_URL} |"
+            echo "| **Health** | ${API_URL}api/health |"
+            echo "| **Deploy** | $(status_icon "${{ needs.deploy-api.result }}") ${{ needs.deploy-api.result }} |"
+            echo ""
+            echo "### 🌐 Monitoring Webapp"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| **URL** | ${WEBAPP_URL} |"
+            echo "| **Deploy** | $(status_icon "${{ needs.deploy-webapp.result }}") ${{ needs.deploy-webapp.result }} |"
+            echo ""
+            echo "### 📋 Job Results"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+            echo "| Infrastructure | $(status_icon "${{ needs.infra.result }}") ${{ needs.infra.result }} |"
+            echo "| Build | $(status_icon "${{ needs.build.result }}") ${{ needs.build.result }} |"
+            echo "| Deploy API | $(status_icon "${{ needs.deploy-api.result }}") ${{ needs.deploy-api.result }} |"
+            echo "| Deploy Webapp | $(status_icon "${{ needs.deploy-webapp.result }}") ${{ needs.deploy-webapp.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

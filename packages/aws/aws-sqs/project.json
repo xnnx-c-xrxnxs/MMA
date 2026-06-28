@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "aws-sqs",
+  "sourceRoot": "packages/aws/aws-sqs/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"]
+}

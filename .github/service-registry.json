@@ -1,0 +1,106 @@
+{
+  "_comment": "Single source of truth for all services. Used by CI workflows (build/start) AND Terraform (for_each resource creation). Update this file when adding a new domain — no .tf edits needed. Example domain services (user, product, order) live in `examples/` and are NOT registered here — examples never deploy.",
+  "apiServices": [
+    {
+      "name": "auth-api-service",
+      "distPath": "dist/apps/auth/auth-api-service/main.js",
+      "domain": "auth",
+      "type": "api",
+      "handler": "run.sh",
+      "memorySize": 256,
+      "timeout": 30,
+      "envVars": [
+        "COGNITO_USER_POOL_ID",
+        "COGNITO_CLIENT_ID",
+        "COGNITO_REGION",
+        "DOMAIN_PREFIX",
+        "JWT_JWKS_URI",
+        "JWT_ISSUER",
+        "JWT_USER_ID_CLAIM",
+        "JWT_USER_ROLE_CLAIM",
+        "AWS_SECRETS_ARN",
+        "FE_BASE_URL"
+      ]
+    },
+    {
+      "name": "file-api-service",
+      "distPath": "dist/apps/files/file-api-service/main.js",
+      "domain": "file",
+      "type": "api",
+      "handler": "run.sh",
+      "memorySize": 256,
+      "timeout": 30,
+      "envVars": [
+        "FILES_S3_BUCKET_NAME",
+        "CLOUDFRONT_DOMAIN",
+        "DOMAIN_PREFIX",
+        "JWT_JWKS_URI",
+        "JWT_ISSUER",
+        "JWT_USER_ID_CLAIM",
+        "JWT_USER_ROLE_CLAIM",
+        "AWS_SECRETS_ARN",
+        "FE_BASE_URL"
+      ]
+    }
+  ],
+  "eventHandlerServices": [],
+  "webapp": {
+    "name": "webapp",
+    "type": "ecs",
+    "port": 3000,
+    "healthCheckPath": "/",
+    "deploymentMode": {
+      "dev": "static",
+      "preview": "static",
+      "staging": "static",
+      "prod": "static"
+    },
+    "envVars": [
+      "NEXT_PUBLIC_API_AUTH_URL",
+      "NEXT_PUBLIC_API_FILE_URL"
+    ]
+  },
+  "infrastructure": {
+    "dynamodbTables": [],
+    "sqsQueues": [],
+    "s3Buckets": [
+      {
+        "name": "files",
+        "envVar": "FILES_S3_BUCKET_NAME",
+        "domain": "file",
+        "cors": true,
+        "cloudfront": true
+      }
+    ],
+    "rds": []
+  },
+  "deployTasks": [
+    {
+      "name": "seed-admin",
+      "type": "custom-script",
+      "script": "seed-admin.mjs",
+      "secretEnvVars": ["COGNITO_USER_POOL_ID", "SEED_ADMIN_EMAIL", "SEED_ADMIN_USER_ID"],
+      "envVars": ["AWS_SECRETS_ARN"]
+    }
+  ],
+
+  "_gatewayAuthComment": "API Gateway-side JWT authorizer config. When enabled=true, Terraform attaches the Cognito JWT authorizer to every route on the shared HTTP API EXCEPT those listed in publicRoutes (Option B — per-route declarations). Each entry's full path on the gateway is /{service.domain}{path}. Routes here MUST stay in sync with @Public() decorators on the corresponding controllers — enforced by the gateway-public-routes-sync lint check in scripts/lint-standards.ts. The `path` field is the gateway-side path AFTER the domain prefix is stripped — i.e. exactly what NestJS sees (always starts with /api).",
+  "gatewayAuth": {
+    "enabled": true,
+    "publicRoutes": [
+      { "service": "file-api-service",    "method": "GET",  "path": "/api/health" },
+      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger" },
+      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger-json" },
+      { "service": "file-api-service",    "method": "GET",  "path": "/api/swagger/{proxy+}" },
+      { "service": "auth-api-service",    "method": "GET",  "path": "/api/health" },
+      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger" },
+      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger-json" },
+      { "service": "auth-api-service",    "method": "GET",  "path": "/api/swagger/{proxy+}" },
+      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/sign-in" },
+      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/new-password" },
+      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/refresh-session" },
+      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/forgot-password" },
+      { "service": "auth-api-service",    "method": "POST", "path": "/api/auth/confirm-forgot-password" }
+    ]
+  }
+}

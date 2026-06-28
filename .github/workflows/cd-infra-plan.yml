@@ -1,0 +1,111 @@
+name: "CD: Infrastructure Plan"
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/service-registry.json"
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-2' }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.environment }}
+    # Skip when the target environment hasn't been bootstrapped yet (template repo,
+    # forks, or projects that haven't run `AWS: Setup GitHub Environment Variables`).
+    # The DEPLOY_ENABLED sentinel is set by that VS Code task, environment-scoped.
+    if: vars.DEPLOY_ENABLED == 'true'
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ vars.AWS_REGION || env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra/environments/${{ matrix.environment }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TFSTATE_BUCKET || format('{0}-tfstate', env.PROJECT_NAME) }}" \
+            -backend-config="key=${{ matrix.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION || env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TFSTATE_LOCK_TABLE || format('{0}-tflock', env.PROJECT_NAME) }}"
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: infra/environments/${{ matrix.environment }}
+        continue-on-error: true
+        run: |
+          terraform plan -no-color \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ matrix.environment }}" \
+            -var="artifact_bucket=${{ vars.ARTIFACT_BUCKET }}" \
+            -var="deploy_sha=plan-only" \
+            -var="ecr_repo_url=${{ vars.ECR_REPO_URL }}" \
+            2>&1 | tee plan-output.txt
+
+      - name: Comment PR with plan
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infra/environments/${{ matrix.environment }}/plan-output.txt', 'utf8');
+            const maxLen = 60000;
+            const truncated = plan.length > maxLen
+              ? plan.substring(0, maxLen) + '\n\n... (truncated)'
+              : plan;
+
+            const body = `### Terraform Plan: \`${{ matrix.environment }}\` ${
+              '${{ steps.plan.outcome }}' === 'success' ? '✅' : '❌'
+            }
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`hcl
+            ${truncated}
+            \`\`\`
+
+            </details>`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const marker = `### Terraform Plan: \`${{ matrix.environment }}\``;
+            const existing = comments.find(c => c.body.startsWith(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }

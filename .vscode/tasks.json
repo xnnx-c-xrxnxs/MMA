@@ -1,0 +1,935 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ── Validation ────────────────────────────────────────────────────────────
+    {
+      "label": "Node: Validate Version",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run validate:node",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "CI: Local Check (affected lint + test + lint-standards)",
+      "detail": "Mirror of ci-fast-check + ci-test-affected — run before pushing to catch failures early",
+      "type": "shell",
+      "command": "pnpm ci:local:quick",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      }
+    },
+
+    // ── Docker / LocalStack ───────────────────────────────────────────────────
+    {
+      "label": "Docker: Start LocalStack",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: Stop LocalStack",
+      "type": "shell",
+      "command": "docker compose down",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: Logs (LocalStack)",
+      "type": "shell",
+      "command": "docker compose logs -f localstack",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Docker: Wipe Data",
+      "type": "shell",
+      "command": "docker compose down -v",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "LocalStack: Create Tables",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run localstack:setup",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "LocalStack: Force Recreate Tables",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run localstack:setup:force",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "LocalStack: Start + Setup",
+      "dependsOn": [
+        "Docker: Start LocalStack",
+        "LocalStack: Create Tables"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: Migrate All",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run prisma:migrate:all",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Infra: Start All ──────────────────────────────────────────────────────
+    // Validates Node version, starts Docker/LocalStack, runs DB migrations.
+    // Safe to run multiple times — all steps are idempotent.
+    {
+      "label": "Infra: Start All",
+      "dependsOn": [
+        "Node: Validate Version",
+        "LocalStack: Start + Setup",
+        "DB: Migrate All"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Microservices ─────────────────────────────────────────────────────────
+    // Add one "Service: Serve {service-name}" task per microservice.
+    // Command pattern: npx nx serve {service-name}
+    // Claim port in §7.1 of CLAUDE.md before adding.
+    {
+      "label": "Service: Serve auth-api-service",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js npx nx serve auth-api-service",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "is running on"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Service: Serve file-api-service",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js npx nx serve file-api-service",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "is running on"
+          }
+        }
+      ]
+    },
+
+    // ── Frontend ──────────────────────────────────────────────────────────────
+    {
+      "label": "Service: Serve webapp",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js npx nx dev webapp",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "Ready in"
+          }
+        }
+      ]
+    },
+
+    // ── Mobile ─────────────────────────────────────────────────────────────
+    {
+      "label": "Service: Serve mobile",
+      "type": "shell",
+      "command": "cd apps/mobile; npx expo start --lan",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "EXPO_ROUTER_APP_ROOT": "../../apps/mobile/src/app"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Domain-Specific Compound Tasks ────────────────────────────────────────
+    // Domain tasks only start services — no infra.
+    // Run "Infra: Start All" once per dev session before using these.
+    //
+    // Example domain compounds (Domain: Start User / Product / Order) live
+    // in [examples/.vscode/tasks.json](examples/.vscode/tasks.json) or in git history.
+    {
+      "label": "Domain: Start Auth",
+      "dependsOn": [
+        "Service: Serve auth-api-service"
+      ],
+      "dependsOrder": "parallel",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Domain: Start Files",
+      "dependsOn": [
+        "Service: Serve file-api-service"
+      ],
+      "dependsOrder": "parallel",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Monitoring (separate concern — not part of Services: Start All) ────────
+    {
+      "label": "Service: Serve monitoring-api-service",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js npx nx serve monitoring-api-service",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "is running on"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Service: Serve monitoring-webapp",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js npx nx dev monitoring-webapp",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "NX_TUI": "false"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monitoring: Start All",
+      "detail": "Start monitoring API + webapp locally (separate from main services)",
+      "dependsOn": [
+        "Service: Serve monitoring-api-service",
+        "Service: Serve monitoring-webapp"
+      ],
+      "dependsOrder": "parallel",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Full Stack ────────────────────────────────────────────────────────────
+    // "Services: Start All" launches every service in parallel (no infra).
+    // "Dev: Start All" runs infra first, then all services.
+    {
+      "label": "Services: Start All",
+      "dependsOn": [
+        "Service: Serve auth-api-service",
+        "Service: Serve file-api-service",
+        "Service: Serve webapp",
+        "Service: Serve mobile"
+      ],
+      "dependsOrder": "parallel",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start All",
+      "dependsOn": [
+        "Infra: Start All",
+        "Services: Start All"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── E2E Testing ──────────────────────────────────────────────────────────
+    {
+      "label": "E2E: Setup Infrastructure",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:setup",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Setup Infrastructure (Force)",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:setup:force",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run API Tests",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run test:e2e:api",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run Webapp Tests",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run test:e2e:webapp",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run All",
+      "dependsOn": [
+        "E2E: Setup Infrastructure",
+        "E2E: Run API Tests",
+        "E2E: Run Webapp Tests"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Teardown",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:teardown",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run Local (Full)",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:local",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run Local + Webapp",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:local:webapp",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "E2E: Run Local (Quick)",
+      "type": "shell",
+      "command": "node scripts/ensure-node.js pnpm run e2e:local:quick",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── AWS Bootstrap (One-Time Account Setup) ────────────────────────────────
+    // Run these tasks once per AWS account to create shared infra (S3 state
+    // bucket, ECR, GitHub OIDC, IAM deploy role). Requires Terraform CLI.
+    //
+    // Setup:
+    //   Single-account:
+    //     1. cp infra/bootstrap/aws-credentials.example infra/bootstrap/aws-credentials
+    //     2. Fill in terraform.tfvars + aws-credentials
+    //     3. Run "AWS: Bootstrap Apply"
+    //
+    //   Multi-account (per environment):
+    //     1. cp infra/bootstrap/aws-credentials.example infra/bootstrap/aws-credentials.dev
+    //     2. Fill aws-credentials.dev with DEV account credentials
+    //     3. Repeat for staging/prod
+    //     4. Run bootstrap tasks (they prompt for which credential file to use)
+    //
+    // All credential files are gitignored — they never leave your machine.
+    {
+      "label": "AWS: Bootstrap Init",
+      "type": "shell",
+      "command": "node scripts/task-helpers/bootstrap-cmd.mjs ${input:credentialsEnv} init",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "AWS: Bootstrap Plan",
+      "type": "shell",
+      "command": "node scripts/task-helpers/bootstrap-cmd.mjs ${input:credentialsEnv} plan",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "dependsOn": ["AWS: Bootstrap Init"]
+    },
+    {
+      "label": "AWS: Bootstrap Apply",
+      "type": "shell",
+      "command": "node scripts/task-helpers/bootstrap-cmd.mjs ${input:credentialsEnv} apply",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "dependsOn": ["AWS: Bootstrap Init"]
+    },
+    {
+      "label": "AWS: Setup GitHub Repo Variables",
+      "detail": "Reads bootstrap Terraform outputs and sets all required GitHub repo variables via gh CLI",
+      "type": "shell",
+      "command": "node scripts/task-helpers/setup-github-vars.mjs ${input:credentialsEnv}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "AWS: Setup GitHub Environment Variables",
+      "detail": "Reads bootstrap outputs and sets GitHub ENVIRONMENT-scoped variables for multi-account deployment",
+      "type": "shell",
+      "command": "node scripts/task-helpers/setup-github-env-vars.mjs ${input:targetEnvironment}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GitHub: Seed Issue Labels",
+      "detail": "Creates/updates the label taxonomy used by AI_ISSUE_CREATOR_PROMPT.md and /triage-sprint",
+      "type": "shell",
+      "command": "node scripts/task-helpers/setup-github-labels.mjs",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Project: Init Branches",
+      "detail": "(One-time, after fresh fork) Create develop from main and push to origin",
+      "type": "shell",
+      "command": "node scripts/task-helpers/init-branches.mjs",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GitHub: Setup Branch Protection",
+      "detail": "Applies branch protection on main + develop, GitHub environments (dev/staging/prod), tag protection on v*",
+      "type": "shell",
+      "command": "node scripts/task-helpers/setup-branch-protection.mjs",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GitHub: Setup Branch Protection (Rename CODEOWNERS Team)",
+      "detail": "Same as above + interactively replaces @Old-St-Labs/senior-devs in CODEOWNERS with your org/team",
+      "type": "shell",
+      "command": "node scripts/task-helpers/setup-branch-protection.mjs --rename-codeowners",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ── Deploy ─────────────────────────────────────────────────────────────────
+    // Trigger CD pipeline from the IDE.
+    // Requires: gh CLI authenticated (gh auth login) + repo variables set.
+    {
+      "label": "Deploy: Trigger",
+      "detail": "Trigger a CD deployment to the selected environment",
+      "type": "shell",
+      "command": "node scripts/task-helpers/deploy-trigger.mjs ${input:deployEnvironment} ${input:deployAll}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: Status",
+      "detail": "Check the latest CD deploy workflow run status",
+      "type": "shell",
+      "command": "echo 'Recent deploy workflow runs:' && gh run list --workflow='CD: Deploy' --limit 5",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy: Logs",
+      "detail": "Stream logs from the most recent deploy workflow run",
+      "type": "shell",
+      "command": "node -e \"const{execSync:e}=require('child_process');const id=e('gh run list --workflow=\\\"CD: Deploy\\\" --limit 1 --json databaseId --jq \\\".[0].databaseId\\\"',{encoding:'utf-8'}).trim();e('gh run watch '+id,{stdio:'inherit'})\"",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+
+    // ── Monitoring Deploy ──────────────────────────────────────────────────────
+    // Deploy monitoring services independently from the main CD pipeline.
+    // Requires: gh CLI authenticated + MONITORING_DEPLOY_ROLE_ARN variable set.
+    {
+      "label": "Monitoring Deploy: Trigger",
+      "detail": "Trigger monitoring service deployment (infra + API + webapp)",
+      "type": "shell",
+      "command": "node scripts/task-helpers/monitoring-deploy-trigger.mjs ${input:monitoringDeployEnv} ${input:monitoringDeployInfra} ${input:monitoringDeployApi} ${input:monitoringDeployWebapp}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monitoring Deploy: Status",
+      "detail": "Check the latest monitoring deploy workflow run status",
+      "type": "shell",
+      "command": "echo 'Recent monitoring deploy runs:' && gh run list --workflow='CD: Monitoring Deploy' --limit 5",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monitoring Deploy: Logs",
+      "detail": "Stream logs from the most recent monitoring deploy workflow run",
+      "type": "shell",
+      "command": "node -e \"const{execSync:e}=require('child_process');const id=e('gh run list --workflow=\\\"CD: Monitoring Deploy\\\" --limit 1 --json databaseId --jq \\\".[0].databaseId\\\"',{encoding:'utf-8'}).trim();e('gh run watch '+id,{stdio:'inherit'})\"",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+
+    // ── Preview Environments ──────────────────────────────────────────────────
+    // Create/destroy preview environments from the IDE.
+    // Requires: gh CLI authenticated (gh auth login) + repo variables set.
+    {
+      "label": "Preview: Create",
+      "detail": "Deploy a full-stack preview environment to AWS",
+      "type": "shell",
+      "command": "node scripts/task-helpers/preview-create.mjs ${input:previewName} __current__ ${input:enableWebapp} ${input:previewAccount}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Preview: Create (Custom Branch)",
+      "detail": "Deploy a preview from a specific branch (not current)",
+      "type": "shell",
+      "command": "node scripts/task-helpers/preview-create.mjs ${input:previewName} ${input:previewBranch} ${input:enableWebapp} ${input:previewAccount}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Preview: Destroy",
+      "detail": "Tear down a preview environment and all its AWS resources",
+      "type": "shell",
+      "command": "node scripts/task-helpers/preview-destroy.mjs ${input:previewName} ${input:previewAccount}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Environment: Destroy",
+      "detail": "Destroy a dev/staging/prod environment and all its AWS resources",
+      "type": "shell",
+      "command": "node scripts/task-helpers/env-destroy.mjs ${input:destroyEnvironment}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Preview: Status",
+      "detail": "Check the latest preview workflow run status",
+      "type": "shell",
+      "command": "echo '--- Create ---' && gh run list --workflow='CD: Preview — Create' --limit 3 && echo '' && echo '--- Destroy ---' && gh run list --workflow='CD: Preview — Destroy' --limit 3",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Preview: Logs",
+      "detail": "Stream logs from the most recent preview workflow run",
+      "type": "shell",
+      "command": "gh run watch",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Project: Bootstrap (One-Step)",
+      "detail": "After cloning a fresh template repo: rename scope/project/org/CODEOWNERS, delete examples/, commit, push main, create+push develop, apply rulesets + envs. Run ONCE.",
+      "type": "shell",
+      "command": "node scripts/bootstrap.mjs --scope=${input:initScope} --name=${input:initName} --owner=${input:initOwner} --org=${input:initOrg} \"--display-name=${input:initDisplayName}\" ${input:initKeepExamples} ${input:initSkipRulesets} ${input:initDryRun}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Project: Init (Bootstrap from Template)",
+      "detail": "DESTRUCTIVE: Renames @old-st scope, removes examples/, re-inits git, self-deletes. Run ONCE per new project.",
+      "type": "shell",
+      "command": "node scripts/init-project.mjs --scope=${input:initScope} --name=${input:initName} --owner=${input:initOwner} ${input:initKeepExamples} ${input:initGitInit} ${input:initDryRun}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Template: Remove examples/",
+      "detail": "Delete examples/ only. Does NOT touch git, source files, package.json, or CODEOWNERS.",
+      "type": "shell",
+      "command": "node scripts/remove-examples.mjs ${input:removeExamplesDryRun}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "destroyEnvironment",
+      "type": "pickString",
+      "description": "Which environment to DESTROY? (all resources will be deleted)",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "credentialsEnv",
+      "type": "pickString",
+      "description": "Which AWS credential file? (aws-credentials.{env} or fallback to aws-credentials)",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "targetEnvironment",
+      "type": "pickString",
+      "description": "Target GitHub environment for multi-account variable setup",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "previewName",
+      "type": "promptString",
+      "description": "Preview name (lowercase, 3-32 chars, e.g. 'dennis-test' or 'qa-sprint-5')"
+    },
+    {
+      "id": "previewAccount",
+      "type": "pickString",
+      "description": "Which AWS account to deploy the preview to? (reads vars from this GitHub environment)",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "previewBranch",
+      "type": "promptString",
+      "description": "Branch to deploy (e.g. 'develop', 'feature/payments')",
+      "default": "develop"
+    },
+    {
+      "id": "deployEnvironment",
+      "type": "pickString",
+      "description": "Target environment to deploy to",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "deployAll",
+      "type": "pickString",
+      "description": "Deploy all services? (true = skip affected detection, deploy everything)",
+      "options": ["false", "true"],
+      "default": "false"
+    },
+    {
+      "id": "enableWebapp",
+      "type": "pickString",
+      "description": "Deploy webapp (ALB + ECS)? Requires VPC. Adds ~$20/mo.",
+      "options": ["false", "true"],
+      "default": "false"
+    },
+    {
+      "id": "monitoringDeployEnv",
+      "type": "pickString",
+      "description": "Target environment for monitoring deployment",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "monitoringDeployInfra",
+      "type": "pickString",
+      "description": "Apply monitoring Terraform (IAM role, state bucket)?",
+      "options": ["true", "false"],
+      "default": "true"
+    },
+    {
+      "id": "monitoringDeployApi",
+      "type": "pickString",
+      "description": "Build + deploy monitoring-api-service Lambda?",
+      "options": ["true", "false"],
+      "default": "true"
+    },
+    {
+      "id": "monitoringDeployWebapp",
+      "type": "pickString",
+      "description": "Build + deploy monitoring-webapp Lambda?",
+      "options": ["true", "false"],
+      "default": "true"
+    },
+    {
+      "id": "initOrg",
+      "type": "promptString",
+      "description": "GitHub org/user (leave blank to auto-detect from origin remote, e.g. Acme-Inc)",
+      "default": ""
+    },
+    {
+      "id": "initDisplayName",
+      "type": "promptString",
+      "description": "Display name shown in UI (leave blank to titleize --name, e.g. \"Acme\")",
+      "default": ""
+    },
+    {
+      "id": "initSkipRulesets",
+      "type": "pickString",
+      "description": "Skip GitHub rulesets + environments? (default: apply them)",
+      "options": ["", "--skip-rulesets"],
+      "default": ""
+    },
+    {
+      "id": "initScope",
+      "type": "promptString",
+      "description": "New npm scope (e.g. @acme — must start with @, lowercase)"
+    },
+    {
+      "id": "initName",
+      "type": "promptString",
+      "description": "New project name (lowercase kebab-case, e.g. acme-platform)"
+    },
+    {
+      "id": "initOwner",
+      "type": "promptString",
+      "description": "CODEOWNERS team (e.g. @acme/platform — leave blank to keep default)",
+      "default": ""
+    },
+    {
+      "id": "initKeepExamples",
+      "type": "pickString",
+      "description": "Keep examples/ directory? (default: removes it)",
+      "options": ["", "--keep-examples"],
+      "default": ""
+    },
+    {
+      "id": "initGitInit",
+      "type": "pickString",
+      "description": "Re-initialize git? (default: yes)",
+      "options": ["", "--no-git-init"],
+      "default": ""
+    },
+    {
+      "id": "initDryRun",
+      "type": "pickString",
+      "description": "Dry run? (prints what would change, touches nothing)",
+      "options": ["--dry-run", ""],
+      "default": "--dry-run"
+    },
+    {
+      "id": "removeExamplesDryRun",
+      "type": "pickString",
+      "description": "Dry run? (prints what would change, touches nothing)",
+      "options": ["--dry-run", "--yes"],
+      "default": "--dry-run"
+    }
+  ]
+}

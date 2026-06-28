@@ -1,0 +1,8 @@
+{
+  "name": "client-common-examples",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/client-common-examples/src",
+  "projectType": "library",
+  "tags": ["scope:examples", "type:lib"],
+  "targets": {}
+}

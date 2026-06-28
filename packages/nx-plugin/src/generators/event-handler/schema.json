@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "OldStEventHandler",
+  "title": "Old-ST Event-Handler Service Generator",
+  "type": "object",
+  "description": "Scaffold an SQS-consumer event-handler microservice (apps/{domain}/{domain}-event-handler-service). No HTTP layer, no Swagger, no presentation folder.",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Owning domain in kebab-case (e.g. notification, order). The service will live at apps/{domain}/{domain}-event-handler-service.",
+      "x-prompt": "What is the owning domain (kebab-case, e.g. notification)?"
+    },
+    "entity": {
+      "type": "string",
+      "description": "Entity name in kebab-case (default: same as domain). Drives the dispatcher/module file names."
+    },
+    "eventTypes": {
+      "type": "string",
+      "description": "Comma-separated event types in CONSTANT_CASE (e.g. USER_DELETED,USER_DEACTIVATED). One handler stub will be generated per event type.",
+      "x-prompt": "Which event types? (comma-separated CONSTANT_CASE, e.g. USER_DELETED,USER_DEACTIVATED)"
+    },
+    "crossDomain": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this handler consumes events published by a different bounded context. Dispatcher imports schemas from `@old-st/contracts/{sourceDomain}` and handlers must use Extract<...DomainEvent, {eventType:'X'}> for typing."
+    },
+    "sourceDomain": {
+      "type": "string",
+      "description": "Required when crossDomain=true. The publishing domain (kebab-case) whose events we consume."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip Prettier formatting after generation."
+    }
+  },
+  "required": ["domain", "eventTypes"]
+}

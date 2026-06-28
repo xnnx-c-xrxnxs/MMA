@@ -1,0 +1,7 @@
+{
+  "name": "@old-st/ui",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "description": "Shared UI component library (shadcn/ui + Tailwind)"
+}

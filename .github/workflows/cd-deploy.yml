@@ -1,0 +1,978 @@
+name: "CD: Deploy"
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths-ignore:
+      - "infra/bootstrap/**"
+      - "**.md"
+      - ".github/CODEOWNERS"
+      - "examples/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      aws_account_id:
+        description: "AWS Account ID"
+        required: true
+        type: string
+      aws_region:
+        description: "AWS Region"
+        required: false
+        type: string
+        default: "eu-west-2"
+      deploy_all:
+        description: "Deploy all services (skip affected detection)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read    # required by nrwl/nx-set-shas@v4 to find last successful run
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  AWS_REGION: ${{ github.event.inputs.aws_region || vars.AWS_REGION || 'eu-west-2' }}
+  ENVIRONMENT: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+  DEPLOY_SHA: ${{ github.sha }}
+  NODE_VERSION: "24"
+
+jobs:
+  # ─── Preflight: verify environment credentials are configured ─────────────
+  preflight:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check environment is configured
+        id: check
+        run: |
+          ENV="${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}"
+
+          # Manual dispatch always provides aws_account_id — skip check
+          if [ -n "${{ github.event.inputs.aws_account_id }}" ]; then
+            echo "Manual dispatch with explicit account ID — proceeding"
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # For push-triggered deploys, require DEPLOY_ENABLED sentinel
+          # (set by 'AWS: Setup GitHub Environment Variables' task, environment-scoped only)
+          if [ "${{ vars.DEPLOY_ENABLED }}" != "true" ]; then
+            echo "::notice::Skipping deployment — '$ENV' environment is not configured. Run the 'AWS: Setup GitHub Environment Variables' VS Code task for '$ENV' to enable auto-deploy."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Environment '$ENV' is configured — proceeding with deployment"
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+  # ─── Determine what changed ───────────────────────────────────────────────
+  detect-changes:
+    needs: preflight
+    if: needs.preflight.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      affected_api: ${{ steps.affected.outputs.api_services }}
+      affected_workers: ${{ steps.affected.outputs.worker_services }}
+      affected_webapp: ${{ steps.affected.outputs.webapp }}
+      has_infra_changes: ${{ steps.affected.outputs.infra_changes }}
+      has_any_changes: ${{ steps.affected.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Derive SHAs for nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Detect affected projects
+        id: affected
+        run: |
+          if [[ "${{ github.event.inputs.deploy_all }}" == "true" ]]; then
+            echo "::group::Deploy all mode — skipping affected detection"
+            REGISTRY=$(cat .github/service-registry.json)
+            API_SERVICES=$(echo "$REGISTRY" | jq -c '[.apiServices[].name]')
+            WORKER_SERVICES=$(echo "$REGISTRY" | jq -c '[.eventHandlerServices[].name]')
+            echo "api_services=$API_SERVICES" >> "$GITHUB_OUTPUT"
+            echo "worker_services=$WORKER_SERVICES" >> "$GITHUB_OUTPUT"
+            echo "webapp=true" >> "$GITHUB_OUTPUT"
+            echo "infra_changes=true" >> "$GITHUB_OUTPUT"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "📦 API services: $API_SERVICES"
+            echo "📦 Worker services: $WORKER_SERVICES"
+            echo "📦 Webapp: true"
+            echo "::endgroup::"
+          else
+            echo "::group::Run Nx affected detection (NX_BASE=$NX_BASE, NX_HEAD=$NX_HEAD)"
+            AFFECTED=$(pnpm nx show projects --affected --plain 2>&1) || true
+            AFFECTED_COUNT=$(echo "$AFFECTED" | grep -c '.' || echo "0")
+            echo "Nx affected output ($AFFECTED_COUNT projects):"
+            echo "$AFFECTED"
+            if [[ "$AFFECTED_COUNT" == "0" || -z "$AFFECTED" ]]; then
+              echo "::warning::No affected projects detected. This may indicate the base branch ref is missing or Nx detection failed."
+            fi
+            echo "::endgroup::"
+
+            REGISTRY=$(cat .github/service-registry.json)
+            API_NAMES=$(echo "$REGISTRY" | jq -r '.apiServices[].name')
+            WORKER_NAMES=$(echo "$REGISTRY" | jq -r '.eventHandlerServices[].name')
+
+            API_LIST="[]"
+            WORKER_LIST="[]"
+            WEBAPP="false"
+
+            for svc in $API_NAMES; do
+              if echo "$AFFECTED" | grep -q "^${svc}$"; then
+                API_LIST=$(echo "$API_LIST" | jq -c ". + [\"$svc\"]")
+              fi
+            done
+
+            for svc in $WORKER_NAMES; do
+              if echo "$AFFECTED" | grep -q "^${svc}$"; then
+                WORKER_LIST=$(echo "$WORKER_LIST" | jq -c ". + [\"$svc\"]")
+              fi
+            done
+
+            if echo "$AFFECTED" | grep -q "^webapp$"; then
+              WEBAPP="true"
+            fi
+
+            INFRA_CHANGES="false"
+            git diff --name-only HEAD~1 HEAD | grep -qE '^(infra/|\.github/service-registry\.json)' && INFRA_CHANGES="true"
+
+            # When service-registry.json changes, new services may be added.
+            # Force all services to rebuild so new Lambdas get real code.
+            REGISTRY_CHANGED="false"
+            git diff --name-only HEAD~1 HEAD | grep -qE '^\.github/service-registry\.json$' && REGISTRY_CHANGED="true"
+            if [[ "$REGISTRY_CHANGED" == "true" ]]; then
+              API_LIST=$(echo "$REGISTRY" | jq -c '[.apiServices[].name]')
+              WORKER_LIST=$(echo "$REGISTRY" | jq -c '[.eventHandlerServices[].name]')
+              WEBAPP="true"
+            fi
+
+            HAS_CHANGES="false"
+            if [[ "$API_LIST" != "[]" ]] || [[ "$WORKER_LIST" != "[]" ]] || [[ "$WEBAPP" == "true" ]] || [[ "$INFRA_CHANGES" == "true" ]]; then
+              HAS_CHANGES="true"
+            fi
+
+            echo "::group::Affected service summary"
+            echo "📦 Affected API services: $API_LIST"
+            echo "📦 Affected worker services: $WORKER_LIST"
+            echo "📦 Webapp affected: $WEBAPP"
+            echo "📦 Infrastructure changes: $INFRA_CHANGES"
+            echo "✅ Has any changes: $HAS_CHANGES"
+            echo "::endgroup::"
+
+            echo "api_services=$API_LIST" >> "$GITHUB_OUTPUT"
+            echo "worker_services=$WORKER_LIST" >> "$GITHUB_OUTPUT"
+            echo "webapp=$WEBAPP" >> "$GITHUB_OUTPUT"
+            echo "infra_changes=$INFRA_CHANGES" >> "$GITHUB_OUTPUT"
+            echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ─── Terraform Plan + Apply ───────────────────────────────────────────────
+  terraform:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_infra_changes == 'true' || needs.detect-changes.outputs.has_any_changes == 'true'
+    # Native ARM64 runner — Lambda/ECS targets are arm64 (Graviton2). Avoids QEMU emulation.
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+    outputs:
+      api_urls: ${{ steps.outputs.outputs.api_urls }}
+      webapp_url: ${{ steps.outputs.outputs.webapp_url }}
+      webapp_mode: ${{ steps.outputs.outputs.webapp_mode }}
+      webapp_static_bucket: ${{ steps.outputs.outputs.webapp_static_bucket }}
+      webapp_cf_distribution: ${{ steps.outputs.outputs.webapp_cf_distribution }}
+      init_runner_config: ${{ steps.outputs.outputs.init_runner_config }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws_account_id || vars.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TFSTATE_BUCKET || format('{0}-tfstate', env.PROJECT_NAME) }}" \
+            -backend-config="key=${{ env.ENVIRONMENT }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TFSTATE_LOCK_TABLE || format('{0}-tflock', env.PROJECT_NAME) }}"
+
+      - name: Remove orphaned RDS instances
+        # When a domain is removed from service-registry.json, Terraform plans to destroy
+        # the RDS instance. The cached state has skip_final_snapshot=false, which triggers
+        # a CreateDBSnapshot API call that requires an IAM permission not granted by default.
+        # Fix: detect orphaned instances, remove them from state, and delete via CLI directly.
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          REGISTRY_DOMAINS=$(node -e \
+            "const r=require('../../../.github/service-registry.json'); \
+            process.stdout.write((r.infrastructure.rds||[]).map(d=>d.domain).join('\n'))")
+
+          while IFS= read -r resource; do
+            DOMAIN=$(echo "$resource" | sed "s/module\.rds\[.\([^'\"]*\).\].*/\1/")
+            [ -z "$DOMAIN" ] && continue
+
+            if ! echo "$REGISTRY_DOMAINS" | grep -qxF "$DOMAIN"; then
+              DB_ID="${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-${DOMAIN}"
+              echo "Orphaned RDS instance: $DB_ID — not in registry, cleaning up..."
+
+              # Disable deletion protection so we can delete it
+              aws rds modify-db-instance \
+                --db-instance-identifier "$DB_ID" \
+                --no-deletion-protection \
+                --apply-immediately \
+                --region "${{ env.AWS_REGION }}" 2>/dev/null || true
+
+              # Remove from Terraform state so the plan doesn't try to manage it
+              terraform state rm "$resource" || true
+
+              # Wait for modification to settle, then delete without final snapshot
+              aws rds wait db-instance-available \
+                --db-instance-identifier "$DB_ID" \
+                --region "${{ env.AWS_REGION }}" 2>/dev/null || true
+              aws rds delete-db-instance \
+                --db-instance-identifier "$DB_ID" \
+                --skip-final-snapshot \
+                --region "${{ env.AWS_REGION }}" 2>/dev/null \
+                && echo "Deletion initiated for $DB_ID" \
+                || echo "$DB_ID may already be deleted or not found"
+            fi
+          done < <(terraform state list 2>/dev/null | grep '^module\.rds\[' | grep '\.aws_db_instance\.' || true)
+
+      - name: Upload placeholder ZIPs for Lambda creation
+        run: |
+          REGISTRY=$(cat .github/service-registry.json)
+
+          # Affected services from detect-changes
+          AFFECTED_API='${{ needs.detect-changes.outputs.affected_api }}'
+          AFFECTED_WORKERS='${{ needs.detect-changes.outputs.affected_workers }}'
+          ALL_AFFECTED=$(echo "$AFFECTED_API $AFFECTED_WORKERS" | jq -s 'add // []')
+
+          # Create minimal valid Lambda ZIP (exports a handler that returns 503)
+          mkdir -p /tmp/placeholder
+          echo 'exports.handler = async () => ({ statusCode: 503, body: "Deploying..." });' > /tmp/placeholder/main.js
+          (cd /tmp/placeholder && zip -j /tmp/placeholder.zip main.js)
+
+          for svc in $(echo "$REGISTRY" | jq -r '.apiServices[].name, .eventHandlerServices[].name'); do
+            S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/${svc}/${{ env.DEPLOY_SHA }}.zip"
+
+            # If the artifact already exists (e.g. from a prior attempt), skip
+            if aws s3api head-object --bucket "${{ vars.ARTIFACT_BUCKET }}" --key "$S3_KEY" 2>/dev/null; then
+              echo "  $svc already has artifact, skipping"
+              continue
+            fi
+
+            # For UNAFFECTED services, copy the currently-deployed code to the
+            # new SHA key so Terraform can re-point the Lambda without breaking it.
+            IS_AFFECTED=$(echo "$ALL_AFFECTED" | jq -r --arg s "$svc" 'if index($s) then "yes" else "no" end')
+            if [[ "$IS_AFFECTED" == "no" ]]; then
+              FUNCTION_NAME=$(echo "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-${svc}" | cut -c1-59 | sed 's/-*$//')
+              CURRENT_KEY=$(aws lambda get-function-configuration \
+                --function-name "$FUNCTION_NAME" \
+                --query 'Environment.Variables.__S3_KEY // empty' \
+                --output text 2>/dev/null || true)
+
+              # Fallback: find the latest existing ZIP for this service in S3
+              if [[ -z "$CURRENT_KEY" || "$CURRENT_KEY" == "None" ]]; then
+                CURRENT_KEY=$(aws s3api list-objects-v2 \
+                  --bucket "${{ vars.ARTIFACT_BUCKET }}" \
+                  --prefix "${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/${svc}/" \
+                  --query 'sort_by(Contents, &LastModified)[-1].Key' \
+                  --output text 2>/dev/null || true)
+              fi
+
+              if [[ -n "$CURRENT_KEY" && "$CURRENT_KEY" != "None" ]]; then
+                aws s3 cp \
+                  "s3://${{ vars.ARTIFACT_BUCKET }}/$CURRENT_KEY" \
+                  "s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY" 2>/dev/null && \
+                  echo "  Copied existing code for $svc (unaffected)" && continue
+              fi
+            fi
+
+            # Fallback: upload placeholder for new or affected services
+            aws s3 cp /tmp/placeholder.zip "s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY"
+            echo "  Uploaded placeholder for $svc"
+          done
+
+          # Upload webapp placeholder for Lambda mode (if webapp affected)
+          # NOTE: For container image mode, the webapp Docker image is built in
+          # deploy-webapp job AFTER Terraform. The Lambda's lifecycle block
+          # (ignore_changes = [image_uri]) means Terraform only needs a valid
+          # image at initial creation. After the first deploy, subsequent
+          # Terraform applies don't touch image_uri.
+
+      # ── Pre-build webapp image for Lambda (if needed for Terraform creation)
+      # Lambda package_type=Image requires a pullable image at function creation.
+      # The real image is built in deploy-webapp, but Terraform runs first.
+      # This step pushes a minimal placeholder only when no image exists yet.
+      # For static mode the 'Ensure webapp image exists in ECR' step below exits
+      # early (webapp_mode != 'lambda'), so ECR login is effectively a no-op.
+      - name: Login to Amazon ECR (for webapp placeholder)
+        id: ecr-login-tf
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Ensure webapp image exists in ECR
+        run: |
+          REGISTRY=$(cat .github/service-registry.json)
+          WEBAPP_MODE=$(echo "$REGISTRY" | jq -r --arg env "${{ env.ENVIRONMENT }}" '.webapp.deploymentMode[$env] // "ecs"')
+          if [ "$WEBAPP_MODE" != "lambda" ]; then
+            echo "Webapp mode is ECS — skipping placeholder image"
+            exit 0
+          fi
+
+          IMAGE="${{ vars.ECR_REPO_URL }}:${{ env.DEPLOY_SHA }}"
+
+          # Check if image already exists
+          REPO_NAME=$(echo "${{ vars.ECR_REPO_URL }}" | sed 's|.*/||')
+          if aws ecr describe-images --repository-name "$REPO_NAME" --image-ids imageTag="${{ env.DEPLOY_SHA }}" 2>/dev/null; then
+            echo "Image $IMAGE already exists — skipping"
+            exit 0
+          fi
+
+          echo "Building placeholder webapp image for Terraform..."
+          cat <<'PLACEHOLDER_DOCKERFILE' | docker build -t "$IMAGE" -
+          FROM node:24-alpine
+          COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.0 /lambda-adapter /opt/extensions/lambda-adapter
+          ENV PORT=3000 HOSTNAME=0.0.0.0
+          EXPOSE 3000
+          CMD ["node", "-e", "require('http').createServer((q,s)=>{s.writeHead(503);s.end('Deploying...')}).listen(3000)"]
+          PLACEHOLDER_DOCKERFILE
+          docker push "$IMAGE"
+          echo "Pushed placeholder image: $IMAGE"
+
+      - name: Terraform Plan
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        env:
+          TF_VAR_sensitive_vars: ${{ secrets.SENSITIVE_VARS }}
+        run: |
+          # If SENSITIVE_VARS secret is not set, unset the TF_VAR so the
+          # variable defaults to {} (no third-party API keys configured yet)
+          if [ -z "$TF_VAR_sensitive_vars" ]; then unset TF_VAR_sensitive_vars; fi
+          terraform plan \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="environment=${{ env.ENVIRONMENT }}" \
+            -var="artifact_bucket=${{ vars.ARTIFACT_BUCKET }}" \
+            -var="deploy_sha=${{ env.DEPLOY_SHA }}" \
+            -var="ecr_repo_url=${{ vars.ECR_REPO_URL }}" \
+            -var="webapp_image_tag=${{ env.DEPLOY_SHA }}" \
+            -var="adot_layer_id=${{ vars.ADOT_LAYER_ID }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        env:
+          TF_VAR_sensitive_vars: ${{ secrets.SENSITIVE_VARS }}
+        run: |
+          if [ -z "$TF_VAR_sensitive_vars" ]; then unset TF_VAR_sensitive_vars; fi
+          terraform apply -auto-approve tfplan
+
+      - name: Capture outputs
+        id: outputs
+        working-directory: infra/environments/${{ env.ENVIRONMENT }}
+        run: |
+          # Bullet-proof against Terraform's box-drawing deprecation warning frame
+          # ("╷ │ Warning: ... ╵") that gets emitted on STDOUT after the value on every
+          # `terraform output` invocation in current Terraform versions. The earlier
+          # `2>/dev/null` fix was wrong-direction — the noise is on stdout, not stderr.
+          #
+          # All outputs we capture are single-line: `-json` emits one line, `-raw` for
+          # URLs/strings is one line, `-raw` for init_runner_config is one line of JSON.
+          # `head -n 1` discards everything past the value line. `set -e` (bash default)
+          # still aborts on a real non-zero exit from terraform.
+          API_URLS_JSON=$(terraform output -json api_urls 2>/dev/null | head -n 1)
+          WEBAPP_URL=$(terraform output -raw webapp_url 2>/dev/null | head -n 1)
+          WEBAPP_MODE=$(terraform output -raw webapp_mode 2>/dev/null | head -n 1)
+          WEBAPP_STATIC_BUCKET=$(terraform output -raw webapp_static_bucket 2>/dev/null | head -n 1 || echo "")
+          WEBAPP_CF_DISTRIBUTION=$(terraform output -raw webapp_cf_distribution 2>/dev/null | head -n 1 || echo "")
+          INIT_RUNNER_CONFIG=$(terraform output -raw init_runner_config 2>/dev/null | head -n 1)
+          {
+            echo "api_urls<<EOF"
+            echo "$API_URLS_JSON"
+            echo "EOF"
+            echo "webapp_url=$WEBAPP_URL"
+            echo "webapp_mode=$WEBAPP_MODE"
+            echo "webapp_static_bucket=$WEBAPP_STATIC_BUCKET"
+            echo "webapp_cf_distribution=$WEBAPP_CF_DISTRIBUTION"
+            echo "init_runner_config<<EOF"
+            echo "$INIT_RUNNER_CONFIG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  # ─── Build Backend Services ───────────────────────────────────────────────
+  build-backend:
+    needs: [detect-changes, terraform]
+    if: needs.detect-changes.outputs.affected_api != '[]' || needs.detect-changes.outputs.affected_workers != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Build affected API services
+        if: needs.detect-changes.outputs.affected_api != '[]'
+        run: |
+          for svc in $(echo '${{ needs.detect-changes.outputs.affected_api }}' | jq -r '.[]'); do
+            echo "Building $svc..."
+            pnpm nx build "$svc"
+            pnpm nx run "${svc}:prune-lockfile"
+            pnpm nx run "${svc}:copy-workspace-modules"
+          done
+
+      - name: Build affected worker services
+        if: needs.detect-changes.outputs.affected_workers != '[]'
+        run: |
+          for svc in $(echo '${{ needs.detect-changes.outputs.affected_workers }}' | jq -r '.[]'); do
+            echo "Building $svc..."
+            pnpm nx build "$svc"
+            pnpm nx run "${svc}:prune-lockfile"
+            pnpm nx run "${svc}:copy-workspace-modules"
+          done
+
+      - name: Verify no workspace: protocol leaked into dist/package.json
+        run: |
+          # Defense in depth — if @nx/js:prune-lockfile fails to resolve workspace:* deps,
+          # `npm install --omit=dev` at deploy time blows up with EUNSUPPORTEDPROTOCOL.
+          # Fail loud at build time with an actionable message instead.
+          FAILED=0
+          for pkg in dist/apps/*/*/package.json; do
+            [ -f "$pkg" ] || continue
+            if grep -qE '"workspace:' "$pkg"; then
+              echo "::error file=$pkg::Lambda dist/package.json still contains 'workspace:' protocol — npm install at deploy time will fail with EUNSUPPORTEDPROTOCOL."
+              echo "  Cause: a per-app package.json under apps/ uses 'workspace:*' but @nx/js:prune-lockfile did not resolve it."
+              echo "  Fix: remove the per-app package.json (recommended — let @nx/js:prune-lockfile generate one from the workspace lockfile), OR pin deps to real versions instead of 'workspace:*'."
+              grep -nE '"workspace:' "$pkg" || true
+              FAILED=1
+            fi
+          done
+          [ "$FAILED" -eq 0 ]
+
+      - name: Verify Prisma engine binaries
+        run: |
+          for dir in dist/apps/*/*; do
+            if [ -f "$dir/schema.prisma" ]; then
+              ENGINE="$dir/libquery_engine-linux-arm64-openssl-3.0.x.so.node"
+              if [ ! -f "$ENGINE" ]; then
+                echo "::error::Missing Prisma engine binary in $dir"
+                ls -la "$dir/"
+                exit 1
+              fi
+              SIZE=$(stat -c%s "$ENGINE")
+              echo "Prisma engine found in $dir ($SIZE bytes)"
+            fi
+          done
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: dist/apps/
+          retention-days: 1
+
+  # ─── Run Init Tasks (Lambda — migrations, seeds) ─────────────────────────
+  run-init-tasks:
+    needs: terraform
+    if: needs.terraform.outputs.init_runner_config != '{}'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws_account_id || vars.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Package init-runner
+        run: |
+          mkdir -p /tmp/init-runner
+
+          # Copy handler and scripts
+          cp infra/init-runner/handler.mjs /tmp/init-runner/handler.mjs
+          cp -r infra/init-runner/scripts /tmp/init-runner/scripts
+
+          # Install runtime dependencies (Prisma CLI + AWS SDK clients)
+          cat > /tmp/init-runner/package.json << 'EOF'
+          {
+            "name": "init-runner",
+            "type": "module",
+            "dependencies": {
+              "prisma": "^6.8.2",
+              "@aws-sdk/client-secrets-manager": "*",
+              "@aws-sdk/client-dynamodb": "*",
+              "@aws-sdk/client-s3": "*",
+              "@aws-sdk/client-cognito-identity-provider": "*"
+            }
+          }
+          EOF
+          cd /tmp/init-runner && npm install --omit=dev --no-audit --no-fund
+
+          # ── Copy Prisma schemas (one per domain) ─────────────────────────
+          # Add a line per Prisma domain:
+          # cp -r packages/{domain}-domain/src/infrastructure/prisma/ /tmp/init-runner/prisma/{domain}/
+          # (See examples/infra/init-runner/ for the order-domain reference.)
+
+          # Create ZIP
+          cd /tmp/init-runner && zip -r /tmp/init-runner.zip .
+          echo "Init-runner ZIP size: $(du -sh /tmp/init-runner.zip | cut -f1)"
+
+      - name: Upload init-runner ZIP to S3
+        run: |
+          S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/init-runner/${{ env.DEPLOY_SHA }}.zip"
+          aws s3 cp /tmp/init-runner.zip "s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY"
+          echo "Uploaded init-runner to s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY"
+
+      - name: Update init-runner Lambda code
+        run: |
+          CONFIG='${{ needs.terraform.outputs.init_runner_config }}'
+          FUNCTION_NAME=$(echo "$CONFIG" | jq -r '.function_name')
+          S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/init-runner/${{ env.DEPLOY_SHA }}.zip"
+
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --s3-bucket "${{ vars.ARTIFACT_BUCKET }}" \
+            --s3-key "$S3_KEY" \
+            --publish
+
+          # Wait for the update to complete before invoking
+          aws lambda wait function-updated \
+            --function-name "$FUNCTION_NAME"
+
+      - name: Invoke init-runner Lambda
+        run: |
+          CONFIG='${{ needs.terraform.outputs.init_runner_config }}'
+          FUNCTION_NAME=$(echo "$CONFIG" | jq -r '.function_name')
+          LOG_GROUP="/aws/lambda/$FUNCTION_NAME"
+
+          echo "Invoking $FUNCTION_NAME..."
+          aws lambda invoke \
+            --function-name "$FUNCTION_NAME" \
+            --invocation-type RequestResponse \
+            --log-type Tail \
+            --cli-binary-format raw-in-base64-out \
+            --payload '{}' \
+            /tmp/lambda-response.json \
+            --query 'LogResult' \
+            --output text | base64 -d || true
+
+          echo "--- Response ---"
+          cat /tmp/lambda-response.json
+
+          # Detect Lambda function error (non-200 status or FunctionError field)
+          FUNCTION_ERROR=$(aws lambda invoke \
+            --function-name "$FUNCTION_NAME" \
+            --invocation-type RequestResponse \
+            --cli-binary-format raw-in-base64-out \
+            --payload '{}' \
+            /tmp/lambda-response2.json \
+            --query 'FunctionError' \
+            --output text 2>/dev/null || echo "")
+
+          if [[ -n "$FUNCTION_ERROR" && "$FUNCTION_ERROR" != "None" ]]; then
+            echo "::error::Init runner Lambda failed: $FUNCTION_ERROR"
+            cat /tmp/lambda-response2.json
+            exit 1
+          fi
+
+          echo "Init runner completed successfully"
+
+  # ─── Package and Deploy Lambda ZIPs ───────────────────────────────────────
+  deploy-lambdas:
+    needs: [detect-changes, terraform, build-backend, run-init-tasks]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.affected_api != '[]' || needs.detect-changes.outputs.affected_workers != '[]') &&
+      needs.build-backend.result == 'success' &&
+      (needs.run-init-tasks.result == 'success' || needs.run-init-tasks.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: dist/apps/
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws_account_id || vars.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Package and deploy API services
+        if: needs.detect-changes.outputs.affected_api != '[]'
+        run: |
+          REGISTRY=$(cat .github/service-registry.json)
+          for svc in $(echo '${{ needs.detect-changes.outputs.affected_api }}' | jq -r '.[]'); do
+            DIST_PATH=$(echo "$REGISTRY" | jq -r --arg name "$svc" '.apiServices[] | select(.name==$name) | .distPath')
+            DIST_DIR=$(dirname "$DIST_PATH")
+
+            echo "Packaging $svc from $DIST_DIR..."
+
+            # Install production dependencies in dist
+            cd "$DIST_DIR"
+            if [ -f "package.json" ]; then
+              npm install --omit=dev --no-audit --no-fund
+            fi
+
+            # Create run.sh — Lambda Web Adapter entrypoint
+            echo '#!/bin/bash' > run.sh
+            echo 'exec node main.js' >> run.sh
+            chmod +x run.sh
+
+            cd "$GITHUB_WORKSPACE"
+
+            # Create ZIP
+            ZIP_NAME="${svc}.zip"
+            (cd "$DIST_DIR" && zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" .)
+
+            # Upload to S3
+            S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/${svc}/${{ env.DEPLOY_SHA }}.zip"
+            aws s3 cp "$ZIP_NAME" "s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY"
+
+            # Update Lambda function code
+            FUNCTION_NAME=$(echo "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-${svc}" | cut -c1-59 | sed 's/-*$//')
+            aws lambda update-function-code \
+              --function-name "$FUNCTION_NAME" \
+              --s3-bucket "${{ vars.ARTIFACT_BUCKET }}" \
+              --s3-key "$S3_KEY" \
+              --publish
+
+            echo "Deployed $svc"
+            rm "$ZIP_NAME"
+          done
+
+      - name: Package and deploy worker services
+        if: needs.detect-changes.outputs.affected_workers != '[]'
+        run: |
+          REGISTRY=$(cat .github/service-registry.json)
+          for svc in $(echo '${{ needs.detect-changes.outputs.affected_workers }}' | jq -r '.[]'); do
+            DIST_PATH=$(echo "$REGISTRY" | jq -r --arg name "$svc" '.eventHandlerServices[] | select(.name==$name) | .distPath')
+            DIST_DIR=$(dirname "$DIST_PATH")
+
+            echo "Packaging $svc from $DIST_DIR..."
+            cd "$DIST_DIR"
+            if [ -f "package.json" ]; then
+              npm install --omit=dev --no-audit --no-fund
+            fi
+            cd "$GITHUB_WORKSPACE"
+
+            ZIP_NAME="${svc}.zip"
+            (cd "$DIST_DIR" && zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" .)
+
+            S3_KEY="${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/${svc}/${{ env.DEPLOY_SHA }}.zip"
+            aws s3 cp "$ZIP_NAME" "s3://${{ vars.ARTIFACT_BUCKET }}/$S3_KEY"
+
+            FUNCTION_NAME=$(echo "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-${svc}" | cut -c1-59 | sed 's/-*$//')
+            aws lambda update-function-code \
+              --function-name "$FUNCTION_NAME" \
+              --s3-bucket "${{ vars.ARTIFACT_BUCKET }}" \
+              --s3-key "$S3_KEY" \
+              --publish
+
+            echo "Deployed $svc"
+            rm "$ZIP_NAME"
+          done
+
+  # ─── Build and Deploy Webapp ──────────────────────────────────────────────
+  deploy-webapp:
+    needs: [detect-changes, terraform]
+    if: needs.detect-changes.outputs.affected_webapp == 'true'
+    # Native ARM64 runner — webapp image is arm64 (Lambda + ECS Fargate Graviton2).
+    # Eliminates QEMU emulation that was making this job take ~14 minutes.
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/develop' && 'dev') || (github.ref == 'refs/heads/main' && 'staging') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws_account_id || vars.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ── Static webapp deploy (S3 + CloudFront) ───────────────────────────
+      - name: Setup Node.js
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build static webapp
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        run: |
+          API_URLS='${{ needs.terraform.outputs.api_urls }}'
+          REGISTRY=$(cat .github/service-registry.json)
+          for svc in $(echo "$REGISTRY" | jq -r '.apiServices[].name'); do
+            DOMAIN=$(echo "$REGISTRY" | jq -r --arg name "$svc" '.apiServices[] | select(.name==$name) | .domain')
+            URL=$(echo "$API_URLS" | jq -r --arg domain "$DOMAIN" '.[$domain]')
+            VAR_NAME="NEXT_PUBLIC_API_$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')_URL"
+            export "${VAR_NAME}=${URL}"
+          done
+          pnpm nx build webapp
+
+      - name: Sync static assets to S3
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        run: |
+          BUCKET="${{ needs.terraform.outputs.webapp_static_bucket }}"
+          # Immutable content-hashed assets — long-lived cache
+          aws s3 sync apps/webapp/out/_next/static/ \
+            "s3://${BUCKET}/_next/static/" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --delete
+          # All other files — no caching (HTML must always be fresh for SPA routing)
+          aws s3 sync apps/webapp/out/ \
+            "s3://${BUCKET}/" \
+            --cache-control "no-cache" \
+            --exclude "_next/static/*" \
+            --delete
+
+      - name: Invalidate CloudFront cache
+        if: needs.terraform.outputs.webapp_mode == 'static'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ needs.terraform.outputs.webapp_cf_distribution }}" \
+            --paths "/*"
+
+      # ── Build Docker image (shared by ECS + Lambda paths) ────────────────
+      - name: Login to Amazon ECR
+        if: needs.terraform.outputs.webapp_mode != 'static'
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        if: needs.terraform.outputs.webapp_mode != 'static'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute NEXT_PUBLIC build args from Terraform outputs
+        if: needs.terraform.outputs.webapp_mode != 'static'
+        id: build-args
+        run: |
+          API_URLS='${{ needs.terraform.outputs.api_urls }}'
+          REGISTRY=$(cat .github/service-registry.json)
+          {
+            echo 'args<<BUILD_ARGS_EOF'
+            for svc in $(echo "$REGISTRY" | jq -r '.apiServices[].name'); do
+              DOMAIN=$(echo "$REGISTRY" | jq -r --arg name "$svc" '.apiServices[] | select(.name==$name) | .domain')
+              URL=$(echo "$API_URLS" | jq -r --arg domain "$DOMAIN" '.[$domain]')
+              VAR_NAME="NEXT_PUBLIC_API_$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')_URL"
+              echo "${VAR_NAME}=${URL}"
+            done
+            echo 'BUILD_ARGS_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        if: needs.terraform.outputs.webapp_mode != 'static'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/webapp/Dockerfile
+          # Native arm64 runner — no emulation, no --platform list needed.
+          platforms: linux/arm64
+          push: true
+          # Lambda requires Docker v2 manifests, not OCI. provenance:false disables
+          # the attestation manifest that turns the push into a multi-arch index
+          # Lambda cannot parse ("image manifest ... is not supported").
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ vars.ECR_REPO_URL }}:${{ env.DEPLOY_SHA }}
+            ${{ vars.ECR_REPO_URL }}:${{ env.ENVIRONMENT }}-latest
+          build-args: ${{ steps.build-args.outputs.args }}
+          # Registry-backed layer cache. First run populates `:webapp-buildcache`,
+          # subsequent runs reuse pnpm install + unchanged Next.js layers.
+          # Typical cache-hit build: < 60s. Cache miss (lockfile change): ~2-3 min.
+          cache-from: type=registry,ref=${{ vars.ECR_REPO_URL }}:webapp-buildcache
+          cache-to: type=registry,ref=${{ vars.ECR_REPO_URL }}:webapp-buildcache,mode=max,image-manifest=true,oci-mediatypes=true
+
+      # ── ECS deploy ───────────────────────────────────────────────────────
+      - name: Update ECS service
+        if: needs.terraform.outputs.webapp_mode == 'ecs'
+        run: |
+          aws ecs update-service \
+            --cluster "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" \
+            --service "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-webapp" \
+            --force-new-deployment
+
+          echo "Waiting for ECS service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" \
+            --services "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-webapp" || true
+
+      # ── Lambda deploy (container image) ──────────────────────────────────
+      - name: Deploy webapp Lambda
+        if: needs.terraform.outputs.webapp_mode == 'lambda'
+        run: |
+          IMAGE_URI="${{ vars.ECR_REPO_URL }}:${{ env.DEPLOY_SHA }}"
+          FUNCTION_NAME=$(echo "${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-webapp" | cut -c1-59 | sed 's/-*$//')
+
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --image-uri "$IMAGE_URI" \
+            --publish
+
+          echo "Deployed webapp Lambda from container image: $IMAGE_URI"
+
+  # ─── Smoke Test + Deployment Summary ───────────────────────────────────────
+  smoke-test:
+    needs: [terraform, deploy-lambdas, deploy-webapp, run-init-tasks]
+    if: always() && needs.terraform.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check API services
+        id: api_health
+        run: |
+          API_URLS='${{ needs.terraform.outputs.api_urls }}'
+          RESULTS=""
+          echo "$API_URLS" | jq -r 'to_entries[] | "\(.key) \(.value)"' | while read -r SVC URL; do
+            HEALTH_URL="${URL}/health"
+            SWAGGER_URL="${URL}/swagger"
+            echo "Checking $SVC at $HEALTH_URL..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || echo "000")
+            if [[ "$HTTP_CODE" == "200" ]]; then
+              echo "  ✓ $SVC responded with $HTTP_CODE"
+              echo "$SVC|$HEALTH_URL|$HTTP_CODE|✅|$SWAGGER_URL" >> /tmp/api_results.txt
+            else
+              echo "  ✗ $SVC responded with $HTTP_CODE"
+              echo "$SVC|$HEALTH_URL|$HTTP_CODE|❌|$SWAGGER_URL" >> /tmp/api_results.txt
+            fi
+          done
+
+      - name: Health check webapp
+        id: webapp_health
+        if: needs.terraform.outputs.webapp_url != ''
+        run: |
+          URL="${{ needs.terraform.outputs.webapp_url }}"
+          echo "Checking webapp at $URL..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$URL" || echo "000")
+          echo "Webapp responded with $HTTP_CODE"
+          echo "code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Write deployment summary
+        if: always()
+        run: |
+          ENV="${{ env.ENVIRONMENT }}"
+          SHA="${{ env.DEPLOY_SHA }}"
+          SHORT_SHA="${SHA:0:7}"
+          REPO="${{ github.repository }}"
+          BRANCH="${{ github.ref_name }}"
+          WEBAPP_URL="${{ needs.terraform.outputs.webapp_url }}"
+          WEBAPP_CODE="${{ steps.webapp_health.outputs.code }}"
+          LAMBDA_RESULT="${{ needs.deploy-lambdas.result }}"
+          WEBAPP_RESULT="${{ needs.deploy-webapp.result }}"
+          INIT_RESULT="${{ needs.run-init-tasks.result }}"
+
+          status_icon() {
+            case "$1" in
+              success)  echo "✅";;
+              skipped)  echo "⏭️";;
+              failure)  echo "❌";;
+              *)        echo "⚪";;
+            esac
+          }
+
+          {
+            echo "## 🚀 Deployment Summary"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| **Environment** | \`$ENV\` |"
+            echo "| **Branch** | \`$BRANCH\` |"
+            echo "| **Commit** | [\`$SHORT_SHA\`](https://github.com/$REPO/commit/$SHA) |"
+            echo "| **Triggered by** | ${{ github.actor }} |"
+            echo "| **Workflow run** | [#${{ github.run_number }}](https://github.com/$REPO/actions/runs/${{ github.run_id }}) |"
+            echo ""
+            echo "### 📡 API Endpoints"
+            echo ""
+            echo "| Service | Health URL | Health | Swagger |"
+            echo "|---------|------------|--------|---------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          API_URLS='${{ needs.terraform.outputs.api_urls }}'
+          if [ -f /tmp/api_results.txt ]; then
+            while IFS='|' read -r SVC URL CODE ICON SWAGGER_URL; do
+              echo "| **$SVC** | $URL | $ICON \`$CODE\` | [$SVC Swagger]($SWAGGER_URL) |" >> "$GITHUB_STEP_SUMMARY"
+            done < /tmp/api_results.txt
+          else
+            echo "$API_URLS" | jq -r 'to_entries[] | "| **\(.key)** | \(.value)/health | ⚪ | [\(.key) Swagger](\(.value)/swagger) |"' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          {
+            echo ""
+            echo "### 🌐 Webapp"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| **URL** | ${WEBAPP_URL:-N/A} |"
+            echo "| **Health** | $([ -n "$WEBAPP_CODE" ] && echo "\`$WEBAPP_CODE\`" || echo "N/A") |"
+            echo ""
+            echo "### 📋 Job Results"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+            echo "| Terraform | $(status_icon "${{ needs.terraform.result }}") ${{ needs.terraform.result }} |"
+            echo "| Deploy Lambdas | $(status_icon "$LAMBDA_RESULT") ${LAMBDA_RESULT:-skipped} |"
+            echo "| Deploy Webapp | $(status_icon "$WEBAPP_RESULT") ${WEBAPP_RESULT:-skipped} |"
+            echo "| Init Tasks | $(status_icon "$INIT_RESULT") ${INIT_RESULT:-skipped} |"
+          } >> "$GITHUB_STEP_SUMMARY"

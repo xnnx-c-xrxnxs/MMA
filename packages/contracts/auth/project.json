@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "contracts-auth",
+  "sourceRoot": "packages/contracts/auth/src",
+  "projectType": "library",
+  "tags": ["scope:auth", "type:contracts"]
+}

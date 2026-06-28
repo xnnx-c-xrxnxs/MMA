@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "OldStService",
+  "title": "Old-ST Service Generator",
+  "type": "object",
+  "description": "Scaffold a NestJS HTTP API microservice (skeleton). Use the `domain` generator to scaffold a full domain + service together.",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Domain name in kebab-case (e.g. shipping). The service will live at apps/{domain}/{domain}-api-service.",
+      "x-prompt": "What is the domain name (kebab-case, e.g. shipping)?"
+    },
+    "entity": {
+      "type": "string",
+      "description": "Entity name in kebab-case singular (default: same as domain). Drives the module/controller/app-service file names."
+    },
+    "persistence": {
+      "type": "string",
+      "enum": ["dynamodb"],
+      "default": "dynamodb",
+      "description": "Persistence layer (dynamodb only for now — prisma support to come)."
+    },
+    "publishesEvents": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, the service publishes domain events to SQS. Adds {DOMAIN}_SQS_QUEUE_URL/_NAME env vars and registers the queue URL in service-registry.json."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip Prettier formatting after generation."
+    }
+  },
+  "required": ["domain"]
+}

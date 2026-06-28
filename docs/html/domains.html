@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bounded Contexts — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html" class="active">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Bounded Contexts &amp; Domain Model</h1>
+      <p class="subtitle">
+        Three core bounded contexts — User, Product, and Order — each with their own entity, state machine,
+        persistence, and business rules. Two supporting services — Auth and Files — provide cross-cutting
+        infrastructure to all domains without owning business data.
+        Each domain owns its data completely and communicates with others through well-defined interfaces.
+      </p>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Domain Overview</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Entity</th>
+            <th>Persistence</th>
+            <th>Services</th>
+            <th>Events Published</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>User</strong></td>
+            <td>User</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+            <td>user-api-service, user-event-handler-service</td>
+            <td>USER_DELETED</td>
+          </tr>
+          <tr>
+            <td><strong>Product</strong></td>
+            <td>Product</td>
+            <td><span class="tag dynamo">DynamoDB</span></td>
+            <td>product-api-service, product-event-handler-service</td>
+            <td>PRODUCT_DEACTIVATED, PRODUCT_DISCONTINUED, PRODUCT_DELETED, PRODUCT_PRICE_CHANGED, PRODUCT_VALIDATION_SUCCEEDED, PRODUCT_VALIDATION_FAILED</td>
+          </tr>
+          <tr>
+            <td><strong>Order</strong></td>
+            <td>Order (aggregate root), OrderItem, OrderPayment</td>
+            <td><span class="tag prisma">PostgreSQL</span></td>
+            <td>order-api-service, order-event-handler-service</td>
+            <td>ORDER_CREATED</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Strategic Domain Classification</h2>
+
+      <p>
+        Domain-Driven Design distinguishes between <strong>Core</strong>, <strong>Supporting</strong>, and
+        <strong>Generic</strong> subdomains. This classification drives where the team invests the most modeling
+        effort, where simpler patterns suffice, and how each domain justifies its complexity budget.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Classification</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Order</strong></td>
+            <td><span class="tag saga">Core Domain</span></td>
+            <td>
+              The primary source of business value. Orchestrates the most complex workflows —
+              aggregate root with child entities (OrderItem, OrderPayment), choreography saga for
+              async product validation, ACL integration with the User domain, and the richest state
+              machine (DRAFT → PENDING → CONFIRMED → SHIPPED → DELIVERED, plus CANCELLED and
+              VALIDATION_FAILED branches).
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Product</strong></td>
+            <td><span class="tag async">Supporting Subdomain</span></td>
+            <td>
+              Enables the core domain to function. Product catalog, pricing, and lifecycle events
+              feed directly into order creation and validation. Publishes the most event types
+              (6 events). Non-trivial business rules (status lifecycle, price change tracking),
+              but does not own the primary business workflow.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>User</strong></td>
+            <td><span class="tag async">Supporting Subdomain</span></td>
+            <td>
+              Provides identity and access management — required by the core domain (customer
+              validation via ACL) but contains standard CRUD + status lifecycle logic. Simplest
+              entity model (single entity, no children). Could potentially be replaced by an
+              external identity provider with minimal impact on the core.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>What the Classification Drives</h3>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph CORE ["Core Domain — Order"]
+        C1["Maximum modeling investment"]:::red
+        C2["Richest domain entity\n(aggregate root + children)"]:::red
+        C3["Choreography saga\n(async cross-domain validation)"]:::red
+        C4["ACL for upstream dependencies"]:::red
+        C5["Most complex state machine\n(7 statuses, guarded transitions)"]:::red
+    end
+
+    subgraph SUPPORTING ["Supporting Subdomains — Product, User"]
+        S1["Moderate modeling investment"]:::blue
+        S2["Single entity per domain"]:::blue
+        S3["Event publishing\n(react-to by core)"]:::blue
+        S4["Standard lifecycle patterns\n(activate, deactivate, delete)"]:::blue
+    end
+
+    subgraph GENERIC ["Generic Subdomain (not in template)"]
+        G1["Minimal custom modeling"]:::gray
+        G2["Off-the-shelf or library solution"]:::gray
+        G3["Examples: email delivery,\nfile storage, logging"]:::gray
+    end
+
+    CORE ---|"depends on"| SUPPORTING
+    SUPPORTING ---|"could delegate to"| GENERIC
+
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef gray fill:#f3f4f6,stroke:#6b7280,color:#000
+      </div>
+
+      <h3>How Classification Appears in This Codebase</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Design Decision</th>
+            <th>Core (Order)</th>
+            <th>Supporting (Product, User)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Entity complexity</strong></td>
+            <td>Aggregate root with <code>OrderItem[]</code> and <code>OrderPayment</code> children. Factory methods manage the full object graph.</td>
+            <td>Flat single entity. No child entities or aggregates.</td>
+          </tr>
+          <tr>
+            <td><strong>State machine depth</strong></td>
+            <td>7 statuses with branching paths (DRAFT → PENDING/VALIDATION_FAILED, PENDING → CONFIRMED → SHIPPED → DELIVERED, any → CANCELLED). Guarded transitions with domain exceptions.</td>
+            <td>4–5 statuses with linear progressions (PENDING → ACTIVE → INACTIVE → DELETED). Straightforward guards.</td>
+          </tr>
+          <tr>
+            <td><strong>Cross-domain integration</strong></td>
+            <td>Consumes events from Product (price changes, discontinuation). Uses ACL to validate customers via User API. Publishes saga-initiating events.</td>
+            <td>Product publishes lifecycle events. User is fully independent (no outbound dependencies).</td>
+          </tr>
+          <tr>
+            <td><strong>Persistence</strong></td>
+            <td>Prisma + PostgreSQL — relational model for aggregate with joins, transactions, and cascade deletes.</td>
+            <td>DynamoDB OneTable — single-table design optimized for key-value lookups and status-based listing.</td>
+          </tr>
+          <tr>
+            <td><strong>Saga participation</strong></td>
+            <td>Initiator (publishes <code>ORDER_CREATED</code>) and resolver (handles validation result). Owns the provisional state (DRAFT) until the saga completes.</td>
+            <td>Product is the saga responder (validates products, publishes result). User does not participate in sagas.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Why does this matter?</strong>
+        The core domain is where competitive advantage lives — invest the deepest modeling, richest testing, and most
+        careful invariant enforcement here. Supporting subdomains should be <em>good enough</em> without over-engineering.
+        Generic subdomains (not implemented in this template) should ideally be replaced by off-the-shelf solutions.
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>DDD Concepts as They Appear in Code</h2>
+
+      <p>This template applies Domain-Driven Design pragmatically. Here's how each DDD concept maps to the codebase:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>DDD Concept</th>
+            <th>In This Codebase</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Bounded Context</strong></td>
+            <td>Each <code>packages/{domain}-domain</code> is a bounded context with its own entity, constants, exceptions, and repository interface. No domain imports from another domain package.</td>
+            <td><code>packages/order-domain</code> owns everything about orders — statuses, items, payments, validation rules.</td>
+          </tr>
+          <tr>
+            <td><strong>Entity</strong></td>
+            <td>A class with a private constructor, <code>create()</code> factory (new instances), <code>reconstitute()</code> factory (from DB), getters, and business methods that enforce invariants.</td>
+            <td><code>User.create({ email, firstName, lastName })</code> validates email format and sets status to PENDING.</td>
+          </tr>
+          <tr>
+            <td><strong>Aggregate Root</strong></td>
+            <td>An entity that owns child entities. Only the root is accessed via the repository. Children are created/managed through the root.</td>
+            <td><code>Order</code> is the aggregate root for <code>OrderItem[]</code> and <code>OrderPayment</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Repository Interface</strong></td>
+            <td>An abstract class in <code>application/interfaces/</code> that declares persistence operations. The domain defines <em>what</em>; infrastructure provides <em>how</em>.</td>
+            <td><code>IOrderRepository.save(order)</code>, <code>IOrderRepository.findById(orderId)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Use Case</strong></td>
+            <td>A single-responsibility class in <code>application/use-cases/</code> with an <code>execute()</code> method. Each operation (create, activate, cancel…) is its own use case.</td>
+            <td><code>CreateOrderUseCase.execute(input)</code> validates customer via ACL, creates entity, saves, publishes event.</td>
+          </tr>
+          <tr>
+            <td><strong>Domain Exception</strong></td>
+            <td>Typed error classes in <code>domain/exceptions/</code>. Each represents a specific business rule violation. Mapped to HTTP status codes by <code>DomainExceptionFilter</code>.</td>
+            <td><code>CannotCancelOrderError</code> → 409, <code>OrderNotFoundError</code> → 404</td>
+          </tr>
+          <tr>
+            <td><strong>Anti-Corruption Layer (ACL)</strong></td>
+            <td>An abstract class in <code>application/interfaces/</code> defining what the domain needs from another bounded context, without importing upstream types. Infrastructure provides an HTTP adapter.</td>
+            <td><code>ICustomerValidator.validate(customerId)</code> — order domain's interface. <code>UserApiClient</code> — the HTTP adapter.</td>
+          </tr>
+          <tr>
+            <td><strong>Published Language</strong></td>
+            <td>Event schemas in <code>@old-st/contracts/{domain}/event-schemas.ts</code>. This is the shared vocabulary between publisher and consumer domains.</td>
+            <td><code>productDomainEventSchema</code> — Zod discriminated union of all product event types.</td>
+          </tr>
+          <tr>
+            <td><strong>Domain Event</strong></td>
+            <td>A JSON message published to SQS with a <code>type</code> discriminator and typed payload. Constants in <code>domain/constants/</code>, schemas in <code>contracts/</code>.</td>
+            <td><code>{ type: 'ORDER_CREATED', orderId, customerId, items }</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>User Domain</h2>
+
+      <p class="file-path">packages/user-domain/src/domain/</p>
+
+      <h3>Status Values</h3>
+      <p><code>PENDING</code> · <code>ACTIVE</code> · <code>INACTIVE</code> · <code>DELETED</code></p>
+      <p>Roles: <code>USER</code> · <code>ADMIN</code></p>
+
+      <h3>State Machine</h3>
+
+      <div class="mermaid">
+flowchart TD
+    Start(["User.create()"]) --> PENDING
+    PENDING -->|"activate()\nrequires emailVerified=true"| ACTIVE
+    ACTIVE -->|"deactivate()"| INACTIVE
+    PENDING -->|"markAsDeleted()"| DELETED
+    ACTIVE -->|"markAsDeleted()"| DELETED
+    INACTIVE -->|"markAsDeleted()"| DELETED
+
+    INACTIVE -.->|"deactivate()\n⛔ UserAlreadyInactiveError"| INACTIVE
+    DELETED -.->|"markAsDeleted()\n⛔ UserAlreadyDeletedError"| DELETED
+
+    style Start fill:#f3e8ff,stroke:#7c3aed
+    style PENDING fill:#fef3c7,stroke:#d97706
+    style ACTIVE fill:#dcfce7,stroke:#16a34a
+    style INACTIVE fill:#dbeafe,stroke:#2563eb
+    style DELETED fill:#fee2e2,stroke:#dc2626
+      </div>
+
+      <p style="font-size:0.85rem;color:var(--text-muted);">Solid arrows = valid transitions · Dashed arrows = blocked (throws error)</p>
+
+      <h3>Business Rules</h3>
+      <ul>
+        <li>New users are created with status <code>PENDING</code>, <code>emailVerified: false</code>, and default role <code>USER</code>.</li>
+        <li>Email must match a valid format — enforced in <code>create()</code>.</li>
+        <li><code>activate()</code> requires <code>PENDING</code> status <strong>and</strong> <code>emailVerified === true</code>. Both guards must pass.</li>
+        <li><code>deactivate()</code> is blocked for <code>DELETED</code> users and already <code>INACTIVE</code> users.</li>
+        <li><code>markAsDeleted()</code> is a soft delete — transitions any non-deleted status to <code>DELETED</code>.</li>
+        <li>Profile updates (<code>updateProfile</code>, <code>updateData</code>) and role changes (<code>changeRole</code>) are blocked for <code>DELETED</code> users.</li>
+        <li><code>changeRole()</code> throws if the user already has the target role.</li>
+      </ul>
+
+      <h3>Events Published</h3>
+      <table>
+        <thead><tr><th>Event</th><th>Published By</th><th>Consumed By</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>USER_DELETED</code></td>
+            <td>user-api-service (on delete)</td>
+            <td>user-event-handler-service</td>
+            <td>Full user snapshot + <code>deletedAt</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Product Domain</h2>
+
+      <p class="file-path">packages/product-domain/src/domain/</p>
+
+      <h3>Status Values</h3>
+      <p><code>ACTIVE</code> · <code>INACTIVE</code> · <code>DISCONTINUED</code> · <code>DELETED</code></p>
+
+      <h3>State Machine</h3>
+
+      <div class="mermaid">
+flowchart TD
+    Start(["Product.create()"]) --> ACTIVE
+    ACTIVE -->|"deactivate()"| INACTIVE
+    INACTIVE -->|"activate()"| ACTIVE
+    ACTIVE -->|"discontinue()"| DISCONTINUED
+    INACTIVE -->|"discontinue()"| DISCONTINUED
+    ACTIVE -->|"markAsDeleted()"| DELETED
+    INACTIVE -->|"markAsDeleted()"| DELETED
+    DISCONTINUED -->|"markAsDeleted()"| DELETED
+
+    DELETED -.->|"markAsDeleted()\n⛔ ProductAlreadyDeletedError"| DELETED
+
+    style Start fill:#f3e8ff,stroke:#7c3aed
+    style ACTIVE fill:#dcfce7,stroke:#16a34a
+    style INACTIVE fill:#fef3c7,stroke:#d97706
+    style DISCONTINUED fill:#dbeafe,stroke:#2563eb
+    style DELETED fill:#fee2e2,stroke:#dc2626
+      </div>
+
+      <p style="font-size:0.85rem;color:var(--text-muted);">Solid arrows = valid transitions · Dashed arrows = blocked (throws error)</p>
+
+      <h3>Business Rules</h3>
+      <ul>
+        <li>New products are created with status <code>ACTIVE</code>.</li>
+        <li><code>activate()</code> only works from <code>INACTIVE</code>.</li>
+        <li><code>deactivate()</code> only works from <code>ACTIVE</code>.</li>
+        <li><code>discontinue()</code> works from <code>ACTIVE</code> or <code>INACTIVE</code> — it's a one-way transition.</li>
+        <li>Updates to details, price, and inventory are blocked for <code>DELETED</code> and <code>DISCONTINUED</code> products.</li>
+        <li>Price must be &gt; 0, inventory must be &gt;= 0, name cannot be empty.</li>
+      </ul>
+
+      <h3>Events Published</h3>
+      <table>
+        <thead><tr><th>Event</th><th>Published By</th><th>Consumed By</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>PRODUCT_DEACTIVATED</code></td>
+            <td>product-api-service</td>
+            <td>order-event-handler-service</td>
+            <td>productId</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DISCONTINUED</code></td>
+            <td>product-api-service</td>
+            <td>order-event-handler-service</td>
+            <td>productId</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_DELETED</code></td>
+            <td>product-api-service</td>
+            <td>order-event-handler-service</td>
+            <td>productId</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_PRICE_CHANGED</code></td>
+            <td>product-api-service</td>
+            <td>order-event-handler-service</td>
+            <td>productId, oldPrice, newPrice</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_VALIDATION_SUCCEEDED</code></td>
+            <td>product-event-handler-service</td>
+            <td>order-event-handler-service</td>
+            <td>orderId</td>
+          </tr>
+          <tr>
+            <td><code>PRODUCT_VALIDATION_FAILED</code></td>
+            <td>product-event-handler-service</td>
+            <td>order-event-handler-service</td>
+            <td>orderId, reason, failedProducts[]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Order Domain</h2>
+
+      <p class="file-path">packages/order-domain/src/domain/</p>
+
+      <h3>Status Values</h3>
+      <p><code>DRAFT</code> · <code>PENDING</code> · <code>CONFIRMED</code> · <code>PROCESSING</code> · <code>SHIPPED</code> · <code>DELIVERED</code> · <code>CANCELLED</code> · <code>REFUNDED</code> · <code>VALIDATION_FAILED</code></p>
+
+      <h3>State Machine</h3>
+
+      <div class="mermaid">
+flowchart TD
+    Start(["Order.create()"]) --> DRAFT
+
+    DRAFT -->|"approveProductValidation()\nsaga: products valid"| PENDING
+    DRAFT -->|"failValidation()\nsaga: products invalid"| VALIDATION_FAILED
+
+    PENDING -->|"confirmOrder()\nrequires items + payment"| CONFIRMED
+    CONFIRMED -->|"startProcessing()"| PROCESSING
+    PROCESSING -->|"ship()"| SHIPPED
+    SHIPPED -->|"deliver()"| DELIVERED
+    DELIVERED -->|"refund()\nrequires successful payment"| REFUNDED
+
+    DRAFT -->|"cancel()"| CANCELLED
+    PENDING -->|"cancel()"| CANCELLED
+    CONFIRMED -->|"cancel()"| CANCELLED
+    PROCESSING -->|"cancel()"| CANCELLED
+    SHIPPED -->|"cancel()"| CANCELLED
+
+    style Start fill:#f3e8ff,stroke:#7c3aed
+    style DRAFT fill:#fef3c7,stroke:#d97706
+    style PENDING fill:#dbeafe,stroke:#2563eb
+    style CONFIRMED fill:#dbeafe,stroke:#2563eb
+    style PROCESSING fill:#dbeafe,stroke:#2563eb
+    style SHIPPED fill:#dbeafe,stroke:#2563eb
+    style DELIVERED fill:#dcfce7,stroke:#16a34a
+    style REFUNDED fill:#e0e7ff,stroke:#6366f1
+    style VALIDATION_FAILED fill:#fee2e2,stroke:#dc2626
+    style CANCELLED fill:#fee2e2,stroke:#dc2626
+      </div>
+
+      <p style="font-size:0.85rem;color:var(--text-muted);">Green = happy path complete · Blue = in-progress · Yellow = initial · Red = terminal</p>
+
+      <h3>Aggregate Structure</h3>
+
+      <p>
+        <code>Order</code> is an <strong>aggregate root</strong> that owns two child entities:
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph Order["Order (Aggregate Root)"]
+        O1["orderId: string"]
+        O2["customerId: string"]
+        O3["orderStatus: OrderStatus"]
+        O4["totalAmount: number"]
+        O5["create() · addItem() · removeItem()
+confirmOrder() · cancel() · refund()
+approveProductValidation() · failValidation()"]
+    end
+
+    subgraph OrderItem["OrderItem (0..* per Order)"]
+        I1["itemId · productId · productName"]
+        I2["quantity · unitPrice · latestKnownPrice"]
+        I3["updateQuantity() · updateLatestKnownPrice()
+hasPriceDrift() · getSubtotal()"]
+    end
+
+    subgraph OrderPayment["OrderPayment (0..1 per Order)"]
+        P1["paymentId · method · amount · status"]
+        P2["markSuccessful() · fail() · refund()"]
+    end
+
+    Order -->|"owns 0..*"| OrderItem
+    Order -->|"owns 0..1"| OrderPayment
+
+    style Order fill:#dcfce7,stroke:#16a34a
+    style OrderItem fill:#dbeafe,stroke:#2563eb
+    style OrderPayment fill:#fef3c7,stroke:#d97706
+      </div>
+
+      <h3>Business Rules</h3>
+      <ul>
+        <li>New orders start in <code>DRAFT</code> — items can be added/removed/updated only while in DRAFT.</li>
+        <li>The <strong>choreography saga</strong> resolves DRAFT orders: <code>approveProductValidation()</code> transitions to <code>PENDING</code>, <code>failValidation()</code> transitions to <code>VALIDATION_FAILED</code>.</li>
+        <li><code>confirmOrder()</code> requires <code>PENDING</code> status, at least one item, a payment, and no price drift on any item.</li>
+        <li><strong>Price drift guard:</strong> if any <code>OrderItem.latestKnownPrice</code> differs from <code>unitPrice</code>, <code>confirmOrder()</code> throws <code>PriceDriftDetectedError</code>.</li>
+        <li><code>cancel()</code> is available from most statuses except <code>DELIVERED</code>, <code>REFUNDED</code>, and <code>VALIDATION_FAILED</code>.</li>
+        <li><code>refund()</code> requires <code>DELIVERED</code> status with a successful payment.</li>
+        <li><code>totalAmount</code> is automatically recalculated when items are added, removed, or updated.</li>
+      </ul>
+
+      <h3>Events Published</h3>
+      <table>
+        <thead><tr><th>Event</th><th>Published By</th><th>Consumed By</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>ORDER_CREATED</code></td>
+            <td>CreateOrderUseCase (in order-api-service)</td>
+            <td>product-event-handler-service</td>
+            <td>orderId, customerId, items[]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Domain Boundaries — What Each Domain Owns</h2>
+
+      <table>
+        <thead>
+          <tr><th></th><th>User Domain</th><th>Product Domain</th><th>Order Domain</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Owns</strong></td>
+            <td>User identity, email verification, activation/deactivation lifecycle, roles</td>
+            <td>Product catalog, pricing, inventory, product lifecycle</td>
+            <td>Orders, order items, payments, order lifecycle, price drift detection</td>
+          </tr>
+          <tr>
+            <td><strong>Knows about other domains</strong></td>
+            <td>Nothing — fully independent</td>
+            <td>Reacts to <code>ORDER_CREATED</code> events (validates products)</td>
+            <td>Needs customer validation from User (via ACL). Reacts to product lifecycle events.</td>
+          </tr>
+          <tr>
+            <td><strong>Imports from other domains</strong></td>
+            <td>None</td>
+            <td><code>@old-st/contracts/order</code> (event schemas only)</td>
+            <td><code>@old-st/contracts/product</code> (event schemas only)</td>
+          </tr>
+          <tr>
+            <td><strong>Never imports</strong></td>
+            <td>—</td>
+            <td><code>@old-st/order-domain</code> (domain package)</td>
+            <td><code>@old-st/product-domain</code>, <code>@old-st/user-domain</code> (domain packages)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Import rule</strong>
+        Cross-domain services import from <code>@old-st/contracts/{domain}</code> (published language) — never from <code>@old-st/{domain}-domain</code> (internal domain package). This prevents tight coupling between bounded contexts.
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Entity Pattern Summary</h2>
+
+      <p>Every entity in this template follows the same structural pattern:</p>
+
+      <pre><code>export class EntityName {
+  // 1. Private constructor — entities cannot be instantiated with `new`
+  private constructor(
+    private readonly id: string | null,
+    private field: Type,
+    // ...
+  ) {}
+
+  // 2. create() factory — for new instances (not yet persisted)
+  //    Validates invariants, sets defaults (status, timestamps)
+  static create(props: { ... }): EntityName { }
+
+  // 3. reconstitute() factory — for hydrating from database
+  //    No validation — trusts persisted data
+  static reconstitute(props: { ... }): EntityName { }
+
+  // 4. Business methods — enforce state transitions and invariants
+  //    Throw typed domain exceptions on rule violations
+  activate(): void { }
+  deactivate(): void { }
+  cancel(): void { }
+
+  // 5. State query helpers
+  isActive(): boolean { }
+  isDeleted(): boolean { }
+
+  // 6. Getters — encapsulated access, no public fields
+  getId(): string | null { }
+  getStatus(): Status { }
+}</code></pre>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="domain-interactions.html">Domain Interactions</a> — see how these three bounded contexts communicate via ACL, events, and sagas.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

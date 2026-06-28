@@ -1,0 +1,38 @@
+{
+  "$schema": "./issue-config.schema.json",
+  "_comment": [
+    "Project-specific configuration for issue creation, label seeding, and triage.",
+    "",
+    "When you create a new project from this template:",
+    "  1. Edit `domains[]` to match your bounded contexts.",
+    "  2. Edit `crossCutting[]` only if you add front-end or infra surfaces.",
+    "  3. Run `node scripts/task-helpers/setup-github-labels.mjs` to seed labels.",
+    "  4. Manually update the `Domain` dropdown in:",
+    "       - .github/ISSUE_TEMPLATE/user-story.yml",
+    "       - .github/ISSUE_TEMPLATE/bug.yml",
+    "       - .github/ISSUE_TEMPLATE/infra-chore.yml",
+    "     (GitHub issue forms do not support dynamic dropdowns — keep them in sync manually.)",
+    "  5. Update the domain table in `docs/PROJECT_CONTEXT.md` §2.",
+    "",
+    "NOTE: each `description` becomes a GitHub label description and MUST be ≤ 100 characters",
+    "(hard limit enforced by the GitHub REST API — longer values are rejected with HTTP 422)."
+  ],
+
+  "projectName": "old-st-template",
+
+  "ticketPrefix": "OST",
+
+  "domains": [
+    { "name": "auth",       "description": "auth-api-service / Cognito / JWT", "persistence": "none" },
+    { "name": "files",      "description": "file-api-service / S3 presigned URLs", "persistence": "s3" },
+    { "name": "monitoring", "description": "monitoring-api-service / monitoring-webapp (internal)", "persistence": "cloudwatch" }
+  ],
+
+  "crossCutting": [
+    { "name": "webapp",       "description": "apps/webapp (Next.js)", "color": "0366d6" },
+    { "name": "mobile",       "description": "apps/mobile (Expo)", "color": "0366d6" },
+    { "name": "infra",        "description": "Terraform / CD / AWS resources", "color": "5319e7" },
+    { "name": "cross-domain", "description": "Spans 2+ bounded contexts (sync ACL or async saga)", "color": "ff6b6b" },
+    { "name": "new-domain",   "description": "New bounded context to be scaffolded", "color": "b60205" }
+  ]
+}

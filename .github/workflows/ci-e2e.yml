@@ -1,0 +1,346 @@
+name: CI - E2E Tests
+
+# Dedicated E2E workflow: runs API E2E tests (Jest + fetch) and Webapp E2E tests (Playwright)
+# Requires full infrastructure (LocalStack + Postgres) and all backend services running.
+#
+# Smart change detection (PRs only):
+#   - Backend paths changed  → API E2E runs
+#   - Frontend paths changed → Webapp E2E runs
+#   - Both changed           → both run
+#   - Push to main/develop or workflow_dispatch → ALL E2E jobs always run
+#
+# Backend paths:  apps/{users,orders,products}/**, packages/*-domain/**, packages/contracts/**
+#                 packages/common/**, packages/dynamodb-onetable/**, packages/aws/**
+# Frontend paths: apps/webapp/**, packages/ui/**, packages/client-common/**
+# Mobile E2E:     Manual only — no automated mobile E2E in CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'examples/**'
+  push:
+    branches: [main, develop, 'release/**']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'infra/bootstrap/**'
+      - '.github/CODEOWNERS'
+      - 'examples/**'
+  workflow_dispatch:
+    # Allow manual trigger for debugging
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────
+  # Job 0: Detect what has changed (PR only — push/dispatch always run all)
+  # ────────────────────────────────────────────────────────────────────────
+  detect-changes:
+    name: Detect Changed Areas
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'apps/users/**'
+              - 'apps/orders/**'
+              - 'apps/products/**'
+              - 'apps/auth/**'
+              - 'apps/files/**'
+              - 'packages/*-domain/**'
+              - 'packages/contracts/**'
+              - 'packages/common/**'
+              - 'packages/dynamodb-onetable/**'
+              - 'packages/aws/**'
+            frontend:
+              - 'apps/webapp/**'
+              - 'packages/ui/**'
+              - 'packages/client-common/**'
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Job 1: Backend API E2E Tests
+  # Runs when: push/dispatch (always) OR PR touching backend paths
+  # ────────────────────────────────────────────────────────────────────────
+  api-e2e-tests:
+    name: API E2E Tests
+    needs: [detect-changes]
+    # always() prevents auto-skip when detect-changes is skipped (push/dispatch events)
+    if: |
+      always() &&
+      needs.detect-changes.result != 'failure' &&
+      (github.event_name != 'pull_request' || needs.detect-changes.outputs.backend == 'true')
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack:3.8
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb,sqs
+          DYNAMODB_SHARE_DB: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 15s
+
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: orders_e2e_db
+        options: >-
+          --health-cmd "pg_isready -U dev"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+    env:
+      STAGE: local
+      NODE_ENV: production
+      DYNAMODB_ENDPOINT: http://localhost:4566
+      LOCALSTACK_ENDPOINT: http://localhost:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      DEFAULT_REGION: eu-west-2
+      FE_BASE_URL: http://localhost:4200
+      # Per-service vars (ports, URLs, table/DB names, queue names) are loaded
+      # from .github/service-registry.env at runtime. Add new domain vars there.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load service registry
+        run: grep -v '^\s*#' .github/service-registry.env | grep -v '^\s*$' >> $GITHUB_ENV
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup E2E infrastructure
+        run: pnpm e2e:setup
+
+      - name: Run Prisma migrations
+        run: pnpm run prisma:migrate:all
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Build backend services
+        run: |
+          PROJECTS=$(node -e "const r=require('./.github/service-registry.json');process.stdout.write(r.apiServices.map(s=>s.name).join(','))")
+          pnpm nx run-many --target=build --projects=$PROJECTS --parallel=3
+
+      - name: Start backend services
+        run: bash .github/scripts/start-api-services.sh
+
+      - name: Wait for services
+        run: npx ts-node --project scripts/tsconfig.json test/e2e/wait-for-services.ts
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Service logs ==="
+          for f in logs/*.log; do
+            echo "\n--- $f ---"
+            cat "$f" || true
+          done
+
+      - name: Run API E2E tests
+        run: pnpm test:e2e:api
+
+      - name: Upload API E2E results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: api-e2e-results
+          path: |
+            test-results/
+            logs/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Job 2: Webapp E2E Tests (Playwright)
+  # Runs when: push/dispatch (always) OR PR touching frontend paths
+  # Blocked if API E2E explicitly failed; proceeds if API E2E was skipped.
+  # ────────────────────────────────────────────────────────────────────────
+  webapp-e2e-tests:
+    name: Webapp E2E Tests (Playwright)
+    needs: [detect-changes, api-e2e-tests]
+    # always() prevents auto-skip when api-e2e-tests or detect-changes was skipped
+    if: |
+      always() &&
+      needs.detect-changes.result != 'failure' &&
+      (github.event_name != 'pull_request' || needs.detect-changes.outputs.frontend == 'true') &&
+      needs.api-e2e-tests.result != 'failure'
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack:3.8
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb,sqs
+          DYNAMODB_SHARE_DB: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 15s
+
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: dev
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: orders_e2e_db
+        options: >-
+          --health-cmd "pg_isready -U dev"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+    env:
+      STAGE: local
+      NODE_ENV: production
+      DYNAMODB_ENDPOINT: http://localhost:4566
+      LOCALSTACK_ENDPOINT: http://localhost:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      DEFAULT_REGION: eu-west-2
+      FE_BASE_URL: http://localhost:4200
+      # Per-service vars (ports, URLs, table/DB names, queue names) are loaded
+      # from .github/service-registry.env at runtime. Add new domain vars there.
+      # NEXT_PUBLIC_* vars are also in service-registry.env for webapp build.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load service registry
+        run: grep -v '^\s*#' .github/service-registry.env | grep -v '^\s*$' >> $GITHUB_ENV
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 5
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive npx playwright install-deps chromium
+
+      - name: Setup E2E infrastructure
+        run: pnpm e2e:setup
+
+      - name: Run Prisma migrations
+        run: pnpm run prisma:migrate:all
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Build backend services
+        run: |
+          PROJECTS=$(node -e "const r=require('./.github/service-registry.json');process.stdout.write(r.apiServices.map(s=>s.name).join(','))")
+          pnpm nx run-many --target=build --projects=$PROJECTS --parallel=3
+
+      - name: Start backend services
+        run: bash .github/scripts/start-api-services.sh
+
+      - name: Wait for backend services
+        run: npx ts-node --project scripts/tsconfig.json test/e2e/wait-for-services.ts
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Service logs ==="
+          for f in logs/*.log; do
+            echo "\n--- $f ---"
+            cat "$f" || true
+          done
+
+      - name: Build webapp
+        run: pnpm nx build webapp
+
+      - name: Start webapp
+        run: |
+          # Webapp uses output: 'export' — serve the static out/ directory
+          npx serve@latest apps/webapp/out -p 4200 &
+          # Wait for webapp to be ready (up to 60s)
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:4200 > /dev/null 2>&1; then
+              echo "Webapp is ready after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Webapp failed to start after 60s"
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Run Playwright E2E tests
+        run: pnpm test:e2e:webapp
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/webapp-e2e/
+          retention-days: 7

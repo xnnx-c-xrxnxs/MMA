@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "contracts-order",
+  "sourceRoot": "packages/contracts/order/src",
+  "projectType": "library",
+  "tags": ["scope:order", "type:contracts"]
+}

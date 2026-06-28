@@ -1,0 +1,106 @@
+/* Base monitoring dashboard styles */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; }
+.container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── Traces list ─────────────────────────────────────────────────────────── */
+.traces-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+.traces-filters { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.traces-filters select, .traces-filters input {
+  padding: 0.35rem 0.6rem; border: 1px solid #30363d; border-radius: 6px;
+  background: #161b22; color: #e2e8f0; font-size: 0.85rem;
+}
+.traces-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.traces-table th { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #30363d; color: #8b949e; font-weight: 600; }
+.traces-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #21262d; }
+.traces-table tr:hover { background: #161b22; }
+.traces-table a { color: #58a6ff; text-decoration: none; }
+.traces-table a:hover { text-decoration: underline; }
+
+.status-ok { color: #3fb950; }
+.status-error { color: #d29922; }
+.status-fault { color: #f85149; }
+
+.service-chip {
+  display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+  font-size: 0.75rem; margin-right: 0.25rem; margin-bottom: 0.15rem;
+  background: #21262d; color: #c9d1d9;
+}
+
+.mini-flow { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+.mini-flow .flow-arrow { color: #484f58; font-size: 0.7rem; }
+
+/* ── Journey page layout ─────────────────────────────────────────────────── */
+.journey-page { display: flex; flex-direction: column; gap: 1.5rem; }
+.journey-section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; }
+.journey-section h2 { margin: 0 0 0.75rem; font-size: 1rem; color: #8b949e; font-weight: 600; }
+
+/* ── Service flow diagram ────────────────────────────────────────────────── */
+.service-flow { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 0.5rem 0; }
+.flow-node {
+  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+  min-width: 140px; padding: 0.75rem; border-radius: 8px; border: 2px solid #30363d; background: #0d1117;
+  text-align: center; position: relative;
+}
+.flow-node.status-ok-node { border-color: #238636; }
+.flow-node.status-error-node { border-color: #d29922; }
+.flow-node.status-fault-node { border-color: #da3633; }
+.flow-node .node-name { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; word-break: break-word; }
+.flow-node .node-duration { font-size: 0.7rem; color: #8b949e; }
+.flow-node .node-role { font-size: 0.65rem; color: #484f58; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.flow-connector {
+  display: flex; flex-direction: column; align-items: center; min-width: 80px; gap: 0.15rem;
+}
+.flow-connector .connector-line {
+  width: 100%; height: 2px; background: #30363d; position: relative;
+}
+.flow-connector .connector-line::after {
+  content: '▶'; position: absolute; right: -4px; top: -7px; color: #30363d; font-size: 0.6rem;
+}
+.flow-connector .connector-label {
+  font-size: 0.65rem; color: #8b949e; white-space: nowrap; text-align: center;
+}
+
+/* ── Timeline waterfall ──────────────────────────────────────────────────── */
+.waterfall-container { overflow-x: auto; }
+.waterfall-row { display: flex; align-items: center; height: 28px; border-bottom: 1px solid #21262d; cursor: pointer; }
+.waterfall-row:hover { background: #1c2128; }
+.waterfall-row.selected { background: #0d419d33; }
+.waterfall-label { min-width: 240px; max-width: 240px; padding: 0 0.5rem; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9d1d9; flex-shrink: 0; }
+.waterfall-bar-area { flex: 1; position: relative; height: 100%; }
+.waterfall-bar {
+  position: absolute; height: 16px; top: 6px; border-radius: 3px; min-width: 2px;
+  transition: opacity 0.15s;
+}
+.waterfall-bar.bar-ok { background: #238636; }
+.waterfall-bar.bar-error { background: #d29922; }
+.waterfall-bar.bar-fault { background: #da3633; }
+.waterfall-bar .bar-duration { position: absolute; right: -45px; top: 1px; font-size: 0.65rem; color: #8b949e; white-space: nowrap; }
+
+.waterfall-header { display: flex; align-items: center; height: 24px; border-bottom: 1px solid #30363d; margin-bottom: 0.25rem; }
+.waterfall-header .wh-label { min-width: 240px; max-width: 240px; font-size: 0.7rem; color: #484f58; padding: 0 0.5rem; flex-shrink: 0; }
+.waterfall-header .wh-ticks { flex: 1; position: relative; }
+.waterfall-header .wh-tick { position: absolute; top: 0; font-size: 0.6rem; color: #484f58; }
+
+/* ── Correlated log panel ────────────────────────────────────────────────── */
+.log-panel { max-height: 400px; overflow-y: auto; }
+.log-panel-filters { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+.log-panel-filters select { padding: 0.25rem 0.5rem; border: 1px solid #30363d; border-radius: 4px; background: #0d1117; color: #e2e8f0; font-size: 0.75rem; }
+.log-entry { display: flex; gap: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; font-family: 'SF Mono', 'Consolas', monospace; border-bottom: 1px solid #21262d; }
+.log-entry:hover { background: #1c2128; }
+.log-entry.log-highlighted { background: #0d419d22; }
+.log-ts { color: #484f58; min-width: 90px; flex-shrink: 0; }
+.log-service { min-width: 180px; flex-shrink: 0; font-weight: 600; }
+.log-level { min-width: 40px; flex-shrink: 0; }
+.log-level.level-info { color: #58a6ff; }
+.log-level.level-warn { color: #d29922; }
+.log-level.level-error { color: #f85149; }
+.log-msg { flex: 1; color: #c9d1d9; word-break: break-word; }
+.log-extras { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.log-extra-tag { background: #21262d; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.65rem; color: #8b949e; }
+
+/* ── Loading skeleton ────────────────────────────────────────────────────── */
+@keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+.skeleton { background: linear-gradient(90deg, #21262d 25%, #30363d 50%, #21262d 75%); background-size: 200px 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+.skeleton-row { height: 28px; margin-bottom: 4px; }

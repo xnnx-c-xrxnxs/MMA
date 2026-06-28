@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Native Development Masterclass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ===== Reset & Variables ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #f7f8fa;
+      --bg-card: #ffffff;
+      --bg-code: #1e1e2e;
+      --bg-code-text: #cdd6f4;
+      --bg-nav: rgba(255,255,255,0.92);
+      --border: #e4e7ec;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --text-light: #9ca3af;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+      --hero-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #4c1d95 100%);
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --info: #3b82f6;
+      --info-bg: #eff6ff;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      --transition: 0.2s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --bg-alt: #161922;
+      --bg-card: #1a1d28;
+      --bg-nav: rgba(15,17,23,0.92);
+      --border: #2d3148;
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-light: #6b7280;
+      --accent: #818cf8;
+      --accent-hover: #a5b4fc;
+      --accent-light: #1e1b4b;
+      --success-bg: #064e3b;
+      --warning-bg: #451a03;
+      --danger-bg: #450a0a;
+      --info-bg: #172554;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow: 0 4px 6px rgba(0,0,0,0.3);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Scroll Progress ===== */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0; height: 3px; z-index: 1001;
+      background: var(--accent-gradient);
+      width: 0%; transition: width 0.1s linear;
+    }
+
+    /* ===== Top Nav ===== */
+    .top-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: var(--bg-nav); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: box-shadow var(--transition);
+    }
+    .top-nav.scrolled { box-shadow: var(--shadow); }
+    .nav-brand { font-weight: 800; font-size: 1rem; color: var(--accent); text-decoration: none; white-space: nowrap; }
+    .nav-links { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-links a {
+      padding: 8px 14px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+      text-decoration: none; border-radius: 8px; white-space: nowrap;
+      transition: background var(--transition), color var(--transition);
+    }
+    .nav-links a:hover { background: var(--accent-light); color: var(--accent); }
+    .nav-links a.active { background: var(--accent-light); color: var(--accent); }
+    .nav-controls { display: flex; gap: 8px; align-items: center; }
+    .theme-toggle {
+      width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); }
+    .hamburger { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1.2rem; align-items: center; justify-content: center; }
+
+    /* ===== Hero ===== */
+    .hero {
+      background: var(--hero-gradient);
+      padding: 140px 24px 80px; text-align: center; color: #fff;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%),
+                  radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+    .hero h1 { font-size: 3rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 16px; }
+    .hero .lead { font-size: 1.25rem; color: rgba(255,255,255,0.8); margin-bottom: 32px; line-height: 1.6; }
+    .hero-meta { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.85rem; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
+    .hero-meta span strong { color: rgba(255,255,255,0.9); }
+
+    /* ===== Section Modules ===== */
+    .module { padding: 64px 24px; }
+    .module:nth-child(even) { background: var(--bg-alt); }
+    .module-inner { max-width: 960px; margin: 0 auto; }
+    .module-header { margin-bottom: 40px; }
+    .module-label {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--accent); margin-bottom: 12px;
+      background: var(--accent-light); padding: 4px 12px; border-radius: 20px;
+    }
+    .module-header h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .module-header .module-desc { font-size: 1.05rem; color: var(--text-muted); max-width: 680px; }
+
+    /* ===== Topic (h3) ===== */
+    .topic { margin-top: 48px; }
+    .topic h3 {
+      font-size: 1.35rem; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 8px; border-bottom: 2px solid var(--border);
+    }
+    .topic h4 { font-size: 1.05rem; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+    .topic p { margin-bottom: 16px; }
+    .topic ul, .topic ol { margin-bottom: 16px; padding-left: 24px; }
+    .topic li { margin-bottom: 6px; }
+    .topic strong { font-weight: 600; }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .card h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0 28px; }
+    .card-grid .card { margin-bottom: 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0 28px; }
+
+    /* ===== Callout ===== */
+    .callout {
+      border-left: 4px solid var(--info); background: var(--info-bg);
+      padding: 16px 20px; margin: 20px 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .callout.success { border-left-color: var(--success); background: var(--success-bg); }
+    .callout.warning { border-left-color: var(--warning); background: var(--warning-bg); }
+    .callout.danger  { border-left-color: var(--danger); background: var(--danger-bg); }
+    .callout .callout-title { font-weight: 700; margin-bottom: 4px; font-size: 0.9rem; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    /* ===== Demo Callout ===== */
+    .demo-card {
+      background: var(--success-bg); border: 1px solid var(--success);
+      border-radius: var(--radius); padding: 20px 24px; margin: 20px 0;
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .demo-card .demo-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
+    .demo-card .demo-title { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--success); margin-bottom: 4px; }
+    .demo-card p { margin-bottom: 0; font-size: 0.95rem; }
+
+    /* ===== Tags / Badges ===== */
+    .tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--accent-light); color: var(--accent);
+    }
+    .tag.junior   { background: #dbeafe; color: #1e40af; }
+    .tag.mid      { background: #fef3c7; color: #92400e; }
+    .tag.senior   { background: #f3e8ff; color: #6b21a8; }
+    .tag.frontend { background: #dcfce7; color: #166534; }
+    .tag.backend  { background: #fce7f3; color: #9d174d; }
+    .tag.fullstack{ background: #e0e7ff; color: #3730a3; }
+    .tag.level    { background: #f1f5f9; color: #475569; }
+    .tag.current  { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .tag.target   { background: #dcfce7; color: #166534; border: 1px solid #10b981; }
+
+    [data-theme="dark"] .tag.junior   { background: #1e3a5f; color: #93c5fd; }
+    [data-theme="dark"] .tag.mid      { background: #78350f; color: #fef3c7; }
+    [data-theme="dark"] .tag.senior   { background: #581c87; color: #e9d5ff; }
+    [data-theme="dark"] .tag.frontend { background: #14532d; color: #bbf7d0; }
+    [data-theme="dark"] .tag.backend  { background: #831843; color: #fbcfe8; }
+    [data-theme="dark"] .tag.fullstack{ background: #312e81; color: #c7d2fe; }
+    [data-theme="dark"] .tag.level    { background: #1e293b; color: #94a3b8; }
+    [data-theme="dark"] .tag.current  { background: #451a03; color: #fef3c7; border-color: #d97706; }
+    [data-theme="dark"] .tag.target   { background: #064e3b; color: #bbf7d0; border-color: #10b981; }
+
+    /* ===== Tables ===== */
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 12px 16px; border: 1px solid var(--border); }
+    th { background: var(--bg-alt); font-weight: 600; font-size: 0.85rem; }
+    tr:hover td { background: var(--accent-light); }
+
+    /* ===== Code Blocks ===== */
+    code {
+      font-family: var(--mono); font-size: 0.85em;
+      background: var(--bg-alt); padding: 2px 7px; border-radius: 5px;
+    }
+    pre {
+      background: var(--bg-code); color: var(--bg-code-text);
+      border-radius: var(--radius-sm); padding: 20px; overflow-x: auto;
+      margin: 16px 0 20px; line-height: 1.6; font-size: 0.85rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; }
+    .prompt-example { position: relative; }
+    .prompt-label {
+      position: absolute; top: 8px; right: 12px; font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
+    }
+    .prompt-label.bad  { background: #ef4444; color: #fff; }
+    .prompt-label.good { background: #10b981; color: #fff; }
+
+    /* ===== Blockquote ===== */
+    blockquote {
+      font-size: 1.2rem; font-weight: 500; font-style: italic;
+      color: var(--text-muted); border-left: 4px solid var(--accent);
+      padding: 16px 24px; margin: 24px 0;
+      background: var(--accent-light); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* ===== Speaker Notes ===== */
+    details.speaker-notes {
+      margin: 12px 0 20px; border: 1px dashed var(--border);
+      border-radius: var(--radius-sm); overflow: hidden;
+    }
+    details.speaker-notes summary {
+      padding: 10px 16px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; user-select: none;
+    }
+    details.speaker-notes summary:hover { color: var(--accent); }
+    details.speaker-notes .notes-content {
+      padding: 12px 16px; font-size: 0.85rem; color: var(--text-muted);
+      border-top: 1px dashed var(--border); line-height: 1.7;
+    }
+
+    /* ===== Comparison Layout ===== */
+    .vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; margin: 24px 0; align-items: stretch; }
+    .vs-side { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .vs-divider {
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem; color: var(--text-muted); padding: 0 16px;
+    }
+    .vs-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 12px; display: block;
+    }
+    .vs-label.red { color: var(--danger); }
+    .vs-label.green { color: var(--success); }
+
+    /* ===== Staircase (Maturity) ===== */
+    .maturity-levels { display: flex; flex-direction: column; gap: 0; margin: 24px 0; }
+    .maturity-step {
+      display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      margin-bottom: -1px; transition: background var(--transition);
+    }
+    .maturity-step:hover { background: var(--accent-light); }
+    .maturity-step .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
+      background: var(--bg-alt); color: var(--text-muted);
+    }
+    .maturity-step.current .step-num { background: #fef3c7; color: #92400e; }
+    .maturity-step.target .step-num  { background: #dcfce7; color: #166534; }
+    .maturity-step .step-info { flex: 1; }
+    .maturity-step .step-name { font-weight: 700; font-size: 0.95rem; }
+    .maturity-step .step-desc { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* ===== Timeline ===== */
+    .timeline { position: relative; margin: 32px 0; padding-left: 32px; border-left: 3px solid var(--accent); }
+    .timeline-item { position: relative; margin-bottom: 28px; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -39px; top: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent); border: 3px solid var(--bg);
+    }
+    .timeline-label { font-weight: 700; font-size: 0.85rem; color: var(--accent); margin-bottom: 4px; }
+    .timeline-text { font-size: 0.95rem; }
+
+    /* ===== Section Divider ===== */
+    .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+    /* ===== Fade-in Animation ===== */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== Print ===== */
+    @media print {
+      .top-nav, .scroll-progress, .theme-toggle, .hamburger { display: none !important; }
+      .hero { padding-top: 40px; }
+      .module { padding: 32px 0; break-inside: avoid; }
+      body { font-size: 11pt; }
+      .card:hover { transform: none; box-shadow: var(--shadow-sm); }
+    }
+
+    /* ===== Mobile ===== */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 60px; left: 0; right: 0; background: var(--bg-nav); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px; z-index: 999; }
+      .hamburger { display: flex; }
+      .hero h1 { font-size: 2rem; }
+      .hero .lead { font-size: 1rem; }
+      .hero-meta { flex-direction: column; gap: 8px; }
+      .card-grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .vs-grid { grid-template-columns: 1fr; }
+      .vs-divider { padding: 12px 0; }
+      .module { padding: 40px 16px; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Top Navigation -->
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">AI Native Development</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#module1">1. The AI Shift</a>
+    <a href="#module2">2. Vibe vs Spec</a>
+    <a href="#module3">3. Claude Code Mastery</a>
+    <a href="#module4">4. Team Practices</a>
+    <a href="#module5">5. Adoption</a>
+    <a href="#module6">6. Backend</a>
+    <a href="#module7">7. Frontend</a>
+    <a href="#module8">8. Mobile</a>
+    <a href="#module9">9. Challenge</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+    <button class="hamburger" id="hamburger" title="Menu">☰</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ HERO ═══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-content">
+    <h1>AI Native Development<br>Masterclass</h1>
+    <p class="lead">From Autocomplete to Architecture &mdash; Transforming How We Build Software.<br>
+    A comprehensive guide to adopting AI-native development practices across your engineering organization.</p>
+    <div class="hero-meta">
+      <span>⏱ <strong>~5 hours</strong> (9 modules)</span>
+      <span>👥 <strong>Junior &middot; Mid &middot; Senior</strong></span>
+      <span>🔧 <strong>Full-Stack &middot; Frontend &middot; Backend</strong></span>
+      <span>🛠 <strong>Claude Code (CLI + IDE extensions)</strong></span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ MODULE 1 ═══════════════════════════════════════ -->
+<section class="module" id="module1">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 1 &mdash; 25 min</div>
+      <h2>The AI Shift &mdash; Why It Matters Now</h2>
+      <p class="module-desc">The landscape has changed. AI-native development is the industry baseline, not a trend. Here&rsquo;s why it matters for every developer in this room.</p>
+    </div>
+
+    <!-- Topic 1: State of AI -->
+    <div class="topic fade-in">
+      <h3>The State of AI in Software Development (2026)</h3>
+      <ul>
+        <li>92% of developers now use AI tools in some capacity (GitHub / Stack Overflow surveys)</li>
+        <li>AI-assisted code accounts for 30&#8211;50% of new code at major tech companies</li>
+        <li>Clients are beginning to <strong>expect</strong> AI-augmented delivery timelines</li>
+        <li>&ldquo;AI-Native&rdquo; is not about replacing developers &mdash; it&rsquo;s about <strong>how</strong> you develop</li>
+      </ul>
+
+      <table>
+        <thead><tr><th>AI-Assisted</th><th>AI-Native</th></tr></thead>
+        <tbody>
+          <tr><td>Developer uses AI reactively</td><td>AI is embedded in the development workflow</td></tr>
+          <tr><td>Tab-autocomplete, occasional chat</td><td>Structured instructions, skills, orchestrated workflows</td></tr>
+          <tr><td>Individual productivity gain</td><td>Team-wide consistency + velocity</td></tr>
+          <tr><td>AI adapts to each developer</td><td>Developers and AI share a codified standard</td></tr>
+          <tr><td>&ldquo;I use an AI assistant sometimes&rdquo;</td><td>&ldquo;Our architecture guides the AI&rdquo;</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Key Insight</div>
+        <p>AI-Native = Your engineering standards are <strong>machine-readable</strong>, not just human-readable.</p>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">This isn&rsquo;t a trend anymore &mdash; it&rsquo;s the baseline. The question isn&rsquo;t whether to use AI, it&rsquo;s how well you use it. As a consulting company, our clients will start measuring us against teams who have adopted this.</div>
+      </details>
+    </div>
+
+    <!-- Topic 2: Pros -->
+    <div class="topic fade-in">
+      <h3>AI Development &mdash; The Pros</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>⚡ Velocity</h4>
+          <p>40&#8211;60% faster for boilerplate, scaffolding, and repetitive patterns.</p>
+        </div>
+        <div class="card">
+          <h4>🧠 Knowledge Amplification</h4>
+          <p>Juniors get exposure to senior-level patterns instantly.</p>
+        </div>
+        <div class="card">
+          <h4>🔁 Consistency</h4>
+          <p>AI follows the same rules every time &mdash; if you give it rules.</p>
+        </div>
+        <div class="card">
+          <h4>🔍 Reduced Context-Switching</h4>
+          <p>Stay in the editor instead of searching Stack Overflow and docs.</p>
+        </div>
+        <div class="card">
+          <h4>🚀 Faster Onboarding</h4>
+          <p>New team members understand codebases faster with AI explanations.</p>
+        </div>
+        <div class="card">
+          <h4>🧪 Test Generation</h4>
+          <p>Coverage that would take days can be scaffolded in hours.</p>
+        </div>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">Notice most of these are about removing friction, not replacing thinking. The high-value work &mdash; architecture, design decisions, business logic &mdash; is still yours.</div>
+      </details>
+    </div>
+
+    <!-- Topic 3: Cons -->
+    <div class="topic fade-in">
+      <h3>AI Development &mdash; The Cons</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>🎭 Hallucination</h4>
+          <p>AI generates confident-sounding but incorrect code. It will never tell you &ldquo;I don&rsquo;t know.&rdquo;</p>
+        </div>
+        <div class="card">
+          <h4>🦥 Over-Reliance</h4>
+          <p>Skill atrophy when you stop understanding what the AI writes.</p>
+        </div>
+        <div class="card">
+          <h4>🔓 Security Blind Spots</h4>
+          <p>AI-generated code can introduce OWASP vulnerabilities (SQL injection, XSS, broken auth).</p>
+        </div>
+        <div class="card">
+          <h4>👀 &ldquo;Looks Right, Isn&rsquo;t Right&rdquo;</h4>
+          <p>Code that passes a quick scan but breaks on edge cases.</p>
+        </div>
+        <div class="card">
+          <h4>🔒 IP &amp; Confidentiality</h4>
+          <p>What you paste into prompts matters &mdash; sensitive data risk.</p>
+        </div>
+        <div class="card">
+          <h4>✅ Rubber Stamp</h4>
+          <p>Less careful review because &ldquo;AI wrote it&rdquo; &mdash; the most dangerous anti-pattern.</p>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">Reality Check</div>
+        <p>Every one of these risks is mitigated by the <strong>developer</strong>, not the tool. The better developer you are, the better you manage these risks.</p>
+      </div>
+    </div>
+
+    <!-- Topic 4: Why use AI? -->
+    <div class="topic fade-in">
+      <h3>&ldquo;I&rsquo;m a Good Developer. Why Do I Need AI?&rdquo;</h3>
+
+      <blockquote>&ldquo;I work faster without AI. It slows me down.&rdquo;</blockquote>
+
+      <ol>
+        <li><strong>You already use AI-adjacent tools:</strong> IntelliSense, TypeScript compiler, linters, formatters.</li>
+        <li><strong>AI amplifies skill:</strong> A great developer + AI &gt; a great developer alone.</li>
+        <li><strong>The best developers get the MOST from AI</strong> &mdash; they know what to ask, can validate output, can architect the instructions.</li>
+        <li><strong>The cost of not adopting:</strong> your velocity expectation goes up, not down.</li>
+        <li><strong>Senior developers become &ldquo;AI Architects&rdquo;</strong> &mdash; you design the system that makes the whole team faster.</li>
+      </ol>
+
+      <div class="callout success">
+        <div class="callout-title">The Reframe</div>
+        <p>If you&rsquo;re the best developer on a team of 10, and you write the AI instructions and skills, you&rsquo;ve just <strong>scaled your expertise to 10 developers</strong>. That&rsquo;s not a demotion &mdash; that&rsquo;s leverage.</p>
+      </div>
+
+      <h4>It&rsquo;s Not &ldquo;Should I Use AI?&rdquo; &mdash; It&rsquo;s &ldquo;How Well Do I Use AI?&rdquo;</h4>
+      <table>
+        <thead><tr><th>Level</th><th>Approach</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td>Level 1</td><td>AI writes code <strong>FOR</strong> you</td><td>🔴 Dangerous</td></tr>
+          <tr><td>Level 2</td><td>AI writes code <strong>WITH</strong> you</td><td>🟡 Good</td></tr>
+          <tr><td>Level 3</td><td>You architect how AI writes code</td><td>🟢 Exceptional</td></tr>
+        </tbody>
+      </table>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">Level 3 is where senior developers live. You&rsquo;re not typing less &mdash; you&rsquo;re thinking at a higher level of abstraction. The most productive engineers in 2026 are the ones who design the AI system, not the ones who type the fastest.</div>
+      </details>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 2 ═══════════════════════════════════════ -->
+<section class="module" id="module2">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 2 &mdash; 30 min</div>
+      <h2>Vibe Coding vs Spec-Driven Development</h2>
+      <p class="module-desc">Two ways to build with AI. One is great for exploration. The other is how you ship production code. Know when to use each.</p>
+    </div>
+
+    <!-- Topic: Vibe Coding -->
+    <div class="topic fade-in">
+      <h3>What is Vibe Coding?</h3>
+      <p>Conversational, ad-hoc prompting with minimal structure or specification. You describe what you want in natural language and hope for the best.</p>
+
+      <blockquote>&ldquo;Vibe coding is like giving a contractor verbal instructions with no blueprints.&rdquo;</blockquote>
+
+      <div class="two-col">
+        <div class="card" style="border-left: 3px solid var(--success);">
+          <h4>✅ When It Works</h4>
+          <ul>
+            <li>Prototyping and proof-of-concept</li>
+            <li>Throwaway scripts and one-off utilities</li>
+            <li>Learning a new language or framework</li>
+            <li>Hackathons and rapid exploration</li>
+            <li>Personal side projects</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--danger);">
+          <h4>❌ When It Fails</h4>
+          <ul>
+            <li>Team inconsistency &mdash; 5 devs, 5 different patterns</li>
+            <li>Architectural drift &mdash; AI doesn&rsquo;t know your clean architecture rules</li>
+            <li>Silent defects &mdash; code looks correct but violates invariants</li>
+            <li>No reproducibility &mdash; same prompt, different day, different output</li>
+            <li>Security gaps &mdash; AI doesn&rsquo;t know your OWASP requirements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topic: Spec-Driven -->
+    <div class="topic fade-in">
+      <h3>What is Spec-Driven Development?</h3>
+      <p>Development guided by <strong>structured, machine-readable specifications</strong> that define architecture, constraints, patterns, and validation rules. The AI follows your engineering system, not its own defaults.</p>
+
+      <h4>The &ldquo;Spec&rdquo; Consists Of:</h4>
+      <table>
+        <thead><tr><th>File</th><th>Purpose</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td><code>CLAUDE.md</code></td><td>Architecture, golden rules, patterns, conventions</td><td>1,000+ lines</td></tr>
+          <tr><td><code>.claude/skills/</code></td><td>Focused instructions for specific task types</td><td>40 skills</td></tr>
+          <tr><td><code>.claude/commands/</code></td><td>Multi-phase guided workflows</td><td>6 orchestrators</td></tr>
+          <tr><td><code>AGENTS.md</code></td><td>Global agent behavior rules</td><td>~30 lines</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Key Principle</div>
+        <p>&ldquo;The quality of AI output is directly proportional to the quality of your specification.&rdquo;</p>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">You write the spec once. Every developer on the team benefits. Every AI interaction is governed by the same standard. One senior&rsquo;s work scales to the entire team.</div>
+      </details>
+    </div>
+
+    <!-- Topic: Head-to-Head -->
+    <div class="topic fade-in">
+      <h3>Head-to-Head Comparison</h3>
+      <table>
+        <thead><tr><th>Dimension</th><th>Vibe Coding</th><th>Spec-Driven</th></tr></thead>
+        <tbody>
+          <tr><td>Output consistency</td><td>Varies by session</td><td>Same standards every time</td></tr>
+          <tr><td>Architectural compliance</td><td>Hope for the best</td><td>Enforced by instructions</td></tr>
+          <tr><td>Team alignment</td><td>Each dev gets different results</td><td>Everyone gets the same patterns</td></tr>
+          <tr><td>Skill requirement</td><td>Low barrier to start</td><td>Requires upfront investment</td></tr>
+          <tr><td>Scalability</td><td>Individual only</td><td>Entire team benefits</td></tr>
+          <tr><td>Production readiness</td><td>Needs heavy review</td><td>Built-in quality gates</td></tr>
+          <tr><td>Debugging</td><td>&ldquo;Why did AI do that?&rdquo;</td><td>Traceable to spec rules</td></tr>
+          <tr><td>Best for</td><td>Exploration, prototyping</td><td>Production, team delivery</td></tr>
+        </tbody>
+      </table>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Same Task, Two Approaches</div>
+          <p><strong>Vibe:</strong> &ldquo;Create a user service with CRUD operations&rdquo; &rarr; generic code, wrong patterns.<br>
+          <strong>Spec-Driven:</strong> Run <code>/new-feature</code> &rarr; interview phase, structured output, correct architecture.</p>
+        </div>
+      </div>
+
+      <h4>The Maturity Shift</h4>
+      <p>They&rsquo;re not enemies. Vibe coding is how you <strong>start</strong>. Spec-driven is how you <strong>deliver</strong>.</p>
+      <table>
+        <thead><tr><th>Phase</th><th>Approach</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Explore</td><td>Vibe Coding</td><td>Quick prototype to validate an idea</td></tr>
+          <tr><td>Build</td><td>Guided AI</td><td>Use chat with context to build properly</td></tr>
+          <tr><td>Deliver</td><td>Spec-Driven</td><td>Instructions + skills govern every interaction</td></tr>
+          <tr><td>Standardize</td><td>AI-Native</td><td>Orchestrators automate multi-step workflows</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Topic: Maturity Model -->
+    <div class="topic fade-in">
+      <h3>The AI Development Maturity Model</h3>
+      <p>Where are we? Where are we going?</p>
+
+      <div class="maturity-levels">
+        <div class="maturity-step">
+          <div class="step-num">0</div>
+          <div class="step-info">
+            <div class="step-name">No AI <span class="tag level">Past</span></div>
+            <div class="step-desc">Manual everything. No tools. Pure craftsmanship.</div>
+          </div>
+        </div>
+        <div class="maturity-step current">
+          <div class="step-num">1</div>
+          <div class="step-info">
+            <div class="step-name">Autocomplete <span class="tag current">Most of Us</span></div>
+            <div class="step-desc">Tab-accept, ghost text only. AI as typo-fixer.</div>
+          </div>
+        </div>
+        <div class="maturity-step">
+          <div class="step-num">2</div>
+          <div class="step-info">
+            <div class="step-name">Chat-Assisted <span class="tag level">Emerging</span></div>
+            <div class="step-desc">Ask questions, get snippets. AI as search engine replacement.</div>
+          </div>
+        </div>
+        <div class="maturity-step target">
+          <div class="step-num">3</div>
+          <div class="step-info">
+            <div class="step-name">Spec-Driven <span class="tag target">Our Target</span></div>
+            <div class="step-desc">Structured instructions + validation gates. AI follows your standards.</div>
+          </div>
+        </div>
+        <div class="maturity-step">
+          <div class="step-num">4</div>
+          <div class="step-info">
+            <div class="step-name">AI-Native <span class="tag level">North Star</span></div>
+            <div class="step-desc">Skills, orchestrators, automated pipelines. AI as engineering system.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-title">Our Reference Architecture</div>
+        <p><strong>1,000+ lines</strong> of project instructions &middot; <strong>40 skills</strong> &middot; <strong>6 orchestrators</strong> &middot; <strong>Claude Code</strong> (CLI, VS Code, JetBrains, web) &mdash; This is what Level 4 looks like.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 3 ═══════════════════════════════════════ -->
+<section class="module" id="module3">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 3 &mdash; 75 min</div>
+      <h2>Claude Code &mdash; Basics to Advanced</h2>
+      <p class="module-desc">The core hands-on module. Progressive journey from your first question to orchestrating multi-phase AI workflows.</p>
+    </div>
+
+    <!-- TIER 1 -->
+    <div class="topic fade-in">
+      <h3>Tier 1: The Basics &mdash; What Everyone Should Know</h3>
+      <p><span class="tag junior">This week</span> <span class="tag">All levels</span></p>
+
+      <h4>Inline Suggestions (Autocomplete)</h4>
+      <table>
+        <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><code>Tab</code></td><td>Accept full suggestion</td></tr>
+          <tr><td><code>Esc</code></td><td>Dismiss suggestion</td></tr>
+          <tr><td><code>Alt + ]</code> / <code>Alt + [</code></td><td>Cycle through alternative suggestions</td></tr>
+          <tr><td><code>Ctrl + Right Arrow</code></td><td>Accept word-by-word (partial accept)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Pro Tips for Better Suggestions</div>
+        <ul>
+          <li>Write descriptive function signatures first &mdash; <code>function validateEmailFormat(email: string): string</code> beats <code>function validate(x)</code></li>
+          <li>Add a brief comment above &mdash; <code>// Throws InvalidEmailError if format is invalid</code> primes the suggestion</li>
+          <li>Point Claude Code at the relevant files (<code>@path</code>) so it has the full picture</li>
+          <li>Use TypeScript types &mdash; typed parameters produce better code than <code>any</code></li>
+        </ul>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Autocomplete in Action</div>
+          <p>Write a TypeScript function, watch how suggestions evolve as you add more context (types, comments, related files).</p>
+        </div>
+      </div>
+
+      <h4>Launching Claude Code</h4>
+      <p>Run <code>claude</code> in your terminal, open the VS Code / JetBrains extension, or use <code>claude.ai/code</code> in the browser.</p>
+      <table>
+        <thead><tr><th>Mode</th><th>What It Does</th><th>When to Use</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Ask</strong> 💬</td><td>Q&amp;A &mdash; explain code, answer questions; it reads files but makes no edits</td><td>&ldquo;What does this function do?&rdquo;</td></tr>
+          <tr><td><strong>Plan mode</strong> 📋</td><td>Researches and proposes a plan for your approval before touching anything</td><td>&ldquo;Plan how to add user suspension&rdquo;</td></tr>
+          <tr><td><strong>Default (agentic)</strong> 🤖</td><td>Full autonomy &mdash; reads files, runs commands, makes edits, validates</td><td>&ldquo;Add a new REST endpoint for user suspension&rdquo;</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Built-in Codebase Awareness</h4>
+      <p>Unlike autocomplete tools, Claude Code <strong>explores your repository itself</strong> with its own search/read tools &mdash; no special <code>@workspace</code> participant or index step needed. Just ask:</p>
+      <pre><code>Where is the user authentication logic?
+What patterns do we use for error handling?
+Show me all the API endpoints in this project</code></pre>
+
+      <h4>Targeted Edits</h4>
+      <p>Reference a file or selection (<code>@path/to/file.ts</code>) and tell Claude Code what to change. It applies edits as reviewable diffs.</p>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Ask + Edit</div>
+          <p>Ask Claude Code to explain a domain entity. Then ask it to add a validation rule to a use case and review the diff.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIER 2 -->
+    <div class="topic fade-in">
+      <h3>Tier 2: Productivity Multipliers</h3>
+      <p><span class="tag mid">Weeks 2&ndash;3</span> <span class="tag">Intermediate</span></p>
+
+      <h4>Context Management &mdash; The #1 AI Skill</h4>
+      <p><strong>The rule:</strong> Claude Code is only as good as the context it can see.</p>
+      <table>
+        <thead><tr><th>Reference</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td><code>@path/to/file.ts</code></td><td>Reference a specific file</td></tr>
+          <tr><td>Selected code + ask</td><td>Reference your currently selected code (IDE extension)</td></tr>
+          <tr><td>Codebase search</td><td>Claude Code searches the full project itself (Grep/Glob/Read)</td></tr>
+          <tr><td><code>CLAUDE.md</code></td><td>Loaded automatically every session</td></tr>
+          <tr><td>Skills &amp; commands</td><td><code>.claude/skills/</code> + <code>.claude/commands/</code> loaded on demand</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">If You&rsquo;re Getting Bad Results&hellip;</div>
+        <p>The first question is always: <strong>Did Claude Code have enough context?</strong> Move your prompts up the context funnel. Reference the relevant files (<code>@path</code>). The more context, the better the output.</p>
+      </div>
+    </div>
+
+    <!-- PROMPT vs CONTEXT -->
+    <div class="topic fade-in">
+      <h3>Prompt vs Context &mdash; The #1 Misconception</h3>
+
+      <blockquote>&ldquo;Most developers write longer prompts when they should be providing better context.&rdquo;</blockquote>
+
+      <table>
+        <thead><tr><th></th><th>Prompt</th><th>Context</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Definition</strong></td><td>What you <strong>ask</strong> the AI to do</td><td>What the AI <strong>knows</strong> when it acts</td></tr>
+          <tr><td><strong>Nature</strong></td><td>Your instruction, question, or command</td><td>Files, patterns, architecture, rules visible to AI</td></tr>
+          <tr><td><strong>Lifespan</strong></td><td>Changes every interaction</td><td>Persistent (instructions, skills, open files)</td></tr>
+          <tr><td><strong>Quality rule</strong></td><td>Short and precise is better</td><td>More is better (up to the window limit)</td></tr>
+          <tr><td><strong>Who builds it</strong></td><td>Developer writes it each time</td><td>Architects build it once, everyone benefits</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout success">
+        <div class="callout-title">The Formula</div>
+        <p><strong>AI Output Quality = f(Context Quality &times; Prompt Precision)</strong><br><br>
+        Great prompt + poor context = inconsistent results<br>
+        Average prompt + rich context = <strong>consistently good results</strong><br>
+        Great prompt + rich context = production-ready code</p>
+      </div>
+
+      <h4>See the Difference: 3 Scenarios</h4>
+      <div class="card-grid">
+        <div class="card" style="border-top: 3px solid var(--warning);">
+          <h4>Scenario 1: Good Prompt, No Context</h4>
+          <p>Long, detailed prompt specifying architecture rules, naming, patterns&hellip;</p>
+          <p><strong>Result:</strong> Decent code, but wrong naming conventions, wrong import paths for YOUR project. 30 minutes fixing details.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--info);">
+          <h4>Scenario 2: Bad Prompt, Rich Context</h4>
+          <p>Short prompt: <em>&ldquo;Add a user controller&rdquo;</em> &mdash; but instructions + skills are loaded.</p>
+          <p><strong>Result:</strong> Follows your exact patterns. Correct naming, layers, imports. Minor tweaks only.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--success);">
+          <h4>Scenario 3: Good Prompt + Rich Context</h4>
+          <p>Precise prompt + full context stack loaded.</p>
+          <p><strong>Result:</strong> Production-ready code on first generation. All golden rules followed. Done. ✅</p>
+        </div>
+      </div>
+
+      <h4>The Context Stack &mdash; From Temporary to Permanent</h4>
+      <table>
+        <thead><tr><th>Layer</th><th>Scope</th><th>Who Builds It</th><th>Lifespan</th></tr></thead>
+        <tbody>
+          <tr><td><code>CLAUDE.md</code></td><td>Every interaction, every developer</td><td>Senior / Lead</td><td>Permanent</td></tr>
+          <tr><td>Skills (<code>.claude/skills/</code>)</td><td>Task-specific, auto-loaded</td><td>Senior developers</td><td>Permanent</td></tr>
+          <tr><td>Commands (<code>.claude/commands/</code>)</td><td>Workflow-specific, multi-phase</td><td>Senior developers</td><td>Permanent</td></tr>
+          <tr><td>Codebase search</td><td>Full project structure</td><td>Automatic</td><td>Session</td></tr>
+          <tr><td>Referenced files (<code>@path</code>)</td><td>Specific files you choose</td><td>Individual developer</td><td>Momentary</td></tr>
+          <tr><td>Your prompt</td><td>Single interaction</td><td>Individual developer</td><td>One-shot</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Key Insight</div>
+        <p>Junior developers operate at the bottom two layers. Senior developers build the top three layers. <strong>AI Architects design the entire stack.</strong></p>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">This is the most important section in the masterclass. If the audience takes away one thing: stop writing longer prompts &mdash; start providing better context. A mediocre prompt with our 1,000-line instruction file produces better code than a perfect prompt with no context.</div>
+      </details>
+    </div>
+
+    <!-- Smart Prompting -->
+    <div class="topic fade-in">
+      <h3>Smart Prompting for Developers</h3>
+      <h4>The C.I.C.F. Framework</h4>
+      <div class="card-grid">
+        <div class="card"><h4>C &mdash; Context</h4><p>What are you working on? What files/patterns are relevant?</p></div>
+        <div class="card"><h4>I &mdash; Intent</h4><p>What do you want to accomplish?</p></div>
+        <div class="card"><h4>C &mdash; Constraints</h4><p>Rules, patterns, architectures to follow.</p></div>
+        <div class="card"><h4>F &mdash; Format</h4><p>How you want the output structured.</p></div>
+      </div>
+
+      <h4>Bad vs Good Prompts</h4>
+      <div class="prompt-example">
+        <span class="prompt-label bad">Bad</span>
+        <pre><code>Make a function</code></pre>
+      </div>
+      <div class="prompt-example">
+        <span class="prompt-label good">Good</span>
+        <pre><code>Create a private method `validateEmail(email: string): string`
+that validates email format using a regex, throws
+`InvalidEmailError` if invalid, and returns the normalized
+lowercase email.</code></pre>
+      </div>
+
+      <h4>Advanced Techniques</h4>
+      <table>
+        <thead><tr><th>Technique</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Role Prompting</strong></td><td><em>&ldquo;As a senior TypeScript developer following clean architecture, review this code&hellip;&rdquo;</em></td></tr>
+          <tr><td><strong>Chain-of-Thought</strong></td><td><em>&ldquo;Think step-by-step: First identify state transitions, then list guard conditions, then implement.&rdquo;</em></td></tr>
+          <tr><td><strong>Few-Shot</strong></td><td><em>&ldquo;Here&rsquo;s how we structure use cases: [example]. Now create one for order cancellation.&rdquo;</em></td></tr>
+          <tr><td><strong>Negative Prompting</strong></td><td><em>&ldquo;Do NOT use string literals for status values. Use the enum constants.&rdquo;</em></td></tr>
+        </tbody>
+      </table>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Code Generation Patterns</div>
+          <p>Generate unit tests for an existing entity by showing Claude Code one test file as a pattern, then asking for tests on a different entity.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIER 3 -->
+    <div class="topic fade-in">
+      <h3>Tier 3: Advanced &mdash; AI-Native Workflows</h3>
+      <p><span class="tag senior">Month 2+</span> <span class="tag">Creates team leverage</span></p>
+
+      <h4>Project Instructions (<code>CLAUDE.md</code>)</h4>
+      <p>A file at the repo root, <code>CLAUDE.md</code>, that Claude Code reads automatically on <strong>every interaction</strong> (with nested <code>CLAUDE.md</code> files auto-loaded per folder). It&rsquo;s your project&rsquo;s &ldquo;brain transplant&rdquo; for AI.</p>
+      <div class="card">
+        <h4>Our Workspace&rsquo;s Instruction File</h4>
+        <ul>
+          <li><strong>1,000+ lines</strong> covering architecture, rules, patterns, conventions</li>
+          <li><strong>12 sections:</strong> Architecture, Golden Rules, Persistence, API Conventions, Exceptions, Testing&hellip;</li>
+          <li><strong>18 Golden Rules</strong> enforced on every code generation</li>
+        </ul>
+        <p>Example rules: <em>&ldquo;Controllers never call use-cases directly&rdquo;</em> &middot; <em>&ldquo;Domain layer has zero dependencies on NestJS&rdquo;</em> &middot; <em>&ldquo;Never use non-null assertions&rdquo;</em></p>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Instruction File Walkthrough</div>
+          <p>Open <code>CLAUDE.md</code> and scroll through the Golden Rules, Architecture section, and Exception Strategy. Show how each section governs AI output.</p>
+        </div>
+      </div>
+
+      <h4>Skills (<code>.claude/skills/</code>)</h4>
+      <p>Focused SKILL.md files loaded automatically when a matching task is detected. Our workspace has <strong>40 skills</strong> across every layer:</p>
+      <div class="card-grid">
+        <div class="card"><h4>Domain Layer</h4><p><code>new-domain-entity</code> &middot; <code>domain-business-rules</code> &middot; <code>new-use-case</code></p></div>
+        <div class="card"><h4>API Layer</h4><p><code>add-api-endpoints</code> &middot; <code>swagger-controller-docs</code> &middot; <code>domain-exception-filter</code></p></div>
+        <div class="card"><h4>Persistence</h4><p><code>dynamo-repository</code> &middot; <code>prisma-repository</code> &middot; <code>new-dynamo-schema</code></p></div>
+        <div class="card"><h4>Testing</h4><p><code>write-domain-tests</code> &middot; <code>write-webapp-tests</code> &middot; <code>write-mobile-tests</code></p></div>
+        <div class="card"><h4>Frontend</h4><p><code>webapp-new-page</code> &middot; <code>mobile-new-screen</code> &middot; <code>webapp-ui-primitive</code></p></div>
+        <div class="card"><h4>Integration</h4><p><code>sqs-event-publisher</code> &middot; <code>sync-cross-service-call</code> &middot; <code>choreography-saga</code></p></div>
+      </div>
+
+      <h4>Workflow Commands (<code>.claude/commands/</code>)</h4>
+      <p>Multi-phase guided workflows that coordinate many skills across complex, multi-step tasks.</p>
+      <table>
+        <thead><tr><th>Stage</th><th>What Happens</th><th>Why It Matters</th></tr></thead>
+        <tbody>
+          <tr><td>🎤 <strong>Interview</strong></td><td>Claude Code asks structured questions about requirements</td><td>Prevents assumptions and hallucination</td></tr>
+          <tr><td>📋 <strong>Plan</strong></td><td>Claude Code outlines the implementation steps</td><td>Developer reviews before code is written</td></tr>
+          <tr><td>⚙️ <strong>Execute</strong></td><td>Claude Code writes code, loading skills per layer</td><td>Each layer follows its skill&rsquo;s recipe</td></tr>
+          <tr><td>✅ <strong>Verify</strong></td><td>Claude Code runs tests + builds to validate</td><td>Catches errors before human review</td></tr>
+        </tbody>
+      </table>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Orchestrator in Action</div>
+          <p>Run <code>/new-feature</code> by asking to add a &ldquo;suspend&rdquo; feature. Watch the interview phase, plan generation, and skill loading.</p>
+        </div>
+      </div>
+
+      <h4>Agent Mode &amp; MCP (Model Context Protocol)</h4>
+      <div class="two-col">
+        <div class="card">
+          <h4>🤖 Agent Mode</h4>
+          <p>Claude Code reads files, runs terminal commands, edits files, and validates results &mdash; autonomously. Runs in a loop: plan &rarr; act &rarr; observe &rarr; iterate. You review each step.</p>
+        </div>
+        <div class="card">
+          <h4>🔌 MCP Servers</h4>
+          <p>Standard for connecting AI to external tools. Our workspace uses the Nx MCP server &mdash; Claude Code gets awareness of projects, targets, and dependencies.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI-Native Stack Summary -->
+    <div class="topic fade-in">
+      <h3>The Complete AI-Native Stack</h3>
+      <table>
+        <thead><tr><th>Layer</th><th>What</th><th>Files</th></tr></thead>
+        <tbody>
+          <tr><td>🔌 External Tools</td><td>MCP Servers</td><td>Nx MCP, future integrations</td></tr>
+          <tr><td>📋 Agent Behavior</td><td>Global rules</td><td><code>AGENTS.md</code></td></tr>
+          <tr><td>🔄 Commands</td><td>Multi-phase workflows (6)</td><td><code>.claude/commands/*.md</code></td></tr>
+          <tr><td>🎯 Skills</td><td>Task-specific recipes (40)</td><td><code>.claude/skills/*/SKILL.md</code></td></tr>
+          <tr><td>📐 Context</td><td>Project instructions</td><td><code>CLAUDE.md</code></td></tr>
+          <tr><td>🏗️ Foundation</td><td>Claude Code (Anthropic)</td><td>CLI + IDE extensions</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 4 ═══════════════════════════════════════ -->
+<section class="module" id="module4">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 4 &mdash; 40 min</div>
+      <h2>AI-Native Practices for Teams</h2>
+      <p class="module-desc">Your job title didn&rsquo;t change. Your role did. From individual AI use to team-wide engineering systems.</p>
+    </div>
+
+    <!-- Role Evolution -->
+    <div class="topic fade-in">
+      <h3>Software Developer &rarr; Software AI Architect</h3>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-label">2020 &mdash; Software Developer</div>
+          <div class="timeline-text">Writes code manually. Researches on Google/Stack Overflow. Knowledge lives in the developer&rsquo;s head.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">2024 &mdash; AI-Assisted Developer</div>
+          <div class="timeline-text">Uses autocomplete and chat. AI helps write code faster. Knowledge still lives in the developer&rsquo;s head.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">2026 &mdash; Software AI Architect</div>
+          <div class="timeline-text">Designs systems that govern how AI writes code. Encodes expertise into machine-readable specifications. Knowledge lives in the repository, scales to the team.</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">The Shift</div>
+        <p>The most valuable skill is no longer writing code &mdash; it&rsquo;s <strong>encoding engineering decisions into systems that scale</strong>.</p>
+      </div>
+    </div>
+
+    <!-- New Competencies -->
+    <div class="topic fade-in">
+      <h3>The New Core Competencies</h3>
+      <table>
+        <thead><tr><th>Traditional Developer</th><th>Software AI Architect</th></tr></thead>
+        <tbody>
+          <tr><td>Writes functions and classes</td><td>Writes code AND specifications that teach AI to write them</td></tr>
+          <tr><td>Reviews code line by line</td><td>Reviews code AND reviews AI instruction quality</td></tr>
+          <tr><td>Knows patterns in their head</td><td>Encodes patterns into skills so team + AI follow them</td></tr>
+          <tr><td>Onboards devs through pairing</td><td>Onboards devs AND AI agents through instruction files</td></tr>
+          <tr><td>Debugs runtime errors</td><td>Debugs errors AND debugs AI behavior (&ldquo;why did it generate that?&rdquo;)</td></tr>
+          <tr><td>Measures code quality</td><td>Measures code quality AND AI output consistency</td></tr>
+        </tbody>
+      </table>
+
+      <h4>New Skills You Need</h4>
+      <div class="card-grid">
+        <div class="card"><h4>📝 Specification Writing</h4><p>Turning implicit engineering knowledge into explicit, machine-readable rules.</p></div>
+        <div class="card"><h4>📚 Context Architecture</h4><p>Designing what the AI sees and when &mdash; the full context stack.</p></div>
+        <div class="card"><h4>🔍 Output Evaluation</h4><p>Knowing when AI output is good enough vs when it needs human refinement.</p></div>
+        <div class="card"><h4>🔄 Workflow Design</h4><p>Breaking complex tasks into phases with validation gates.</p></div>
+      </div>
+    </div>
+
+    <!-- AI Architect by Seniority -->
+    <div class="topic fade-in">
+      <h3>Everyone Is an AI Architect &mdash; At Different Scales</h3>
+      <div class="card-grid">
+        <div class="card" style="border-top: 3px solid #3b82f6;">
+          <h4><span class="tag junior">Junior</span> AI Architect</h4>
+          <ul>
+            <li>Learns to <em>read</em> and <em>follow</em> specifications</li>
+            <li>Provides feedback: &ldquo;This skill didn&rsquo;t handle my case&rdquo;</li>
+            <li>Writes well-structured prompts within the context stack</li>
+            <li>Evaluates AI output: &ldquo;Is this correct?&rdquo;</li>
+          </ul>
+          <p><strong>Superpower:</strong> Understand codebases faster than any previous generation.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid #f59e0b;">
+          <h4><span class="tag mid">Mid-Level</span> AI Architect</h4>
+          <ul>
+            <li><em>Writes</em> skills for patterns you know well</li>
+            <li>Identifies gaps in instruction files, proposes updates</li>
+            <li>Designs context strategy for specific tasks</li>
+            <li>Trains juniors on effective AI collaboration</li>
+          </ul>
+          <p><strong>Superpower:</strong> Deliver features at 2x speed with consistent quality.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid #8b5cf6;">
+          <h4><span class="tag senior">Senior / Lead</span> AI Architect</h4>
+          <ul>
+            <li><em>Designs</em> the instruction file, skill library, and orchestrators</li>
+            <li>Makes architectural decisions that are machine-enforceable</li>
+            <li>Reviews AI specification quality &mdash; not just code quality</li>
+            <li>Sets the team&rsquo;s AI maturity roadmap</li>
+          </ul>
+          <p><strong>Superpower:</strong> Your expertise scales to every developer and every AI interaction.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Mindset Shift -->
+    <div class="topic fade-in">
+      <h3>The Architect&rsquo;s Mindset Shift</h3>
+      <div class="vs-grid">
+        <div class="vs-side">
+          <span class="vs-label red">Before (Developer Mindset)</span>
+          <ol>
+            <li>&ldquo;How do I implement this?&rdquo;</li>
+            <li>&ldquo;Does my code work?&rdquo;</li>
+            <li>&ldquo;Is my code clean?&rdquo;</li>
+          </ol>
+        </div>
+        <div class="vs-divider">&rarr;</div>
+        <div class="vs-side">
+          <span class="vs-label green">After (AI Architect Mindset)</span>
+          <ol>
+            <li>&ldquo;How do I implement this &mdash; <strong>and encode it so AI follows it next time?</strong>&rdquo;</li>
+            <li>&ldquo;Does my code work &mdash; <strong>and would AI produce similar quality without me?</strong>&rdquo;</li>
+            <li>&ldquo;Is my code clean &mdash; <strong>and are my specs clear enough to produce clean code at scale?</strong>&rdquo;</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-title">The Meta-Skill</div>
+        <p>Every time you solve a problem, ask: <strong>Can I turn this solution into a specification that prevents the problem from ever being solved manually again?</strong></p>
+      </div>
+    </div>
+
+    <!-- Why this matters for consulting -->
+    <div class="topic fade-in">
+      <h3>Why This Matters for Our Company</h3>
+      <div class="card-grid">
+        <div class="card"><h4>🚀 Faster Onboarding</h4><p>We bring pre-built instruction files and skills, not just developers.</p></div>
+        <div class="card"><h4>✅ Consistent Quality</h4><p>Standards are encoded, not just documented in a wiki nobody reads.</p></div>
+        <div class="card"><h4>👶 Junior Productivity</h4><p>Guided by AI that follows senior patterns from day one.</p></div>
+        <div class="card"><h4>🧠 Knowledge Retention</h4><p>When a developer rolls off a project, their expertise stays in the repo.</p></div>
+        <div class="card"><h4>📈 Scalability</h4><p>Staff more projects without diluting quality.</p></div>
+      </div>
+
+      <blockquote>&ldquo;Our team doesn&rsquo;t just write code. We build AI-governed engineering systems that produce consistent, high-quality, architecture-compliant code &mdash; at speed.&rdquo;</blockquote>
+    </div>
+
+    <!-- AI-Assisted Code Review -->
+    <div class="topic fade-in">
+      <h3>AI-Assisted Code Review</h3>
+      <p>Use Claude Code as a <strong>first pass</strong> before requesting human review. AI catches mechanical issues; humans catch design issues.</p>
+      <div class="card-grid">
+        <div class="card"><h4>🐛 Bug Detection</h4><p><em>&ldquo;Review this code for potential bugs and edge cases&rdquo;</em></p></div>
+        <div class="card"><h4>🏗️ Architecture Check</h4><p><em>&ldquo;Does this follow our clean architecture rules?&rdquo;</em></p></div>
+        <div class="card"><h4>🔒 Security Review</h4><p><em>&ldquo;Check this for OWASP security vulnerabilities&rdquo;</em></p></div>
+        <div class="card"><h4>❓ Risk Analysis</h4><p><em>&ldquo;What could go wrong in production with this code?&rdquo;</em></p></div>
+      </div>
+    </div>
+
+    <!-- AI and Testing -->
+    <div class="topic fade-in">
+      <h3>AI-Powered Testing</h3>
+      <table>
+        <thead><tr><th>Pattern</th><th>Prompt Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Generate from source</strong></td><td><em>&ldquo;Write unit tests for CreateUserUseCase. Mock the repository. Test: success, duplicate email, invalid role.&rdquo;</em></td></tr>
+          <tr><td><strong>Test-driven with AI</strong></td><td>Write the test description first &rarr; AI writes the implementation</td></tr>
+          <tr><td><strong>Coverage gap analysis</strong></td><td><em>&ldquo;What edge cases am I missing? Consider null, undefined, empty, very long strings.&rdquo;</em></td></tr>
+        </tbody>
+      </table>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Test Generation</div>
+          <p>Generate tests for a domain entity using the <code>write-domain-tests</code> skill. Show how the skill ensures consistent test patterns.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safety -->
+    <div class="topic fade-in">
+      <h3>AI Safety &amp; Security</h3>
+      <div class="callout danger">
+        <div class="callout-title">⚠️ Non-Negotiable Rules</div>
+        <p><strong>Rule 1:</strong> Never blindly trust AI for security-sensitive code (auth, crypto, SQL, file I/O).<br>
+        <strong>Rule 2:</strong> Code review is MORE important with AI, not less.<br>
+        <strong>Rule 3:</strong> Never paste API keys, customer data, or proprietary algorithms into prompts.<br>
+        <strong>Rule 4:</strong> AI doesn&rsquo;t know your business rules unless you tell it.</p>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">The &ldquo;Rubber Stamp&rdquo; Anti-Pattern</div>
+        <p>AI-generated code has the same bug rate or higher than human code. It just <strong>looks</strong> more polished, which makes reviewers less careful. Review AI code with <strong>MORE</strong> scrutiny, not less.</p>
+      </div>
+    </div>
+
+    <!-- Building Knowledge Base -->
+    <div class="topic fade-in">
+      <h3>Building Your Team&rsquo;s AI Knowledge Base</h3>
+
+      <div class="maturity-levels">
+        <div class="maturity-step">
+          <div class="step-num">1</div>
+          <div class="step-info">
+            <div class="step-name">Write <code>CLAUDE.md</code></div>
+            <div class="step-desc">Document your architecture, naming conventions, patterns, and rules. Start with 100 lines, grow over time.</div>
+          </div>
+        </div>
+        <div class="maturity-step">
+          <div class="step-num">2</div>
+          <div class="step-info">
+            <div class="step-name">Extract Skills from Repeating Patterns</div>
+            <div class="step-desc">Every time you correct AI output the same way twice, write a skill. Specific, testable, focused.</div>
+          </div>
+        </div>
+        <div class="maturity-step">
+          <div class="step-num">3</div>
+          <div class="step-info">
+            <div class="step-name">Build Workflow Orchestrators</div>
+            <div class="step-desc">Any multi-file, multi-layer task that follows a predictable sequence. Interview &rarr; Plan &rarr; Execute &rarr; Verify.</div>
+          </div>
+        </div>
+        <div class="maturity-step">
+          <div class="step-num">4</div>
+          <div class="step-info">
+            <div class="step-name">Share &amp; Standardize</div>
+            <div class="step-desc">Git-committed, available to the entire team. One senior&rsquo;s investment benefits every developer.</div>
+          </div>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>Without AI Knowledge Base</th><th>With AI Knowledge Base</th></tr></thead>
+        <tbody>
+          <tr><td>10 devs &times; ad-hoc = inconsistent output</td><td>10 devs &times; governed system = consistent quality</td></tr>
+          <tr><td>Each dev figures out patterns alone</td><td>Patterns are codified and shared</td></tr>
+          <tr><td>Knowledge leaves when people leave</td><td>Knowledge is in the repo</td></tr>
+          <tr><td>AI learns nothing between sessions</td><td>AI follows the same standards every session</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 5 ═══════════════════════════════════════ -->
+<section class="module" id="module5">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 5 &mdash; 20 min</div>
+      <h2>Adoption Framework &amp; Next Steps</h2>
+      <p class="module-desc">Making it stick. A practical 90-day roadmap to go from autocomplete users to an AI-native engineering organization.</p>
+    </div>
+
+    <!-- 90-Day Plan -->
+    <div class="topic fade-in">
+      <h3>The 90-Day Adoption Roadmap</h3>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-label">Weeks 1&ndash;2: Foundation</div>
+          <div class="timeline-text">Use Claude Code daily. Ask questions in chat instead of Googling. Practice codebase questions. <span class="tag">Level 2</span></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">Weeks 3&ndash;4: Proficiency</div>
+          <div class="timeline-text">Master context management (<code>@path</code> references, codebase search). Practice C.I.C.F. prompting. Generate tests from source. <span class="tag">Level 2&rarr;3</span></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">Month 2: Specification</div>
+          <div class="timeline-text">Teams create project-specific <code>CLAUDE.md</code>. Write first skills for repeating patterns. <span class="tag target">Level 3</span></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">Month 3: Orchestration</div>
+          <div class="timeline-text">Build workflow orchestrators. Standardize across teams. Measure impact. <span class="tag">Level 3&rarr;4</span></div>
+        </div>
+      </div>
+
+      <h4>Metrics to Track</h4>
+      <div class="card-grid">
+        <div class="card"><h4>⏱ Time to PR</h4><p>Average time from ticket assignment to pull request.</p></div>
+        <div class="card"><h4>🧪 Test Coverage</h4><p>% of tests generated with AI assistance.</p></div>
+        <div class="card"><h4>😊 Developer Satisfaction</h4><p>Monthly survey on AI tool experience.</p></div>
+        <div class="card"><h4>📏 Spec Growth</h4><p>Lines committed to AI instruction/skill files.</p></div>
+      </div>
+    </div>
+
+    <!-- Role Strategies -->
+    <div class="topic fade-in">
+      <h3>Role-Specific Strategies</h3>
+      <h4>By Seniority</h4>
+      <div class="card-grid">
+        <div class="card">
+          <h4><span class="tag junior">Junior</span> &mdash; AI as Mentor</h4>
+          <p>Use chat to understand codebases. Follow orchestrator workflows. Ask <em>&ldquo;why does this work?&rdquo;</em> not just <em>&ldquo;make it work.&rdquo;</em></p>
+        </div>
+        <div class="card">
+          <h4><span class="tag mid">Mid-Level</span> &mdash; AI as Accelerator</h4>
+          <p>Master context management. Use generation patterns to reduce boilerplate. Start contributing skills.</p>
+        </div>
+        <div class="card">
+          <h4><span class="tag senior">Senior</span> &mdash; AI as Force Multiplier</h4>
+          <p>Write instruction files and skills. Build orchestrators. Review AI output quality. Set the standard.</p>
+        </div>
+      </div>
+
+      <h4>By Specialization</h4>
+      <table>
+        <thead><tr><th>Specialization</th><th>High-Impact AI Uses</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag frontend">Frontend</span></td><td>Component generation, accessibility audits, responsive CSS, React hook generation, Zod schema &rarr; form generation</td></tr>
+          <tr><td><span class="tag backend">Backend</span></td><td>API endpoint scaffolding, DB schema + repository gen, exception mapping, Swagger doc generation, event service wiring</td></tr>
+          <tr><td><span class="tag fullstack">Full-Stack</span></td><td>End-to-end feature delivery with orchestrators, API client &rarr; hook &rarr; component &rarr; page pipeline</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pitfalls -->
+    <div class="topic fade-in">
+      <h3>Common Pitfalls &amp; Anti-Patterns</h3>
+      <table>
+        <thead><tr><th>Anti-Pattern</th><th>Why It&rsquo;s Dangerous</th><th>Do This Instead</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Copy-paste without understanding</strong></td><td>You can&rsquo;t debug code you don&rsquo;t understand</td><td>Always read and understand AI output before committing</td></tr>
+          <tr><td><strong>AI as oracle</strong></td><td>AI doesn&rsquo;t know your business rules</td><td>Validate domain logic with stakeholders</td></tr>
+          <tr><td><strong>Prompt once, give up</strong></td><td>First output is rarely perfect</td><td>Iterate: refine the prompt, add context, try again</td></tr>
+          <tr><td><strong>Works in chat, skip the tests</strong></td><td>AI code has bugs too</td><td>Same testing rigor as human-written code</td></tr>
+          <tr><td><strong>One person&rsquo;s setup</strong></td><td>Knowledge locked in one dev&rsquo;s head</td><td>Version-control all AI specs in the repo</td></tr>
+          <tr><td><strong>Over-delegation</strong></td><td>Blindly trusting AI for complex logic</td><td>AI proposes, you decide</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Homework -->
+    <div class="topic fade-in">
+      <h3>Your Homework &mdash; Start This Week</h3>
+      <div class="callout success">
+        <div class="callout-title">Immediate Actions (Everyone)</div>
+        <ol>
+          <li>Launch Claude Code (<code>claude</code> or the IDE extension) at least 3 times today</li>
+          <li>Ask Claude Code a question about your codebase</li>
+          <li>Ask it to refactor one function and review the diff</li>
+          <li>Read through the <code>CLAUDE.md</code> file in the reference workspace</li>
+        </ol>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">This Month (Leads &amp; Seniors)</div>
+        <ol>
+          <li>Identify 3 repeating patterns in your project that could be a skill</li>
+          <li>Start drafting a <code>CLAUDE.md</code> for your current client project</li>
+          <li>Share one &ldquo;AI trick&rdquo; in the team channel each week</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 6 ═══════════════════════════════════════ -->
+<section class="module" id="module6">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 6 &mdash; 30 min &middot; <span class="tag backend">Backend</span></div>
+      <h2>Backend Deep Dive &mdash; AI in Action</h2>
+      <p class="module-desc">Real use cases from our reference architecture. See how spec-driven AI generates production-quality backend code across every layer of the clean architecture &mdash; with real prompts and real outputs.</p>
+    </div>
+
+    <!-- 6.1 Data Flow -->
+    <div class="topic fade-in">
+      <h3>The Clean Architecture Vertical Slice</h3>
+      <p>Every backend feature spans <strong>6 layers</strong>. AI without specifications generates flat Express-style code. AI with our spec-driven context generates code across all layers correctly.</p>
+
+      <table>
+        <thead><tr><th>Layer</th><th>Responsibility</th><th>Example File</th></tr></thead>
+        <tbody>
+          <tr><td>🌐 <strong>Presentation</strong></td><td>HTTP routing, Zod validation, Swagger docs</td><td><code>order.controller.ts</code></td></tr>
+          <tr><td>📋 <strong>Application Service</strong></td><td>Orchestration, DTO mapping, cursor routing</td><td><code>order-application.service.ts</code></td></tr>
+          <tr><td>⚙️ <strong>Use Case</strong></td><td>Single business operation, domain rules</td><td><code>create-order.use-case.ts</code></td></tr>
+          <tr><td>🏛️ <strong>Domain Entity</strong></td><td>Business invariants, state transitions</td><td><code>order.entity.ts</code></td></tr>
+          <tr><td>📦 <strong>Infrastructure</strong></td><td>Repository implementation, DB access</td><td><code>prisma-order.repository.ts</code></td></tr>
+          <tr><td>🔌 <strong>Module Wiring</strong></td><td>NestJS DI tokens, provider factories</td><td><code>order.module.ts</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Why This Matters</div>
+        <p>Without spec context, AI generates a single file with routes + queries mixed together. With our 1,000-line instruction file + 40 skills, it generates code across <strong>all 6 layers</strong> with correct imports, naming, and architecture boundaries.</p>
+      </div>
+    </div>
+
+    <!-- 6.2 Use Case: Domain Entity -->
+    <div class="topic fade-in">
+      <h3>Use Case 1: Creating a Domain Entity</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~30 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~3 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Create a domain entity Order for the order-domain package.
+- Private constructor, create() factory, reconstitute() factory
+- Properties: orderId, customerId, items[], payment,
+  orderStatus, totalAmount, dateCreated, updatedAt
+- create() sets status to DRAFT via OrderStatusEnum,
+  validates customerId is not empty
+- addItem() throws CannotModifyNonDraftOrderError if not DRAFT
+- Use domain constants for all status comparisons</code></pre>
+      </div>
+
+      <h4>AI Output (from our codebase)</h4>
+      <pre><code>export class Order {
+  private constructor(
+    private readonly orderId: string | null,
+    private customerId: string,
+    private items: OrderItem[],
+    private payment: OrderPayment | null,
+    private orderStatus: OrderStatus,
+    private totalAmount: number,
+    private readonly dateCreated: string,
+    private updatedAt: string
+  ) {}
+
+  static create(props: { customerId: string }): Order {
+    if (!props.customerId.trim()) {
+      throw new CustomerIdRequiredError();
+    }
+    const now = new Date().toISOString();
+    return new Order(
+      null, props.customerId, [], null,
+      OrderStatusEnum.DRAFT, // ← Enum constant, not 'DRAFT' string
+      0, now, now
+    );
+  }
+
+  addItem(item: OrderItem): void {
+    if (this.orderStatus !== OrderStatusEnum.DRAFT) {
+      throw new CannotModifyNonDraftOrderError('add');
+    }
+    this.items.push(item);
+    this.recalculateTotal();
+    this.updatedAt = new Date().toISOString();
+  }
+  // ... getters, reconstitute(), other state transitions
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">What AI Got Right (Because of Specs)</div>
+        <ul>
+          <li><strong>Private constructor</strong> &mdash; enforced by <code>new-domain-entity</code> skill</li>
+          <li><strong>Factory methods</strong> <code>create()</code> + <code>reconstitute()</code> &mdash; pattern from skill instructions</li>
+          <li><strong>Enum constants</strong> (<code>OrderStatusEnum.DRAFT</code>) &mdash; Golden Rule #8, never hardcode strings</li>
+          <li><strong>Typed domain exceptions</strong> &mdash; not generic <code>Error</code>, mapped to HTTP 409</li>
+          <li><strong>Immutable orderId</strong> &mdash; <code>readonly</code>, null until persisted</li>
+        </ul>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">Without spec context, Claude Code would generate a simple class with public properties, no factory methods, string literals for status, and generic Error throws. The spec-driven version follows every Golden Rule automatically.</div>
+      </details>
+    </div>
+
+    <!-- 6.3 Use Case: Use Case with ACL -->
+    <div class="topic fade-in">
+      <h3>Use Case 2: Business Logic with Cross-Service Validation</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~45 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~5 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Add a CreateOrder use case to order-domain.
+- Validates customer exists and is active via
+  ICustomerValidator (ACL — cross-service call)
+- Creates Order entity, adds items from input
+- Saves to IOrderRepository
+- Publishes ORDER_CREATED event via IEventPublisher</code></pre>
+      </div>
+
+      <h4>AI Output</h4>
+      <pre><code>export class CreateOrderUseCase implements IUseCase&lt;CreateOrderInput, Order&gt; {
+  constructor(
+    private readonly orderRepository: IOrderRepository,
+    private readonly customerValidator: ICustomerValidator,
+    private readonly eventPublisher: IEventPublisher&lt;unknown&gt;,
+  ) {}
+
+  async execute(input: CreateOrderInput): Promise&lt;Order&gt; {
+    // Application-level validation
+    if (!input.customerId) {
+      throw new InvalidInputError('Customer ID is required');
+    }
+    if (!input.items || input.items.length === 0) {
+      throw new InvalidInputError('At least one item is required');
+    }
+
+    // ACL: Cross-service validation (Order → User API)
+    await this.customerValidator.validate(input.customerId);
+
+    // Domain: Create entity + add items
+    const order = Order.create({ customerId: input.customerId });
+    for (const itemInput of input.items) {
+      const item = OrderItem.create({
+        productId: itemInput.productId,
+        productName: itemInput.productName,
+        quantity: itemInput.quantity,
+        price: itemInput.price,
+      });
+      order.addItem(item);
+    }
+
+    // Persist + publish event
+    const savedOrder = await this.orderRepository.save(order);
+    await this.eventPublisher.publish({
+      type: OrderEventType.ORDER_CREATED,
+      payload: { orderId: savedOrder.getOrderId() },
+    });
+
+    return savedOrder;
+  }
+}</code></pre>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>🔌 ACL Pattern</h4>
+          <p><code>ICustomerValidator</code> is an abstract interface in order-domain. The HTTP adapter (<code>UserApiClient</code>) lives in the service&rsquo;s <code>infrastructure/clients/</code>. The use case never sees HTTP, Axios, or user-domain types.</p>
+        </div>
+        <div class="card">
+          <h4>📤 Event Publishing</h4>
+          <p><code>IEventPublisher</code> is injected &mdash; the use case doesn&rsquo;t know it&rsquo;s SQS. The adapter (<code>SqsStandardEventPublisher</code>) is wired in the NestJS module.</p>
+        </div>
+        <div class="card">
+          <h4>🏗️ Clean Boundaries</h4>
+          <p>The use case depends only on <strong>interfaces</strong>. Repository, ACL validator, and event publisher are all injected. Infrastructure knows about Prisma/SQS/HTTP; the use case doesn&rsquo;t.</p>
+        </div>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">This is the most impressive demo for backend developers. Without specs, Claude Code would call the User API directly from the use case using axios. With our sync-cross-service-call skill, it generates the proper ACL boundary: abstract interface + HTTP adapter + DI wiring. That&rsquo;s architecture you can&rsquo;t get from autocomplete.</div>
+      </details>
+    </div>
+
+    <!-- 6.4 Use Case: Repository -->
+    <div class="topic fade-in">
+      <h3>Use Case 3: Repository with Transactions &amp; Pagination</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~40 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~4 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Implement the Prisma repository for Order in order-domain.
+- save() uses $transaction for order + items + payment
+- findById() includes items and payment
+- findByStatus() with offset pagination (skip/take + count)
+- Private toDomain() and toPersistence() mapping methods</code></pre>
+      </div>
+
+      <h4>AI Output &mdash; save() with Transaction</h4>
+      <pre><code>export class PrismaOrderRepository implements IOrderRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async save(order: Order): Promise&lt;Order&gt; {
+    const orderId = order.getOrderId();
+
+    if (orderId) {
+      // Update: transaction replaces items + payment atomically
+      await this.prisma.$transaction(async (tx) =&gt; {
+        await tx.order.update({
+          where: { orderId },
+          data: {
+            customerId: order.getCustomerId(),
+            orderStatus: order.getOrderStatus(),
+            totalAmount: order.getTotalAmount(),
+          },
+        });
+        await tx.orderItem.deleteMany({ where: { orderId } });
+        await tx.orderPayment.deleteMany({ where: { orderId } });
+
+        const items = order.getItems();
+        if (items.length &gt; 0) {
+          await tx.orderItem.createMany({
+            data: items.map((item) =&gt; ({
+              orderId, productId: item.getProductId(),
+              productName: item.getProductName(),
+              quantity: item.getQuantity(), price: item.getPrice(),
+              latestKnownPrice: item.getLatestKnownPrice(),
+            })),
+          });
+        }
+      });
+      return this.findById(orderId) as Promise&lt;Order&gt;;
+    }
+    // ... create path (similar $transaction)
+  }
+}</code></pre>
+
+      <h4>AI Output &mdash; Offset Pagination</h4>
+      <pre><code>  async findByStatus(
+    orderStatus: OrderStatus, page = 1, limit = 20,
+  ): Promise&lt;IOffsetPaginatedResponse&lt;Order&gt;&gt; {
+    const where = { orderStatus };
+
+    const [records, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: { items: true, payment: true },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { dateCreated: 'desc' },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return createOffsetPaginatedResponse(
+      records.map((r) =&gt; this.toDomain(r, r.items, r.payment)),
+      total, page, limit,
+    );
+  }</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Key Pattern the AI Follows</div>
+        <p><strong>Prisma domains use <code>IOffsetPaginatedResponse</code></strong> (Golden Rule #16). DynamoDB domains use cursor-based <code>IPaginatedResponse</code>. The <code>prisma-repository</code> skill ensures the correct pagination style is always generated. A developer unfamiliar with the codebase would get this right on their first file.</p>
+      </div>
+    </div>
+
+    <!-- 6.5 Use Case: Wiring -->
+    <div class="topic fade-in">
+      <h3>Use Case 4: Controller + Module Wiring</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~60 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~8 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Wire the order API service:
+- Controller: POST /orders with ZodValidationPipe + Swagger
+- Application service: DTO mapping via Zod schema parse
+- NestJS module: Prisma client token, repository token,
+  use case factory providers, ACL + event publisher DI</code></pre>
+      </div>
+
+      <h4>AI Output &mdash; Controller</h4>
+      <pre><code>@ApiTags('orders')
+@Controller('orders')
+export class OrderController {
+  constructor(
+    private readonly orderApplicationService: OrderApplicationService
+  ) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new order',
+    description: 'Creates a draft order with items for a customer.',
+  })
+  @ApiCreatedResponse({ description: 'Order created' })
+  @ApiBadRequestResponse({ description: 'Validation error' })
+  createOrder(
+    @Body(new ZodValidationPipe(createOrderSchema)) body: CreateOrderInput,
+  ) {
+    return this.orderApplicationService.createOrder(body);
+  }
+}</code></pre>
+
+      <h4>AI Output &mdash; Module Wiring</h4>
+      <pre><code>const PRISMA_CLIENT = 'PRISMA_CLIENT';
+const ORDER_REPOSITORY = 'ORDER_REPOSITORY';
+const ORDER_EVENT_PUBLISHER = 'ORDER_EVENT_PUBLISHER';
+
+@Module({
+  imports: [HttpModule],
+  controllers: [OrderController],
+  providers: [
+    // Infrastructure: Prisma client singleton
+    { provide: PRISMA_CLIENT,
+      useFactory: () =&gt; PrismaConfig.getClient() },
+
+    // Infrastructure: Repository with Prisma injection
+    { provide: ORDER_REPOSITORY,
+      useFactory: (prisma: PrismaClient) =&gt;
+        new PrismaOrderRepository(prisma),
+      inject: [PRISMA_CLIENT] },
+
+    // ACL: Cross-service validator (Order → User API)
+    { provide: ICustomerValidator, useClass: UserApiClient },
+
+    // Use Case: factory with all dependencies
+    { provide: CreateOrderUseCase,
+      useFactory: (repo, validator, publisher) =&gt;
+        new CreateOrderUseCase(repo, validator, publisher),
+      inject: [ORDER_REPOSITORY, ICustomerValidator,
+               ORDER_EVENT_PUBLISHER] },
+
+    // Application Service (class provider)
+    OrderApplicationService,
+  ],
+  exports: [OrderApplicationService],
+})
+export class OrderModule {}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">This Is the Power of Spec-Driven AI</div>
+        <p>The NestJS module wiring is the most error-prone part of backend development. AI generated: string token constants (not enums), factory providers for use cases, class provider for app service, HttpModule import for ACL, and correct inject arrays. All from the <code>prisma-service-wiring</code> skill.</p>
+      </div>
+    </div>
+
+    <!-- 6.6 Supporting Services -->
+    <div class="topic fade-in">
+      <h3>Supporting Services &mdash; Auth &amp; File Upload</h3>
+      <p>
+        Two cross-cutting services sit alongside the core domain services. They are never called
+        directly by domain services — they provide capabilities consumed by API clients and
+        orchestrated through the shared frontend layer.
+      </p>
+
+      <table>
+        <thead><tr><th>Service</th><th>Port</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>auth-api-service</code></td>
+            <td><code>3003</code></td>
+            <td>
+              Sign-in, refresh, password flows. Uses <code>IAuthProvider</code> abstraction:
+              <code>CognitoAuthProvider</code> in deployed environments,
+              <code>LocalAuthProvider</code> in development
+              (<code>admin@test.com</code> / <code>Password123!</code>).
+            </td>
+          </tr>
+          <tr>
+            <td><code>file-api-service</code></td>
+            <td><code>3004</code></td>
+            <td>
+              Presigned S3 URL gateway. Clients upload directly to S3 — no file bytes pass
+              through the backend. Domain services store only a <code>fileKey</code>.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Auth: Provider Abstraction Pattern</h4>
+      <pre><code>// Deployed: delegates to AWS Cognito SDK
+class CognitoAuthProvider implements IAuthProvider { ... }
+
+// Local (STAGE=local): accepts admin@test.com / Password123!
+// Issues unsigned mock JWTs. No Cognito dependency in dev.
+class LocalAuthProvider implements IAuthProvider { ... }
+
+// JwtAuthGuard is provider-agnostic — reads env vars:
+//   JWT_JWKS_URI    → JWKS endpoint for token verification
+//   JWT_ISSUER      → expected issuer claim
+//   JWT_USER_ID_CLAIM → claim name holding userId (e.g. &quot;sub&quot;)
+// Locally bypassed when STAGE=local.</code></pre>
+
+      <h4>File Upload: Presigned URL Flow</h4>
+      <pre><code>// 1. Client requests a presigned upload URL
+POST /api/files/presigned-upload
+  → { uploadUrl, fileKey, expiresIn }
+
+// 2. Client uploads directly to S3 (no backend involved)
+PUT {uploadUrl} (binary file body)
+
+// 3. Domain service stores only the fileKey
+// Never store the full S3 URL — only the key
+const order = Order.create({ ..., attachmentKey: fileKey });
+
+// 4. Download: request a presigned download URL
+GET /api/files/presigned-download/{key}
+  → { downloadUrl, expiresIn }</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Golden Rule: File bytes never pass through the backend</div>
+        <p>
+          Domain services must never import from <code>aws-s3</code> or call S3 directly.
+          Only <code>file-api-service</code> touches S3. Domain entities store a <code>fileKey</code>
+          string. This keeps Lambda payload sizes small and prevents timeouts on large uploads.
+        </p>
+      </div>
+    </div>
+
+    <!-- 6.7 Summary -->
+    <div class="topic fade-in">
+      <h3>Backend Summary &mdash; The Time Equation</h3>
+
+      <table>
+        <thead><tr><th>Task</th><th>Manual</th><th>🤖 AI + Specs</th><th>Savings</th></tr></thead>
+        <tbody>
+          <tr><td>Domain Entity (create, guards, exceptions)</td><td>~30 min</td><td>~3 min</td><td>90%</td></tr>
+          <tr><td>Use Case + ACL Validation</td><td>~45 min</td><td>~5 min</td><td>89%</td></tr>
+          <tr><td>Repository (transactions, pagination)</td><td>~40 min</td><td>~4 min</td><td>90%</td></tr>
+          <tr><td>Controller + Module Wiring</td><td>~60 min</td><td>~8 min</td><td>87%</td></tr>
+          <tr><td><strong>Full Vertical Slice</strong></td><td><strong>~3 hours</strong></td><td><strong>~20 min</strong></td><td><strong>~89%</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <div class="callout-title">Important: These Savings Require Specifications</div>
+        <p>Without <code>CLAUDE.md</code> and skills, the same prompts produce generic code that needs ~60% rework. The time investment in specs pays for itself on the <strong>second feature</strong>.</p>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Full Vertical Slice</div>
+          <p>Add a &ldquo;cancel order&rdquo; feature using the <code>/new-feature</code> command. Watch Claude Code interview, plan, and generate code across all 6 layers in real time.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 7 ═══════════════════════════════════════ -->
+<section class="module" id="module7">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 7 &mdash; 25 min &middot; <span class="tag frontend">Frontend</span></div>
+      <h2>Frontend Deep Dive &mdash; AI in Action</h2>
+      <p class="module-desc">Real use cases from our Next.js webapp. See how AI generates typed API clients, React Query hooks, pages, domain components, and status mappings &mdash; all governed by specs.</p>
+    </div>
+
+    <!-- 7.1 Data Flow -->
+    <div class="topic fade-in">
+      <h3>The Frontend Data Flow</h3>
+      <p>Frontend follows a strict layered architecture. Each layer has a single responsibility. The data-access layer (<code>@old-st/client-common</code>) is <strong>shared between webapp and mobile</strong>.</p>
+
+      <table>
+        <thead><tr><th>Layer</th><th>Responsibility</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>📄 <strong>Page</strong></td><td>Thin orchestrator &mdash; wires state, hooks, and components</td><td><code>users/page.tsx</code></td></tr>
+          <tr><td>🧩 <strong>Domain Component</strong></td><td>Domain-specific UI (tables, forms, action menus)</td><td><code>components/users/users-table.tsx</code></td></tr>
+          <tr><td>🪝 <strong>React Query Hook</strong></td><td>Data fetching, caching, cache invalidation</td><td><code>hooks/use-users.ts</code></td></tr>
+          <tr><td>📡 <strong>API Client</strong></td><td>Typed fetch + Zod response parsing</td><td><code>api-clients/user-api.client.ts</code></td></tr>
+          <tr><td>🎨 <strong>UI Primitive</strong></td><td>Reusable components (Badge, Button, Table&hellip;)</td><td><code>@old-st/ui</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">The Shared Data Layer</div>
+        <p><code>@old-st/client-common</code> contains API clients + React Query hooks. Both the <strong>webapp</strong> and <strong>mobile app</strong> import from this same package. Write once, use on both platforms.</p>
+      </div>
+    </div>
+
+    <!-- 7.2 Use Case: API Client + Hooks -->
+    <div class="topic fade-in">
+      <h3>Use Case 1: API Client + React Query Hooks</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~40 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~5 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Add API client methods and React Query hooks for the user domain
+in client-common.
+- Methods: listByStatus, create, delete, activate,
+  deactivate, verifyEmail
+- Use Zod schemas from @old-st/contracts/user for response parsing
+- Hooks: useUsersByStatus (query), useCreateUser (mutation with
+  cache invalidation), useDeleteUser, useActivateUser, etc.</code></pre>
+      </div>
+
+      <h4>AI Output &mdash; API Client (typed fetch + Zod)</h4>
+      <pre><code>import { apiRequest, apiRequestVoid } from './base-api.client';
+import { userResponseSchema, type CreateUserInput,
+         type UserResponse } from '@old-st/contracts/user';
+import { paginatedResponseSchema } from '@old-st/contracts/common';
+
+const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
+const baseUrl = () =&gt; getApiConfig().userApiUrl;
+
+export const userApiClient = {
+  create(input: CreateUserInput): Promise&lt;UserResponse&gt; {
+    return apiRequest(baseUrl(), '/users', {
+      method: 'POST', body: input,
+      schema: userResponseSchema, // ← Zod parse on response
+    });
+  },
+
+  listByStatus(params: {
+    userStatus: string; limit?: number;
+    cursor?: string; direction?: 'next' | 'prev';
+  }): Promise&lt;PaginatedResponse&lt;UserResponse&gt;&gt; {
+    return apiRequest(baseUrl(), '/users/by-status', {
+      params: params as Record&lt;string, string | number | undefined&gt;,
+      schema: paginatedUsersSchema, // ← Zod parse on response
+    });
+  },
+
+  delete(userId: string): Promise&lt;void&gt; {
+    return apiRequestVoid(baseUrl(),
+      `/users/${encodeURIComponent(userId)}`,
+      { method: 'DELETE' },
+    );
+  },
+};</code></pre>
+
+      <h4>AI Output &mdash; React Query Hooks</h4>
+      <pre><code>const USERS_KEY = 'users';
+
+export function useUsersByStatus(params: {
+  userStatus: string; limit?: number;
+  cursor?: string; direction?: 'next' | 'prev';
+}) {
+  return useQuery({
+    queryKey: [USERS_KEY, 'by-status', params],
+    queryFn: () =&gt; userApiClient.listByStatus(params),
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateUserInput) =&gt;
+      userApiClient.create(input),
+    onSuccess: () =&gt; {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =&gt; userApiClient.delete(userId),
+    onSuccess: () =&gt; {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+}</code></pre>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>🔒 Type-Safe End-to-End</h4>
+          <p>Zod schema parses the API response at runtime. TypeScript infers the return type from the schema. No <code>as any</code>, no manual type casting.</p>
+        </div>
+        <div class="card">
+          <h4>🧹 Automatic Cache Invalidation</h4>
+          <p>Every mutation invalidates the <code>USERS_KEY</code> queries. The UI refreshes automatically &mdash; no manual fetch calls.</p>
+        </div>
+        <div class="card">
+          <h4>📦 Shared by Web + Mobile</h4>
+          <p>These hooks and clients live in <code>@old-st/client-common</code>. Both the Next.js webapp and Expo mobile app import them. Zero duplication.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Authentication: Silent Refresh + Memory-Only Access Tokens</div>
+        <p>
+          Access tokens are stored in memory only — lost on page refresh and restored via
+          <strong>silent refresh</strong>: the <code>AuthProvider</code> in <code>client-common</code>
+          calls <code>POST /auth/refresh-session</code> on mount with <code>credentials: 'include'</code>
+          to restore the session from the httpOnly refresh cookie. Frontend code never reads the
+          refresh token. On 401, the client retries once after attempting a silent refresh.
+          Refresh tokens are stored in <strong>httpOnly cookies</strong> — never in localStorage.
+        </p>
+      </div>
+    </div>
+
+    <!-- 7.3 Use Case: Page + Components -->
+    <div class="topic fade-in">
+      <h3>Use Case 2: Page + Domain Components</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~60 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~8 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Create a Users page for the webapp with:
+- Status filter dropdown using USER_STATUSES from contracts
+- Create user form toggle
+- UsersTable component: @old-st/ui Table primitives,
+  status badges using userStatusVariant, action column
+- UserActions: conditional buttons per user status
+  (Verify for PENDING, Activate for INACTIVE, etc.)</code></pre>
+      </div>
+
+      <h4>AI Output &mdash; Thin Orchestrator Page</h4>
+      <pre><code>'use client';
+
+export default function UsersPage() {
+  const [status, setStatus] = useState&lt;string&gt;('ACTIVE');
+  const [showCreate, setShowCreate] = useState(false);
+
+  const { data, isLoading, isError, error } = useUsersByStatus({
+    userStatus: status,
+  });
+
+  return (
+    &lt;&gt;
+      &lt;Header title="Users" /&gt;
+      &lt;div className="p-6 space-y-4"&gt;
+        &lt;div className="flex items-center justify-between"&gt;
+          &lt;Select value={status}
+            onChange={(e) =&gt; setStatus(e.target.value)}&gt;
+            {USER_STATUSES.map((s) =&gt; (
+              &lt;option key={s} value={s}&gt;{s}&lt;/option&gt;
+            ))}
+          &lt;/Select&gt;
+          &lt;Button onClick={() =&gt; setShowCreate(!showCreate)}&gt;
+            {showCreate ? 'Close' : '+ New User'}
+          &lt;/Button&gt;
+        &lt;/div&gt;
+
+        {showCreate &amp;&amp; &lt;CreateUserForm /&gt;}
+        {isLoading &amp;&amp; &lt;p&gt;Loading...&lt;/p&gt;}
+        {data &amp;&amp; &lt;UsersTable users={data.data} /&gt;}
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+      <h4>AI Output &mdash; Domain Table with Status Badges</h4>
+      <pre><code>export function UsersTable({ users }: { users: UserResponse[] }) {
+  return (
+    &lt;Table&gt;
+      &lt;TableHeader&gt;
+        &lt;TableRow&gt;
+          &lt;TableHead&gt;Name&lt;/TableHead&gt;
+          &lt;TableHead&gt;Email&lt;/TableHead&gt;
+          &lt;TableHead&gt;Status&lt;/TableHead&gt;
+          &lt;TableHead className="text-right"&gt;Actions&lt;/TableHead&gt;
+        &lt;/TableRow&gt;
+      &lt;/TableHeader&gt;
+      &lt;TableBody&gt;
+        {users.map((user) =&gt; (
+          &lt;TableRow key={user.userId}&gt;
+            &lt;TableCell&gt;
+              &lt;Link href={`/users/${user.userId}`}&gt;
+                {user.firstName} {user.lastName}
+              &lt;/Link&gt;
+            &lt;/TableCell&gt;
+            &lt;TableCell&gt;
+              &lt;Badge variant={userStatusVariant(user.userStatus)}&gt;
+                {user.userStatus}
+              &lt;/Badge&gt;
+            &lt;/TableCell&gt;
+            &lt;TableCell className="text-right"&gt;
+              &lt;UserActions user={user} /&gt;
+            &lt;/TableCell&gt;
+          &lt;/TableRow&gt;
+        ))}
+      &lt;/TableBody&gt;
+    &lt;/Table&gt;
+  );
+}</code></pre>
+
+      <h4>AI Output &mdash; Conditional Action Buttons</h4>
+      <pre><code>export function UserActions({ user }: { user: UserResponse }) {
+  const activateUser = useActivateUser();
+  const deactivateUser = useDeactivateUser();
+  const verifyEmail = useVerifyUserEmail();
+  const deleteUser = useDeleteUser();
+
+  return (
+    &lt;div className="flex gap-1"&gt;
+      {user.userStatus === UserStatusEnum.PENDING &amp;&amp; (
+        &lt;Button size="sm" variant="ghost"
+          onClick={() =&gt; verifyEmail.mutate(user.userId)}&gt;
+          Verify
+        &lt;/Button&gt;
+      )}
+      {user.userStatus === UserStatusEnum.ACTIVE &amp;&amp; (
+        &lt;Button size="sm" variant="ghost"
+          onClick={() =&gt; deactivateUser.mutate(user.userId)}&gt;
+          Deactivate
+        &lt;/Button&gt;
+      )}
+      {user.userStatus !== UserStatusEnum.DELETED &amp;&amp; (
+        &lt;Button size="sm" variant="ghost" className="text-destructive"
+          onClick={() =&gt; deleteUser.mutate(user.userId)}&gt;
+          Delete
+        &lt;/Button&gt;
+      )}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">What AI Got Right</div>
+        <ul>
+          <li><strong>Thin page</strong> &mdash; no table markup or form logic in the page (Rule #19)</li>
+          <li><strong>Shared UI primitives</strong> from <code>@old-st/ui</code> &mdash; no raw <code>&lt;table&gt;</code> or <code>&lt;button&gt;</code> (Rule #21)</li>
+          <li><strong>Enum constants</strong> for status comparison (<code>UserStatusEnum.PENDING</code>) &mdash; not strings (Rule #22)</li>
+          <li><strong>Conditional rendering by status</strong> &mdash; business-driven UI from domain contracts</li>
+          <li><strong>Mutation hooks with auto-invalidation</strong> from the shared data layer</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 7.4 Status Mapping -->
+    <div class="topic fade-in">
+      <h3>Use Case 3: Status Badge Mapping</h3>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Add userStatusVariant mapping for the webapp badge component.
+Map each UserStatusEnum value to a Badge variant.
+Use enum constants from @old-st/contracts/user — no strings.</code></pre>
+      </div>
+
+      <h4>AI Output</h4>
+      <pre><code>import { UserStatusEnum } from '@old-st/contracts/user';
+
+type BadgeVariant = 'default' | 'secondary' | 'destructive'
+                  | 'outline' | 'success' | 'warning';
+
+export function userStatusVariant(status: string): BadgeVariant {
+  switch (status) {
+    case UserStatusEnum.ACTIVE:   return 'success';
+    case UserStatusEnum.PENDING:  return 'warning';
+    case UserStatusEnum.INACTIVE: return 'secondary';
+    case UserStatusEnum.DELETED:  return 'destructive';
+    default:                      return 'outline';
+  }
+}</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Why Enums Matter</div>
+        <p>String literals (<code>'ACTIVE'</code>) don&rsquo;t refactor. Enum constants (<code>UserStatusEnum.ACTIVE</code>) do. If the backend renames a status, TypeScript catches every usage. This is enforced by Golden Rule #22 &mdash; AI follows it automatically with our specs.</p>
+      </div>
+    </div>
+
+    <!-- 7.5 Summary -->
+    <div class="topic fade-in">
+      <h3>Frontend Summary</h3>
+
+      <table>
+        <thead><tr><th>Task</th><th>Manual</th><th>🤖 AI + Specs</th><th>Savings</th></tr></thead>
+        <tbody>
+          <tr><td>API Client + 6 hooks (shared data layer)</td><td>~40 min</td><td>~5 min</td><td>88%</td></tr>
+          <tr><td>Page + Table + Actions (3 components)</td><td>~60 min</td><td>~8 min</td><td>87%</td></tr>
+          <tr><td>Status variant mapping</td><td>~10 min</td><td>~1 min</td><td>90%</td></tr>
+          <tr><td><strong>Full Feature (data to UI)</strong></td><td><strong>~110 min</strong></td><td><strong>~14 min</strong></td><td><strong>~87%</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Full Frontend Feature</div>
+          <p>Add a &ldquo;Products&rdquo; page from scratch: API client &rarr; hooks &rarr; page &rarr; table component &rarr; status badges. Watch how the <code>webapp-new-page</code> skill governs every component.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 8 ═══════════════════════════════════════ -->
+<section class="module" id="module8">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 8 &mdash; 25 min &middot; <span class="tag fullstack">Mobile</span></div>
+      <h2>Mobile Deep Dive &mdash; AI in Action</h2>
+      <p class="module-desc">Real use cases from our Expo (React Native) mobile app. See how the shared data layer gives mobile a massive head start &mdash; and how AI generates native screens, lists, and UI primitives following our specs.</p>
+    </div>
+
+    <!-- 8.1 Data Flow -->
+    <div class="topic fade-in">
+      <h3>The Mobile Data Flow</h3>
+      <p>Mobile follows the same layered pattern as the webapp &mdash; with one critical advantage: the <strong>entire data layer is shared</strong>.</p>
+
+      <table>
+        <thead><tr><th>Layer</th><th>Responsibility</th><th>Shared?</th></tr></thead>
+        <tbody>
+          <tr><td>📱 <strong>Screen</strong></td><td>Thin orchestrator (same as webapp page)</td><td>Mobile only</td></tr>
+          <tr><td>🧩 <strong>Domain Component</strong></td><td>Native lists, cards, detail views</td><td>Mobile only</td></tr>
+          <tr><td>🪝 <strong>React Query Hook</strong></td><td>Data fetch, cache, invalidation</td><td>✅ <strong>Shared</strong> (<code>client-common</code>)</td></tr>
+          <tr><td>📡 <strong>API Client</strong></td><td>Typed fetch + Zod parsing</td><td>✅ <strong>Shared</strong> (<code>client-common</code>)</td></tr>
+          <tr><td>🎨 <strong>UI Primitive</strong></td><td>React Native components (Badge, Card, Button)</td><td>Mobile only (<code>@old-st/mobile-ui</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout success">
+        <div class="callout-title">The Shared Data Layer Advantage</div>
+        <p>When the webapp ships a feature first, mobile gets the <strong>API client + hooks for free</strong>. That&rsquo;s typically ~30% of the work already done. Mobile developers write screens and components only &mdash; no duplicate data-fetching logic.</p>
+      </div>
+    </div>
+
+    <!-- 8.2 Use Case: Tab Screen + List -->
+    <div class="topic fade-in">
+      <h3>Use Case 1: Tab Screen + Domain List</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~50 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~6 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Create a Users tab screen for the Expo mobile app.
+- Filter buttons for status (ALL + USER_STATUSES from contracts)
+- Use useUsersByStatus hook from @old-st/client-common
+- UsersList component: FlatList with Card items
+- Each item shows name, email, status badge, role
+- Navigate to /users/[userId] on press
+- StyleSheet.create for all styles</code></pre>
+      </div>
+
+      <h4>AI Output &mdash; Tab Screen (Thin Orchestrator)</h4>
+      <pre><code>import { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, Button } from '@old-st/mobile-ui';
+import { useUsersByStatus } from '@old-st/client-common';
+import { USER_STATUSES } from '@old-st/contracts/user';
+import { UsersList } from '../../components/users/users-list';
+
+const statuses = ['ALL', ...USER_STATUSES];
+
+export default function UsersScreen() {
+  const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const queryStatus = selectedStatus === 'ALL'
+    ? USER_STATUSES[0] : selectedStatus;
+
+  const { data, isLoading } = useUsersByStatus({
+    userStatus: queryStatus,
+  });
+  const users = data?.data ?? [];
+
+  return (
+    &lt;SafeAreaView edges={['bottom']} style={styles.container}&gt;
+      &lt;View style={styles.header}&gt;
+        &lt;Text variant="heading"&gt;Users&lt;/Text&gt;
+      &lt;/View&gt;
+      &lt;View style={styles.filters}&gt;
+        {statuses.map((status) =&gt; (
+          &lt;Button key={status} size="sm"
+            variant={selectedStatus === status
+              ? 'default' : 'outline'}
+            onPress={() =&gt; setSelectedStatus(status)}&gt;
+            {status}
+          &lt;/Button&gt;
+        ))}
+      &lt;/View&gt;
+      &lt;UsersList users={users} isLoading={isLoading} /&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { paddingHorizontal: 16, paddingTop: 16 },
+  filters: { flexDirection: 'row', gap: 8, padding: 16,
+             flexWrap: 'wrap' },
+});</code></pre>
+
+      <h4>AI Output &mdash; Domain List Component</h4>
+      <pre><code>function UserListItem({ user }: { user: UserResponse }) {
+  const router = useRouter();
+  return (
+    &lt;Pressable onPress={() =&gt;
+      router.push(`/users/${user.userId}`)}&gt;
+      &lt;Card style={styles.card}&gt;
+        &lt;CardContent style={styles.cardContent}&gt;
+          &lt;View style={styles.row}&gt;
+            &lt;View style={styles.info}&gt;
+              &lt;Text variant="subheading"&gt;
+                {user.firstName} {user.lastName}
+              &lt;/Text&gt;
+              &lt;Text variant="muted"&gt;{user.email}&lt;/Text&gt;
+            &lt;/View&gt;
+            &lt;Badge variant={userStatusVariant(user.userStatus)}&gt;
+              {user.userStatus}
+            &lt;/Badge&gt;
+          &lt;/View&gt;
+          &lt;Separator /&gt;
+          &lt;Text variant="caption"&gt;
+            Role: {user.userRole}
+          &lt;/Text&gt;
+        &lt;/CardContent&gt;
+      &lt;/Card&gt;
+    &lt;/Pressable&gt;
+  );
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">What AI Got Right</div>
+        <ul>
+          <li><strong>Same thin-orchestrator pattern</strong> as webapp &mdash; screen only wires state + hooks + components (Rule #24)</li>
+          <li><strong>Shared hook</strong> <code>useUsersByStatus</code> from <code>@old-st/client-common</code> &mdash; same code as webapp (Rule #25)</li>
+          <li><strong>Mobile-ui primitives</strong> (Badge, Card, Text, Button) &mdash; not raw View/Text (Rule #26)</li>
+          <li><strong>StyleSheet.create</strong> for styles (Rule #28)</li>
+          <li><strong>Expo Router navigation</strong> <code>router.push()</code> with typed route segments</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 8.3 Use Case: Mobile UI Primitive -->
+    <div class="topic fade-in">
+      <h3>Use Case 2: Mobile UI Primitive</h3>
+      <div class="two-col">
+        <div><span class="tag">Manual effort</span> <strong style="font-size:1.4rem; margin-left:8px;">~25 min</strong></div>
+        <div><span class="tag target">AI with spec-driven</span> <strong style="font-size:1.4rem; margin-left:8px;">~3 min</strong></div>
+      </div>
+
+      <h4>The Prompt</h4>
+      <div class="prompt-example">
+        <span class="prompt-label good">Spec-Driven</span>
+        <pre><code>Add a Badge component to @old-st/mobile-ui.
+- Variants: default, secondary, destructive, outline,
+  success, warning
+- Use design tokens from lib/theme.ts for colors
+- Export BadgeVariant type
+- StyleSheet.create for all variant styles</code></pre>
+      </div>
+
+      <h4>AI Output</h4>
+      <pre><code>export type BadgeVariant = 'default' | 'secondary'
+  | 'destructive' | 'outline' | 'success' | 'warning';
+
+const variantStyles: Record&lt;BadgeVariant,
+  { container: ViewStyle; textColor: string }&gt; = {
+  default: {
+    container: { backgroundColor: colors.primary },
+    textColor: colors.primaryForeground,
+  },
+  success: {
+    container: { backgroundColor: colors.successBg },
+    textColor: colors.successText,
+  },
+  warning: {
+    container: { backgroundColor: colors.warningBg },
+    textColor: colors.warningText,
+  },
+  destructive: {
+    container: { backgroundColor: colors.destructive },
+    textColor: colors.destructiveForeground,
+  },
+  outline: {
+    container: {
+      backgroundColor: 'transparent',
+      borderWidth: 1, borderColor: colors.border,
+    },
+    textColor: colors.foreground,
+  },
+  secondary: {
+    container: { backgroundColor: colors.secondary },
+    textColor: colors.secondaryForeground,
+  },
+};</code></pre>
+
+      <h4>Web vs Mobile &mdash; Same Concept, Different Implementation</h4>
+      <div class="vs-grid">
+        <div class="vs-side">
+          <span class="vs-label">🌐 Web Badge (<code>@old-st/ui</code>)</span>
+          <pre style="font-size:0.8rem;"><code>// class-variance-authority
+const badgeVariants = cva(
+  'inline-flex items-center ...',
+  { variants: {
+      variant: {
+        success: 'bg-green-100 text-green-800',
+        warning: 'bg-yellow-100 ...',
+      }
+    }
+  });
+// Tailwind CSS classes</code></pre>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="vs-side">
+          <span class="vs-label">📱 Mobile Badge (<code>@old-st/mobile-ui</code>)</span>
+          <pre style="font-size:0.8rem;"><code>// Variant record + theme tokens
+const variantStyles: Record&lt;
+  BadgeVariant,
+  { container: ViewStyle; textColor: string }
+&gt; = {
+  success: {
+    container: {
+      backgroundColor: colors.successBg
+    },
+    textColor: colors.successText,
+  },
+}; // StyleSheet + theme tokens</code></pre>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Same Pattern, Different Platform</div>
+        <p>Both use a variant record mapping names to styles. Web uses Tailwind CSS + <code>cva</code>. Mobile uses <code>StyleSheet</code> + design tokens. The AI knows which to use because the <code>webapp-ui-primitive</code> and <code>mobile-ui-primitive</code> skills specify the correct pattern per platform.</p>
+      </div>
+    </div>
+
+    <!-- 8.4 Shared Hook Advantage -->
+    <div class="topic fade-in">
+      <h3>Use Case 3: The Shared Hook Advantage</h3>
+      <p>This is the most powerful insight for mobile developers: <strong>you don&rsquo;t write data-fetching code</strong>.</p>
+
+      <table>
+        <thead><tr><th></th><th>Webapp</th><th>Mobile</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Hook import</strong></td><td><code>import { useUsersByStatus } from '@old-st/client-common';</code></td><td><code>import { useUsersByStatus } from '@old-st/client-common';</code></td></tr>
+          <tr><td><strong>Hook usage</strong></td><td><code>const { data, isLoading } = useUsersByStatus({ userStatus });</code></td><td><code>const { data, isLoading } = useUsersByStatus({ userStatus });</code></td></tr>
+          <tr><td><strong>API client</strong></td><td colspan="2" style="text-align:center;"><strong>Identical</strong> &mdash; same <code>userApiClient.listByStatus()</code></td></tr>
+          <tr><td><strong>Zod parsing</strong></td><td colspan="2" style="text-align:center;"><strong>Identical</strong> &mdash; same schema validation</td></tr>
+          <tr><td><strong>Cache key</strong></td><td colspan="2" style="text-align:center;"><strong>Identical</strong> &mdash; <code>['users', 'by-status', params]</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout success">
+        <div class="callout-title">Zero Duplication</div>
+        <p>The webapp team builds the API client + hooks in <code>@old-st/client-common</code>. The mobile team uses them <em>as-is</em>. They only write the native UI layer: screens (<code>Expo Router</code>), components (<code>FlatList</code>, <code>Card</code>), and mobile-specific styles (<code>StyleSheet.create</code>).</p>
+      </div>
+    </div>
+
+    <!-- 8.5 Summary -->
+    <div class="topic fade-in">
+      <h3>Mobile Summary</h3>
+
+      <table>
+        <thead><tr><th>Task</th><th>Manual</th><th>🤖 AI + Specs</th><th>Savings</th></tr></thead>
+        <tbody>
+          <tr><td>Tab Screen + Filter State</td><td>~20 min</td><td>~3 min</td><td>85%</td></tr>
+          <tr><td>Domain List Component (FlatList + Card)</td><td>~30 min</td><td>~3 min</td><td>90%</td></tr>
+          <tr><td>Mobile UI Primitive (Badge)</td><td>~25 min</td><td>~3 min</td><td>88%</td></tr>
+          <tr><td>Data Layer (hooks + API client)</td><td colspan="3" style="text-align:center;">✅ <strong>Already done</strong> (shared with webapp &mdash; zero mobile effort)</td></tr>
+          <tr><td><strong>Full Mobile Feature</strong></td><td><strong>~75 min</strong></td><td><strong>~9 min</strong></td><td><strong>~88%</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">The Cross-Platform Story</div>
+        <p>When a feature exists on the webapp, mobile implementation takes <strong>~40% less time</strong> because the data layer already exists. AI amplifies this further by generating the native UI layer to match our mobile-specific skills and patterns.</p>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-icon">🎬</div>
+        <div>
+          <div class="demo-title">Live Demo &mdash; Mobile Feature from Shared Hooks</div>
+          <p>Build an &ldquo;Orders&rdquo; mobile screen from scratch. Import the existing <code>useOrders</code> hook (already built for webapp) and generate the native list + detail screen using the <code>mobile-new-screen</code> skill.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 9 ═══════════════════════════════════════ -->
+<section class="module" id="module9">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 9 &mdash; 20 min</div>
+      <h2>Hands-On Challenge &amp; Q&amp;A</h2>
+      <p class="module-desc">Your turn. Put it into practice, then let&rsquo;s discuss.</p>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>10-Minute Challenge</h3>
+      <div class="callout">
+        <div class="callout-title">Your Task</div>
+        <p>Using Claude Code with our reference workspace:</p>
+        <blockquote>&ldquo;Add a &lsquo;suspend&rsquo; action to the user entity. A user can only be suspended if they are currently ACTIVE. Suspended users cannot log in.&rdquo;</blockquote>
+      </div>
+
+      <h4>What to Observe</h4>
+      <ul>
+        <li>Does Claude Code ask clarifying questions? (It should, if using the command)</li>
+        <li>Does it follow our architecture? (Entity &rarr; Use Case &rarr; App Service &rarr; Controller)</li>
+        <li>Does the generated code use enum constants? (Not string literals)</li>
+        <li>Does it add proper domain exceptions?</li>
+      </ul>
+      <p><strong>Debrief:</strong> Compare results across the room. Discuss what worked and what didn&rsquo;t.</p>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>Resources &amp; Continued Learning</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>📁 Internal Resources</h4>
+          <ul>
+            <li>Reference architecture: <code>old-st-template</code> repo</li>
+            <li>AI workflow docs: <code>docs/ai-workflows.html</code></li>
+            <li>40 skills: <code>.claude/skills/</code></li>
+            <li>Testing guide: <code>docs/testing.md</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🌐 External Resources</h4>
+          <ul>
+            <li>Claude Code Documentation</li>
+            <li>Claude Code IDE integrations (VS Code / JetBrains)</li>
+            <li>Company AI Usage Policy</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🔄 Ongoing</h4>
+          <ul>
+            <li>Weekly &ldquo;AI tip&rdquo; sharing in team channel</li>
+            <li>Monthly AI adoption review</li>
+            <li>Follow-up workshop: building skills for your client project</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Closing -->
+    <div class="topic fade-in" style="text-align: center; padding: 48px 0;">
+      <h3>The Future Is AI-Native</h3>
+      <blockquote>&ldquo;The question is no longer whether to use AI &mdash; it&rsquo;s how well your team&rsquo;s engineering standards guide the AI.&rdquo;</blockquote>
+      <p style="font-size: 1.1rem; margin-top: 24px;">You&rsquo;re not being replaced. You&rsquo;re being upgraded.<br>
+      Start today. Open chat. Ask a question. Iterate.<br>
+      Build the specs. Your expertise, machine-readable.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="text-align: center; padding: 40px 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem;">
+  AI Native Development Masterclass &middot; Built for developers, by developers &middot; &copy; 2026
+</footer>
+
+<!-- ═══════════════════════════════════════ JavaScript ═══════════════════════════════════════ -->
+<script>
+  // Theme Toggle
+  const toggle = document.getElementById('themeToggle');
+  const setTheme = (dark) => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('masterclass-theme', dark ? 'dark' : 'light');
+  };
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(!isDark);
+  });
+  // Restore theme
+  const saved = localStorage.getItem('masterclass-theme');
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+
+  // Scroll Progress
+  const progressBar = document.getElementById('scrollProgress');
+  const updateProgress = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = docHeight > 0 ? (scrollTop / docHeight * 100) + '%' : '0%';
+  };
+
+  // Sticky Nav Shadow
+  const topNav = document.getElementById('topNav');
+  const updateNav = () => { topNav.classList.toggle('scrolled', window.scrollY > 10); };
+
+  // Active NavLink (scroll spy)
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const sections = document.querySelectorAll('.module');
+  const updateActiveLink = () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  };
+
+  // Combine scroll handlers
+  window.addEventListener('scroll', () => { updateProgress(); updateNav(); updateActiveLink(); }, { passive: true });
+
+  // Hamburger
+  const hamburger = document.getElementById('hamburger');
+  const navLinksEl = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinksEl.classList.toggle('open'));
+  navLinksEl.addEventListener('click', (e) => { if (e.target.tagName === 'A') navLinksEl.classList.remove('open'); });
+
+  // Fade-in on scroll (IntersectionObserver)
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

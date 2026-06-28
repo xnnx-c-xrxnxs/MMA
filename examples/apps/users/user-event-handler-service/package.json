@@ -1,0 +1,14 @@
+{
+  "name": "user-event-handler-service",
+  "version": "0.0.1",
+  "description": "User domain SQS event-driven consumer service",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.0.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0"
+  }
+}

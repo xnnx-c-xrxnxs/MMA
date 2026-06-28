@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "OldStDomain",
+  "title": "Old-ST Domain Generator",
+  "type": "object",
+  "description": "Scaffold a complete new domain: domain package, contracts package, API service (optional), and CRUD use cases.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Domain name in kebab-case (e.g. shipping).",
+      "x-prompt": "What is the domain name (kebab-case, e.g. shipping)?"
+    },
+    "entity": {
+      "type": "string",
+      "description": "Entity name in kebab-case singular (default: same as domain). Drives entity class, repository, and contract names."
+    },
+    "persistence": {
+      "type": "string",
+      "enum": ["dynamodb"],
+      "default": "dynamodb",
+      "description": "Persistence layer (dynamodb only for now)."
+    },
+    "fields": {
+      "type": "string",
+      "description": "Comma-separated field specs, e.g. 'orderId:string,trackingNumber:string,weight:number,address:string?'. Allowed types: string, number, boolean, date. Suffix '?' marks the field optional."
+    },
+    "statuses": {
+      "type": "string",
+      "description": "Comma-separated SCREAMING_SNAKE statuses, e.g. 'PENDING,IN_TRANSIT,DELIVERED,CANCELLED'. Defaults to 'ACTIVE,DELETED'."
+    },
+    "withService": {
+      "type": "boolean",
+      "default": true,
+      "description": "Also scaffold the API service shell (apps/{name}/{name}-api-service)."
+    },
+    "withContracts": {
+      "type": "boolean",
+      "default": true,
+      "description": "Also scaffold the contracts package (packages/contracts/{name})."
+    },
+    "publishesEvents": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, the service publishes domain events to SQS. Adds {DOMAIN}_SQS_QUEUE_URL/_NAME env vars and the registry entry. Default false."
+    },
+    "useCases": {
+      "type": "string",
+      "default": "create,get-by-id,list",
+      "description": "Comma-separated CRUD use cases to scaffold. Supported: create, get-by-id, update, delete, list. Action use cases must be added separately via the use-case generator."
+    },
+    "dryRun": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print the file plan without writing anything."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip Prettier formatting after generation."
+    }
+  },
+  "required": ["name"]
+}

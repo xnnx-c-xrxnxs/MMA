@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "telemetry",
+  "sourceRoot": "packages/telemetry/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"]
+}

@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=schemas/domain-spec.schema.json
+#
+# Worked example — a fictional Invoice domain showing every supported feature.
+# Copy this file as a starting point for similar entities, or run /new-domain-spec
+# for a clean template tailored to your domain name.
+
+domain: invoice
+persistence: prisma   # joins to customer, line items, payments → relational
+
+entity:
+  name: Invoice
+  description: "Customer-facing billing document with status lifecycle and line items."
+
+  fields:
+    - { name: id,           type: ulid,   pk: true }
+    - { name: customerId,   type: ulid,   index: true,  description: "FK to customer (validated via ACL)" }
+    - { name: invoiceNumber, type: string, unique: true, min: 1, max: 32 }
+
+    - name: status
+      type: enum
+      values: [DRAFT, SENT, PAID, VOID]
+      default: DRAFT
+      description: "Lifecycle state — see businessRules for transitions"
+      # OPTIONAL: per-value display labels for the FE `formatInvoiceStatus()` helper.
+      # `VOID` would Title-Case to "Void" which is fine, but listing every value
+      # makes intent explicit and forces a TS error if a new enum value is added
+      # without a label. See Golden Rule #22a.
+      labels:
+        DRAFT: "Draft"
+        SENT: "Sent"
+        PAID: "Paid"
+        VOID: "Void"
+
+    - { name: subtotal,     type: number, min: 0 }
+    - { name: taxAmount,    type: number, min: 0,    default: 0 }
+    - { name: total,        type: number, min: 0 }
+    - { name: currency,     type: string, min: 3,    max: 3,   description: "ISO 4217 code" }
+
+    - { name: issuedAt,     type: datetime, optional: true,    description: "Set when status moves to SENT" }
+    - { name: dueDate,      type: date,     optional: true }
+    - { name: paidAt,       type: datetime, optional: true,    description: "Set when status moves to PAID" }
+    - { name: voidedAt,     type: datetime, optional: true }
+    - { name: voidReason,   type: string,   optional: true,    max: 500 }
+
+    - { name: notes,        type: string,   optional: true,    max: 2000 }
+    - { name: metadata,     type: json,     optional: true }
+
+    - { name: dateCreated,  type: datetime }
+    - { name: updatedAt,    type: datetime }
+
+businessRules:
+  - "Status transitions: DRAFT → SENT, SENT → PAID, SENT → VOID, DRAFT → VOID"
+  - "PAID and VOID are terminal — no transitions out"
+  - "issuedAt must be set when transitioning to SENT"
+  - "paidAt must be set when transitioning to PAID"
+  - "voidReason is required when transitioning to VOID"
+  - "total must equal subtotal + taxAmount"
+  - "total > 0 for any non-DRAFT invoice"
+  - "currency is immutable after creation"
+
+events:
+  - INVOICE_CREATED
+  - INVOICE_SENT
+  - INVOICE_PAID
+  - INVOICE_VOIDED
+
+indexes:
+  - { name: invoice_customer_status_idx, fields: [customerId, status],  description: "list invoices by customer + status" }
+  - { name: invoice_due_date_idx,        fields: [dueDate],             description: "find overdue invoices for reminder cron" }
+
+useCases:
+  - { name: createInvoice,             type: create }
+  - { name: getInvoice,                type: read }
+  - { name: listInvoicesByCustomer,    type: list }
+  - { name: listInvoicesByStatus,      type: list }
+  - { name: listOverdueInvoices,       type: list,       description: "status=SENT AND dueDate < today" }
+  - { name: sendInvoice,               type: transition, description: "DRAFT → SENT" }
+  - { name: markInvoicePaid,           type: transition, description: "SENT → PAID" }
+  - { name: voidInvoice,               type: transition, description: "DRAFT|SENT → VOID" }
+  - { name: updateInvoiceNotes,        type: update }

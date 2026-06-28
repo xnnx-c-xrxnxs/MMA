@@ -1,0 +1,2 @@
+# Drop .svg files here and run `pnpm icons:add` to regenerate icons.tsx.
+# This folder is the permanent source of truth for the icon set.

@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "aws-s3",
+  "sourceRoot": "packages/aws/aws-s3/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"]
+}

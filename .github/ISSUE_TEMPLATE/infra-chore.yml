@@ -1,0 +1,111 @@
+name: "🛠️ Infrastructure / Chore"
+description: "Infra change, CI/CD update, dependency upgrade, refactor, or non-feature chore."
+title: "[CHORE] "
+labels: ["type-chore", "needs-triage"]
+body:
+  - type: dropdown
+    id: chore-type
+    attributes:
+      label: "Chore Type"
+      options:
+        - "Infrastructure (Terraform module, AWS resource)"
+        - "CI / CD workflow"
+        - "Dependency upgrade"
+        - "Refactor (no behaviour change)"
+        - "Documentation"
+        - "Tooling / Scripts"
+        - "Test infrastructure"
+        - "Security / Secrets rotation"
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      options:
+        - "Critical (P0)"
+        - "High (P1)"
+        - "Medium (P2)"
+        - "Low (P3)"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: "Effort"
+      options:
+        - "XS (≤ 2h)"
+        - "S (≤ 8h)"
+        - "M (≤ 16h)"
+        - "L (≤ 32h)"
+        - "XL (> 32h)"
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: domain
+    attributes:
+      label: "Domain"
+      description: "Which bounded context or surface does this chore affect? See `.github/issue-config.json` for valid values. Use `infra` for cross-cutting infra changes. (Auto-populated as a dropdown after `/sync-notebooklm-output` runs.)"
+      placeholder: "e.g. infra, user, webapp"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: workflow-hint
+    attributes:
+      label: "Recommended Workflow Prompt"
+      options:
+        - "/cd-register-service (new Lambda / table / queue)"
+        - "/infra-new-module (new AWS service type)"
+        - "/add-monitoring-feature"
+        - "/add-alerting"
+        - "/add-push-notifications"
+        - "Direct work (no orchestrator — use individual skills)"
+      default: 5
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "What needs to change and why."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "Acceptance Criteria"
+      placeholder: |
+        - [ ] Terraform plan shows expected diff (no drift)
+        - [ ] CI workflows pass
+        - [ ] Documentation updated
+    validations:
+      required: true
+
+  - type: textarea
+    id: touches
+    attributes:
+      label: "Touches (file globs)"
+      placeholder: |
+        infra/modules/{module}/**
+        .github/workflows/**
+        .github/service-registry.json
+    validations:
+      required: false
+
+  - type: textarea
+    id: blocked-by
+    attributes:
+      label: "Blocked by"
+      placeholder: |
+        #123
+    validations:
+      required: false

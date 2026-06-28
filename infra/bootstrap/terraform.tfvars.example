@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Bootstrap Configuration
+#
+# Copy this file to terraform.tfvars and fill in the values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# terraform.tfvars is gitignored — it will never be committed.
+#
+# AWS credentials go in a separate file (also gitignored):
+#   cp aws-credentials.example aws-credentials
+#   Fill in your temporary AWS credentials there.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Project slug — prefixes all AWS resource names (lowercase, 2-21 chars)
+project_name = ""
+
+# AWS region for all resources
+aws_region = "eu-west-2"
+
+# GitHub organization or user that owns this repository
+github_org = ""
+
+# GitHub repository name (without org prefix)
+github_repo = ""
+
+# Environment label (dev, staging, prod) — appended to S3 bucket names
+# to avoid global namespace collisions in multi-account setups.
+# Automatically set by the bootstrap task helper scripts.
+# environment = ""

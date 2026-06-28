@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring &amp; Observability — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html" class="active">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Monitoring &amp; Observability</h1>
+      <p class="subtitle">
+        Structured JSON logging via <code>@old-st/telemetry</code>, request-scoped <code>correlationId</code> propagation,
+        the internal <code>monitoring-api-service</code>, and CloudWatch dashboards.
+        All services emit correlated log lines — every line carries a <code>correlationId</code> so logs
+        from HTTP requests and SQS event chains are joinable in CloudWatch Log Insights.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Architecture Overview</h2>
+
+      <div class="mermaid">
+graph LR
+  subgraph Services["NestJS Services (Lambda)"]
+    US["user-api-service"]
+    PS["product-api-service"]
+    OS["order-api-service"]
+    AS["auth-api-service"]
+    FS["file-api-service"]
+    UE["user-event-handler"]
+    PE["product-event-handler"]
+    OE["order-event-handler"]
+  end
+
+  subgraph Telemetry["@old-st/telemetry"]
+    Logger["createLogger()\nJSON → stdout"]
+    OTel["initTelemetry()\nOTel SDK"]
+    Corr["correlationMiddleware()\nAsyncLocalStorage"]
+  end
+
+  subgraph AWS["AWS (deployed)"]
+    CW["CloudWatch Logs\n(auto-shipped from Lambda stdout)"]
+    XR["X-Ray\n(OTel traces)"]
+    Alarms["CloudWatch Alarms\n(Lambda errors + DLQ depth)"]
+  end
+
+  MonAPI["monitoring-api-service\nport 8080"]
+  MonUI["monitoring-webapp\nport 4300"]
+
+  Services --> Logger
+  Services --> OTel
+  Services --> Corr
+  Logger --> CW
+  OTel --> XR
+  CW --> MonAPI
+  XR --> MonAPI
+  Alarms --> MonAPI
+  MonAPI --> MonUI
+      </div>
+
+      <p>
+        Locally, <code>initTelemetry()</code> is a no-op (<code>OTEL_SDK_DISABLED=true</code> in <code>.env.local</code>)
+        — no X-Ray daemon or OTel collector is needed. Logs are still emitted as structured JSON to stdout,
+        which means you can parse them locally with <code>jq</code> or search them in your terminal.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>The <code>@old-st/telemetry</code> Package</h2>
+
+      <p>
+        Located at <code>packages/telemetry/</code>. Exports five main things:
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Export</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>initTelemetry(serviceName)</code></td>
+            <td>Bootstraps the OpenTelemetry SDK (OTLP exporter → X-Ray). No-op when <code>OTEL_SDK_DISABLED=true</code>. Must be called <strong>before</strong> <code>NestFactory.create()</code> in <code>main.ts</code>.</td>
+          </tr>
+          <tr>
+            <td><code>createLogger(serviceName): StructuredLogger</code></td>
+            <td>Returns a structured JSON logger. Emits one JSON line per call to <code>process.stdout</code>. Each line includes <code>timestamp</code>, <code>level</code>, <code>service</code>, <code>message</code>, <code>correlationId</code>, plus any extra fields you pass. When an active OTel span exists, <code>traceId</code> and <code>spanId</code> are added automatically.</td>
+          </tr>
+          <tr>
+            <td><code>correlationMiddleware()</code></td>
+            <td>Express middleware that generates a UUID <code>correlationId</code> per HTTP request (or reuses <code>x-correlation-id</code> from incoming headers). Stores it in <code>AsyncLocalStorage</code> so the logger and SQS publishers can read it automatically. Must be the <strong>first</strong> middleware in <code>setupGlobalMiddleware()</code>.</td>
+          </tr>
+          <tr>
+            <td><code>runWithCorrelationId(id, fn) / getCorrelationId()</code></td>
+            <td><code>runWithCorrelationId</code> wraps an async function in a correlation context. Used by event handlers to restore the correlationId from the SQS message body. <code>getCorrelationId()</code> reads the current correlationId from <code>AsyncLocalStorage</code> — used by SQS publishers to auto-inject it into event payloads.</td>
+          </tr>
+          <tr>
+            <td><code>getCorrelationHeaders()</code></td>
+            <td>Returns <code>{ 'x-correlation-id': id }</code> if a correlation context is active, or <code>{}</code> otherwise. Spread into outbound HTTP request headers in ACL adapters so the receiving service continues the same correlationId chain.</td>
+          </tr>
+          <tr>
+            <td><code>injectTraceContext / extractTraceContext</code></td>
+            <td>Propagates W3C trace context through SQS <code>MessageAttributes</code>. Used by event publishers (inject) and SQS consumer services (extract).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Structured Log Format</h2>
+
+      <p>Every log call produces a single-line JSON object:</p>
+
+      <pre><code>{
+  "timestamp": "2026-04-16T10:23:45.123Z",
+  "level": "INFO",
+  "service": "user-api-service",
+  "message": "User created",
+  "traceId": "1-661e2b21-abc123def456...",
+  "spanId": "a1b2c3d4e5f60011",
+  "correlationId": "a3f2c8d1-7e4b-4f9a-b6c2-1d8e5f0a3b7c",
+  "userId": "usr_abc",
+  "email": "user@example.com"
+}</code></pre>
+
+      <p>
+        The <code>correlationId</code> is the primary correlation mechanism. It is generated per HTTP request
+        by <code>correlationMiddleware()</code>, auto-injected into SQS event payloads by the publishers,
+        and extracted by event handlers via <code>runWithCorrelationId()</code>. This creates end-to-end
+        request tracing across HTTP → SQS → event handler chains without depending on X-Ray.
+        The monitoring dashboard groups all logs sharing the same <code>correlationId</code> into
+        a single "event chain".
+      </p>
+
+      <p>Error calls additionally include <code>errorType</code>, <code>errorMessage</code>, and <code>stack</code>:</p>
+
+      <pre><code>logger.error('Failed to create user', { email }, someError);
+// → { ..., "errorType": "DuplicateEmailError", "errorMessage": "...", "stack": "..." }</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Using <code>createLogger()</code></h2>
+
+      <h3>Golden Rule</h3>
+      <p>
+        Never use <code>new Logger(ClassName.name)</code> from <code>@nestjs/common</code>.
+        Always declare a <strong>module-level singleton</strong>:
+      </p>
+
+      <pre><code>import { createLogger } from '@old-st/telemetry';
+
+const logger = createLogger('user-api-service');   // top of the file, outside the class
+
+@Injectable()
+export class UserApplicationService {
+  async createUser(input: CreateUserInput): Promise&lt;UserDto&gt; {
+    logger.info('Creating user', { email: input.email, userRole: input.userRole });
+    const user = await this.createUserUseCase.execute(input);
+    logger.info('User created', { userId: user.id, email: user.email });
+    return userResponseSchema.parse(user);
+  }
+}</code></pre>
+
+      <h3>Log Levels</h3>
+
+      <table>
+        <thead>
+          <tr><th>Situation</th><th>Level</th><th>Method</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Operation start / completion</td><td>Info</td><td><code>logger.info(...)</code></td></tr>
+          <tr><td>Non-fatal unexpected condition</td><td>Warn</td><td><code>logger.warn(...)</code></td></tr>
+          <tr><td>Domain exception caught by filter</td><td>Warn</td><td><code>logger.warn(...)</code></td></tr>
+          <tr><td>Unhandled 5xx, infrastructure failure</td><td>Error</td><td><code>logger.error(...)</code></td></tr>
+          <tr><td>Detailed debugging (rarely committed)</td><td>Debug</td><td><code>logger.debug(...)</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>What to Log</h3>
+      <ul>
+        <li><strong>Before a mutating operation</strong> — what is being done + key input identifiers (userId, productId, etc.)</li>
+        <li><strong>After success</strong> — confirming completion + result identifier</li>
+        <li><strong>Before publishing an event</strong> — note the event type being dispatched</li>
+        <li><strong>Before and after ACL calls</strong> — outbound cross-service HTTP validation calls (e.g. <code>customerValidator.validate()</code>) must have before/after logs in the adapter so the call appears in the event chain</li>
+        <li><strong>Read endpoints called by ACL</strong> — when a read method (e.g. <code>getUserById</code>) is the target of another service's ACL call, it must have before/after logs so the upstream service appears in the monitoring event chain</li>
+        <li><strong>On error</strong> — pass the <code>error</code> object as the third argument to <code>logger.error()</code></li>
+        <li><strong>Never log</strong> passwords, tokens, full PII, or raw request bodies</li>
+      </ul>
+
+      <p>
+        <strong>Mutating operations</strong> include: create, update, delete, activate, deactivate,
+        verify, state transitions, event publishing, sign-in/sign-out, password changes, and
+        presigned URL generation. Read-only operations (getById, list, search) do not require
+        before/after logs <strong>unless</strong> the endpoint is called by another service's ACL
+        adapter — in that case, logs are required so the upstream service appears in the event chain.
+      </p>
+
+      <h3>CI Enforcement</h3>
+      <p>
+        The <code>app-service-has-logger</code> structural lint check
+        (in <code>scripts/lint-standards.ts</code>) runs in CI and verifies that
+        <strong>every application service file</strong> has a module-level
+        <code>const logger = createLogger(...)</code> declaration. It also detects and rejects the
+        forbidden <code>new Logger()</code> pattern from <code>@nestjs/common</code>.
+        A PR that adds an application service without a structured logger will fail CI.
+      </p>
+
+      <h3>Service Name Convention</h3>
+
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Logger name</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>user-api-service</code></td><td><code>'user-api-service'</code></td></tr>
+          <tr><td><code>product-api-service</code></td><td><code>'product-api-service'</code></td></tr>
+          <tr><td><code>order-api-service</code></td><td><code>'order-api-service'</code></td></tr>
+          <tr><td><code>auth-api-service</code></td><td><code>'auth-api-service'</code></td></tr>
+          <tr><td><code>file-api-service</code></td><td><code>'file-api-service'</code></td></tr>
+          <tr><td><code>monitoring-api-service</code></td><td><code>'monitoring-api-service'</code></td></tr>
+          <tr><td><code>user-event-handler-service</code></td><td><code>'user-event-handler-service'</code></td></tr>
+          <tr><td><code>product-event-handler-service</code></td><td><code>'product-event-handler-service'</code></td></tr>
+          <tr><td><code>order-event-handler-service</code></td><td><code>'order-event-handler-service'</code></td></tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>OTel Initialisation in <code>main.ts</code></h2>
+
+      <p>
+        Every service's <code>main.ts</code> must call <code>initTelemetry()</code> <strong>before</strong>
+        <code>NestFactory.create()</code>. This registers the OTel SDK so that spans are active when
+        the NestJS request lifecycle begins — ensuring <code>traceId</code> and <code>spanId</code>
+        are available to every logger call inside the request.
+      </p>
+
+      <pre><code>import { initTelemetry } from '@old-st/telemetry';
+
+initTelemetry('user-api-service');   // ← must be FIRST, before NestFactory
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  // ...
+}
+bootstrap();</code></pre>
+
+      <p>
+        Lambda Web Adapter requires no special bootstrap — your <code>main.ts</code>
+        starts a plain NestJS HTTP server inside the Lambda container. Just call
+        <code>initTelemetry()</code> at module load (outside any handler), so it runs once at
+        cold start.
+      </p>
+
+      <h3>Local Dev: OTel Disabled</h3>
+      <p>
+        <code>.env.local</code> sets <code>OTEL_SDK_DISABLED=true</code>. This makes
+        <code>initTelemetry()</code> a no-op — no OTel collector, no X-Ray daemon, no
+        network calls. Logs still emit as structured JSON to stdout; they just won't carry
+        <code>traceId</code>/<code>spanId</code> values.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Dependency Setup</h2>
+
+      <h3>HTTP API Services (no own <code>package.json</code>)</h3>
+      <p>
+        <code>@old-st/telemetry</code> is declared in the workspace root <code>package.json</code>.
+        No per-service action needed — imports resolve automatically.
+      </p>
+
+      <h3>Event-Handler Services (own <code>package.json</code>)</h3>
+      <p>
+        Add to the service's <code>package.json</code> <code>dependencies</code>:
+      </p>
+      <pre><code>"@old-st/telemetry": "workspace:*"</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Monitoring Service</h2>
+
+      <p>
+        <code>apps/monitoring/monitoring-api-service/</code> is an internal NestJS service
+        that aggregates observability data from AWS and exposes it to the monitoring dashboard.
+        It runs on port <code>8080</code> locally and uses the
+        <a href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-web-adapter.html" target="_blank">Lambda Web Adapter</a>
+        pattern in deployed environments (plain HTTP server — no <code>@codegenie/serverless-express</code>).
+      </p>
+
+      <h3>Controllers</h3>
+
+      <table>
+        <thead>
+          <tr><th>Controller</th><th>Route</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>TracesController</code></td>
+            <td><code>GET /api/traces</code><br><code>GET /api/traces/:correlationId</code></td>
+            <td>Lists recent event chains (grouped by <code>correlationId</code>) with description, services involved, log count, duration, and status. Detail endpoint returns all correlated log entries for a specific chain.</td>
+          </tr>
+          <tr>
+            <td><code>AlarmsController</code></td>
+            <td><code>GET /api/alarms</code></td>
+            <td>Lists CloudWatch alarms filtered by name prefix for the target environment. Optional <code>state</code> filter (OK | ALARM | INSUFFICIENT_DATA).</td>
+          </tr>
+          <tr>
+            <td><code>ServicesController</code></td>
+            <td><code>GET /api/services</code></td>
+            <td>Returns recent X-Ray service map — service names, error rates, response times.</td>
+          </tr>
+          <tr>
+            <td><code>AuthController</code></td>
+            <td><code>POST /api/auth/sign-in</code></td>
+            <td>Internal auth for the monitoring dashboard. Issues a short-lived session token (stored in <code>localStorage</code> — internal tool only).</td>
+          </tr>
+          <tr>
+            <td><code>AppController</code></td>
+            <td><code>GET /api/health</code></td>
+            <td>Health check — returns <code>{ status: 'ok', service: 'monitoring-api-service' }</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Multi-Environment Support</h3>
+      <p>
+        The monitoring service accepts an <code>X-Target-Environment</code> request header
+        (values: <code>dev</code>, <code>staging</code>, <code>prod</code>). The monitoring webapp
+        passes the currently selected environment via this header, so a single deployed monitoring
+        service can query CloudWatch and X-Ray for any environment.
+      </p>
+
+      <h3>Authentication</h3>
+      <p>
+        All monitoring API routes (except <code>/api/health</code> and <code>/api/auth/sign-in</code>)
+        require a Bearer token issued by the internal <code>AuthController</code>. This is a
+        lightweight internal auth mechanism — <strong>not</strong> the same Cognito/LocalAuth
+        flow used by domain API services. The monitoring webapp stores the token in
+        <code>localStorage</code>; this is acceptable because the monitoring dashboard is
+        an internal developer tool, never user-facing.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Monitoring Dashboard (<code>monitoring-webapp</code>)</h2>
+
+      <p>
+        A Next.js app at <code>apps/monitoring/monitoring-webapp/</code> running on port <code>4300</code>.
+        It is a developer-facing internal tool, not deployed as part of the public product stack.
+      </p>
+
+      <h3>Dashboard Pages</h3>
+
+      <table>
+        <thead>
+          <tr><th>Page</th><th>Route</th><th>Content</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dashboard</td>
+            <td><code>/</code></td>
+            <td>Summary cards — alarm counts (ALARM / OK), recent error traces, service health overview</td>
+          </tr>
+          <tr>
+            <td>Traces</td>
+            <td><code>/traces</code></td>
+            <td>Event chain list grouped by <code>correlationId</code> \u2014 shows description (derived from first log message + event types), services involved, log count, duration, and error status. Click-through to chain detail view with service flow diagram and correlated log timeline.</td>
+          </tr>
+          <tr>
+            <td>Alarms</td>
+            <td><code>/alarms</code></td>
+            <td>CloudWatch alarm list with state badges; filter by OK / ALARM / INSUFFICIENT_DATA</td>
+          </tr>
+          <tr>
+            <td>Login</td>
+            <td><code>/auth/login</code></td>
+            <td>Internal sign-in form (credentials set via <code>MONITORING_ADMIN_PASSWORD</code> env var)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Environment Switching</h3>
+      <p>
+        Append <code>?env=staging</code> (or <code>prod</code>, <code>dev</code>) to any page URL
+        to view data from a different environment. The dashboard passes the selected env to the
+        monitoring API via the <code>X-Target-Environment</code> header.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CloudWatch Alarms</h2>
+
+      <p>
+        The <code>infra/modules/monitoring/</code> Terraform module creates two alarm types
+        per service automatically:
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Alarm type</th><th>Metric</th><th>Threshold</th><th>Config needed</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lambda error alarm</td>
+            <td><code>AWS/Lambda &gt; Errors</code></td>
+            <td><code>&gt; lambda_error_threshold</code> in 5 min</td>
+            <td>Add function name to <code>lambda_functions</code> map in <code>module.monitoring</code></td>
+          </tr>
+          <tr>
+            <td>SQS DLQ alarm</td>
+            <td><code>AWS/SQS &gt; ApproximateNumberOfMessagesVisible</code></td>
+            <td><code>&gt; 0</code></td>
+            <td>Add DLQ name to <code>dlq_arns</code> map in <code>module.monitoring</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        When adding a new service, update <code>lambda_functions</code> and <code>dlq_arns</code>
+        in all four environment roots (<code>dev</code>, <code>staging</code>, <code>prod</code>,
+        <code>preview</code>). See the <code>add-monitoring</code> skill for the exact Terraform
+        snippet. Preview environments use <code>enable_alarms = false</code> — alarm resources
+        are never created for previews, so the maps can still be populated for consistency.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Notifications (SNS + AWS Chatbot)</h2>
+
+      <p>
+        Alarms publish to a per-environment <strong>SNS topic</strong> created by the
+        <code>infra/modules/notifications/</code> module. The topic fans out to:
+      </p>
+
+      <ul>
+        <li><strong>Email subscriptions</strong> — declared in <code>infra/notification-config.json</code>. Each subscriber receives an SNS confirmation email on first deploy.</li>
+        <li><strong>AWS Chatbot Slack channel(s)</strong> — declared in the same config file. Requires a one-time Slack workspace OAuth handshake in the AWS Chatbot console.</li>
+      </ul>
+
+      <p>
+        See <a href="../notifications.md">docs/notifications.md</a> for the full setup walkthrough,
+        including first-time channel handshake and adding new channel types (PagerDuty, Opsgenie,
+        MS Teams). Use the <code>add-notifications</code> skill or <code>/add-alerting</code>
+        prompt to add a new channel.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CloudWatch Log Insights Queries</h2>
+
+      <p>Useful queries for the CloudWatch Log Insights console:</p>
+
+      <h3>All errors across all services (last 1 hour)</h3>
+      <pre><code>fields @timestamp, level, service, message, errorType, errorMessage, traceId
+| filter level = "ERROR"
+| sort @timestamp desc
+| limit 50</code></pre>
+
+      <h3>Find all logs for a specific trace</h3>
+      <pre><code>fields @timestamp, level, service, message
+| filter correlationId = "a3f2c8d1-7e4b-..."
+| sort @timestamp asc</code></pre>
+
+      <h3>List recent event chains (correlationId grouping)</h3>
+      <pre><code>fields @timestamp, level, service, message, correlationId
+| filter ispresent(correlationId)
+| stats count() as logCount, min(@timestamp) as firstSeen, max(@timestamp) as lastSeen by correlationId
+| sort firstSeen desc
+| limit 50</code></pre>
+
+      <h3>Error rate by service (last 24 hours)</h3>
+      <pre><code>fields service, level
+| filter level = "ERROR"
+| stats count() as errorCount by service
+| sort errorCount desc</code></pre>
+
+      <h3>Slow operations (warn about high latency)</h3>
+      <pre><code>fields @timestamp, service, message, durationMs
+| filter ispresent(durationMs) and durationMs > 1000
+| sort durationMs desc
+| limit 20</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Local Development</h2>
+
+      <h3>Starting the Monitoring Services</h3>
+      <pre><code># VS Code tasks:
+#   Service: Serve monitoring-api-service   → port 8080
+#   Service: Serve monitoring-webapp        → port 4300
+
+# Or manually:
+pnpm nx serve monitoring-api-service
+pnpm nx serve monitoring-webapp</code></pre>
+
+      <p>
+        The monitoring service requires AWS credentials to query CloudWatch and X-Ray.
+        For local development pointing at a real AWS environment:
+      </p>
+
+      <ol>
+        <li>Set <code>AWS_PROFILE</code> or <code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code> in your shell.</li>
+        <li>Set <code>X_TARGET_ENV_DEFAULT=dev</code> (or whichever environment you want to inspect).</li>
+        <li>Open <code>http://localhost:4300</code> and sign in with the monitoring admin credentials.</li>
+      </ol>
+
+      <h3>Required Environment Variables</h3>
+
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Local value</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MONITORING_API_PORT</code></td>
+            <td><code>8080</code></td>
+            <td>HTTP listen port for <code>monitoring-api-service</code>.</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_MONITORING_API_URL</code></td>
+            <td><code>http://localhost:8080</code></td>
+            <td>Monitoring API base URL consumed by <code>monitoring-webapp</code>.</td>
+          </tr>
+          <tr>
+            <td><code>MONITORING_WEBAPP_URL</code></td>
+            <td><code>http://localhost:4300</code></td>
+            <td>CORS origin allowed by <code>monitoring-api-service</code>.</td>
+          </tr>
+          <tr>
+            <td><code>OTEL_SDK_DISABLED</code></td>
+            <td><code>true</code></td>
+            <td>Disables the OTel SDK locally — <code>initTelemetry()</code> becomes a no-op. Logs still emit as JSON.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Adding Monitoring to a New Service</h2>
+
+      <p>
+        When you add a new domain service, three steps are needed — use the
+        <code>add-monitoring</code> Claude Code skill which covers all three:
+      </p>
+
+      <ol>
+        <li>
+          <strong>Terraform</strong> — add the Lambda function name to <code>lambda_functions</code>
+          and (if it has an SQS queue) the DLQ name to <code>dlq_arns</code> in all four environment
+          root <code>module.monitoring</code> blocks.
+        </li>
+        <li>
+          <strong><code>initTelemetry()</code></strong> — call it in <code>main.ts</code> before
+          <code>NestFactory.create()</code>.
+        </li>
+        <li>
+          <strong><code>correlationMiddleware()</code></strong> — for HTTP API services, add
+          <code>app.use(correlationMiddleware())</code> as the <strong>first</strong> middleware in
+          <code>setupGlobalMiddleware()</code>. For event handler services, extract <code>correlationId</code>
+          from the raw SQS body and wrap processing in <code>runWithCorrelationId()</code>.
+        </li>
+        <li>
+          <strong><code>createLogger()</code></strong> — add module-level logger singletons to the
+          application service, exception filter, event handler, and any ACL clients.
+          Log meaningful before/after messages at every domain operation.
+          The logger automatically includes <code>correlationId</code> in every log line.
+        </li>
+        <li>
+          <strong>Event schemas</strong> — if the service publishes SQS events, ensure all event
+          schemas include <code>correlationId: z.string().optional()</code>. The SQS publisher
+          auto-injects the correlationId — no manual work is needed in the publishing code.
+        </li>
+      </ol>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

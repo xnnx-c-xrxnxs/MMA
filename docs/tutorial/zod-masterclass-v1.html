@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zod Masterclass — Schema Validation for TypeScript</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ===== Reset & Variables ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff; --bg-alt: #f7f8fa; --bg-card: #ffffff;
+      --bg-code: #1e1e2e; --bg-code-text: #cdd6f4;
+      --bg-nav: rgba(255,255,255,0.92); --border: #e4e7ec;
+      --text: #111827; --text-muted: #6b7280; --text-light: #9ca3af;
+      --accent: #6366f1; --accent-hover: #4f46e5; --accent-light: #eef2ff;
+      --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+      --hero-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #4c1d95 100%);
+      --success: #10b981; --success-bg: #ecfdf5;
+      --warning: #f59e0b; --warning-bg: #fffbeb;
+      --danger: #ef4444; --danger-bg: #fef2f2;
+      --info: #3b82f6; --info-bg: #eff6ff;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+      --radius: 12px; --radius-sm: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      --transition: 0.2s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1117; --bg-alt: #161922; --bg-card: #1a1d28;
+      --bg-nav: rgba(15,17,23,0.92); --border: #2d3148;
+      --text: #e5e7eb; --text-muted: #9ca3af; --text-light: #6b7280;
+      --accent: #818cf8; --accent-hover: #a5b4fc; --accent-light: #1e1b4b;
+      --success-bg: #064e3b; --warning-bg: #451a03;
+      --danger-bg: #450a0a; --info-bg: #172554;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow: 0 4px 6px rgba(0,0,0,0.3);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+    /* ===== Scroll Progress ===== */
+    .scroll-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 1001; background: var(--accent-gradient); width: 0%; transition: width 0.1s linear; }
+
+    /* ===== Top Nav ===== */
+    .top-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--bg-nav); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; transition: box-shadow var(--transition); }
+    .top-nav.scrolled { box-shadow: var(--shadow); }
+    .nav-brand { font-weight: 800; font-size: 1rem; color: var(--accent); text-decoration: none; white-space: nowrap; }
+    .nav-links { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-links a { padding: 8px 14px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; border-radius: 8px; white-space: nowrap; transition: background var(--transition), color var(--transition); }
+    .nav-links a:hover { background: var(--accent-light); color: var(--accent); }
+    .nav-links a.active { background: var(--accent-light); color: var(--accent); }
+    .nav-controls { display: flex; gap: 8px; align-items: center; }
+    .theme-toggle { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: background var(--transition), border-color var(--transition); }
+    .theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); }
+    .hamburger { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1.2rem; align-items: center; justify-content: center; }
+
+    /* ===== Hero ===== */
+    .hero { background: var(--hero-gradient); padding: 140px 24px 80px; text-align: center; color: #fff; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%), radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%); }
+    .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+    .hero h1 { font-size: 3rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 16px; }
+    .hero .lead { font-size: 1.25rem; color: rgba(255,255,255,0.8); margin-bottom: 32px; line-height: 1.6; }
+    .hero-meta { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.85rem; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
+    .hero-meta span strong { color: rgba(255,255,255,0.9); }
+
+    /* ===== Section Modules ===== */
+    .module { padding: 64px 24px; }
+    .module:nth-child(even) { background: var(--bg-alt); }
+    .module-inner { max-width: 960px; margin: 0 auto; }
+    .module-header { margin-bottom: 40px; }
+    .module-label { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 12px; background: var(--accent-light); padding: 4px 12px; border-radius: 20px; }
+    .module-header h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .module-header .module-desc { font-size: 1.05rem; color: var(--text-muted); max-width: 680px; }
+
+    /* ===== Topic (h3) ===== */
+    .topic { margin-top: 48px; }
+    .topic h3 { font-size: 1.35rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+    .topic h4 { font-size: 1.05rem; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+    .topic p { margin-bottom: 16px; }
+    .topic ul, .topic ol { margin-bottom: 16px; padding-left: 24px; }
+    .topic li { margin-bottom: 6px; }
+    .topic strong { font-weight: 600; }
+
+    /* ===== Cards ===== */
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .card h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0 28px; }
+    .card-grid .card { margin-bottom: 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0 28px; }
+
+    /* ===== Callout ===== */
+    .callout { border-left: 4px solid var(--info); background: var(--info-bg); padding: 16px 20px; margin: 20px 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    .callout.success { border-left-color: var(--success); background: var(--success-bg); }
+    .callout.warning { border-left-color: var(--warning); background: var(--warning-bg); }
+    .callout.danger  { border-left-color: var(--danger); background: var(--danger-bg); }
+    .callout .callout-title { font-weight: 700; margin-bottom: 4px; font-size: 0.9rem; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    /* ===== Tags / Badges ===== */
+    .tag { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
+    .tag.green  { background: #dcfce7; color: #166534; }
+    .tag.blue   { background: #dbeafe; color: #1e40af; }
+    .tag.purple { background: #f3e8ff; color: #6b21a8; }
+    .tag.orange { background: #ffedd5; color: #9a3412; }
+    .tag.red    { background: #fce7f3; color: #9d174d; }
+    .tag.backend  { background: #fce7f3; color: #9d174d; }
+    .tag.frontend { background: #dcfce7; color: #166534; }
+    .tag.fullstack{ background: #e0e7ff; color: #3730a3; }
+    [data-theme="dark"] .tag.green  { background: #14532d; color: #bbf7d0; }
+    [data-theme="dark"] .tag.blue   { background: #1e3a5f; color: #93c5fd; }
+    [data-theme="dark"] .tag.purple { background: #581c87; color: #e9d5ff; }
+    [data-theme="dark"] .tag.orange { background: #7c2d12; color: #fed7aa; }
+    [data-theme="dark"] .tag.red    { background: #831843; color: #fbcfe8; }
+    [data-theme="dark"] .tag.backend  { background: #831843; color: #fbcfe8; }
+    [data-theme="dark"] .tag.frontend { background: #14532d; color: #bbf7d0; }
+    [data-theme="dark"] .tag.fullstack{ background: #312e81; color: #c7d2fe; }
+
+    /* ===== Tables ===== */
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 12px 16px; border: 1px solid var(--border); }
+    th { background: var(--bg-alt); font-weight: 600; font-size: 0.85rem; }
+    tr:hover td { background: var(--accent-light); }
+
+    /* ===== Code Blocks ===== */
+    code { font-family: var(--mono); font-size: 0.85em; background: var(--bg-alt); padding: 2px 7px; border-radius: 5px; }
+    pre { background: var(--bg-code); color: var(--bg-code-text); border-radius: var(--radius-sm); padding: 20px; overflow-x: auto; margin: 16px 0 20px; line-height: 1.6; font-size: 0.82rem; }
+    pre code { background: none; padding: 0; color: inherit; }
+
+    /* ===== Blockquote ===== */
+    blockquote { font-size: 1.15rem; font-weight: 500; font-style: italic; color: var(--text-muted); border-left: 4px solid var(--accent); padding: 16px 24px; margin: 24px 0; background: var(--accent-light); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+    /* ===== Speaker Notes ===== */
+    details.speaker-notes { margin: 12px 0 20px; border: 1px dashed var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    details.speaker-notes summary { padding: 10px 16px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); cursor: pointer; user-select: none; }
+    details.speaker-notes summary:hover { color: var(--accent); }
+    details.speaker-notes .notes-content { padding: 12px 16px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px dashed var(--border); line-height: 1.7; }
+
+    /* ===== VS Grid ===== */
+    .vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; margin: 24px 0; align-items: stretch; }
+    .vs-side { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .vs-divider { display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); padding: 0 16px; }
+    .vs-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; display: block; }
+    .vs-label.red   { color: var(--danger); }
+    .vs-label.green { color: var(--success); }
+
+    /* ===== Flow Diagram ===== */
+    .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 24px 0; }
+    .flow-box { background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px 18px; text-align: center; font-size: 0.85rem; font-weight: 600; min-width: 130px; flex-shrink: 0; }
+    .flow-arrow { font-size: 1.4rem; color: var(--accent); padding: 0 6px; flex-shrink: 0; }
+    .flow-box.contracts  { border-color: #8b5cf6; background: #f5f3ff; }
+    .flow-box.backend    { border-color: #3b82f6; background: #eff6ff; }
+    .flow-box.frontend   { border-color: #10b981; background: #ecfdf5; }
+    .flow-box.events     { border-color: #f59e0b; background: #fffbeb; }
+    [data-theme="dark"] .flow-box.contracts  { background: #2e1065; }
+    [data-theme="dark"] .flow-box.backend    { background: #172554; }
+    [data-theme="dark"] .flow-box.frontend   { background: #064e3b; }
+    [data-theme="dark"] .flow-box.events     { background: #451a03; }
+
+    /* ===== Layer Strip ===== */
+    .layer-strip { display: flex; flex-direction: column; gap: 0; margin: 24px 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .layer-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
+    .layer-row:last-child { border-bottom: none; }
+    .layer-num { min-width: 48px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: #fff; }
+    .layer-body { flex: 1; padding: 16px 20px; background: var(--bg-card); }
+    .layer-body h4 { margin: 0 0 4px; font-size: 0.95rem; }
+    .layer-body p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+    .layer-body code { font-size: 0.78rem; }
+
+    /* ===== Shared Badge ===== */
+    .shared-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); color: var(--accent); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--accent); }
+
+    /* ===== Divider ===== */
+    .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+    /* ===== Fade-in Animation ===== */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== Print ===== */
+    @media print { .top-nav, .scroll-progress, .theme-toggle, .hamburger { display: none !important; } .hero { padding-top: 40px; } .module { padding: 32px 0; break-inside: avoid; } body { font-size: 11pt; } .card:hover { transform: none; box-shadow: var(--shadow-sm); } }
+
+    /* ===== Mobile ===== */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 60px; left: 0; right: 0; background: var(--bg-nav); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px; z-index: 999; }
+      .hamburger { display: flex; }
+      .hero h1 { font-size: 2rem; }
+      .hero .lead { font-size: 1rem; }
+      .hero-meta { flex-direction: column; gap: 8px; }
+      .card-grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .vs-grid { grid-template-columns: 1fr; }
+      .vs-divider { padding: 12px 0; }
+      .module { padding: 40px 16px; }
+      .flow { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+      table { font-size: 0.8rem; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Top Navigation -->
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">Zod Masterclass</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#module1">1. Introduction</a>
+    <a href="#module2">2. Core API</a>
+    <a href="#module3">3. Advantages</a>
+    <a href="#module4">4. Limitations</a>
+    <a href="#module5">5. Architecture</a>
+    <a href="#module6">6. Backend</a>
+    <a href="#module7">7. Frontend</a>
+    <a href="#module8">8. Events</a>
+    <a href="#module9">9. Patterns</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+    <button class="hamburger" id="hamburger" title="Menu">☰</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ HERO ═══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-content">
+    <h1>Zod Masterclass<br>Schema Validation for TypeScript</h1>
+    <p class="lead">From unvalidated <code style="background:rgba(255,255,255,0.15);color:#fff;">any</code> to runtime type safety &mdash; how we use Zod to eliminate an entire class of bugs across our full-stack TypeScript application.</p>
+    <div class="hero-meta">
+      <span>⏱ <strong>~3 hours</strong> (9 modules)</span>
+      <span>👥 <strong>Backend &middot; Frontend &middot; Full-Stack</strong></span>
+      <span>📦 <strong>Zod v4</strong></span>
+      <span>🔧 <strong>NestJS &middot; Next.js &middot; React Native</strong></span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ MODULE 1 ═══════════════════════════════════════ -->
+<section class="module" id="module1">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 1 &mdash; 20 min</div>
+      <h2>Introduction &mdash; What Is Zod?</h2>
+      <p class="module-desc">Before we write a single line of code, let&rsquo;s understand what problem Zod solves, where it came from, and why it&rsquo;s become the de facto standard for TypeScript validation.</p>
+    </div>
+
+    <!-- Topic: The Problem -->
+    <div class="topic fade-in">
+      <h3>The Problem Zod Solves</h3>
+      <p>TypeScript gives you compile-time type safety. But what happens at the <strong>boundaries</strong> of your application &mdash; where data enters from the outside world?</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>🌐 HTTP Request Bodies</h4>
+          <p>A client sends JSON to your API. TypeScript says it&rsquo;s <code>CreateUserInput</code>, but at runtime it could be <em>anything</em>. A missing field, a wrong type, a SQL injection string.</p>
+        </div>
+        <div class="card">
+          <h4>📡 API Responses</h4>
+          <p>Your frontend calls a backend API. TypeScript trusts the response type, but the server might return a different shape. A renamed field silently becomes <code>undefined</code>.</p>
+        </div>
+        <div class="card">
+          <h4>📨 SQS Messages</h4>
+          <p>An event handler receives a JSON message from a queue. Is it the event you expect? Is the payload well-formed? Without validation, a malformed message crashes your entire service.</p>
+        </div>
+        <div class="card">
+          <h4>🗄️ Database Records</h4>
+          <p>Data retrieved from a database may have been written by an older version of the code with a different schema. TypeScript has no idea.</p>
+        </div>
+      </div>
+
+      <blockquote>&ldquo;TypeScript types disappear at runtime. They are a compile-time illusion. Zod makes them real.&rdquo;</blockquote>
+
+      <div class="callout danger">
+        <div class="callout-title">The Core Issue</div>
+        <p><strong>TypeScript types are erased at compile time.</strong> They provide zero runtime protection. Every <code>as SomeType</code> cast or unvalidated <code>JSON.parse()</code> result is a potential bug waiting to happen.</p>
+      </div>
+    </div>
+
+    <!-- Topic: What is Zod -->
+    <div class="topic fade-in">
+      <h3>What Is Zod?</h3>
+      <p><strong>Zod</strong> is a TypeScript-first schema declaration and validation library. It lets you define a schema once and get both:</p>
+      <ol>
+        <li><strong>Runtime validation</strong> &mdash; parse unknown data and get a typed result or structured errors</li>
+        <li><strong>TypeScript types</strong> &mdash; infer static types directly from the schema via <code>z.infer&lt;typeof schema&gt;</code></li>
+      </ol>
+
+      <pre><code>import { z } from 'zod';
+
+// Define the schema ONCE
+const userSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1).max(100),
+  age: z.number().int().positive().optional(),
+});
+
+// Infer the TypeScript type FROM the schema
+type User = z.infer&lt;typeof userSchema&gt;;
+// → { email: string; firstName: string; age?: number | undefined }
+
+// Validate unknown data at runtime
+const result = userSchema.safeParse(requestBody);
+if (!result.success) {
+  console.log(result.error.issues);
+  // → [{ code: 'too_small', minimum: 1, path: ['firstName'], message: '...' }]
+} else {
+  const user = result.data; // ← fully typed User
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Single Source of Truth</div>
+        <p>With Zod, you never write a type and a validator separately. The schema <strong>IS</strong> the type. Change the schema, and the TypeScript type updates automatically. This eliminates type drift &mdash; the #1 source of validation bugs.</p>
+      </div>
+    </div>
+
+    <!-- Topic: Origin & History -->
+    <div class="topic fade-in">
+      <h3>Origin &amp; History</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Event</th></tr></thead>
+        <tbody>
+          <tr><td><strong>March 2020</strong></td><td>Colin McDonnell creates Zod as a personal project, frustrated by the gap between TypeScript types and runtime validation.</td></tr>
+          <tr><td><strong>2021</strong></td><td>Rapid community adoption. Zod becomes the most popular TypeScript validation library, surpassing <code>joi</code>, <code>yup</code>, and <code>io-ts</code> in downloads.</td></tr>
+          <tr><td><strong>2022&ndash;2023</strong></td><td>Ecosystem integration explodes: tRPC, React Hook Form, Next.js server actions, Drizzle ORM &mdash; all adopt Zod as their validation layer.</td></tr>
+          <tr><td><strong>2024</strong></td><td>Zod v3 stabilizes as the industry standard. 40M+ weekly npm downloads. Used by Vercel, Stripe, Shopify, and thousands of production apps.</td></tr>
+          <tr><td><strong>2025</strong></td><td>Zod v4 released &mdash; major performance improvements (2&ndash;7x faster parsing, 2x smaller bundle), <code>z.interface()</code>, <code>z.stringbool()</code>, and JSON Schema output support.</td></tr>
+        </tbody>
+      </table>
+      <p>Zod is <strong>open source</strong> (MIT license), has <strong>zero dependencies</strong>, works in Node.js, browsers, Deno, Bun, and Edge runtimes. It requires TypeScript 4.5+ and <code>strict</code> mode.</p>
+    </div>
+
+    <!-- Topic: Why Zod over Alternatives -->
+    <div class="topic fade-in">
+      <h3>Why Zod Over the Alternatives?</h3>
+      <table>
+        <thead><tr><th>Library</th><th>TS-First?</th><th>Type Inference</th><th>Bundle Size</th><th>Ecosystem</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Zod</strong></td><td>✅ Yes</td><td>✅ <code>z.infer</code></td><td>~13 KB (v4)</td><td>Massive (tRPC, RHF, Next.js)</td><td>Active, v4</td></tr>
+          <tr><td>Yup</td><td>❌ JS-first</td><td>⚠️ Partial</td><td>~17 KB</td><td>Formik-centric</td><td>Maintenance</td></tr>
+          <tr><td>Joi</td><td>❌ JS-first</td><td>❌ None</td><td>~70 KB</td><td>Express/Hapi</td><td>Maintenance</td></tr>
+          <tr><td>io-ts</td><td>✅ Yes</td><td>✅ Full</td><td>~8 KB</td><td>Small, FP-heavy</td><td>Low activity</td></tr>
+          <tr><td>class-validator</td><td>⚠️ Decorator</td><td>❌ None</td><td>~25 KB</td><td>NestJS default</td><td>Active</td></tr>
+          <tr><td>ArkType</td><td>✅ Yes</td><td>✅ Full</td><td>~13 KB</td><td>Emerging</td><td>Active, newer</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <div class="callout-title">Why Not class-validator (NestJS Default)?</div>
+        <p>NestJS ships with <code>class-validator</code> + <code>class-transformer</code> by default, using decorators on DTO classes. We chose Zod instead because:</p>
+        <ul>
+          <li><strong>No decorator boilerplate</strong> &mdash; Zod schemas are plain functions, not decorated classes</li>
+          <li><strong>Type inference</strong> &mdash; <code>z.infer</code> means you never write a type AND a validator</li>
+          <li><strong>Full-stack sharing</strong> &mdash; the same Zod schema validates on the backend AND parses on the frontend. class-validator is backend-only</li>
+          <li><strong>Composition</strong> &mdash; Zod schemas compose with generics (<code>paginatedResponseSchema(userSchema)</code>). Decorator-based validation cannot do this</li>
+          <li><strong>No <code>reflect-metadata</code></strong> &mdash; Zod has zero dependencies; class-validator requires the Reflect polyfill</li>
+        </ul>
+      </div>
+
+      <details class="speaker-notes">
+        <summary>🎤 Speaker Notes</summary>
+        <div class="notes-content">
+          Emphasize that Zod is not a NestJS plugin or a frontend library &mdash; it&rsquo;s a universal TypeScript tool. That&rsquo;s why it can live in a shared <code>contracts</code> package and be consumed by backend (NestJS), frontend (Next.js), and mobile (Expo) simultaneously. This is impossible with class-validator or Joi.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 2 ═══════════════════════════════════════ -->
+<section class="module" id="module2">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 2 &mdash; 25 min</div>
+      <h2>Core Zod API &mdash; The Building Blocks</h2>
+      <p class="module-desc">A comprehensive tour of the Zod APIs you&rsquo;ll use every day. From primitives to advanced patterns like discriminated unions and schema composition.</p>
+    </div>
+
+    <!-- Primitive Types -->
+    <div class="topic fade-in">
+      <h3>Primitive Types</h3>
+      <pre><code>import { z } from 'zod';
+
+z.string()             // validates string
+z.number()             // validates number
+z.boolean()            // validates boolean
+z.date()               // validates Date object
+z.bigint()             // validates BigInt
+z.undefined()          // validates undefined
+z.null()               // validates null
+z.any()                // allows any value (escape hatch)
+z.unknown()            // like any, but safer (must narrow before use)</code></pre>
+    </div>
+
+    <!-- String Validators -->
+    <div class="topic fade-in">
+      <h3>String Validators &amp; Transforms</h3>
+      <pre><code>z.string().email()          // "user@example.com"
+z.string().url()            // "https://example.com"
+z.string().uuid()           // "550e8400-e29b-41d4-a716-446655440000"
+z.string().min(1)           // at least 1 character (non-empty)
+z.string().max(100)         // at most 100 characters
+z.string().regex(/^[A-Z]/)  // starts with uppercase
+z.string().datetime()       // ISO 8601 datetime string
+z.string().trim()           // strips whitespace (transform)
+z.string().toLowerCase()    // converts to lowercase (transform)
+z.string().optional()       // string | undefined
+z.string().nullable()       // string | null
+z.string().default('N/A')   // uses 'N/A' if undefined</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Used in our template</div>
+        <p>Our user contracts use <code>z.string().email()</code> for email validation and <code>z.string().min(1).max(100)</code> for name fields. Datetime fields use <code>z.string().datetime()</code> which validates the ISO 8601 format.</p>
+      </div>
+    </div>
+
+    <!-- Number Validators -->
+    <div class="topic fade-in">
+      <h3>Number Validators &amp; Coercion</h3>
+      <pre><code>z.number().int()            // must be integer
+z.number().positive()       // &gt; 0
+z.number().min(0)           // &ge; 0
+z.number().max(1000)        // &le; 1000
+z.number().min(1).max(100)  // between 1 and 100
+
+// z.coerce — converts string → number before validation
+z.coerce.number()           // "42" → 42, then validates as number
+z.coerce.number().int().min(1).max(100)  // query params come as strings!</code></pre>
+
+      <div class="callout warning">
+        <div class="callout-title">Why z.coerce matters for HTTP</div>
+        <p>HTTP query parameters are <strong>always strings</strong>: <code>?limit=20</code> arrives as <code>"20"</code>, not <code>20</code>. Using <code>z.number()</code> rejects it. Using <code>z.coerce.number()</code> converts <code>"20"</code> → <code>20</code> first, then validates. Our controllers use <code>z.coerce</code> for all query parameters.</p>
+      </div>
+    </div>
+
+    <!-- Objects -->
+    <div class="topic fade-in">
+      <h3>Objects &mdash; The Workhorse</h3>
+      <pre><code>const createUserSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  userRole: z.enum(['USER', 'ADMIN']).optional().default('USER'),
+  data: z.object({
+    country: z.string().optional(),
+  }).optional(),
+});
+
+type CreateUserInput = z.infer&lt;typeof createUserSchema&gt;;
+// → {
+//   email: string;
+//   firstName: string;
+//   lastName: string;
+//   userRole?: "USER" | "ADMIN" | undefined;  (defaults to "USER")
+//   data?: { country?: string | undefined } | undefined;
+// }</code></pre>
+
+      <h4>Object Methods</h4>
+      <pre><code>schema.partial()       // all fields become optional
+schema.required()      // all fields become required
+schema.pick({ email: true, firstName: true })  // only these fields
+schema.omit({ password: true })                // everything except
+schema.extend({ age: z.number() })             // add fields
+schema.merge(otherSchema)                      // combine two schemas
+schema.passthrough()   // allow extra properties (default: strip)
+schema.strict()        // reject extra properties (throw error)</code></pre>
+    </div>
+
+    <!-- Enums -->
+    <div class="topic fade-in">
+      <h3>Enums &mdash; Constrained String Sets</h3>
+      <pre><code>// From a hardcoded tuple
+const roleSchema = z.enum(['USER', 'ADMIN', 'MANAGER']);
+type Role = z.infer&lt;typeof roleSchema&gt;; // "USER" | "ADMIN" | "MANAGER"
+
+// From domain constants (our pattern)
+import { USER_ROLES } from '@old-st/user-domain';
+// USER_ROLES = ['USER', 'ADMIN', 'MANAGER'] as const
+
+const userRoleSchema = z.enum(USER_ROLES);
+// Same result, but the enum values come from the domain layer</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Template Pattern: Domain Constants → Zod Enums</div>
+        <p>We never hardcode enum values in Zod schemas. The domain package defines constants (<code>USER_ROLES</code>, <code>ORDER_STATUSES</code>), and the contracts package creates Zod enums from them. This ensures the schema always matches the domain.</p>
+      </div>
+    </div>
+
+    <!-- Arrays -->
+    <div class="topic fade-in">
+      <h3>Arrays &amp; Tuples</h3>
+      <pre><code>z.array(z.string())                // string[]
+z.array(z.number()).min(1)         // at least one element
+z.array(z.number()).max(10)        // at most 10 elements
+z.array(z.number()).nonempty()     // at least one (narrows type)
+
+z.array(orderItemSchema).min(1)    // our order schema: at least 1 item
+
+z.tuple([z.string(), z.number()])  // [string, number] — fixed length</code></pre>
+    </div>
+
+    <!-- parse vs safeParse -->
+    <div class="topic fade-in">
+      <h3><code>parse()</code> vs <code>safeParse()</code></h3>
+      <div class="vs-grid">
+        <div class="vs-side">
+          <span class="vs-label red">parse() — throws on failure</span>
+          <pre style="font-size:0.8rem;"><code>// Throws ZodError if invalid
+const user = userSchema.parse(data);
+// user is fully typed
+
+// Use when you WANT to crash:
+// - DTO mapping in app services
+// - Frontend API response parsing</code></pre>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="vs-side">
+          <span class="vs-label green">safeParse() — returns result object</span>
+          <pre style="font-size:0.8rem;"><code>const result = userSchema.safeParse(data);
+if (!result.success) {
+  // result.error.issues → structured errors
+  return; // handle gracefully
+}
+const user = result.data; // typed
+
+// Use when you DON'T want to crash:
+// - Validation pipes (return 400)
+// - SQS event handlers (skip bad msgs)</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discriminated Unions -->
+    <div class="topic fade-in">
+      <h3>Discriminated Unions &mdash; The Power Feature</h3>
+      <p>A discriminated union is a set of object schemas that share a <strong>common field</strong> (the discriminant) with different literal values. Zod uses the discriminant to pick the right schema instantly.</p>
+
+      <pre><code>// Auth response: either SUCCESS with tokens, or NEW_PASSWORD_REQUIRED
+const signInSuccessSchema = z.object({
+  type: z.literal('SUCCESS'),
+  tokens: authTokensSchema,
+});
+
+const signInNewPasswordSchema = z.object({
+  type: z.literal('NEW_PASSWORD_REQUIRED'),
+  session: z.string(),
+});
+
+const signInResponseSchema = z.discriminatedUnion('type', [
+  signInSuccessSchema,
+  signInNewPasswordSchema,
+]);
+
+type SignInResponse = z.infer&lt;typeof signInResponseSchema&gt;;
+// → { type: "SUCCESS"; tokens: AuthTokens }
+//   | { type: "NEW_PASSWORD_REQUIRED"; session: string }
+
+// Usage — TypeScript narrows the type automatically:
+const response = signInResponseSchema.parse(apiResult);
+if (response.type === 'SUCCESS') {
+  response.tokens; // ✅ TypeScript knows this exists
+}
+if (response.type === 'NEW_PASSWORD_REQUIRED') {
+  response.session; // ✅ TypeScript knows this exists
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Used Extensively in Our Template</div>
+        <p>We use discriminated unions for two critical patterns: <strong>auth responses</strong> (SUCCESS vs NEW_PASSWORD_REQUIRED) and <strong>SQS event routing</strong> (each event type has a different payload shape, discriminated by <code>eventType</code>). This gives us type-safe <code>switch</code> statements with exhaustive checking.</p>
+      </div>
+    </div>
+
+    <!-- Schema Composition -->
+    <div class="topic fade-in">
+      <h3>Schema Composition &mdash; Generic Factories</h3>
+      <p>Zod schemas are just values &mdash; you can compose them like functions. This is one of Zod&rsquo;s most powerful features.</p>
+
+      <pre><code>// A generic schema factory — takes any item schema, returns paginated wrapper
+const paginatedResponseSchema = &lt;T extends z.ZodType&gt;(dataSchema: T) =&gt;
+  z.object({
+    data: z.array(dataSchema),
+    nextCursorPointer: z.string().optional(),
+    prevCursorPointer: z.string().optional(),
+  });
+
+// Compose: paginated users
+const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
+type PaginatedUsers = z.infer&lt;typeof paginatedUsersSchema&gt;;
+// → { data: UserResponse[]; nextCursorPointer?: string; prevCursorPointer?: string }
+
+// Compose: paginated products (same wrapper, different item)
+const paginatedProductsSchema = paginatedResponseSchema(productResponseSchema);
+
+// Offset-based variant for Prisma domains
+const offsetPaginatedResponseSchema = &lt;T extends z.ZodType&gt;(dataSchema: T) =&gt;
+  z.object({
+    data: z.array(dataSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  });</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">This Is Impossible with class-validator</div>
+        <p>Try creating a generic <code>PaginatedResponse&lt;T&gt;</code> validator with decorators. You can&rsquo;t &mdash; decorators are per-class, not composable. Zod makes this a one-liner.</p>
+      </div>
+    </div>
+
+    <!-- z.infer -->
+    <div class="topic fade-in">
+      <h3><code>z.infer</code> &mdash; Types From Schemas</h3>
+      <pre><code>// Instead of this (type + validator drift):
+interface CreateUserInput {
+  email: string;
+  firstName: string;
+  // ❌ Someone adds 'lastName' here but forgets the validator...
+}
+
+// Do this (single source of truth):
+const createUserSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),   // ← the type includes this automatically
+});
+
+type CreateUserInput = z.infer&lt;typeof createUserSchema&gt;;
+// ✅ Type and validation are always in sync</code></pre>
+    </div>
+
+    <details class="speaker-notes">
+      <summary>🎤 Speaker Notes</summary>
+      <div class="notes-content">
+        This module covers the API surface you'll use 90% of the time. The key takeaway is that Zod schemas are composable JavaScript values that produce TypeScript types. Everything else builds on this foundation.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 3 ═══════════════════════════════════════ -->
+<section class="module" id="module3">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 3 &mdash; 15 min</div>
+      <h2>Advantages &mdash; Why Zod Is Worth It</h2>
+      <p class="module-desc">The concrete benefits Zod brings to a full-stack TypeScript codebase, with real examples from our template.</p>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>Key Advantages</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>1. Single Source of Truth</h4>
+          <p>Define a schema once → get the TypeScript type via <code>z.infer</code>. No more maintaining a type and a validator that drift apart. When you add a field to the schema, every consumer updates automatically.</p>
+        </div>
+        <div class="card">
+          <h4>2. Full-Stack Sharing</h4>
+          <p>The same Zod schema lives in <code>@old-st/contracts/user</code> and is consumed by NestJS controllers, Next.js API clients, and Expo mobile hooks. One change propagates everywhere.</p>
+        </div>
+        <div class="card">
+          <h4>3. Runtime Safety</h4>
+          <p>TypeScript types vanish at runtime. Zod schemas don&rsquo;t. Every API boundary &mdash; request body, response, SQS message &mdash; is validated with structured error messages, not <code>Cannot read property of undefined</code>.</p>
+        </div>
+        <div class="card">
+          <h4>4. Composability</h4>
+          <p>Build complex schemas from simple ones. Our <code>paginatedResponseSchema(itemSchema)</code> factory creates a validated paginated wrapper for ANY entity with one function call.</p>
+        </div>
+        <div class="card">
+          <h4>5. Zero Dependencies</h4>
+          <p>Zod has no dependencies. It works in Node.js, browsers, Deno, Bun, Cloudflare Workers, and Lambda@Edge. No polyfills, no <code>reflect-metadata</code>, no peer dependencies to manage.</p>
+        </div>
+        <div class="card">
+          <h4>6. Excellent Error Messages</h4>
+          <p>Zod errors include the exact path, expected type, received value, and a human-readable message. Our <code>ZodValidationPipe</code> returns these directly as 400 response bodies.</p>
+        </div>
+        <div class="card">
+          <h4>7. Ecosystem Integration</h4>
+          <p>tRPC, React Hook Form, Next.js Server Actions, Drizzle ORM, Prisma (via <code>zod-prisma</code>), OpenAPI generators &mdash; the TypeScript ecosystem has standardized on Zod.</p>
+        </div>
+        <div class="card">
+          <h4>8. Performance (v4)</h4>
+          <p>Zod v4 is 2&ndash;7x faster than v3 for parsing and 2x smaller. It&rsquo;s fast enough for hot paths like API validation and frontend form state.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>Before &amp; After: Without vs With Zod</h3>
+
+      <div class="vs-grid">
+        <div class="vs-side">
+          <span class="vs-label red">Without Zod</span>
+          <pre style="font-size:0.78rem;"><code>// ❌ Manual type + manual validation
+interface CreateUserInput {
+  email: string;
+  firstName: string;
+}
+
+function validate(body: any) {
+  if (!body.email) throw new Error('email required');
+  if (typeof body.email !== 'string')
+    throw new Error('email must be string');
+  if (!body.email.includes('@'))
+    throw new Error('invalid email');
+  if (!body.firstName) throw new Error('...');
+  if (body.firstName.length > 100) throw new Error('...');
+  // 20 more lines of manual checks...
+  return body as CreateUserInput; // 😱 unsafe cast
+}</code></pre>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="vs-side">
+          <span class="vs-label green">With Zod</span>
+          <pre style="font-size:0.78rem;"><code>// ✅ Schema IS the type AND the validator
+const createUserSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1).max(100),
+});
+
+type CreateUserInput = z.infer&lt;typeof createUserSchema&gt;;
+
+// One line validates + types the result:
+const input = createUserSchema.parse(body);
+// input is CreateUserInput — fully typed, fully validated
+
+// Error? Structured, with path:
+// [{ code: "invalid_string", validation: "email",
+//    path: ["email"], message: "Invalid email" }]</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 4 ═══════════════════════════════════════ -->
+<section class="module" id="module4">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 4 &mdash; 10 min</div>
+      <h2>Limitations &amp; Trade-Offs</h2>
+      <p class="module-desc">Zod isn&rsquo;t perfect. Understanding its limitations helps you use it appropriately and avoid pitfalls.</p>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>Known Limitations</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>⚠️ Runtime Overhead</h4>
+          <p>Parsing has a cost. For extremely hot paths (millions of ops/sec), raw type guards may be faster. For API validation (microseconds vs milliseconds), this is negligible.</p>
+        </div>
+        <div class="card">
+          <h4>⚠️ Bundle Size (Frontend)</h4>
+          <p>Zod v4 is ~13 KB minified+gzipped. It&rsquo;s small, but not zero. For frontend apps that validate API responses, this is justified by the bugs it catches. For edge/worker functions where every KB matters, evaluate carefully.</p>
+        </div>
+        <div class="card">
+          <h4>⚠️ TypeScript Complexity</h4>
+          <p>Complex Zod schemas can produce <em>very</em> long inferred types. IDE tooltips for deeply nested schemas can be hard to read. This is a TypeScript limitation, not Zod&rsquo;s.</p>
+        </div>
+        <div class="card">
+          <h4>⚠️ No Async Validation (in schemas)</h4>
+          <p>Zod schemas are synchronous by default. You can use <code>z.string().refine(async (val) =&gt; ...)</code> but it requires <code>.parseAsync()</code>. Database-dependent validation (e.g., &ldquo;email must be unique&rdquo;) belongs in the use case layer, not in Zod.</p>
+        </div>
+        <div class="card">
+          <h4>⚠️ Not a Form Library</h4>
+          <p>Zod validates data shapes &mdash; it doesn&rsquo;t manage form state, touched fields, or dirty tracking. Pair it with React Hook Form or Formik for frontend forms.</p>
+        </div>
+        <div class="card">
+          <h4>⚠️ Error Messages Need Customization</h4>
+          <p>Default error messages are developer-friendly but not user-friendly. For customer-facing forms, use <code>.refine()</code> or custom error maps to produce human-readable messages.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Our Approach to These Limitations</div>
+        <p><strong>Runtime overhead:</strong> We only parse at system boundaries (API in/out, SQS events), not inside domain logic. <strong>Bundle size:</strong> Acceptable for our use case. <strong>Async validation:</strong> Business rules live in domain entities and use cases, not in Zod schemas. <strong>Forms:</strong> We don&rsquo;t use Zod for frontend form state &mdash; we use it for API response validation.</p>
+      </div>
+    </div>
+
+    <div class="topic fade-in">
+      <h3>When NOT to Use Zod</h3>
+      <table>
+        <thead><tr><th>Scenario</th><th>Better Alternative</th></tr></thead>
+        <tbody>
+          <tr><td>Complex business rules (status transitions, invariants)</td><td>Domain entity methods (Clean Architecture)</td></tr>
+          <tr><td>Database-level constraints (unique, FK)</td><td>Database constraints / Prisma schema</td></tr>
+          <tr><td>Frontend form state management</td><td>React Hook Form, Formik (can use Zod as resolver)</td></tr>
+          <tr><td>Performance-critical inner loops</td><td>Type guards or manual validation</td></tr>
+          <tr><td>Non-TypeScript projects</td><td>Joi, Ajv, JSON Schema</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 5 ═══════════════════════════════════════ -->
+<section class="module" id="module5">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 5 &mdash; 20 min</div>
+      <h2>How Zod Fits Our Architecture</h2>
+      <p class="module-desc">Where Zod lives in our Clean Architecture, why it belongs in the contracts layer, and how it flows through the entire stack.</p>
+    </div>
+
+    <!-- Data Flow -->
+    <div class="topic fade-in">
+      <h3>Zod&rsquo;s Role in Clean Architecture</h3>
+      <p>In our template, Zod operates at <strong>system boundaries only</strong> &mdash; where data enters or leaves a layer. It never appears inside domain entities or use cases.</p>
+
+      <div class="layer-strip">
+        <div class="layer-row">
+          <div class="layer-num" style="background:#8b5cf6;">1</div>
+          <div class="layer-body">
+            <h4>Contracts Layer <code>packages/contracts/{domain}/</code></h4>
+            <p><strong>Zod schemas live here.</strong> Defines input schemas (<code>createUserSchema</code>), response schemas (<code>userResponseSchema</code>), event schemas (<code>userDomainEventSchema</code>). Exports both schemas and inferred types.</p>
+          </div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-num" style="background:#3b82f6;">2</div>
+          <div class="layer-body">
+            <h4>Presentation Layer <code>apps/{domain}/{service}/src/presentation/</code></h4>
+            <p><strong>Zod validates incoming requests.</strong> <code>ZodValidationPipe</code> uses <code>safeParse()</code> on <code>@Body()</code> and <code>@Query()</code> parameters. Invalid requests return 400 with structured Zod error issues.</p>
+          </div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-num" style="background:#10b981;">3</div>
+          <div class="layer-body">
+            <h4>Application Layer <code>apps/{domain}/{service}/src/application/</code></h4>
+            <p><strong>Zod validates outgoing responses.</strong> Application services use <code>schema.parse()</code> to map domain entities to DTOs. This ensures the API never returns malformed data.</p>
+          </div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-num" style="background:#6b7280;">4</div>
+          <div class="layer-body">
+            <h4>Domain Layer <code>packages/{domain}-domain/src/domain/</code></h4>
+            <p><strong>Zod is NOT used here.</strong> The domain layer has zero dependencies on Zod. Business rules, invariants, and validation logic live in entity methods (e.g., <code>User.validateEmail()</code>).</p>
+          </div>
+        </div>
+        <div class="layer-row">
+          <div class="layer-num" style="background:#f59e0b;">5</div>
+          <div class="layer-body">
+            <h4>Frontend Layer <code>packages/client-common/</code></h4>
+            <p><strong>Zod validates API responses.</strong> Every API client method passes a schema to <code>apiRequest()</code>. The fetch response JSON is parsed through Zod before reaching React Query hooks.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Package Structure -->
+    <div class="topic fade-in">
+      <h3>The Contracts Package &mdash; Zod&rsquo;s Home</h3>
+      <p>Each domain has its own contracts package under <code>packages/contracts/{domain}/</code>:</p>
+
+      <pre><code>packages/contracts/
+  common/
+    src/
+      pagination.ts        ← Generic pagination schemas (cursor + offset)
+      index.ts
+  user/
+    src/
+      schemas.ts           ← Zod schemas for user CRUD operations
+      event-schemas.ts     ← Zod schemas for user domain events (SQS)
+      index.ts             ← Barrel export
+    package.json           ← depends on @old-st/user-domain + zod
+  order/
+    src/
+      schemas.ts           ← Zod schemas for order CRUD
+      event-schemas.ts     ← Zod schemas for order domain events
+      index.ts
+  product/
+    src/
+      schemas.ts
+      event-schemas.ts
+      index.ts
+  auth/
+    src/
+      schemas.ts           ← Sign-in, refresh, password flow schemas
+      index.ts</code></pre>
+
+      <div class="callout warning">
+        <div class="callout-title">Import Rule: Always Use Subpath Imports</div>
+        <p><strong>Never</strong> import from <code>@old-st/contracts</code> (the bare root). Always use domain-scoped imports: <code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc. This prevents transitive coupling &mdash; a type error in <code>order</code> contracts cannot break consumers of <code>user</code> contracts.</p>
+      </div>
+    </div>
+
+    <!-- Full Data Flow Diagram -->
+    <div class="topic fade-in">
+      <h3>End-to-End Zod Data Flow</h3>
+      <p>Follow a <code>POST /users</code> request through the entire stack:</p>
+
+      <div class="flow">
+        <div class="flow-box frontend">Client sends JSON</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box backend">ZodValidationPipe<br><code>safeParse(body)</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box backend">Controller<br>(typed input)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box contracts">App Service<br><code>schema.parse(entity)</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box frontend">API Client<br><code>schema.parse(json)</code></div>
+      </div>
+
+      <table>
+        <thead><tr><th>Step</th><th>Zod API</th><th>Purpose</th><th>On Failure</th></tr></thead>
+        <tbody>
+          <tr><td>1. Request validation</td><td><code>safeParse()</code></td><td>Validate incoming HTTP body/query</td><td>400 Bad Request with Zod issues</td></tr>
+          <tr><td>2. DTO mapping</td><td><code>parse()</code></td><td>Map domain entity → response DTO</td><td>500 (schema bug — should never happen)</td></tr>
+          <tr><td>3. Response parsing</td><td><code>parse()</code></td><td>Validate API response on client</td><td>Throws (catches backend schema drift)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 6 ═══════════════════════════════════════ -->
+<section class="module" id="module6">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 6 &mdash; 30 min</div>
+      <h2>Backend Implementation</h2>
+      <p class="module-desc">How Zod is implemented across all backend layers &mdash; from request validation pipes to DTO mapping in application services. <span class="tag backend">Backend</span></p>
+    </div>
+
+    <!-- 6.1 Schema Definitions -->
+    <div class="topic fade-in">
+      <h3>6.1 Defining Schemas in Contracts</h3>
+      <p>Every schema follows the same pattern: define input schemas for writes, response schemas for reads, and derive TypeScript types via <code>z.infer</code>.</p>
+
+      <h4>Real Example: User Contracts</h4>
+      <pre><code>// packages/contracts/user/src/schemas.ts
+import { z } from 'zod';
+import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum }
+  from '@old-st/user-domain';
+
+// Re-export domain constants for frontend consumption
+export { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
+
+// 1. Enum schemas from domain constants
+export const userRoleSchema = z.enum(USER_ROLES);
+export const userStatusSchema = z.enum(USER_STATUSES);
+
+// 2. Nested object schema
+export const userDataSchema = z.object({
+  country: z.string().optional(),
+});
+
+// 3. Input schema (for POST /users)
+export const createUserSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  userRole: userRoleSchema.optional().default('USER'),
+  data: userDataSchema.optional(),
+});
+
+// 4. Response schema (API returns this shape)
+export const userResponseSchema = z.object({
+  userId: z.string(),
+  email: z.string().email(),
+  firstName: z.string(),
+  lastName: z.string(),
+  userRole: userRoleSchema,
+  userStatus: userStatusSchema,
+  data: userDataSchema,
+  dateCreated: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+// 5. Derive TypeScript types
+export type CreateUserInput = z.infer&lt;typeof createUserSchema&gt;;
+export type UserResponse = z.infer&lt;typeof userResponseSchema&gt;;
+export type UserRole = z.infer&lt;typeof userRoleSchema&gt;;</code></pre>
+
+      <h4>Real Example: Order Contracts (Nested Objects + Enums)</h4>
+      <pre><code>// packages/contracts/order/src/schemas.ts
+import { z } from 'zod';
+import { ORDER_STATUSES, PAYMENT_STATUSES, PAYMENT_METHODS }
+  from '@old-st/order-domain';
+
+export const orderStatusSchema = z.enum(ORDER_STATUSES);
+export const paymentStatusSchema = z.enum(PAYMENT_STATUSES);
+export const paymentMethodSchema = z.enum(PAYMENT_METHODS);
+
+export const orderItemSchema = z.object({
+  itemId: z.string().optional(),
+  productId: z.string(),
+  productName: z.string().min(1).max(200),
+  quantity: z.number().min(1).max(1000),
+  price: z.number().min(0),
+  latestKnownPrice: z.number().nullable().optional(),
+});
+
+export const createOrderSchema = z.object({
+  customerId: z.string(),
+  items: z.array(orderItemSchema).min(1),  // at least 1 item
+});
+
+export const orderResponseSchema = z.object({
+  orderId: z.string(),
+  customerId: z.string(),
+  items: z.array(orderItemSchema),
+  payment: z.object({ /* ... */ }).nullable(),
+  orderStatus: orderStatusSchema,
+  totalAmount: z.number(),
+  dateCreated: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});</code></pre>
+    </div>
+
+    <!-- 6.2 ZodValidationPipe -->
+    <div class="topic fade-in">
+      <h3>6.2 The ZodValidationPipe &mdash; Request Validation</h3>
+      <p>Our custom NestJS pipe replaces <code>class-validator</code>. It takes a Zod schema and validates incoming data at the controller boundary.</p>
+
+      <pre><code>// apps/users/user-api-service/src/presentation/pipes/zod-validation.pipe.ts
+import { PipeTransform, BadRequestException } from '@nestjs/common';
+import { ZodSchema } from 'zod';
+
+export class ZodValidationPipe implements PipeTransform {
+  constructor(private schema: ZodSchema) {}
+
+  transform(value: unknown) {
+    const result = this.schema.safeParse(value);
+    if (!result.success) {
+      throw new BadRequestException(result.error.issues);
+    }
+    return result.data;  // ← typed, validated, defaults applied
+  }
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">What This Gives Us</div>
+        <ul>
+          <li><strong><code>safeParse()</code> not <code>parse()</code></strong> &mdash; we handle the error gracefully (400) instead of crashing (500)</li>
+          <li><strong><code>result.error.issues</code></strong> &mdash; structured errors with field path, expected type, and message</li>
+          <li><strong><code>result.data</code></strong> &mdash; the controller receives fully typed, validated, default-applied data</li>
+          <li><strong>Strips unknown fields</strong> &mdash; Zod objects strip unrecognized properties by default, preventing mass assignment attacks</li>
+        </ul>
+      </div>
+
+      <h4>Error Response Example</h4>
+      <pre><code>// POST /users with body: { email: "not-an-email", firstName: "" }
+// Response: 400 Bad Request
+{
+  "statusCode": 400,
+  "message": [
+    {
+      "code": "invalid_string",
+      "validation": "email",
+      "path": ["email"],
+      "message": "Invalid email"
+    },
+    {
+      "code": "too_small",
+      "minimum": 1,
+      "type": "string",
+      "inclusive": true,
+      "path": ["firstName"],
+      "message": "String must contain at least 1 character(s)"
+    }
+  ],
+  "error": "Bad Request"
+}</code></pre>
+    </div>
+
+    <!-- 6.3 Controllers -->
+    <div class="topic fade-in">
+      <h3>6.3 Controllers &mdash; Using ZodValidationPipe</h3>
+
+      <h4>Body Validation (POST / PATCH)</h4>
+      <pre><code>@Post()
+@HttpCode(HttpStatus.CREATED)
+createUser(
+  @Body(new ZodValidationPipe(createUserSchema)) body: CreateUserInput,
+) {
+  return this.userApplicationService.createUser(body);
+}
+
+@Patch(':userId')
+updateUserProfile(
+  @Param('userId') userId: string,
+  @Body(new ZodValidationPipe(updateUserSchema)) body: UpdateUserInput,
+) {
+  return this.userApplicationService.updateUserProfile(userId, body);
+}</code></pre>
+
+      <h4>Query Validation with <code>z.coerce</code></h4>
+      <pre><code>// Inline schema for query params — z.coerce converts strings to numbers
+const listByStatusQuerySchema = z.object({
+  userStatus: userStatusSchema,
+  limit: z.coerce.number().min(1).max(100).optional().default(20),
+  cursor: z.string().optional(),
+  direction: z.enum(['next', 'prev']).optional().default('next'),
+});
+
+@Get('by-status')
+listUsersByStatus(
+  @Query(new ZodValidationPipe(listByStatusQuerySchema))
+  query: ListUsersByStatusInput,
+) {
+  return this.userApplicationService.listUsersByStatus(query);
+}</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Pattern: Inline Query Schemas</div>
+        <p>Query parameter schemas often need <code>z.coerce</code> (string → number), so we define them inline in the controller rather than in the contracts package. The contracts package defines the <em>logical</em> types; the controller adapts them for HTTP transport.</p>
+      </div>
+    </div>
+
+    <!-- 6.4 Application Service DTO Mapping -->
+    <div class="topic fade-in">
+      <h3>6.4 Application Services &mdash; Output DTO Mapping</h3>
+      <p>Zod isn&rsquo;t just for input. Application services use <code>schema.parse()</code> to validate <strong>outgoing</strong> DTOs, ensuring the API never returns data that doesn&rsquo;t match the contract.</p>
+
+      <pre><code>// apps/users/user-api-service/src/application/services/user-application.service.ts
+import { userResponseSchema, UserResponse } from '@old-st/contracts/user';
+
+export class UserApplicationService {
+  // Domain entity → API DTO, validated by Zod
+  private toDto(user: User): UserResponse {
+    return userResponseSchema.parse({
+      userId: user.getUserId(),
+      email: user.getEmail(),
+      firstName: user.getFirstName(),
+      lastName: user.getLastName(),
+      userRole: user.getUserRole(),
+      userStatus: user.getUserStatus(),
+      data: user.getData(),
+      dateCreated: user.getDateCreated(),
+      updatedAt: user.getUpdatedAt(),
+    });
+  }
+
+  // Every public method returns a validated DTO:
+  async createUser(input: CreateUserInput): Promise&lt;UserResponse&gt; {
+    const user = await this.createUserUseCase.execute({ ... });
+    return this.toDto(user);  // Zod-validated
+  }
+
+  async getUserById(userId: string): Promise&lt;UserResponse&gt; {
+    const user = await this.getUserByIdUseCase.execute(userId);
+    return this.toDto(user);  // Zod-validated
+  }
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Why Validate Outputs?</div>
+        <p>If a domain entity getter returns <code>null</code> when the contract says <code>string</code>, the <code>parse()</code> call throws immediately with a clear error &mdash; instead of the client receiving <code>null</code> in a field it expects to be non-null. This catches serialization bugs at the source.</p>
+      </div>
+    </div>
+
+    <!-- 6.5 Pagination Schema Composition -->
+    <div class="topic fade-in">
+      <h3>6.5 Pagination &mdash; Schema Composition in Action</h3>
+
+      <pre><code>// packages/contracts/common/src/pagination.ts
+import { z } from 'zod';
+
+// Cursor-based pagination (DynamoDB domains)
+export const paginatedResponseSchema = &lt;T extends z.ZodType&gt;(dataSchema: T) =&gt;
+  z.object({
+    data: z.array(dataSchema),
+    nextCursorPointer: z.string().optional(),
+    prevCursorPointer: z.string().optional(),
+  });
+
+// Offset-based pagination (Prisma/PostgreSQL domains)
+export const offsetPaginatedResponseSchema = &lt;T extends z.ZodType&gt;(dataSchema: T) =&gt;
+  z.object({
+    data: z.array(dataSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  });
+
+// Usage in API clients:
+const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
+const paginatedOrdersSchema = offsetPaginatedResponseSchema(orderResponseSchema);</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">This Is Composition, Not Inheritance</div>
+        <p>These are <strong>functions that create schemas</strong>. You pass in any item schema and get back a fully typed paginated wrapper. No generics gymnastics, no abstract classes, no decorator magic. Just a function that takes a Zod type and returns a Zod type.</p>
+      </div>
+    </div>
+
+    <details class="speaker-notes">
+      <summary>🎤 Speaker Notes</summary>
+      <div class="notes-content">
+        Key takeaway: Zod appears at exactly two points in the backend &mdash; <strong>input validation</strong> (ZodValidationPipe, safeParse) and <strong>output validation</strong> (Application service toDto, parse). The domain layer is completely Zod-free. This is the Clean Architecture boundary pattern.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 7 ═══════════════════════════════════════ -->
+<section class="module" id="module7">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 7 &mdash; 25 min</div>
+      <h2>Frontend Implementation</h2>
+      <p class="module-desc">How Zod validates API responses in the Next.js webapp and Expo mobile app, shared via the <code>client-common</code> package. <span class="tag frontend">Frontend</span></p>
+    </div>
+
+    <!-- 7.1 Base API Client -->
+    <div class="topic fade-in">
+      <h3>7.1 The Base API Client &mdash; Schema-Validated Fetch</h3>
+      <p>All frontend API calls go through a single <code>apiRequest()</code> function that accepts an optional Zod schema. If provided, the response JSON is parsed through Zod before being returned.</p>
+
+      <pre><code>// packages/client-common/src/infrastructure/api-clients/base-api.client.ts
+import { type ZodType } from 'zod';
+
+interface RequestOptions {
+  method?: string;
+  body?: unknown;
+  params?: Record&lt;string, string | number | undefined&gt;;
+  schema?: ZodType;  // ← optional Zod schema for response validation
+}
+
+export async function apiRequest&lt;T&gt;(
+  baseUrl: string,
+  path: string,
+  options?: RequestOptions &amp; { schema?: ZodType&lt;T&gt; },
+): Promise&lt;T&gt; {
+  // ... build URL, add auth headers, call fetch() ...
+  const response = await fetch(url, { ... });
+  const data = await handleResponse(response);
+
+  // If a schema was provided, validate the response
+  if (options?.schema &amp;&amp; data !== undefined) {
+    return options.schema.parse(data) as T;  // Zod validates!
+  }
+  return data as T;
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Why Validate API Responses on the Frontend?</div>
+        <ul>
+          <li><strong>Catch backend bugs early:</strong> If the backend returns a field as <code>null</code> when the frontend expects <code>string</code>, Zod throws immediately — not when the user sees a blank screen</li>
+          <li><strong>Catch contract drift:</strong> If the backend renames a field, Zod fails at the API boundary with a clear error message, not deep in a React component</li>
+          <li><strong>Self-documenting:</strong> Every API client method declares exactly what shape it expects via the schema parameter</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 7.2 Domain API Clients -->
+    <div class="topic fade-in">
+      <h3>7.2 Domain API Clients &mdash; Typed &amp; Validated</h3>
+      <p>Each domain has an API client that imports schemas from <code>@old-st/contracts/{domain}</code> and passes them to <code>apiRequest()</code>.</p>
+
+      <h4>User API Client</h4>
+      <pre><code>// packages/client-common/src/infrastructure/api-clients/user-api.client.ts
+import { userResponseSchema, type CreateUserInput, type UserResponse }
+  from '@old-st/contracts/user';
+import { paginatedResponseSchema } from '@old-st/contracts/common';
+
+// Compose: paginated user list schema
+const paginatedUsersSchema = paginatedResponseSchema(userResponseSchema);
+
+export const userApiClient = {
+  create(input: CreateUserInput): Promise&lt;UserResponse&gt; {
+    return apiRequest(baseUrl(), '/users', {
+      method: 'POST',
+      body: input,
+      schema: userResponseSchema,  // ← validates response
+    });
+  },
+
+  listByStatus(params: {
+    userStatus: string; limit?: number;
+    cursor?: string; direction?: 'next' | 'prev';
+  }): Promise&lt;PaginatedResponse&lt;UserResponse&gt;&gt; {
+    return apiRequest(baseUrl(), '/users/by-status', {
+      params,
+      schema: paginatedUsersSchema,  // ← composed schema
+    });
+  },
+
+  delete(userId: string): Promise&lt;void&gt; {
+    return apiRequestVoid(baseUrl(), `/users/${userId}`, {
+      method: 'DELETE',
+      // No schema needed — void response
+    });
+  },
+};</code></pre>
+
+      <h4>Order API Client (Offset Pagination)</h4>
+      <pre><code>// packages/client-common/src/infrastructure/api-clients/order-api.client.ts
+import { orderResponseSchema } from '@old-st/contracts/order';
+import { offsetPaginatedResponseSchema } from '@old-st/contracts/common';
+
+// Different pagination schema — offset-based for Prisma domains
+const paginatedOrdersSchema = offsetPaginatedResponseSchema(orderResponseSchema);
+
+export const orderApiClient = {
+  listByStatus(params: { ... }): Promise&lt;OffsetPaginatedResponse&lt;OrderResponse&gt;&gt; {
+    return apiRequest(baseUrl(), '/orders/by-status', {
+      params,
+      schema: paginatedOrdersSchema,
+    });
+  },
+};</code></pre>
+
+      <h4>Auth API Client (Discriminated Union)</h4>
+      <pre><code>// packages/client-common/src/infrastructure/api-clients/auth-api.client.ts
+import { signInResponseSchema } from '@old-st/contracts/auth';
+
+export const authApiClient = {
+  signIn(email: string, password: string): Promise&lt;SignInResponse&gt; {
+    return apiRequest(baseUrl(), '/auth/sign-in', {
+      method: 'POST',
+      body: { email, password },
+      schema: signInResponseSchema,  // discriminated union!
+    });
+  },
+};</code></pre>
+    </div>
+
+    <!-- 7.3 React Query Hooks -->
+    <div class="topic fade-in">
+      <h3>7.3 React Query Hooks &mdash; Consuming Validated Data</h3>
+      <p>React Query hooks call the API clients. Since the clients already validate via Zod, hooks receive fully typed, validated data.</p>
+
+      <pre><code>// packages/client-common/src/hooks/use-users.ts
+import { userApiClient } from '../infrastructure/api-clients/user-api.client';
+
+const USERS_KEY = 'users';
+
+export function useUsersByStatus(params: {
+  userStatus: string; limit?: number;
+  cursor?: string; direction?: 'next' | 'prev';
+}) {
+  return useQuery({
+    queryKey: [USERS_KEY, 'by-status', params],
+    queryFn: () =&gt; userApiClient.listByStatus(params),
+    // data is PaginatedResponse&lt;UserResponse&gt; — fully typed, Zod-validated
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateUserInput) =&gt; userApiClient.create(input),
+    onSuccess: () =&gt; {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+}</code></pre>
+
+      <div class="callout">
+        <div class="callout-title">Shared Between Web and Mobile</div>
+        <p>These hooks and API clients live in <code>@old-st/client-common</code> &mdash; they are imported identically by the Next.js webapp and the Expo mobile app. Zod validation happens once in the shared layer, protecting both platforms.</p>
+      </div>
+    </div>
+
+    <!-- 7.4 Frontend Component Consumption -->
+    <div class="topic fade-in">
+      <h3>7.4 Components &mdash; Consuming Typed Data</h3>
+      <p>By the time data reaches a React component, it has been validated by Zod. Components can trust the type completely.</p>
+
+      <pre><code>// apps/webapp/src/components/users/users-table.tsx
+import { type UserResponse } from '@old-st/contracts/user';
+
+export function UsersTable({ users }: { users: UserResponse[] }) {
+  return (
+    &lt;Table&gt;
+      &lt;TableHeader&gt;
+        &lt;TableRow&gt;
+          &lt;TableHead&gt;Name&lt;/TableHead&gt;
+          &lt;TableHead&gt;Email&lt;/TableHead&gt;
+          &lt;TableHead&gt;Status&lt;/TableHead&gt;
+        &lt;/TableRow&gt;
+      &lt;/TableHeader&gt;
+      &lt;TableBody&gt;
+        {users.map((user) =&gt; (
+          &lt;TableRow key={user.userId}&gt;
+            &lt;TableCell&gt;{user.firstName} {user.lastName}&lt;/TableCell&gt;
+            &lt;TableCell&gt;{user.email}&lt;/TableCell&gt;
+            &lt;TableCell&gt;
+              &lt;Badge variant={userStatusVariant(user.userStatus)}&gt;
+                {user.userStatus}
+              &lt;/Badge&gt;
+            &lt;/TableCell&gt;
+          &lt;/TableRow&gt;
+        ))}
+      &lt;/TableBody&gt;
+    &lt;/Table&gt;
+  );
+}
+
+// ✅ user.userId is guaranteed to be a string (Zod validated)
+// ✅ user.email is guaranteed to be a valid email (Zod validated)
+// ✅ user.userStatus is guaranteed to be one of USER_STATUSES (Zod validated)
+// ✅ No "Cannot read property of undefined" — ever</code></pre>
+
+      <h4>Status Variants — Enum Constants, Not Strings</h4>
+      <pre><code>// apps/webapp/src/lib/status-variants.ts
+import { UserStatusEnum } from '@old-st/contracts/user';
+
+export function userStatusVariant(status: string): BadgeVariant {
+  switch (status) {
+    case UserStatusEnum.ACTIVE:     return 'success';
+    case UserStatusEnum.PENDING:    return 'warning';
+    case UserStatusEnum.INACTIVE:   return 'secondary';
+    case UserStatusEnum.SUSPENDED:  return 'destructive';
+    default:                        return 'outline';
+  }
+}
+
+// ✅ UserStatusEnum comes from contracts, which comes from domain constants
+// ✅ If a new status is added to the domain, TypeScript warns this switch is incomplete</code></pre>
+    </div>
+
+    <details class="speaker-notes">
+      <summary>🎤 Speaker Notes</summary>
+      <div class="notes-content">
+        The frontend uses Zod at exactly one point: the API client response parsing. The hooks, pages, and components never see Zod directly. This keeps the frontend clean while providing runtime validation at the data boundary.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 8 ═══════════════════════════════════════ -->
+<section class="module" id="module8">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 8 &mdash; 20 min</div>
+      <h2>Event-Driven Validation</h2>
+      <p class="module-desc">How Zod validates SQS messages using discriminated unions for type-safe event routing. <span class="tag backend">Backend</span></p>
+    </div>
+
+    <!-- 8.1 Event Schema Pattern -->
+    <div class="topic fade-in">
+      <h3>8.1 Defining Event Schemas</h3>
+      <p>Domain events are published as JSON messages to SQS queues. Each event type has a different payload shape, unified by a shared <code>eventType</code> discriminant.</p>
+
+      <pre><code>// packages/contracts/product/src/event-schemas.ts
+import { z } from 'zod';
+import { ProductEventTypeEnum } from '@old-st/product-domain';
+
+// Each event type gets its own schema
+const productPriceChangedSchema = z.object({
+  eventType: z.literal(ProductEventTypeEnum.PRODUCT_PRICE_CHANGED),
+  correlationId: z.string().optional(),
+  productId: z.string(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  occurredAt: z.string(),
+});
+
+const productDiscontinuedSchema = z.object({
+  eventType: z.literal(ProductEventTypeEnum.PRODUCT_DISCONTINUED),
+  correlationId: z.string().optional(),
+  productId: z.string(),
+  name: z.string(),
+  occurredAt: z.string(),
+});
+
+const productValidationFailedSchema = z.object({
+  eventType: z.literal(ProductEventTypeEnum.PRODUCT_VALIDATION_FAILED),
+  correlationId: z.string().optional(),
+  orderId: z.string(),
+  reason: z.string(),
+  failedProducts: z.array(
+    z.object({ productId: z.string(), issue: z.string() }),
+  ),
+  occurredAt: z.string(),
+});
+
+// Discriminated union — combines all event variants
+export const productDomainEventSchema = z.discriminatedUnion('eventType', [
+  productPriceChangedSchema,
+  productDiscontinuedSchema,
+  productValidationFailedSchema,
+  // ... more event types
+]);
+
+export type ProductDomainEvent = z.infer&lt;typeof productDomainEventSchema&gt;;</code></pre>
+    </div>
+
+    <!-- 8.2 Event Handler Dispatcher -->
+    <div class="topic fade-in">
+      <h3>8.2 Event Handler &mdash; Type-Safe Dispatching</h3>
+      <p>The event handler service receives raw SQS messages, validates them through the discriminated union schema, and dispatches to type-safe handlers.</p>
+
+      <pre><code>// apps/orders/order-event-handler-service/src/application/services/
+//   order-event-handler.service.ts
+import { productDomainEventSchema, ProductEventTypeEnum }
+  from '@old-st/contracts/product';
+
+export class OrderEventHandlerService {
+
+  private async processRecord(record: NormalizedSqsRecord): Promise&lt;void&gt; {
+    // Step 1: Parse the raw JSON through the discriminated union
+    const parseResult = productDomainEventSchema.safeParse(
+      JSON.parse(record.body),
+    );
+
+    // Step 2: Skip malformed messages (don't crash the service)
+    if (!parseResult.success) {
+      logger.error('Invalid event shape — skipping message', {
+        messageId: record.messageId,
+        issues: parseResult.error.issues,
+      });
+      return;
+    }
+
+    // Step 3: payload is fully typed — switch narrows the type
+    const payload = parseResult.data;
+
+    switch (payload.eventType) {
+      case ProductEventTypeEnum.PRODUCT_PRICE_CHANGED:
+        // TypeScript knows: payload.oldPrice, payload.newPrice exist
+        await this.priceChangedHandler.handle(payload);
+        break;
+
+      case ProductEventTypeEnum.PRODUCT_DISCONTINUED:
+        // TypeScript knows: payload.name exists
+        await this.discontinuedHandler.handle(payload);
+        break;
+
+      case ProductEventTypeEnum.PRODUCT_VALIDATION_FAILED:
+        // TypeScript knows: payload.orderId, payload.failedProducts exist
+        await this.validationFailedHandler.handle(payload);
+        break;
+
+      default:
+        logger.warn('Unknown event type', { eventType: payload.eventType });
+    }
+  }
+}</code></pre>
+
+      <div class="callout success">
+        <div class="callout-title">Three Problems Solved by One Pattern</div>
+        <ul>
+          <li><strong>Validation:</strong> <code>safeParse()</code> catches malformed messages before they crash handlers</li>
+          <li><strong>Type narrowing:</strong> <code>z.discriminatedUnion</code> + <code>switch</code> gives each handler the exact payload type it needs</li>
+          <li><strong>Exhaustive checking:</strong> If a new event type is added to the schema, TypeScript warns that the <code>switch</code> doesn&rsquo;t handle it (with <code>never</code> default guard)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 8.3 Cross-Domain Events -->
+    <div class="topic fade-in">
+      <h3>8.3 Cross-Domain Event Contracts</h3>
+      <p>When a service consumes events from <strong>another bounded context</strong>, it imports only from the publishing domain&rsquo;s <strong>contracts</strong> &mdash; never from the domain package.</p>
+
+      <div class="flow">
+        <div class="flow-box backend">Product API<br>publishes event</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box events">SQS Queue<br><code>order-events</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box backend">Order Event Handler<br>validates via Zod</div>
+      </div>
+
+      <table>
+        <thead><tr><th>Import</th><th>Allowed?</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>@old-st/contracts/product</code></td><td>✅ Yes</td><td>Published Language — the agreed-upon event shape</td></tr>
+          <tr><td><code>@old-st/product-domain</code></td><td>❌ Never</td><td>Breaks bounded context isolation</td></tr>
+        </tbody>
+      </table>
+
+      <p>The Zod discriminated union schema in <code>@old-st/contracts/product</code> is the <strong>Published Language</strong> &mdash; the formal contract between domains. Both the publisher and consumer validate against it.</p>
+    </div>
+
+    <details class="speaker-notes">
+      <summary>🎤 Speaker Notes</summary>
+      <div class="notes-content">
+        This is where Zod really shines. Without discriminated unions, you'd parse the JSON manually, check the eventType string, then cast to a type. One typo and you have a runtime crash. With Zod, the schema guarantees the payload shape matches the eventType, and TypeScript narrows the type in each switch branch.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MODULE 9 ═══════════════════════════════════════ -->
+<section class="module" id="module9">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-label">Module 9 &mdash; 15 min</div>
+      <h2>Patterns &amp; Best Practices</h2>
+      <p class="module-desc">Summary of all Zod patterns used in the template, key rules, and a quick-reference cheat sheet. <span class="tag fullstack">Full-Stack</span></p>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="topic fade-in">
+      <h3>All Zod Usage Patterns at a Glance</h3>
+      <table>
+        <thead><tr><th>Pattern</th><th>Where</th><th>Zod API</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Schema definitions</strong></td><td><code>packages/contracts/*/schemas.ts</code></td><td><code>z.object()</code>, <code>z.enum()</code>, <code>z.infer</code></td><td>Single source of truth for shapes + types</td></tr>
+          <tr><td><strong>Discriminated unions</strong></td><td><code>packages/contracts/*/event-schemas.ts</code></td><td><code>z.discriminatedUnion()</code>, <code>z.literal()</code></td><td>Type-safe event routing + polymorphic responses</td></tr>
+          <tr><td><strong>Input validation</strong></td><td>Controller <code>@Body()</code> / <code>@Query()</code></td><td><code>safeParse()</code></td><td>Request validation, returns 400 with issues</td></tr>
+          <tr><td><strong>Output validation</strong></td><td>Application service <code>toDto()</code></td><td><code>parse()</code></td><td>DTO mapping, ensures response matches contract</td></tr>
+          <tr><td><strong>Response parsing</strong></td><td>Frontend API clients</td><td><code>schema.parse(data)</code></td><td>Runtime validation of backend responses</td></tr>
+          <tr><td><strong>Event validation</strong></td><td>SQS event handler services</td><td><code>discriminatedUnion.safeParse()</code></td><td>Validate + route incoming async events</td></tr>
+          <tr><td><strong>Schema composition</strong></td><td>Common pagination factories</td><td><code>z.object(z.array(T))</code></td><td>Generic wrappers for any item schema</td></tr>
+          <tr><td><strong>Coercion</strong></td><td>Controller query schemas</td><td><code>z.coerce.number()</code></td><td>Convert string query params to numbers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Golden Rules -->
+    <div class="topic fade-in">
+      <h3>Zod Rules in Our Template</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>1. Schemas live in contracts</h4>
+          <p>All Zod schemas are defined in <code>packages/contracts/{domain}/src/schemas.ts</code>. Never define schemas in controllers, services, or the domain layer.</p>
+        </div>
+        <div class="card">
+          <h4>2. Types are always inferred</h4>
+          <p>Never write a TypeScript interface for a shape that has a Zod schema. Use <code>z.infer&lt;typeof schema&gt;</code>. This eliminates type drift.</p>
+        </div>
+        <div class="card">
+          <h4>3. Enums from domain constants</h4>
+          <p>Use <code>z.enum(USER_ROLES)</code> where <code>USER_ROLES</code> comes from the domain package. Never hardcode string arrays in Zod schemas.</p>
+        </div>
+        <div class="card">
+          <h4>4. safeParse for boundaries you control</h4>
+          <p>Use <code>safeParse()</code> in validation pipes and event handlers where you want to <em>handle</em> the error (400 response, skip message). Use <code>parse()</code> for DTO mapping where failure means a bug.</p>
+        </div>
+        <div class="card">
+          <h4>5. Subpath imports only</h4>
+          <p>Import from <code>@old-st/contracts/user</code>, never from <code>@old-st/contracts</code>. This prevents cross-domain coupling.</p>
+        </div>
+        <div class="card">
+          <h4>6. Zod-free domain layer</h4>
+          <p>The domain layer (<code>packages/{domain}-domain/src/domain/</code>) has <strong>zero</strong> Zod imports. Business validation belongs in entity methods, not in schemas.</p>
+        </div>
+        <div class="card">
+          <h4>7. Always validate API responses</h4>
+          <p>Every frontend API client method must pass a <code>schema</code> option to <code>apiRequest()</code>. Unvalidated responses are forbidden.</p>
+        </div>
+        <div class="card">
+          <h4>8. z.coerce for query params</h4>
+          <p>HTTP query parameters are strings. Use <code>z.coerce.number()</code> in controller query schemas to convert before validation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cheat Sheet -->
+    <div class="topic fade-in">
+      <h3>Quick Reference Cheat Sheet</h3>
+      <pre><code>// ─── PRIMITIVES ───
+z.string()                    z.number()              z.boolean()
+z.string().email()            z.number().int()         z.date()
+z.string().min(1).max(100)    z.number().positive()    z.bigint()
+z.string().datetime()         z.number().min(0)        z.unknown()
+z.string().uuid()             z.coerce.number()        z.any()
+
+// ─── OBJECTS ───
+z.object({ key: z.string() })           // { key: string }
+schema.optional()                        // T | undefined
+schema.nullable()                        // T | null
+schema.default('value')                  // uses 'value' if undefined
+schema.partial()                         // all fields optional
+schema.pick({ a: true })                // only field 'a'
+schema.omit({ b: true })                // everything except 'b'
+
+// ─── ARRAYS ───
+z.array(z.string())                      // string[]
+z.array(itemSchema).min(1)               // non-empty array
+
+// ─── ENUMS ───
+z.enum(['A', 'B', 'C'])                  // "A" | "B" | "C"
+z.enum(DOMAIN_CONSTANTS)                 // from domain package
+z.literal('SUCCESS')                     // exact string "SUCCESS"
+
+// ─── UNIONS ───
+z.union([z.string(), z.number()])        // string | number
+z.discriminatedUnion('type', [a, b])     // tagged union
+
+// ─── PARSING ───
+schema.parse(data)                       // throws ZodError on failure
+schema.safeParse(data)                   // returns { success, data/error }
+
+// ─── TYPE INFERENCE ───
+type MyType = z.infer&lt;typeof mySchema&gt;;  // schema → TypeScript type
+
+// ─── COMPOSITION ───
+const factory = &lt;T extends z.ZodType&gt;(item: T) =&gt;
+  z.object({ data: z.array(item) });     // generic schema factory</code></pre>
+    </div>
+
+    <!-- Where Zod Lives -->
+    <div class="topic fade-in">
+      <h3>Architecture Summary</h3>
+      <div class="flow">
+        <div class="flow-box contracts">Contracts<br><code>z.object()</code><br><code>z.infer</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box backend">Backend Pipes<br><code>safeParse()</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box backend">App Services<br><code>parse()</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box frontend">API Clients<br><code>parse()</code></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box events">Event Handlers<br><code>safeParse()</code></div>
+      </div>
+
+      <blockquote>&ldquo;Define once in contracts. Validate at every boundary. Trust everywhere else.&rdquo;</blockquote>
+
+      <div class="callout success">
+        <div class="callout-title">The Payoff</div>
+        <p>With Zod integrated at every system boundary, we get: <strong>zero type drift</strong> between backend and frontend, <strong>structured error messages</strong> on validation failures, <strong>runtime safety</strong> for API responses and SQS events, and <strong>one schema</strong> that serves NestJS, Next.js, and Expo simultaneously. Every data boundary is guarded. Every type is real.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="text-align:center; padding: 40px 24px; border-top:1px solid var(--border); color:var(--text-muted); font-size:0.85rem;">
+  Zod Masterclass &middot; Schema Validation for TypeScript &middot; Built for Full-Stack Teams &middot; &copy; 2026
+</footer>
+
+<!-- ═══════════════════════════════════════ JavaScript ═══════════════════════════════════════ -->
+<script>
+  // Theme toggle
+  const toggle = document.getElementById('themeToggle');
+  const setTheme = (dark) => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('zod-theme', dark ? 'dark' : 'light');
+  };
+  toggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
+  const saved = localStorage.getItem('zod-theme');
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+
+  // Scroll progress
+  const bar = document.getElementById('scrollProgress');
+  const nav = document.getElementById('topNav');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const sections = document.querySelectorAll('.module');
+
+  window.addEventListener('scroll', () => {
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  }, { passive: true });
+
+  // Hamburger
+  const hamburger = document.getElementById('hamburger');
+  const navLinksEl = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinksEl.classList.toggle('open'));
+  navLinksEl.addEventListener('click', e => { if (e.target.tagName === 'A') navLinksEl.classList.remove('open'); });
+
+  // Fade-in on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deployment &amp; CD — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html" class="active">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Deployment &amp; CD Pipeline</h1>
+      <p class="subtitle">
+        How the GitHub Actions CD pipeline works — from bootstrap to first deployment, preview
+        environments, and the data-driven Terraform pattern that makes most service additions
+        require zero infrastructure file edits.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Deployment Model</h2>
+
+      <p>
+        Backend services deploy as <strong>Lambda ZIP packages</strong> connected to a shared
+        <strong>API Gateway HTTP API v2</strong> per environment. <strong>AWS Lambda Web Adapter</strong>
+        proxies invocation events to a plain NestJS HTTP server inside the Lambda — no
+        <code>@codegenie/serverless-express</code> or dual-mode handler export.
+      </p>
+      <p>
+        The webapp deploys as a <strong>static Next.js export</strong> (<code>output: 'export'</code>) to
+        <strong>S3 + CloudFront</strong> — no Docker container or server process required. CloudFront
+        serves pre-built HTML/CSS/JS with SPA routing (403/404 → <code>/index.html</code>).
+        The mode is configured in <code>service-registry.json</code> →
+        <code>webapp.deploymentMode</code> (defaults to <code>"static"</code> for all environments).
+        All infrastructure is described in Terraform and driven by
+        <code>.github/service-registry.json</code>.
+      </p>
+
+      <div class="mermaid">
+graph LR
+  push["git push\ndevelop → dev\nmain → staging"]
+  ci["GitHub Actions\nCD: Deploy"]
+
+  subgraph AWS
+    apigw["API Gateway\nHTTP API v2"]
+    lambda["Lambda funcs\n(one per service)"]
+    cfstatic["S3 + CloudFront\n(static webapp)"]
+    rds["RDS\nPostgreSQL"]
+    dynamo["DynamoDB\n(OneTable)"]
+    sqs["SQS\nqueues"]
+    cognito["Cognito\nUser Pool"]
+    s3["S3\n(files + artifacts)"]
+  end
+
+  push --> ci
+  ci -->|terraform apply| apigw
+  ci -->|deploy ZIP| lambda
+  ci -->|s3 sync + invalidate| cfstatic
+  apigw --> lambda
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Data-Driven Infrastructure</h2>
+
+      <p>
+        <code>.github/service-registry.json</code> is the single source of truth for both CI and CD.
+        All Terraform environment roots read this file via <code>jsondecode(file(...))</code> and
+        create resources with <code>for_each</code>.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Change</th>
+            <th>Terraform edits needed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Add a new API service</td>
+            <td><strong>None</strong> — add entry to <code>apiServices[]</code></td>
+          </tr>
+          <tr>
+            <td>Add a new event-handler service</td>
+            <td><strong>None</strong> — add entry to <code>eventHandlerServices[]</code></td>
+          </tr>
+          <tr>
+            <td>Add a DynamoDB table</td>
+            <td><strong>None</strong> — add to <code>infrastructure.dynamodbTables[]</code></td>
+          </tr>
+          <tr>
+            <td>Add an SQS queue</td>
+            <td><strong>None</strong> — add to <code>infrastructure.sqsQueues[]</code></td>
+          </tr>
+          <tr>
+            <td>Add an S3 bucket</td>
+            <td><strong>None</strong> — add to <code>infrastructure.s3Buckets[]</code></td>
+          </tr>
+          <tr>
+            <td>Add an RDS PostgreSQL database</td>
+            <td><strong>None</strong> — add to <code>infrastructure.rds[]</code></td>
+          </tr>
+          <tr>
+            <td>Change memory, timeout, env vars</td>
+            <td><strong>None</strong> — update the service entry</td>
+          </tr>
+          <tr>
+            <td>Introduce a new AWS service type (e.g., ElastiCache)</td>
+            <td>Requires a new Terraform module</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CD Workflows</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow</th>
+            <th>Trigger</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>cd-deploy.yml</code></td>
+            <td>Push to <code>develop</code>→dev, <code>main</code>→staging, or manual</td>
+            <td>
+              Build affected services → Terraform apply → run deploy tasks (migrations/seeds)
+              → deploy Lambdas + webapp → smoke test
+            </td>
+          </tr>
+          <tr>
+            <td><code>cd-infra-plan.yml</code></td>
+            <td>PR with <code>infra/**</code> or <code>service-registry.json</code> changes</td>
+            <td>Terraform plan for dev/staging/prod — posts plan as PR comment</td>
+          </tr>
+          <tr>
+            <td><code>cd-preview-create.yml</code></td>
+            <td>Manual dispatch</td>
+            <td>Create or update a full-stack preview environment</td>
+          </tr>
+          <tr>
+            <td><code>cd-preview-destroy.yml</code></td>
+            <td>Manual dispatch</td>
+            <td>Tear down a preview environment</td>
+          </tr>
+          <tr>
+            <td><code>cd-destroy.yml</code></td>
+            <td>Manual dispatch (double-confirm)</td>
+            <td>Permanently destroy an entire dev/staging/prod environment</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CD Deploy Pipeline Jobs</h2>
+
+      <div class="mermaid">
+graph LR
+  preflight["1. Preflight\n(validate vars)"]
+  detect["2. Detect changes\n(Nx affected)"]
+  tf["3. Terraform apply\n(create/update resources)"]
+  build["4. Build Lambda ZIPs\n(affected services)"]
+  init["5. Run init tasks\n(migrations, seeds)"]
+  deploy["6. Deploy\n(upload ZIPs + push webapp)"]
+  smoke["7. Smoke test\n(GET /health on all services)"]
+
+  preflight --> detect --> tf --> build --> init --> deploy --> smoke
+      </div>
+
+      <ol>
+        <li><strong>Preflight</strong> — validates required GitHub variables are set.</li>
+        <li><strong>Detect changes</strong> — uses Nx to find affected services (skipped if <code>deploy_all=true</code>).</li>
+        <li><strong>Terraform apply</strong> — creates/updates all AWS resources from <code>service-registry.json</code>.</li>
+        <li><strong>Build Lambda ZIPs</strong> — packages affected services into ZIP artifacts.</li>
+        <li><strong>Run init tasks</strong> — ECS init-runner applies Prisma migrations and runs seed scripts from within the VPC.</li>
+        <li><strong>Deploy</strong> — uploads Lambda ZIPs to S3 + updates function code, builds/pushes webapp Docker image.</li>
+        <li><strong>Smoke test</strong> — hits <code>GET {base-url}/health</code> on every service. Posts results to GitHub Step Summary.</li>
+      </ol>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Bootstrap (One-Time Setup)</h2>
+
+      <p>
+        Before first deployment, run <code>infra/bootstrap/</code> to create the infrastructure
+        the CD pipeline itself needs: S3 state bucket, DynamoDB lock table, ECR repository,
+        GitHub OIDC provider, and IAM deploy role.
+      </p>
+
+      <p>See <a href="../deployment.md">docs/deployment.md</a> for the complete step-by-step bootstrap guide.</p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>GitHub OIDC — No Secrets in CI</h2>
+
+      <p>
+        GitHub Actions authenticates to AWS via <strong>OIDC</strong> — no AWS credentials are
+        ever stored as GitHub secrets. The bootstrap module creates:
+      </p>
+
+      <ul>
+        <li>An OIDC identity provider in AWS IAM</li>
+        <li>An IAM deploy role with a trust policy allowing GitHub Actions to assume it</li>
+      </ul>
+
+      <p>Workflows use <code>aws-actions/configure-aws-credentials@v4</code> with <code>role-to-assume</code>.</p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>DEPLOY_ENABLED Sentinel</h2>
+
+      <p>
+        Push-triggered deployments are <strong>blocked by default</strong> until you set
+        <code>DEPLOY_ENABLED=true</code> as an environment-scoped GitHub variable for each
+        target environment (dev/staging/prod).
+      </p>
+
+      <p>
+        Set in: <strong>GitHub → Settings → Environments → {env} → Variables → <code>DEPLOY_ENABLED=true</code></strong>
+      </p>
+
+      <div class="callout info">
+        <strong>Manual dispatch always runs</strong> regardless of <code>DEPLOY_ENABLED</code>.
+        This flag only gates push-triggered (automatic) deployments.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Secrets Management (SENSITIVE_VARS)</h2>
+
+      <p>
+        Sensitive values (database passwords, external API keys) flow through the pipeline as
+        a JSON blob via the <code>SENSITIVE_VARS</code> GitHub secret:
+      </p>
+
+      <ol>
+        <li>
+          Create <code>infra/bootstrap/github-secrets</code> (gitignored) with your values:
+          <pre><code>SOME_API_KEY=value
+ANOTHER_SECRET=value</code></pre>
+        </li>
+        <li>The <code>AWS: Bootstrap Apply</code> task reads this file and creates the <code>SENSITIVE_VARS</code> secret in GitHub.</li>
+        <li>CD workflows pass <code>SENSITIVE_VARS</code> to Terraform, which writes selected keys to AWS Secrets Manager.</li>
+        <li>Lambda services read their secrets at cold-start via <code>SecretsConfig.resolve(allowList)</code>.</li>
+      </ol>
+
+      <div class="callout warning">
+        <strong>RDS passwords are auto-generated.</strong> Terraform uses a
+        <code>random_password</code> resource — you don't need to put database passwords in
+        <code>github-secrets</code>. Only pre-existing external credentials go there.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Preview Environments</h2>
+
+      <p>
+        Preview environments are fully isolated ephemeral deployments with their own DynamoDB
+        tables, RDS instance, SQS queues, Lambda functions, and ECS service.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Setting</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Lambda memory</td><td>Capped at 256MB</td></tr>
+          <tr><td>RDS instance</td><td>db.t4g.micro</td></tr>
+          <tr><td>Log retention</td><td>7 days</td></tr>
+          <tr><td>Deletion protection</td><td>Disabled</td></tr>
+          <tr><td>State isolation</td><td><code>preview/{name}/terraform.tfstate</code></td></tr>
+        </tbody>
+      </table>
+
+      <pre><code># Create via VS Code task: "Preview: Create"
+# Or via CLI:
+gh workflow run "CD: Preview — Create" \
+  -f preview_name=john-feature-x \
+  -f ref=feature/my-branch \
+  -f aws_account_id=123456789012
+
+# Destroy via VS Code task: "Preview: Destroy"
+gh workflow run "CD: Preview — Destroy" \
+  -f preview_name=john-feature-x \
+  -f aws_account_id=123456789012</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Smoke Test</h2>
+
+      <p>
+        After every deployment, the CD pipeline sends <code>GET {base-url}/health</code> to every
+        registered API service. Results are posted to the GitHub Step Summary.
+      </p>
+
+      <div class="callout warning">
+        <strong>Every API service must expose <code>GET /health</code>.</strong>
+        The route must use <code>@Get('health')</code> (not <code>@Get()</code>),
+        be decorated with <code>@Public()</code>, and return
+        <code>{ status: 'ok', service: '{service-name}' }</code>.
+        A service that fails the health check will mark the deployment as failed.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>ECS Init-Runner (Deploy Tasks)</h2>
+
+      <p>
+        RDS instances are inside a private VPC — the CI runner has no network path to them.
+        Prisma migrations and other post-deploy scripts are executed via the
+        <strong>ECS init-runner</strong>: a one-shot Fargate container defined in
+        <code>infra/init-runner/</code>.
+      </p>
+
+      <p>
+        The <code>deployTasks</code> array in <code>service-registry.json</code> declares what
+        the init-runner must run:
+      </p>
+
+      <pre><code>{
+  "deployTasks": [
+    {
+      "name": "orders-migrations",
+      "type": "prisma-migrate",
+      "domain": "order",
+      "requiresVpc": true,
+      "secretEnvVars": ["ORDERS_DATABASE_URL"],
+      "envVars": ["AWS_SECRETS_ARN"]
+    }
+  ]
+}</code></pre>
+
+      <p>
+        When <code>deployTasks</code> is empty, zero ECS resources are created and the CD workflow
+        skips the init-runner job entirely — zero cost.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Further Reading</h2>
+
+      <ul>
+        <li><a href="../deployment.md">docs/deployment.md</a> — step-by-step bootstrap guide</li>
+        <li><code>infra/README.md</code> — Terraform module reference</li>
+        <li><code>infra/bootstrap/README.md</code> — credential file format + bootstrap steps</li>
+        <li><code>.claude/skills/cd-register-service/SKILL.md</code> — how to register a new service</li>
+      </ul>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

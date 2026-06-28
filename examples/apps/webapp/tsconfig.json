@@ -1,0 +1,63 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "strict": true,
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@old-st/common": ["../../packages/common/src/index.ts"],
+      "@old-st/contracts/common": ["../../packages/contracts/common/src/index.ts"],
+      "@old-st/contracts/user": ["../../packages/contracts/user/src/index.ts"],
+      "@old-st/contracts/order": ["../../packages/contracts/order/src/index.ts"],
+      "@old-st/contracts/product": ["../../packages/contracts/product/src/index.ts"],
+      "@old-st/contracts/auth": ["../../packages/contracts/auth/src/index.ts"],
+      "@old-st/user-domain": ["../../packages/user-domain/src/index.ts"],
+      "@old-st/order-domain": ["../../packages/order-domain/src/index.ts"],
+      "@old-st/product-domain": ["../../packages/product-domain/src/index.ts"],
+      "@old-st/ui": ["../../packages/ui/src/index.ts"],
+      "@old-st/client-common": ["../../packages/client-common/src/index.ts"],
+      "@old-st/client-common/infrastructure": ["../../packages/client-common/src/infrastructure/index.ts"],
+      "@old-st/client-common/hooks": ["../../packages/client-common/src/hooks/index.ts"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "../../apps/webapp/.next/types/**/*.ts",
+    "../../dist/apps/webapp/.next/types/**/*.ts",
+    "next-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "jest.config.ts",
+    "jest.config.cts",
+    "src/test-setup.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ]
+}

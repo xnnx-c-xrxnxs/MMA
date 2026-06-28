@@ -1,0 +1,41 @@
+{
+  "name": "mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "eas-build-post-install": "cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/mobile"
+  },
+  "dependencies": {
+    "@expo/metro-config": "*",
+    "@old-st/client-common": "link:../../../packages/client-common",
+    "@old-st/contracts-order": "link:../../packages/contracts/order",
+    "@old-st/contracts-product": "link:../../packages/contracts/product",
+    "@old-st/contracts-user": "link:../../packages/contracts/user",
+    "@old-st/mobile-ui": "link:../../../packages/mobile-ui",
+    "@sentry/react-native": "^8.9.1",
+    "@tanstack/react-query": "^5.0.0",
+    "@testing-library/react-native": "*",
+    "expo": "*",
+    "expo-constants": "*",
+    "expo-linking": "*",
+    "expo-router": "*",
+    "expo-secure-store": "^55.0.13",
+    "expo-splash-screen": "*",
+    "expo-status-bar": "*",
+    "expo-system-ui": "*",
+    "jest-expo": "*",
+    "metro-config": "*",
+    "metro-resolver": "*",
+    "react": "19.1.0",
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-screens": "*",
+    "react-native-svg": "*",
+    "react-native-svg-transformer": "*",
+    "react-native-web": "*",
+    "sentry-expo": "^7.2.0",
+    "zod": "^3.0.0"
+  }
+}

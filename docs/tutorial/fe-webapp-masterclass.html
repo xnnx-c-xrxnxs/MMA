@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frontend Webapp Masterclass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#fff; --bg-alt:#f7f8fa; --bg-card:#fff;
+  --bg-code:#1e1e2e; --bg-code-text:#cdd6f4;
+  --bg-nav:rgba(255,255,255,0.92); --border:#e4e7ec;
+  --text:#111827; --text-muted:#6b7280; --text-light:#9ca3af;
+  --accent:#6366f1; --accent-hover:#4f46e5; --accent-light:#eef2ff;
+  --accent-gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);
+  --hero-gradient:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 70%,#4c1d95 100%);
+  --success:#10b981; --success-bg:#ecfdf5;
+  --warning:#f59e0b; --warning-bg:#fffbeb;
+  --danger:#ef4444;  --danger-bg:#fef2f2;
+  --info:#3b82f6;    --info-bg:#eff6ff;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08);
+  --radius:12px; --radius-sm:8px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace;
+  --transition:0.2s ease;
+}
+[data-theme="dark"] {
+  --bg:#0f1117; --bg-alt:#161922; --bg-card:#1a1d28;
+  --bg-nav:rgba(15,17,23,0.92); --border:#2d3148;
+  --text:#e5e7eb; --text-muted:#9ca3af; --text-light:#6b7280;
+  --accent:#818cf8; --accent-hover:#a5b4fc; --accent-light:#1e1b4b;
+  --success-bg:#064e3b; --warning-bg:#451a03;
+  --danger-bg:#450a0a;  --info-bg:#172554;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+  --shadow:0 4px 6px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 25px rgba(0,0,0,0.4);
+}
+html { font-size:16px; scroll-behavior:smooth; scroll-padding-top:80px; }
+body { font-family:var(--font); color:var(--text); background:var(--bg); line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+.scroll-progress { position:fixed; top:0; left:0; height:3px; z-index:1001; background:var(--accent-gradient); width:0%; transition:width 0.1s linear; }
+
+.top-nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; transition:box-shadow var(--transition); }
+.top-nav.scrolled { box-shadow:var(--shadow); }
+.nav-brand { font-weight:800; font-size:1rem; color:var(--accent); text-decoration:none; white-space:nowrap; }
+.nav-links { display:flex; gap:4px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.nav-links a { padding:8px 14px; font-size:0.8rem; font-weight:600; color:var(--text-muted); text-decoration:none; border-radius:8px; white-space:nowrap; transition:background var(--transition), color var(--transition); }
+.nav-links a:hover, .nav-links a.active { background:var(--accent-light); color:var(--accent); }
+.nav-controls { display:flex; gap:8px; align-items:center; }
+.theme-toggle { width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition:background var(--transition), border-color var(--transition); }
+.theme-toggle:hover { background:var(--accent-light); border-color:var(--accent); }
+.hamburger { display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.2rem; align-items:center; justify-content:center; }
+
+.hero { background:var(--hero-gradient); padding:140px 24px 80px; text-align:center; color:#fff; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%), radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%); }
+.hero-content { position:relative; z-index:1; max-width:800px; margin:0 auto; }
+.hero h1 { font-size:3rem; font-weight:900; letter-spacing:-0.04em; line-height:1.1; margin-bottom:16px; }
+.hero .lead { font-size:1.25rem; color:rgba(255,255,255,0.8); margin-bottom:32px; line-height:1.6; }
+.hero-meta { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+.hero-meta span { font-size:0.85rem; color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:6px; }
+.hero-meta span strong { color:rgba(255,255,255,0.9); }
+
+.module { padding:64px 24px; }
+.module:nth-child(even) { background:var(--bg-alt); }
+.module-inner { max-width:1280px; margin:0 auto; }
+.module-header { margin-bottom:32px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.module-header .module-meta { flex:1; min-width:280px; }
+.module-label { display:inline-flex; align-items:center; gap:8px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-bottom:12px; background:var(--accent-light); padding:4px 12px; border-radius:20px; }
+.module-header h2 { font-size:1.85rem; font-weight:800; letter-spacing:-0.03em; margin-bottom:8px; }
+.module-header .module-desc { font-size:1rem; color:var(--text-muted); max-width:680px; }
+.complexity { display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:20px; }
+.complexity.l1 { background:#dcfce7; color:#166534; }
+.complexity.l2 { background:#dbeafe; color:#1e40af; }
+.complexity.l3 { background:#fef3c7; color:#92400e; }
+.complexity.l4 { background:#ffedd5; color:#9a3412; }
+.complexity.l5 { background:#f3e8ff; color:#6b21a8; }
+.complexity.l6 { background:#fce7f3; color:#9d174d; }
+[data-theme="dark"] .complexity.l1 { background:#14532d; color:#bbf7d0; }
+[data-theme="dark"] .complexity.l2 { background:#1e3a5f; color:#93c5fd; }
+[data-theme="dark"] .complexity.l3 { background:#78350f; color:#fef3c7; }
+[data-theme="dark"] .complexity.l4 { background:#7c2d12; color:#fed7aa; }
+[data-theme="dark"] .complexity.l5 { background:#581c87; color:#e9d5ff; }
+[data-theme="dark"] .complexity.l6 { background:#831843; color:#fbcfe8; }
+
+/* Side-by-side spec & code */
+.split { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; margin:24px 0; align-items:stretch; }
+.split > .panel { display:flex; flex-direction:column; }
+
+/* Old vs New comparison grid */
+.comparison-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:24px 0; align-items:start; }
+.comparison-grid > .panel { display:flex; flex-direction:column; }
+.panel.panel-before { border-color:#f97316; }
+.panel.panel-before .panel-header { background:#fff7ed; border-bottom-color:#fed7aa; }
+.panel.panel-after { border-color:#10b981; }
+.panel.panel-after .panel-header { background:#ecfdf5; border-bottom-color:#a7f3d0; }
+[data-theme="dark"] .panel.panel-before { border-color:#c2410c; }
+[data-theme="dark"] .panel.panel-before .panel-header { background:#431407; border-bottom-color:#7c2d12; }
+[data-theme="dark"] .panel.panel-after { border-color:#059669; }
+[data-theme="dark"] .panel.panel-after .panel-header { background:#064e3b; border-bottom-color:#065f46; }
+.comparison-section-header { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin:24px 0 8px; padding-left:8px; border-left:3px solid var(--border); }
+.panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); }
+.panel-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--bg-alt); }
+.panel-header .icon { font-size:1rem; }
+.panel-header .title { font-weight:700; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text); }
+.panel-header .subtitle { font-size:0.75rem; color:var(--text-muted); margin-left:auto; font-family:var(--mono); }
+.panel-body { padding:20px 24px; flex:1; overflow:auto; }
+.panel-body.code-body { padding:0; background:var(--bg-code); }
+.panel-body.code-body pre { margin:0; padding:18px 20px; background:transparent; border-radius:0; font-size:0.78rem; line-height:1.55; max-height:680px; color:var(--bg-code-text); }
+.spec-title { font-size:1.05rem; font-weight:700; margin-bottom:12px; color:var(--text); }
+.spec-body { font-size:0.92rem; }
+.spec-body p { margin-bottom:12px; }
+.spec-body ul { padding-left:22px; margin-bottom:12px; }
+.spec-body li { margin-bottom:6px; }
+.spec-body strong { color:var(--text); font-weight:700; }
+.spec-body em { color:var(--accent); font-style:normal; font-weight:600; background:var(--accent-light); padding:1px 6px; border-radius:4px; }
+
+/* Concepts strip */
+.concepts { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 8px; }
+.concept-pill { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:600; padding:6px 12px; border-radius:20px; background:var(--accent-light); color:var(--accent); border:1px solid var(--accent); }
+
+/* Exceptions block */
+.exceptions { margin-top:20px; }
+.exceptions-header { display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--danger); margin-bottom:12px; }
+.exceptions pre { font-size:0.76rem; max-height:320px; }
+
+/* Pitfalls callout */
+.pitfalls { background:var(--warning-bg); border-left:4px solid var(--warning); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; margin-top:20px; }
+.pitfalls-title { font-weight:700; font-size:0.85rem; margin-bottom:6px; color:#92400e; display:flex; align-items:center; gap:6px; }
+[data-theme="dark"] .pitfalls-title { color:#fef3c7; }
+.pitfalls ul { padding-left:20px; margin:0; font-size:0.86rem; }
+.pitfalls li { margin-bottom:4px; }
+
+/* Code highlighting (super-light, additive only) */
+pre code { background:none; padding:0; color:inherit; font-family:var(--mono); }
+pre .kw  { color:#c084fc; }
+pre .str { color:#a7f3d0; }
+pre .com { color:#64748b; font-style:italic; }
+pre .ty  { color:#7dd3fc; }
+pre .fn  { color:#fde68a; }
+pre .num { color:#fda4af; }
+
+code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padding:2px 7px; border-radius:5px; }
+
+.fade-in { opacity:0; transform:translateY(20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+.fade-in.visible { opacity:1; transform:translateY(0); }
+
+/* Intro module */
+.intro-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; margin-top:24px; }
+.intro-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; }
+.intro-card .num { font-size:0.7rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.intro-card .name { font-weight:700; font-size:0.95rem; margin-bottom:4px; }
+.intro-card .desc { font-size:0.82rem; color:var(--text-muted); }
+
+@media print {
+  .top-nav, .scroll-progress, .theme-toggle, .hamburger { display:none !important; }
+  .hero { padding-top:40px; }
+  .module { padding:32px 0; break-inside:avoid; }
+  .split { grid-template-columns:1fr; }
+}
+@media (max-width:1024px) {
+  .split { grid-template-columns:1fr; }
+  .comparison-grid { grid-template-columns:1fr; }
+}
+@media (max-width:768px) {
+  .nav-links { display:none; }
+  .nav-links.open { display:flex; flex-direction:column; position:absolute; top:60px; left:0; right:0; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:12px; z-index:999; }
+  .hamburger { display:flex; }
+  .hero h1 { font-size:2rem; }
+  .hero .lead { font-size:1rem; }
+  .hero-meta { flex-direction:column; gap:8px; }
+  .module { padding:40px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">Domain Entities</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#overview">Overview</a>
+    <a href="#01-architecture-overview">1. Frontend CLEAN Architecture</a>
+    <a href="#02-file-structure">2. File Structure — New vs Old</a>
+    <a href="#03-static-site-generation">3. Static Site Generation (SSG)</a>
+    <a href="#04-data-access-layer">4. Data-Access Layer</a>
+    <a href="#05-ui-primitives">5. UI Primitives — @old-st/ui</a>
+    <a href="#06-page-thin-orchestrator">6. Page as Thin Orchestrator</a>
+    <a href="#07-auth-flow">7. Auth Flow — Tokens & Cookies</a>
+    <a href="#08-forms-rhf-zod">8. Forms with react-hook-form + Zod</a>
+    <a href="#09-component-patterns">9. Component API Patterns & Tailwind v4</a>
+    <a href="#10-new-codebase-setup">10. New Codebase Setup: Tokens → Icons → Figma</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+    <button class="hamburger" id="hamburger" title="Menu">☰</button>
+  </div>
+</nav>
+<header class="hero">
+  <div class="hero-content">
+    <h1>Frontend Webapp<br>Masterclass</h1>
+    <p class="lead">Ten real-world lessons on building a production Next.js webapp with Clean Architecture — comparing every decision against the old template so you understand not just <em>what</em> changed, but <em>why</em>.</p>
+    <div class="hero-meta">
+      <span>🖥️ <strong>Clean Architecture · Frontend Layer</strong></span>
+      <span>📊 <strong>10 Modules · Old vs New</strong></span>
+      <span>⚡ <strong>Static Site Generation · S3 + CloudFront</strong></span>
+      <span>🔒 <strong>Secure Auth · httpOnly Cookies + React Query</strong></span>
+    </div>
+  </div>
+</header>
+<section class="module" id="overview">
+    <div class="module-inner">
+      <div class="module-header fade-in">
+        <div class="module-meta">
+          <div class="module-label">Overview</div>
+          <h2>10 modules, foundation → advanced</h2>
+          <p class="module-desc">Each module pairs a spec panel with real implementation code — comparing the old template pattern against the new. Concepts build up: architecture → file structure → SSG → data access → UI primitives → pages → auth → forms → components.</p>
+        </div>
+      </div>
+      <div class="intro-grid">
+    <a class="intro-card" href="#01-architecture-overview" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 1 · #01</div>
+      <div class="name">Frontend CLEAN Architecture</div>
+      <div class="desc">Five layers, each with a single responsibility and a strict dependency rule: no layer may reach more than one level below it.</div>
+    </a>
+    <a class="intro-card" href="#02-file-structure" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 1 · #02</div>
+      <div class="name">File Structure — New vs Old</div>
+      <div class="desc">Route groups, feature-scoped components, and shared packages replace scattered module folders.</div>
+    </a>
+    <a class="intro-card" href="#03-static-site-generation" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 2 · #03</div>
+      <div class="name">Static Site Generation (SSG)</div>
+      <div class="desc">output: 'export' replaces a running Node.js server with a CDN-delivered static bundle.</div>
+    </a>
+    <a class="intro-card" href="#04-data-access-layer" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 3 · #04</div>
+      <div class="name">Data-Access Layer</div>
+      <div class="desc">Replace Axios class inheritance + runtime env loading with typed fetch + Zod response parsing.</div>
+    </a>
+    <a class="intro-card" href="#05-ui-primitives" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 2 · #05</div>
+      <div class="name">UI Primitives — @old-st/ui</div>
+      <div class="desc">shadcn-style primitives + cva() variants replace a global SCSS component library.</div>
+    </a>
+    <a class="intro-card" href="#06-page-thin-orchestrator" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 3 · #06</div>
+      <div class="name">Page as Thin Orchestrator</div>
+      <div class="desc">A page wires hooks and domain components — it never contains table markup or API calls.</div>
+    </a>
+    <a class="intro-card" href="#07-auth-flow" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 4 · #07</div>
+      <div class="name">Auth Flow — Tokens &amp; Cookies</div>
+      <div class="desc">httpOnly refresh cookie + memory-only access token replace js-cookie localStorage auth.</div>
+    </a>
+    <a class="intro-card" href="#08-forms-rhf-zod" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 3 · #08</div>
+      <div class="name">Forms with react-hook-form + Zod</div>
+      <div class="desc">Both templates use react-hook-form — the switch is from yup to Zod, and from inline schemas to shared contract schemas.</div>
+    </a>
+    <a class="intro-card" href="#09-component-patterns" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 2 · #09</div>
+      <div class="name">Component API Patterns &amp; Tailwind v4</div>
+      <div class="desc">Compound components stay as the base primitive; a convenience wrapper handles 80 % of use cases — inline Tailwind replaces SCSS modules.</div>
+    </a>
+    <a class="intro-card" href="#10-new-codebase-setup" style="text-decoration:none; color:inherit;">
+      <div class="num">Level 2 · #10</div>
+      <div class="name">New Codebase Setup: Tokens → Icons → Figma</div>
+      <div class="desc">Bootstrap a production design system in three ordered steps — tokens first, icons second, Figma components last. Each step builds on the previous.</div>
+    </a></div>
+    </div>
+  </section>
+
+<section class="module" id="01-architecture-overview">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Architecture Domain</div>
+        <h2>Frontend CLEAN Architecture</h2>
+        <p class="module-desc">The frontend applies the same Clean Architecture discipline as the backend: pages orchestrate, hooks fetch, API clients validate, UI primitives render. Each layer has a single responsibility. The dependency rule is enforced by convention and by the Golden Rules — pages never call fetch, hooks never render markup, API clients never own state.</p>
+      </div>
+      <span class="complexity l1">L1 · Foundation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Architecture · Five Layers</div>
+    <div class="spec-body">
+    <p>The frontend stack has <strong>five layers</strong>, each with exactly one job:</p>
+    <ul>
+      <li><strong>Page</strong> — thin orchestrator. Wires hooks + domain components. Zero markup. Zero fetch calls. Zero <code>useState</code>.</li>
+      <li><strong>Domain Component</strong> — renders one slice of domain data using <code>@old-st/ui</code> primitives and React Query hooks.</li>
+      <li><strong>React Query Hook</strong> — owns server state (loading, error, data, refetch). Calls one API client method.</li>
+      <li><strong>API Client</strong> — typed <code>fetch</code> wrapper. Parses every response with a Zod schema from <code>@old-st/contracts/{domain}</code>.</li>
+      <li><strong>UI Primitive</strong> — stateless, domain-agnostic building block. Imports only design tokens and Tailwind classes.</li>
+    </ul>
+    <p>The <strong>dependency rule</strong>: no layer may reach more than one level below it. A page never imports an API client. A hook never imports a UI primitive. An API client never imports a hook.</p>
+    <p>Shared contracts (<code>@old-st/contracts/{domain}</code>) live outside this stack. They are imported at the boundary layers — by API clients (response validation) and by forms (Zod resolver) — and by the NestJS backend (<code>ZodValidationPipe</code>). One schema, two runtimes.</p>
+  </div>
+  </div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📦</span>
+    <span class="title">Entity</span>
+    <span class="subtitle">frontend-architecture.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="com">//  Frontend CLEAN Architecture — layer dependency rules</span>
+<span class="com">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="com">//</span>
+<span class="com">//  apps/webapp/src/app/(protected)/users/page.tsx       ← Page (orchestrator)</span>
+<span class="com">//    └─ apps/webapp/src/components/users/users-table.tsx ← Domain Component</span>
+<span class="com">//         └─ packages/client-common/src/hooks/use-users.ts ← React Query Hook</span>
+<span class="com">//              └─ packages/client-common/src/infrastructure/</span>
+<span class="com">//                   api-clients/user-api.client.ts        ← API Client (Zod)</span>
+<span class="com">//</span>
+<span class="com">//  packages/ui/src/components/                           ← UI Primitives</span>
+<span class="com">//    Badge, Button, Card, Table, Input, Select …</span>
+<span class="com">//</span>
+<span class="com">//  packages/contracts/user/src/schemas.ts                ← Shared Zod types</span>
+<span class="com">//    (imported by both the API client AND the NestJS ZodValidationPipe)</span>
+<span class="com">//</span>
+<span class="com">//  packages/design-tokens/src/lib/tokens.ts              ← Design tokens</span>
+<span class="com">//    (CSS custom properties on web; direct imports on mobile)</span>
+<span class="com">//</span>
+<span class="com">// ─────────────────────────────────────────────────────────────────────────</span>
+
+<span class="kw">export</span> <span class="kw">type</span> FrontendLayer =
+  | <span class="str">'Page'</span>           <span class="com">// apps/webapp/src/app/</span>
+  | <span class="str">'DomainComponent'</span><span class="com">// apps/webapp/src/components/{domain}/</span>
+  | <span class="str">'ReactQueryHook'</span> <span class="com">// packages/client-common/src/hooks/</span>
+  | <span class="str">'ApiClient'</span>      <span class="com">// packages/client-common/src/infrastructure/api-clients/</span>
+  | <span class="str">'UiPrimitive'</span>;   <span class="com">// packages/ui/src/components/</span>
+
+<span class="com">// ✅ The dependency rule — no layer may import more than one level below it.</span>
+<span class="kw">export</span> <span class="kw">const</span> LAYER_DEPENDENCIES: <span class="ty">Record</span>&lt;FrontendLayer, FrontendLayer[]&gt; = {
+  Page:            [<span class="str">'DomainComponent'</span>],
+  DomainComponent: [<span class="str">'ReactQueryHook'</span>, <span class="str">'UiPrimitive'</span>],
+  ReactQueryHook:  [<span class="str">'ApiClient'</span>],
+  ApiClient:       [],   <span class="com">// leaf — only imports @old-st/contracts and fetch</span>
+  UiPrimitive:     [],   <span class="com">// leaf — only imports design tokens and Tailwind</span>
+};
+
+<span class="com">// ── Golden Rules (frontend) ───────────────────────────────────────────────</span>
+<span class="com">// Rule 19:  Pages are thin orchestrators — no markup, no fetch, no state.</span>
+<span class="com">// Rule 20:  All API calls go through @old-st/client-common hooks.</span>
+<span class="com">// Rule 21:  UI primitives come from @old-st/ui — never raw HTML elements.</span>
+<span class="com">// Rule 23:  Every API client response is Zod-parsed at the client boundary.</span>
+<span class="com">// Rule 23a: All forms use react-hook-form + zodResolver + schema from contracts.</span>
+<span class="com">// Rule 23n: Every @old-st/ui primitive ships 4 files: tsx + index.ts + stories + spec.</span>
+<span class="com">// Rule 23o: Never use template-literal Tailwind class interpolation (JIT can't emit those classes).</span></code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Pages are Server Components by default — "use client" only when needed</span><span class="concept-pill">✦ Hooks own ALL server state — no useEffect + setState for data fetching</span><span class="concept-pill">✦ API clients parse with Zod at the boundary — type safety at runtime</span><span class="concept-pill">✦ UI primitives are domain-agnostic — domain knowledge stays in apps/</span><span class="concept-pill">✦ Contracts are shared between backend NestJS pipe and frontend form resolver</span><span class="concept-pill">✦ Static export (output: export) — CDN delivery, no Node.js server at runtime</span></div>
+    
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Fetching in a page:</strong> calling <code>fetch()</code> or importing API clients directly from a page component breaks layer isolation — use a React Query hook instead.</li><li><strong>Typing API responses manually:</strong> hand-writing <code>type UserResponse = { ... }</code> instead of importing from <code>@old-st/contracts/user</code> causes the types to drift the moment the backend changes.</li><li><strong>Reading <code>process.env</code> in components:</strong> env vars are configured once via <code>configureApi()</code> in <code>layout.tsx</code> — never read them inside a component or hook.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="02-file-structure">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Architecture Domain</div>
+        <h2>File Structure — New vs Old</h2>
+        <p class="module-desc">The old template mixed all components into a shared library, used a flat route structure, and owned its own auth/layout wrappers per app. The new template uses Next.js App Router route groups, domain-scoped components co-located with pages, and a dedicated shared UI + data-access layer across web and mobile.</p>
+      </div>
+      <span class="complexity l1">L1 · Structure</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Structure · Old vs New</div>
+    <div class="spec-body">
+    <p><strong>Old template (nx-template-v2):</strong></p>
+    <ul>
+      <li>Components live in <code>libs/frontend/components-web/</code> — a shared lib used by <em>all</em> apps.</li>
+      <li>Data access in <code>libs/frontend/data-access/src/api/</code> — Axios classes with inheritance.</li>
+      <li>Pages at <code>apps/web-app/src/app/(authenticated-routes)/dashboard/</code>.</li>
+      <li>Auth guard is a <code>&lt;ProtectedRoute&gt;</code> wrapper component inside a layout.</li>
+      <li>Styles: global SCSS in <code>libs/frontend/components-web/src/styles/</code>.</li>
+    </ul>
+    <p><strong>New template (old-st-template):</strong></p>
+    <ul>
+      <li>Domain components co-locate with features in <code>apps/webapp/src/components/{domain}/</code>.</li>
+      <li>Shared UI primitives in <code>packages/ui/src/components/</code> (web) and <code>packages/mobile-ui/</code> (mobile).</li>
+      <li>Shared hooks + API clients in <code>packages/client-common/src/</code> — used by webapp <em>and</em> mobile.</li>
+      <li>Auth guard is a <code>useAuth()</code> hook check in the <code>(protected)/layout.tsx</code> route group.</li>
+      <li>Styles: Tailwind v4 utilities + design tokens in <code>packages/design-tokens/</code>.</li>
+    </ul>
+    <p>The key structural shift: domain knowledge stays with the app; primitives + data-access are shared packages.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">nx-template-v2</span>
+    </div>
+    <div class="panel-body code-body"><pre><code>
+ apps/
+   web-app/
+     src/
+       app/
+         (authenticated-routes)/
+           layout.tsx              ← wraps ProtectedRoute + WithSidebar
+           dashboard/page.tsx
+           settings/page.tsx
+         auth/
+           login/page.tsx
+         layout.tsx                ← bare &lt;html&gt;&lt;body&gt;{children}&lt;/body&gt;&lt;/html&gt;
+         global.scss               ← global styles imported <span class="kw">in</span> layout
+       components/
+         global/
+           client-provider/        ← QueryClient setup per-app
+           <span class="kw">protected</span>-route/        ← auth wrapper component
+         layouts/
+           with-sidebar/           ← sidebar layout component
+         modules/                  ← domain <span class="str">"modules"</span> (mixed UI + fetch)
+       config/
+         metadata.ts
+       types/
+         layout.ts
+
+ libs/
+   frontend/
+     components-web/               ← ALL shared components (web only)
+       src/
+         data-display/
+         form-controls/
+         icons/
+         navigation/
+         styles/                   ← global .scss files
+     data-access/
+       src/
+         api/
+           axiosConfig.ts          ← base <span class="kw">class</span> (Axios + interceptors)
+           auth.ts                 ← <span class="kw">extends</span> AxiosConfig
+           user.ts                 ← <span class="kw">extends</span> AxiosConfig
+         config/
+           env.ts                  ← <span class="kw">async</span> env loader (runtime fetch)
+         hooks/                    ← React Query hooks
+         state-management/         ← Zustand / Context stores</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">old-st-template</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">//</span>
+<span class="com">//  apps/</span>
+<span class="com">//    webapp/</span>
+<span class="com">//      src/</span>
+<span class="com">//        app/</span>
+<span class="com">//          layout.tsx                ← root: ThemeProvider + Providers + Toaster</span>
+<span class="com">//          globals.css               ← @import tokens.css; Tailwind v4 directives</span>
+<span class="com">//          (protected)/</span>
+<span class="com">//            layout.tsx              ← client: useAuth() guard + &lt;Sidebar&gt;</span>
+<span class="com">//            page.tsx                ← dashboard redirect</span>
+<span class="com">//          auth/</span>
+<span class="com">//            login/page.tsx</span>
+<span class="com">//          global-error.tsx          ← App Router error boundary (root)</span>
+<span class="com">//          not-found.tsx</span>
+<span class="com">//        components/</span>
+<span class="com">//          layout/</span>
+<span class="com">//            sidebar.tsx             ← shared layout only; no domain logic</span>
+<span class="com">//            header.tsx</span>
+<span class="com">//          theme-provider.tsx        ← next-themes wrapper</span>
+<span class="com">//          theme-toggle.tsx</span>
+<span class="com">//        features/                   ← (reserved for cross-domain features)</span>
+<span class="com">//        lib/</span>
+<span class="com">//          status-variants.ts        ← badge variant maps (uses domain enums)</span>
+<span class="com">//        test-setup.ts</span>
+<span class="com">//</span>
+<span class="com">//  packages/</span>
+<span class="com">//    ui/                             ← @old-st/ui — web primitives (shadcn-style)</span>
+<span class="com">//      src/</span>
+<span class="com">//        components/</span>
+<span class="com">//          data-display/             ← Badge, Card, Table, Skeleton …</span>
+<span class="com">//          feedback/                 ← Toast (Sonner), Alert …</span>
+<span class="com">//          form-controls/            ← Button, Input, Select, Form …</span>
+<span class="com">//          layout/                   ← Separator, Sheet, Dialog …</span>
+<span class="com">//          navigation/               ← Tabs, Breadcrumb …</span>
+<span class="com">//        lib/utils.ts                ← cn() helper (clsx + tailwind-merge)</span>
+<span class="com">//</span>
+<span class="com">//    client-common/                  ← @old-st/client-common — SHARED (web + mobile)</span>
+<span class="com">//      src/</span>
+<span class="com">//        infrastructure/</span>
+<span class="com">//          config.ts                 ← configureApi() — single call at boot</span>
+<span class="com">//          api-clients/</span>
+<span class="com">//            base-api.client.ts      ← apiRequest&lt;T&gt;() — fetch + Zod parse</span>
+<span class="com">//            auth-api.client.ts</span>
+<span class="com">//            file-api.client.ts</span>
+<span class="com">//          errors/</span>
+<span class="com">//            api-error.ts            ← typed ApiError (statusCode, error, message)</span>
+<span class="com">//        hooks/</span>
+<span class="com">//          use-auth.ts               ← useAuth(), AuthProvider</span>
+<span class="com">//          use-file-upload.ts</span>
+<span class="com">//          optimistic-mutation.ts</span>
+<span class="com">//        lib/</span>
+<span class="com">//          query-client.ts           ← shared QueryClient (staleTime, retry)</span>
+<span class="com">//          providers.tsx             ← &lt;Providers&gt; wraps QueryClientProvider + AuthProvider</span>
+<span class="com">//</span>
+<span class="com">//    design-tokens/                  ← @old-st/design-tokens — cross-platform tokens</span>
+<span class="com">//      src/</span>
+<span class="com">//        lib/tokens.ts               ← lightColors, darkColors, spacing, radii …</span></code></pre></div>
+  </div>
+</div>
+    
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Route groups ( ) organize routes without adding URL segments</span><span class="concept-pill">✦ Domain components live in apps/ — shared primitives live in packages/</span><span class="concept-pill">✦ client-common is used by BOTH webapp and mobile (write once)</span><span class="concept-pill">✦ design-tokens drives Tailwind v4 on web and StyleSheet on mobile</span><span class="concept-pill">✦ No per-app QueryClient setup — shared via &lt;Providers&gt; from client-common</span><span class="concept-pill">✦ Auth guard is a hook + useEffect in a layout, not a wrapper component</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Adding domain components to packages/ui:</strong> UI primitives must be domain-agnostic. A <code>UserBadge</code> belongs in <code>apps/webapp/src/components/users/</code>, not in <code>packages/ui/</code>.</li><li><strong>Duplicating hooks for mobile:</strong> never create a mobile-only API client. Add the method to <code>client-common</code> so both platforms share it.</li><li><strong>Putting global SCSS in apps/:</strong> all styling is Tailwind v4 utilities. If you need a custom token, add it to <code>packages/design-tokens/</code> and regenerate.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="03-static-site-generation">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Infrastructure Domain</div>
+        <h2>Static Site Generation (SSG)</h2>
+        <p class="module-desc">The old template required a running Node.js process (or a Lambda/ECS container) to serve each page request. The new template sets output: 'export' in next.config.js, which produces a static HTML + JS bundle under apps/webapp/out/ — deployed to S3 and served via CloudFront. No server, no cold starts, no container costs for the webapp.</p>
+      </div>
+      <span class="complexity l2">L2 · Deployment</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Infrastructure · Static Export</div>
+    <div class="spec-body">
+    <p><strong>Old template:</strong> no <code>output</code> config → Next.js defaults to server rendering.</p>
+    <ul>
+      <li>Requires a running Node.js process (ECS Fargate or Lambda container image).</li>
+      <li>Server-side redirects: <code>async redirects()</code> in <code>next.config.js</code> handle <code>/</code> → <code>/auth/login</code>.</li>
+      <li>Auth middleware runs server-side — can check cookies on the server before rendering.</li>
+      <li>Cost: always-on ECS task or Lambda warm-up on every page hit.</li>
+    </ul>
+    <p><strong>New template:</strong> <code>output: 'export'</code> → fully static bundle.</p>
+    <ul>
+      <li>Build produces <code>apps/webapp/out/</code> — plain HTML + CSS + JS files.</li>
+      <li>Synced to S3 + CloudFront: <code>aws s3 sync out/ s3://bucket</code> then CloudFront invalidation.</li>
+      <li>No server-side redirects: <code>async redirects()</code> is incompatible with static export. Auth guard moves to the client (<code>useAuth()</code> + <code>useRouter()</code> in the route group layout).</li>
+      <li>Edge middleware (<code>middleware.ts</code>) is also incompatible with static export — not used by default.</li>
+      <li>SPA routing: CloudFront returns <code>index.html</code> for all 403/404 responses so the client-side router handles deep links.</li>
+      <li>Cost: S3 storage + CloudFront data transfer only — no compute per page request.</li>
+    </ul>
+    <p><strong>Trade-off:</strong> no server-side rendering means auth protection is UX, not security. The API Gateway + NestJS JWT guards remain the true security boundary for every data request.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">nx-template-v2/apps/web-app/next.config.js</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">const</span> nextConfig = {
+  nx: { svgr: <span class="kw">false</span> },
+  <span class="kw">async</span> redirects() {             <span class="com">// ← server-side redirect (SSR only)</span>
+    <span class="kw">return</span> [
+      { source: <span class="str">'/'</span>, destination: <span class="str">'/auth/login'</span>, permanent: <span class="kw">true</span> },
+    ];
+  },
+  webpack(config) {
+    config.module.rules.push({ test: /\.svg$/, use: [<span class="str">'@svgr/webpack'</span>] });
+    <span class="kw">return</span> config;
+  },
+};
+→ No output setting = server render required (Node.js process per env)</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">old-st-template/apps/webapp/next.config.js</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">const</span> { composePlugins, withNx } = require(<span class="str">'@nx/next'</span>);
+<span class="kw">const</span> withBundleAnalyzer = require(<span class="str">'@next/bundle-analyzer'</span>)({
+  enabled: process.env.ANALYZE === <span class="str">'true'</span>,  <span class="com">// opt-in: ANALYZE=true nx build webapp</span>
+});
+
+<span class="kw">const</span> nextConfig = {
+  nx: {},
+
+  <span class="com">// ✅ Static export — the key addition.</span>
+  <span class="com">// Produces apps/webapp/out/ on 'nx build webapp'.</span>
+  <span class="com">// Deployed to S3 + served via CloudFront (infra/modules/static-webapp).</span>
+  output: <span class="str">'export'</span>,
+
+  transpilePackages: [
+    <span class="str">'@old-st/contracts-common'</span>,
+    <span class="str">'@old-st/contracts-auth'</span>,
+    <span class="com">// add new @old-st/* packages here when they use TypeScript source</span>
+  ],
+};
+
+<span class="kw">const</span> plugins = [withNx, withBundleAnalyzer];
+module.exports = composePlugins(...plugins)(nextConfig);
+
+<span class="com">//  What output: 'export' disables  (must NOT use these):</span>
+<span class="com">//   ✗ next/headers, next/cookies           (server-only APIs)</span>
+<span class="com">//   ✗ Route Handlers with POST/PUT/DELETE  (use backend services)</span>
+<span class="com">//   ✗ async redirects() / rewrites()       (server config)</span>
+<span class="com">//   ✗ middleware.ts (Edge)                 (incompatible with export)</span>
+<span class="com">//   ✗ getServerSideProps                   (no server at runtime)</span>
+<span class="com">//   ✗ Image Optimization (next/image)      (use unoptimized: true or external CDN)</span>
+<span class="com">//</span>
+<span class="com">//  What still works:</span>
+<span class="com">//   ✅ generateStaticParams / generateMetadata (build-time)</span>
+<span class="com">//   ✅ React Server Components (rendered to static HTML at build)</span>
+<span class="com">//   ✅ useRouter, useSearchParams (client-side navigation)</span>
+<span class="com">//   ✅ React Query (all data fetching is client-side)</span>
+<span class="com">//   ✅ All @old-st/ui primitives</span>
+<span class="com">//   ✅ Dark mode via next-themes (purely client-side)</span></code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">(protected)/layout.tsx</div>
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">ProtectedRoute wrapper component</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">const</span> ProtectedRoute: React.FC = ({ children }) =&gt; {
+  <span class="kw">const</span> isAuthenticated = <span class="com">/* read from cookie / context */</span>;
+  <span class="kw">if</span> (!isAuthenticated) {
+    <span class="kw">return</span> &lt;Navigate to=<span class="str">"/auth/login"</span> /&gt;;   <span class="com">// or redirect()</span>
+  }
+  <span class="kw">return</span> &lt;&gt;{children}&lt;/&gt;;
+};
+→ Lives <span class="kw">in</span> libs/ — shared, but tightly coupled to auth implementation.</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">route group layout with useAuth() hook</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="str">'use client'</span>;
+
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> { useRouter } <span class="kw">from</span> <span class="str">'next/navigation'</span>;
+<span class="kw">import</span> { useEffect } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { Sidebar } <span class="kw">from</span> <span class="str">'@/components/layout/sidebar'</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> ProtectedLayout({ children }: { children: React.ReactNode }) {
+  <span class="kw">const</span> { isAuthenticated, isLoading } = useAuth();
+  <span class="kw">const</span> router = useRouter();
+
+  <span class="com">// Client-side guard: redirects to /auth/login if no valid session.</span>
+  <span class="com">// This is a UX guard — the real security is the API Gateway JWT authorizer.</span>
+  useEffect(() =&gt; {
+    <span class="kw">if</span> (!isLoading &amp;&amp; !isAuthenticated) {
+      router.replace(<span class="str">'/auth/login'</span>);
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  <span class="kw">if</span> (isLoading) {
+    <span class="kw">return</span> (
+      &lt;div className=<span class="str">"flex h-screen items-center justify-center"</span>&gt;
+        &lt;div className=<span class="str">"text-muted-foreground"</span>&gt;Loading…&lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  <span class="kw">if</span> (!isAuthenticated) <span class="kw">return</span> <span class="kw">null</span>;  <span class="com">// avoids flash of protected content</span>
+
+  <span class="kw">return</span> (
+    &lt;div className=<span class="str">"flex h-screen"</span>&gt;
+      &lt;Sidebar /&gt;
+      &lt;main className=<span class="str">"flex-1 overflow-auto"</span>&gt;{children}&lt;/main&gt;
+    &lt;/div&gt;
+  );
+}</code></pre></div>
+  </div>
+</div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ output: 'export' produces static HTML/JS — no Node.js server at runtime</span><span class="concept-pill">✦ S3 + CloudFront replaces ECS/Lambda for the webapp — near-zero cost</span><span class="concept-pill">✦ Auth guard moves to client: useAuth() + useRouter() in layout.tsx</span><span class="concept-pill">✦ SPA routing: CloudFront serves index.html for all 404/403 responses</span><span class="concept-pill">✦ API security stays at the backend — client-side guard is UX only</span><span class="concept-pill">✦ Bundle analyzer: ANALYZE=true pnpm nx run webapp:build</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Using server APIs in a static export:</strong> importing <code>next/headers</code> or <code>next/cookies</code> inside any component causes a build-time error. All data fetching must be client-side (React Query).</li><li><strong>Relying on the client guard for security:</strong> <code>useAuth()</code> prevents seeing the UI, but JavaScript can be disabled or the HTML can be fetched directly. Every API endpoint must validate the JWT independently.</li><li><strong>Forgetting CloudFront SPA routing:</strong> if CloudFront returns 404 for <code>/users/123</code> instead of serving <code>index.html</code>, the Next.js router never runs. Configure a custom error response: <code>403/404 → /index.html, HTTP 200</code>.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="04-data-access-layer">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Infrastructure Domain</div>
+        <h2>Data-Access Layer</h2>
+        <p class="module-desc">The old template used an AxiosConfig base class that loaded environment variables asynchronously inside the constructor, applied interceptors for auth, and returned raw untyped response bodies. The new template replaces this with a single apiRequest&lt;T&gt;() function using the native fetch API — no Axios dependency, responses validated by Zod schemas from the shared contracts package, and a single configureApi() call at boot.</p>
+      </div>
+      <span class="complexity l3">L3 · Data Access</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Data Access · API Clients</div>
+    <div class="spec-body">
+    <p><strong>Old approach — Axios class inheritance:</strong></p>
+    <ul>
+      <li><code>AxiosConfig</code> base class reads env vars via an <em>async</em> <code>getEnv()</code> inside the constructor — env is not available synchronously at class creation time.</li>
+      <li>Each API service creates a subclass: <code>class AuthApi extends AxiosConfig</code>.</li>
+      <li>Axios interceptors handle token injection and 401 redirects.</li>
+      <li>Response bodies are returned as <code>any</code> — no runtime validation.</li>
+      <li>Depends on the <code>axios</code> and <code>js-cookie</code> packages.</li>
+    </ul>
+    <p><strong>New approach — <code>apiRequest&lt;T&gt;()</code> + Zod:</strong></p>
+    <ul>
+      <li><code>configureApi()</code> is called once in <code>layout.tsx</code> — synchronous, no async constructor issues.</li>
+      <li><code>apiRequest&lt;T&gt;()</code> is a plain <code>async function</code> using native <code>fetch</code> — zero new dependencies.</li>
+      <li>Every API client method passes a <code>schema: ZodType&lt;T&gt;</code> option — the response is parsed and typed at the boundary.</li>
+      <li>A <code>401</code> triggers a silent token refresh; if refresh fails, the user is signed out.</li>
+      <li>The same clients work on both the webapp and the Expo mobile app (no browser globals).</li>
+    </ul>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">libs/frontend/data-access/src/api/axiosConfig.ts</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">export</span> <span class="kw">class</span> AxiosConfig {
+  <span class="kw">protected</span> axiosInstance: AxiosInstance;
+
+  constructor(baseURLEnvVar: keyof EnvVariables | <span class="kw">null</span>, ...) {
+    <span class="kw">this</span>.axiosInstance = axios.create({ timeout: <span class="num">150000</span>, ... });
+    <span class="kw">this</span>.initializeBaseURL(baseURLEnvVar); <span class="com">// ← async, fires and forgets!</span>
+    <span class="kw">this</span>.addInterceptor(...);
+  }
+
+  <span class="kw">private</span> <span class="kw">async</span> initializeBaseURL(envVar) {
+    <span class="kw">const</span> env = <span class="kw">await</span> getEnv();            <span class="com">// ← HTTP call to /config.json</span>
+    <span class="kw">this</span>.axiosInstance.defaults.baseURL = env[envVar];
+  }
+}
+Problems: <span class="kw">async</span> constructor, untested interceptors, no response validation.</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">base-api.client.ts</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="kw">type</span> ZodType } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { ApiError } <span class="kw">from</span> <span class="str">'../errors/api-error'</span>;
+
+<span class="com">// ── Token management ─────────────────────────────────────────────────────</span>
+<span class="kw">let</span> accessTokenGetter: (() =&gt; <span class="ty">string</span> | <span class="kw">null</span>) | <span class="kw">null</span> = <span class="kw">null</span>;
+<span class="kw">let</span> onUnauthorized: (() =&gt; <span class="ty">Promise</span>&lt;<span class="ty">boolean</span>&gt;) | <span class="kw">null</span> = <span class="kw">null</span>;
+<span class="kw">let</span> isRefreshing = <span class="kw">false</span>;
+
+<span class="kw">export</span> <span class="kw">function</span> setAccessTokenGetter(getter: () =&gt; <span class="ty">string</span> | <span class="kw">null</span>): <span class="kw">void</span> {
+  accessTokenGetter = getter;
+}
+<span class="kw">export</span> <span class="kw">function</span> setOnUnauthorized(handler: () =&gt; <span class="ty">Promise</span>&lt;<span class="ty">boolean</span>&gt;): <span class="kw">void</span> {
+  onUnauthorized = handler;
+}
+
+<span class="com">// ── Core request function ─────────────────────────────────────────────────</span>
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> apiRequest&lt;T&gt;(
+  baseUrl: <span class="ty">string</span>,
+  path: <span class="ty">string</span>,
+  options?: {
+    method?: <span class="ty">string</span>;
+    body?: unknown;
+    headers?: <span class="ty">Record</span>&lt;<span class="ty">string</span>, <span class="ty">string</span>&gt;;
+    params?: <span class="ty">Record</span>&lt;<span class="ty">string</span>, <span class="ty">string</span> | <span class="ty">number</span> | <span class="kw">undefined</span>&gt;;
+    schema?: ZodType&lt;T&gt;;          <span class="com">// ← Zod schema validates the response at runtime</span>
+  },
+): <span class="ty">Promise</span>&lt;T&gt; {
+  <span class="kw">const</span> { method = <span class="str">'GET'</span>, body, headers, params, schema } = options ?? {};
+
+  <span class="com">// Build URL with optional query parameters</span>
+  <span class="kw">const</span> url = <span class="kw">new</span> URL(<span class="str">`${baseUrl}${path}`</span>);
+  <span class="kw">if</span> (params) {
+    <span class="kw">for</span> (<span class="kw">const</span> [key, value] <span class="kw">of</span> Object.entries(params)) {
+      <span class="kw">if</span> (value !== <span class="kw">undefined</span>) url.searchParams.set(key, String(value));
+    }
+  }
+
+  <span class="com">// Attach the in-memory access token (never read from localStorage)</span>
+  <span class="kw">const</span> token = accessTokenGetter?.();
+  <span class="kw">const</span> authHeaders: <span class="ty">Record</span>&lt;<span class="ty">string</span>, <span class="ty">string</span>&gt; = token
+    ? { Authorization: <span class="str">`Bearer ${token}`</span> }
+    : {};
+
+  <span class="kw">let</span> response = <span class="kw">await</span> fetch(url.toString(), {
+    method,
+    credentials: <span class="str">'include'</span>,           <span class="com">// sends httpOnly refresh cookie</span>
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>, ...authHeaders, ...headers },
+    body: body !== <span class="kw">undefined</span> ? JSON.stringify(body) : <span class="kw">undefined</span>,
+  });
+
+  <span class="com">// Silent token refresh on 401</span>
+  <span class="kw">if</span> (response.status === <span class="num">401</span> &amp;&amp; !isRefreshing &amp;&amp; onUnauthorized) {
+    isRefreshing = <span class="kw">true</span>;
+    <span class="kw">const</span> refreshed = <span class="kw">await</span> onUnauthorized();
+    isRefreshing = <span class="kw">false</span>;
+    <span class="kw">if</span> (refreshed) {
+      <span class="kw">const</span> newToken = accessTokenGetter?.();
+      response = <span class="kw">await</span> fetch(url.toString(), {
+        method,
+        credentials: <span class="str">'include'</span>,
+        headers: {
+          <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+          ...(newToken ? { Authorization: <span class="str">`Bearer ${newToken}`</span> } : {}),
+          ...headers,
+        },
+        body: body !== <span class="kw">undefined</span> ? JSON.stringify(body) : <span class="kw">undefined</span>,
+      });
+    }
+  }
+
+  <span class="kw">if</span> (response.status === <span class="num">204</span>) <span class="kw">return</span> <span class="kw">undefined</span> <span class="kw">as</span> T;
+
+  <span class="kw">const</span> responseBody = <span class="kw">await</span> response.json().<span class="kw">catch</span>(() =&gt; <span class="kw">null</span>);
+  <span class="kw">if</span> (!response.ok) {
+    <span class="kw">throw</span> <span class="kw">new</span> ApiError(
+      response.status,
+      responseBody?.error ?? response.statusText,
+      responseBody?.message ?? <span class="str">'An unexpected error occurred'</span>,
+    );
+  }
+
+  <span class="com">// ✅ Zod parse validates the shape BEFORE returning to the hook</span>
+  <span class="kw">return</span> schema ? schema.parse(responseBody) : (responseBody <span class="kw">as</span> T);
+}</code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">auth-api.client.ts</div>
+    <div class="fade-in"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">✅</span>
+    <span class="title">auth-api.client.ts</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// packages/client-common/src/infrastructure/api-clients/auth-api.client.ts</span>
+<span class="com">//</span>
+<span class="com">// Each domain gets a thin client file — just named functions, no classes.</span>
+<span class="com">// ─────────────────────────────────────────────────────────────────</span>
+<span class="com">//  OLD — libs/frontend/data-access/src/api/auth.ts</span>
+<span class="com">// ─────────────────────────────────────────────────────────────────</span>
+<span class="com">// export class AuthApi extends AxiosConfig {</span>
+<span class="com">//   constructor() {</span>
+<span class="com">//     super('AUTH_API_URL', false, false);  // 'false' = no auth header</span>
+<span class="com">//   }</span>
+<span class="com">//   async login(email: string, password: string): Promise&lt;LoginResponse&gt; {</span>
+<span class="com">//     return this.axiosInstance.post('/auth/sign-in', { email, password });</span>
+<span class="com">//     // ↑ returns response.data.body — untyped, no validation</span>
+<span class="com">//   }</span>
+<span class="com">// }</span>
+
+<span class="com">// ─────────────────────────────────────────────────────────────────</span>
+<span class="com">//  NEW — auth-api.client.ts</span>
+<span class="com">// ─────────────────────────────────────────────────────────────────</span>
+<span class="kw">import</span> { signInResponseSchema, refreshSessionResponseSchema } <span class="kw">from</span> <span class="str">'@old-st/contracts/auth'</span>;
+<span class="kw">import</span> { getApiConfig } <span class="kw">from</span> <span class="str">'../config'</span>;
+<span class="kw">import</span> { apiRequest } <span class="kw">from</span> <span class="str">'./base-api.client'</span>;
+
+<span class="com">// Plain named functions — no class, no 'this', no inheritance.</span>
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> signIn(email: <span class="ty">string</span>, password: <span class="ty">string</span>) {
+  <span class="kw">return</span> apiRequest(
+    getApiConfig().authApiUrl,
+    <span class="str">'/auth/sign-in'</span>,
+    {
+      method: <span class="str">'POST'</span>,
+      body: { email, password },
+      schema: signInResponseSchema,   <span class="com">// ← schema from @old-st/contracts/auth</span>
+    },
+  );
+}
+
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> refreshSession() {
+  <span class="kw">return</span> apiRequest(
+    getApiConfig().authApiUrl,
+    <span class="str">'/auth/refresh-session'</span>,
+    {
+      method: <span class="str">'POST'</span>,
+      credentials: <span class="str">'include'</span>,         <span class="com">// sends httpOnly refresh cookie</span>
+      schema: refreshSessionResponseSchema,
+    },
+  );
+}
+
+<span class="kw">export</span> <span class="kw">async</span> <span class="kw">function</span> signOut() {
+  <span class="kw">return</span> apiRequest(getApiConfig().authApiUrl, <span class="str">'/auth/sign-out'</span>, { method: <span class="str">'POST'</span> });
+}</code></pre></div>
+</div></div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ configureApi() is called once at app boot — no async constructors</span><span class="concept-pill">✦ Native fetch — no Axios dependency (works in Node, browser, React Native)</span><span class="concept-pill">✦ Zod schema validates every response at the client boundary</span><span class="concept-pill">✦ Access token is memory-only — never in localStorage</span><span class="concept-pill">✦ Silent 401 → refresh → retry without the caller knowing</span><span class="concept-pill">✦ Same apiRequest&lt;T&gt;() shared by webapp and Expo mobile</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Returning <code>any</code> from API clients:</strong> if you skip the <code>schema</code> option, TypeScript will infer <code>unknown</code> and every consumer must cast. Always pass a Zod schema — it's runtime safety AND TypeScript inference in one step.</li><li><strong>Creating per-app API client classes:</strong> the old Axios class pattern tempts duplication. The new rule: add a new <em>function</em> to the existing domain client file (<code>auth-api.client.ts</code>) — never create a new class.</li><li><strong>Reading <code>process.env</code> inside a hook or client:</strong> env vars are configured once at boot via <code>configureApi()</code>. Inside a client, always call <code>getApiConfig().userApiUrl</code>.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="05-ui-primitives">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">UI Domain</div>
+        <h2>UI Primitives — @old-st/ui</h2>
+        <p class="module-desc">The old template maintained a components-web library of SCSS-styled React components with no variant system. The new template uses @old-st/ui — shadcn-style primitives built on Radix UI, styled with Tailwind v4 utilities and class-variance-authority (cva()) for type-safe variants. Every primitive has a story (Storybook 8) and a co-located test.</p>
+      </div>
+      <span class="complexity l2">L2 · Design System</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">UI · Primitive Rules</div>
+    <div class="spec-body">
+    <p><strong>Old template (components-web):</strong></p>
+    <ul>
+      <li>Components in <code>libs/frontend/components-web/src/</code> styled with <code>.scss</code> files.</li>
+      <li>No variant system — conditional classes added ad-hoc with ternaries.</li>
+      <li>No Storybook; no co-located tests.</li>
+      <li>Duplicated between web and mobile — mobile had separate SCSS.</li>
+    </ul>
+    <p><strong>New template (@old-st/ui):</strong></p>
+    <ul>
+      <li>Every primitive is a <strong>shadcn-style</strong> component: Radix UI headless + Tailwind utilities.</li>
+      <li>Variants declared with <strong><code>cva()</code></strong> (class-variance-authority) — fully type-safe.</li>
+      <li>Design tokens from <code>@old-st/design-tokens</code> feed CSS custom properties — no hardcoded colours.</li>
+      <li>Each primitive ships: <code>{name}.tsx</code> + <code>index.ts</code> + <code>{name}.stories.tsx</code> + <code>{name}.spec.tsx</code>.</li>
+      <li>No SCSS anywhere in <code>packages/ui/</code> — Tailwind v4 utilities only.</li>
+      <li>Dark mode via CSS variable overrides in <code>globals.css</code> under <code>.dark</code>.</li>
+    </ul>
+    <p><strong>Rule 23n:</strong> every primitive ships four files; rule 23o: never use template-literal Tailwind class interpolation.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">libs/frontend/components-web/src/data-display/</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// badge.tsx (old)</span>
+<span class="kw">import</span> styles <span class="kw">from</span> <span class="str">'./badge.module.scss'</span>;
+<span class="kw">interface</span> BadgeProps { children: React.ReactNode; variant?: <span class="ty">string</span>; }
+<span class="kw">export</span> <span class="kw">const</span> Badge = ({ children, variant = <span class="str">'default'</span> }: BadgeProps) =&gt; (
+  &lt;span className={<span class="str">`${styles.badge} ${styles[variant] ?? ''}`</span>}&gt;
+    {children}
+  &lt;/span&gt;
+);
+Problems: <span class="ty">string</span> variant with no <span class="kw">type</span> safety; SCSS drift; no dark mode tokens.</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">packages/ui/src/components/data-display/badge/badge.tsx</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> * <span class="kw">as</span> React <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { cva, <span class="kw">type</span> VariantProps } <span class="kw">from</span> <span class="str">'class-variance-authority'</span>;
+<span class="kw">import</span> { cn } <span class="kw">from</span> <span class="str">'../../../lib/utils'</span>;
+
+<span class="com">// cva() declares all valid variant combinations at compile time.</span>
+<span class="com">// TypeScript will reject &lt;Badge variant="invented" /&gt; at the call site.</span>
+<span class="kw">const</span> badgeVariants = cva(
+  <span class="com">// Base classes applied to every badge (Tailwind v4 utilities)</span>
+  <span class="str">'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors'</span>,
+  {
+    variants: {
+      variant: {
+        <span class="kw">default</span>:     <span class="str">'border-transparent bg-primary text-primary-foreground'</span>,
+        secondary:   <span class="str">'border-transparent bg-secondary text-secondary-foreground'</span>,
+        destructive: <span class="str">'border-transparent bg-destructive text-destructive-foreground'</span>,
+        outline:     <span class="str">'text-foreground'</span>,
+        success:     <span class="str">'border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'</span>,
+        warning:     <span class="str">'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'</span>,
+        info:        <span class="str">'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'</span>,
+      },
+    },
+    defaultVariants: {
+      variant: <span class="str">'default'</span>,
+    },
+  },
+);
+
+<span class="com">// VariantProps&lt;typeof badgeVariants&gt; gives TypeScript the full union type.</span>
+<span class="kw">export</span> <span class="kw">interface</span> BadgeProps
+  <span class="kw">extends</span> React.HTMLAttributes&lt;HTMLSpanElement&gt;,
+    VariantProps&lt;<span class="kw">typeof</span> badgeVariants&gt; {}
+
+<span class="com">// React 19: ref is a plain prop — no forwardRef wrapper needed.</span>
+<span class="kw">function</span> Badge({ className, variant, ...props }: BadgeProps) {
+  <span class="kw">return</span> (
+    &lt;span
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
+    /&gt;
+  );
+}
+
+<span class="kw">export</span> { Badge, badgeVariants };</code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">status-variants.ts</div>
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">ad-hoc inline ternaries in components</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// Inside a component (old):</span>
+<span class="kw">const</span> color = status === <span class="str">'ACTIVE'</span> ? <span class="str">'green'</span> : status === <span class="str">'PENDING'</span> ? <span class="str">'yellow'</span> : <span class="str">'red'</span>;
+<span class="com">// ↑ string literals, no type safety, duplicated across every component.</span></code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">centralised map using domain enum constants</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> <span class="kw">type</span> { BadgeProps } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/order'</span>;
+<span class="kw">import</span> { ProductStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/product'</span>;
+
+<span class="com">// ✅ Keys are enum values — TypeScript prevents stale string literals.</span>
+<span class="kw">export</span> <span class="kw">const</span> USER_STATUS_VARIANTS: <span class="ty">Record</span>&lt;<span class="ty">string</span>, BadgeProps[<span class="str">'variant'</span>]&gt; = {
+  [UserStatusEnum.ACTIVE]:   <span class="str">'success'</span>,
+  [UserStatusEnum.PENDING]:  <span class="str">'warning'</span>,
+  [UserStatusEnum.INACTIVE]: <span class="str">'secondary'</span>,
+  [UserStatusEnum.DELETED]:  <span class="str">'destructive'</span>,
+};
+
+<span class="kw">export</span> <span class="kw">const</span> ORDER_STATUS_VARIANTS: <span class="ty">Record</span>&lt;<span class="ty">string</span>, BadgeProps[<span class="str">'variant'</span>]&gt; = {
+  [OrderStatusEnum.DRAFT]:     <span class="str">'secondary'</span>,
+  [OrderStatusEnum.PENDING]:   <span class="str">'warning'</span>,
+  [OrderStatusEnum.PROCESSING]:<span class="str">'info'</span>,
+  [OrderStatusEnum.COMPLETED]: <span class="str">'success'</span>,
+  [OrderStatusEnum.CANCELLED]: <span class="str">'destructive'</span>,
+};
+
+<span class="kw">export</span> <span class="kw">const</span> PRODUCT_STATUS_VARIANTS: <span class="ty">Record</span>&lt;<span class="ty">string</span>, BadgeProps[<span class="str">'variant'</span>]&gt; = {
+  [ProductStatusEnum.ACTIVE]:       <span class="str">'success'</span>,
+  [ProductStatusEnum.DISCONTINUED]: <span class="str">'destructive'</span>,
+};
+
+<span class="com">// Usage in a domain component:</span>
+<span class="com">// &lt;Badge variant={USER_STATUS_VARIANTS[user.userStatus] ?? 'default'}&gt;</span>
+<span class="com">//   {user.userStatus}</span>
+<span class="com">// &lt;/Badge&gt;</span></code></pre></div>
+  </div>
+</div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ cva() enforces variant types — no runtime string mistakes</span><span class="concept-pill">✦ cn() merges Tailwind classes without duplication (clsx + tailwind-merge)</span><span class="concept-pill">✦ Design tokens feed CSS custom properties — dark mode is automatic</span><span class="concept-pill">✦ Radix UI handles accessibility (keyboard, focus, ARIA) for interactive primitives</span><span class="concept-pill">✦ No SCSS — Tailwind v4 utilities only (scanned statically by JIT)</span><span class="concept-pill">✦ Four-file rule: tsx + index.ts + stories.tsx + spec.tsx per primitive</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Template-literal Tailwind classes:</strong> <code>className={`bg-${'brand'}-500`}</code> produces <em>no styles</em> — Tailwind v4's JIT scanner never sees this string. Use a <code>cva()</code> variant map or <code>style={{ backgroundColor: token }}</code> for dynamic values.</li><li><strong>Adding domain knowledge to @old-st/ui:</strong> a <code>UserStatusBadge</code> that knows about <code>UserStatusEnum</code> belongs in <code>apps/webapp/src/components/users/</code>. The primitives package must stay domain-agnostic.</li><li><strong>Skipping co-located tests:</strong> the 70% coverage threshold on <code>packages/ui</code> is enforced by CI. Every new primitive needs a <code>.spec.tsx</code> testing at minimum the default render and each variant.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="06-page-thin-orchestrator">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Webapp Domain</div>
+        <h2>Page as Thin Orchestrator</h2>
+        <p class="module-desc">Golden Rule #19: pages are thin orchestrators. A page component's only job is to connect the right hooks, pass state to domain components, and arrange layout. All rendering logic lives in domain-scoped components. All data-fetching logic lives in React Query hooks. A reviewer should be able to understand a page's purpose in 10 lines.</p>
+      </div>
+      <span class="complexity l3">L3 · Page Pattern</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Webapp · Page Pattern</div>
+    <div class="spec-body">
+    <p><strong>Old template — page owns everything:</strong></p>
+    <ul>
+      <li>API calls made with <code>axios.get()</code> inside <code>useEffect()</code> in the page component.</li>
+      <li>Table markup (<code>&lt;table&gt;&lt;tr&gt;&lt;td&gt;</code>) written inline in the page.</li>
+      <li>Status badge colour calculated with inline ternaries in JSX.</li>
+      <li>Sidebar layout imported directly: <code>&lt;WithSidebar&gt;</code> wraps the page.</li>
+    </ul>
+    <p><strong>New template — pages delegate everything:</strong></p>
+    <ul>
+      <li>Page imports a domain component (e.g. <code>&lt;UsersTable&gt;</code>) and passes hooks' state to it.</li>
+      <li>Domain component owns the table/card markup using <code>@old-st/ui</code> primitives.</li>
+      <li>React Query hook (<code>useUsers()</code>) owns server state, caching, and loading/error states.</li>
+      <li>Sidebar lives in the route group layout — the page never renders layout chrome.</li>
+      <li><code>error.tsx</code> and <code>loading.tsx</code> co-located with the route handle error/loading without touching the page.</li>
+    </ul>
+    <p>The complete vertical slice: <strong>Page → Component → Hook → ApiClient → Backend</strong></p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">page owns data fetching + rendering</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="str">'use client'</span>;
+<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { UserApi } <span class="kw">from</span> <span class="str">'@web-app/data-access/api/user'</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> UsersPage() {
+  <span class="kw">const</span> [users, setUsers] = useState([]);
+  <span class="kw">const</span> [loading, setLoading] = useState(<span class="kw">true</span>);
+
+  useEffect(() =&gt; {
+    <span class="kw">new</span> UserApi().getUsers().then(data =&gt; {
+      setUsers(data);
+      setLoading(<span class="kw">false</span>);
+    });
+  }, []);
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> &lt;div&gt;Loading...&lt;/div&gt;;
+
+  <span class="kw">return</span> (
+    &lt;table&gt;                              ← table markup <span class="kw">in</span> the page
+      &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;...&lt;/tr&gt;&lt;/thead&gt;
+      &lt;tbody&gt;
+        {users.map(u =&gt; (
+          &lt;tr key={u.id}&gt;
+            &lt;td&gt;{u.firstName} {u.lastName}&lt;/td&gt;
+            &lt;td&gt;
+              &lt;span style={{ color: u.status === <span class="str">'ACTIVE'</span> ? <span class="str">'green'</span> : <span class="str">'red'</span> }}&gt;
+                {u.status}              ← inline status logic
+              &lt;/span&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        ))}
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  );
+}</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">page is 10 lines; all logic is delegated</span>
+    </div>
+    <div class="panel-body code-body"><pre><code>
+<span class="com">// No 'use client' needed — this is a React Server Component wrapper.</span>
+<span class="com">// Data fetching and interaction happen inside the domain component.</span>
+<span class="kw">import</span> { UsersTable } <span class="kw">from</span> <span class="str">'@/components/users/users-table'</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> UsersPage() {
+  <span class="com">// ✅ Page contains ZERO markup, ZERO fetch calls, ZERO state.</span>
+  <span class="com">// It only names the page and places the domain component.</span>
+  <span class="kw">return</span> (
+    &lt;div className=<span class="str">"p-8"</span>&gt;
+      &lt;div className=<span class="str">"mb-6"</span>&gt;
+        &lt;h1 className=<span class="str">"text-2xl font-bold"</span>&gt;Users&lt;/h1&gt;
+        &lt;p className=<span class="str">"text-muted-foreground"</span>&gt;Manage user accounts and roles.&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;UsersTable /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">users-table.tsx</div>
+    <div class="fade-in"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">✅</span>
+    <span class="title">users-table.tsx</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// apps/webapp/src/components/users/users-table.tsx</span>
+<span class="com">// Domain component — renders the users table using @old-st/ui primitives.</span>
+<span class="com">// Imports the React Query hook; never imports API clients directly.</span>
+<span class="str">'use client'</span>;
+
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { useUsers } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+<span class="kw">import</span> { UserStatusEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { USER_STATUS_VARIANTS } <span class="kw">from</span> <span class="str">'@/lib/status-variants'</span>;
+
+<span class="kw">export</span> <span class="kw">function</span> UsersTable() {
+  <span class="kw">const</span> [statusFilter, setStatusFilter] = useState&lt;<span class="ty">string</span>&gt;(<span class="str">'ALL'</span>);
+
+  <span class="com">// ✅ Hook owns ALL server state — loading, error, data, refetch</span>
+  <span class="kw">const</span> { data, isLoading, isError } = useUsers({ status: statusFilter !== <span class="str">'ALL'</span> ? statusFilter : <span class="kw">undefined</span> });
+
+  <span class="kw">if</span> (isLoading) <span class="kw">return</span> <span class="kw">null</span>;  <span class="com">// loading.tsx handles the skeleton</span>
+  <span class="kw">if</span> (isError)   <span class="kw">return</span> <span class="kw">null</span>;  <span class="com">// error.tsx handles the error state</span>
+
+  <span class="kw">return</span> (
+    &lt;div&gt;
+      {<span class="com">/* Filter bar */</span>}
+      &lt;div className=<span class="str">"mb-4 flex items-center gap-3"</span>&gt;
+        &lt;Select value={statusFilter} onValueChange={setStatusFilter}&gt;
+          &lt;SelectTrigger className=<span class="str">"w-[160px]"</span> data-testid=<span class="str">"status-filter"</span>&gt;
+            &lt;SelectValue placeholder=<span class="str">"Filter by status"</span> /&gt;
+          &lt;/SelectTrigger&gt;
+          &lt;SelectContent&gt;
+            &lt;SelectItem value=<span class="str">"ALL"</span>&gt;All statuses&lt;/SelectItem&gt;
+            {Object.values(UserStatusEnum).map(s =&gt; (
+              &lt;SelectItem key={s} value={s}&gt;{s}&lt;/SelectItem&gt;
+            ))}
+          &lt;/SelectContent&gt;
+        &lt;/Select&gt;
+      &lt;/div&gt;
+
+      {<span class="com">/* Table — @old-st/ui primitives, never raw &lt;table&gt; */</span>}
+      &lt;Table data-testid=<span class="str">"users-table"</span>&gt;
+        &lt;TableHeader&gt;
+          &lt;TableRow&gt;
+            &lt;TableHead&gt;Name&lt;/TableHead&gt;
+            &lt;TableHead&gt;Email&lt;/TableHead&gt;
+            &lt;TableHead&gt;Role&lt;/TableHead&gt;
+            &lt;TableHead&gt;Status&lt;/TableHead&gt;
+            &lt;TableHead /&gt;
+          &lt;/TableRow&gt;
+        &lt;/TableHeader&gt;
+        &lt;TableBody&gt;
+          {data?.items.map(user =&gt; (
+            &lt;TableRow key={user.userId} data-testid={<span class="str">`user-row-${user.userId}`</span>}&gt;
+              &lt;TableCell className=<span class="str">"font-medium"</span>&gt;
+                {user.firstName} {user.lastName}
+              &lt;/TableCell&gt;
+              &lt;TableCell&gt;{user.email}&lt;/TableCell&gt;
+              &lt;TableCell&gt;{user.userRole}&lt;/TableCell&gt;
+              &lt;TableCell&gt;
+                {<span class="com">/* ✅ Variant from status-variants.ts — no inline ternaries */</span>}
+                &lt;Badge
+                  variant={USER_STATUS_VARIANTS[user.userStatus] ?? <span class="str">'default'</span>}
+                  data-testid=<span class="str">"user-status-badge"</span>
+                &gt;
+                  {user.userStatus}
+                &lt;/Badge&gt;
+              &lt;/TableCell&gt;
+              &lt;TableCell&gt;
+                &lt;Button variant=<span class="str">"ghost"</span> size=<span class="str">"sm"</span> asChild&gt;
+                  &lt;a href={<span class="str">`/users/${user.userId}`</span>}&gt;View&lt;/a&gt;
+                &lt;/Button&gt;
+              &lt;/TableCell&gt;
+            &lt;/TableRow&gt;
+          ))}
+        &lt;/TableBody&gt;
+      &lt;/Table&gt;
+    &lt;/div&gt;
+  );
+}</code></pre></div>
+</div></div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Pages are Server Components by default — add "use client" only if needed</span><span class="concept-pill">✦ Co-located error.tsx + loading.tsx handle error/loading per route segment</span><span class="concept-pill">✦ Domain components live in components/{domain}/ — not in app/</span><span class="concept-pill">✦ React Query hook owns loading/error/data — not useState + useEffect</span><span class="concept-pill">✦ Sidebar + layout chrome live in the (protected)/layout.tsx — not in pages</span><span class="concept-pill">✦ Status variants use enum constants from @old-st/contracts/{domain}</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Calling <code>useQuery()</code> directly in a page:</strong> hooks belong in <code>components/{domain}/</code> so they can be tested in isolation and reused across pages. A page that calls a hook directly becomes hard to test and violates the orchestrator pattern.</li><li><strong>Inline status colour logic (<code>status === "ACTIVE" ? "green" : "red"</code>):</strong> this pattern is scattered and silently breaks when a new status is added. Use the central <code>status-variants.ts</code> map.</li><li><strong>Missing <code>data-testid</code> attributes:</strong> E2E tests (Playwright) select elements by <code>data-testid</code>. Every table, row, badge, filter, and action button must have one. See <code>apps/webapp-e2e/src/utils/selectors.ts</code> for the naming convention.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="07-auth-flow">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Authentication Domain</div>
+        <h2>Auth Flow — Tokens &amp; Cookies</h2>
+        <p class="module-desc">The old template stored tokens in cookies readable by JavaScript (js-cookie) and loaded them at component render time. The new template follows the secure browser token pattern: the refresh token lives in an httpOnly cookie (unreadable by JS), the access token lives only in memory (lost on reload, restored by silent refresh), and a single useAuth() hook from client-common manages the full lifecycle.</p>
+      </div>
+      <span class="complexity l4">L4 · Security</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Authentication · Token Rules</div>
+    <div class="spec-body">
+    <p><strong>Old template auth risks:</strong></p>
+    <ul>
+      <li>Tokens stored in <code>js-cookie</code> — readable from JavaScript → XSS risk.</li>
+      <li>Session ID in a cookie: <code>Cookies.get(STORAGE_KEY.SESSION_ID)</code>.</li>
+      <li>Auth state duplicated: cookie + React Context + Axios interceptor.</li>
+      <li>No silent refresh — user hit 401 and saw an error.</li>
+      <li><code>ProtectedRoute</code> component had to know the auth implementation.</li>
+    </ul>
+    <p><strong>New template secure flow (Golden Rules #24–#28):</strong></p>
+    <ul>
+      <li><strong>Refresh token</strong> → httpOnly, Secure, SameSite cookie — JS cannot read it.</li>
+      <li><strong>Access token</strong> → in-memory only (<code>setAccessTokenGetter()</code> in <code>AuthProvider</code>).</li>
+      <li>On page load: <code>POST /auth/refresh-session</code> with <code>credentials: 'include'</code> restores the session silently.</li>
+      <li>On 401: <code>apiRequest</code> calls <code>onUnauthorized()</code> → refresh → retry automatically.</li>
+      <li>All API calls use <code>credentials: 'include'</code> so the browser sends the httpOnly cookie.</li>
+      <li>CORS: backend sets <code>origin: process.env.FE_BASE_URL, credentials: true</code> — never <code>origin: '*'</code>.</li>
+    </ul>
+    <p><strong>Security boundary reminder:</strong> client-side auth is UX only. Every data endpoint validates the JWT at the API Gateway + NestJS guard level.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">session read from cookie in every component</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// Inside a component (old):</span>
+<span class="kw">import</span> Cookies <span class="kw">from</span> <span class="str">'js-cookie'</span>;
+<span class="kw">const</span> token = Cookies.get(<span class="str">'access_token'</span>);     ← XSS-readable
+<span class="kw">const</span> sessionId = Cookies.get(<span class="str">'sessionId'</span>);    ← also readable
+<span class="kw">if</span> (!token) router.push(<span class="str">'/auth/login'</span>);</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">useAuth() hook from client-common</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> React, { createContext, useContext, useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { refreshSession, signIn <span class="kw">as</span> apiSignIn, signOut <span class="kw">as</span> apiSignOut } <span class="kw">from</span> <span class="str">'../infrastructure/api-clients/auth-api.client'</span>;
+<span class="kw">import</span> { setAccessTokenGetter, setOnUnauthorized } <span class="kw">from</span> <span class="str">'../infrastructure/api-clients/base-api.client'</span>;
+
+<span class="kw">interface</span> AuthState {
+  isAuthenticated: <span class="ty">boolean</span>;
+  isLoading: <span class="ty">boolean</span>;
+  userId: <span class="ty">string</span> | <span class="kw">null</span>;
+  email: <span class="ty">string</span> | <span class="kw">null</span>;
+}
+
+<span class="kw">const</span> AuthContext = createContext&lt;AuthState &amp; {
+  signIn: (email: <span class="ty">string</span>, password: <span class="ty">string</span>) =&gt; <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt;;
+  signOut: () =&gt; <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt;;
+} | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+
+<span class="kw">export</span> <span class="kw">function</span> AuthProvider({ children }: { children: React.ReactNode }) {
+  <span class="kw">const</span> [state, setState] = useState&lt;AuthState&gt;({
+    isAuthenticated: <span class="kw">false</span>,
+    isLoading: <span class="kw">true</span>,    <span class="com">// true until silent refresh resolves</span>
+    userId: <span class="kw">null</span>,
+    email: <span class="kw">null</span>,
+  });
+
+  <span class="com">// Access token stored in a closure — never in localStorage or a cookie</span>
+  <span class="kw">let</span> accessToken: <span class="ty">string</span> | <span class="kw">null</span> = <span class="kw">null</span>;
+
+  <span class="com">// Register the getter with the base API client</span>
+  useEffect(() =&gt; {
+    setAccessTokenGetter(() =&gt; accessToken);
+    setOnUnauthorized(<span class="kw">async</span> () =&gt; {
+      <span class="kw">try</span> {
+        <span class="kw">const</span> res = <span class="kw">await</span> refreshSession();  <span class="com">// uses httpOnly cookie</span>
+        accessToken = res.accessToken;
+        setState({ isAuthenticated: <span class="kw">true</span>, isLoading: <span class="kw">false</span>, userId: res.userId, email: res.email });
+        <span class="kw">return</span> <span class="kw">true</span>;
+      } <span class="kw">catch</span> {
+        accessToken = <span class="kw">null</span>;
+        setState({ isAuthenticated: <span class="kw">false</span>, isLoading: <span class="kw">false</span>, userId: <span class="kw">null</span>, email: <span class="kw">null</span> });
+        <span class="kw">return</span> <span class="kw">false</span>;
+      }
+    });
+  }, []);
+
+  <span class="com">// ── Restore session on cold load ──────────────────────────────────────</span>
+  useEffect(() =&gt; {
+    refreshSession()
+      .then(res =&gt; {
+        accessToken = res.accessToken;
+        setState({ isAuthenticated: <span class="kw">true</span>, isLoading: <span class="kw">false</span>, userId: res.userId, email: res.email });
+      })
+      .<span class="kw">catch</span>(() =&gt; {
+        setState(s =&gt; ({ ...s, isLoading: <span class="kw">false</span> }));  <span class="com">// not authenticated, stop spinner</span>
+      });
+  }, []);
+
+  <span class="kw">const</span> signIn = useCallback(<span class="kw">async</span> (email: <span class="ty">string</span>, password: <span class="ty">string</span>) =&gt; {
+    <span class="kw">const</span> res = <span class="kw">await</span> apiSignIn(email, password);
+    <span class="kw">if</span> (res.<span class="kw">type</span> === <span class="str">'SUCCESS'</span>) {
+      accessToken = res.accessToken;
+      setState({ isAuthenticated: <span class="kw">true</span>, isLoading: <span class="kw">false</span>, userId: res.userId, email: res.email });
+    }
+    <span class="com">// Discriminated union: other types (NEW_PASSWORD_REQUIRED etc.) handled by caller</span>
+    <span class="kw">return</span> res;
+  }, []);
+
+  <span class="kw">const</span> signOut = useCallback(<span class="kw">async</span> () =&gt; {
+    <span class="kw">await</span> apiSignOut();
+    accessToken = <span class="kw">null</span>;
+    setState({ isAuthenticated: <span class="kw">false</span>, isLoading: <span class="kw">false</span>, userId: <span class="kw">null</span>, email: <span class="kw">null</span> });
+  }, []);
+
+  <span class="kw">return</span> (
+    &lt;AuthContext.Provider value={{ ...state, signIn, signOut }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}
+
+<span class="com">// ✅ Single hook consumed by every component that needs auth state.</span>
+<span class="com">// Zero knowledge of httpOnly cookies, Axios interceptors, or session storage.</span>
+<span class="kw">export</span> <span class="kw">function</span> useAuth() {
+  <span class="kw">const</span> ctx = useContext(AuthContext);
+  <span class="kw">if</span> (!ctx) <span class="kw">throw</span> <span class="kw">new</span> Error(<span class="str">'useAuth must be used inside &lt;AuthProvider&gt;'</span>);
+  <span class="kw">return</span> ctx;
+}</code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">providers.tsx</div>
+    <div class="fade-in"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">✅</span>
+    <span class="title">providers.tsx</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// packages/client-common/src/lib/providers.tsx</span>
+<span class="com">//</span>
+<span class="com">// Wraps children with QueryClientProvider + AuthProvider.</span>
+<span class="com">// Called once in apps/webapp/src/app/layout.tsx.</span>
+<span class="com">// Also used in apps/mobile/src/app/_layout.tsx.</span>
+<span class="com">//</span>
+<span class="str">'use client'</span>;
+
+<span class="kw">import</span> React <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { QueryClientProvider } <span class="kw">from</span> <span class="str">'@tanstack/react-query'</span>;
+<span class="kw">import</span> { AuthProvider } <span class="kw">from</span> <span class="str">'../hooks/use-auth'</span>;
+<span class="kw">import</span> { queryClient } <span class="kw">from</span> <span class="str">'./query-client'</span>;
+<span class="kw">import</span> { configureApi } <span class="kw">from</span> <span class="str">'../infrastructure/config'</span>;
+
+<span class="kw">interface</span> ApiConfig {
+  userApiUrl?: <span class="ty">string</span>;
+  productApiUrl?: <span class="ty">string</span>;
+  orderApiUrl?: <span class="ty">string</span>;
+  authApiUrl?: <span class="ty">string</span>;
+  fileApiUrl?: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">function</span> Providers({
+  children,
+  apiConfig,
+}: {
+  children: React.ReactNode;
+  apiConfig?: ApiConfig;
+}) {
+  <span class="com">// configureApi is idempotent — safe to call on every render in dev.</span>
+  <span class="com">// In production (static export) this runs once on the client.</span>
+  <span class="kw">if</span> (apiConfig) configureApi(apiConfig);
+
+  <span class="kw">return</span> (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;AuthProvider&gt;{children}&lt;/AuthProvider&gt;
+    &lt;/QueryClientProvider&gt;
+  );
+}
+
+<span class="com">// ─── apps/webapp/src/app/layout.tsx (excerpt) ─────────────────────────────</span>
+<span class="com">//</span>
+<span class="com">// const apiConfig = {</span>
+<span class="com">//   userApiUrl:    process.env.NEXT_PUBLIC_API_USER_URL,</span>
+<span class="com">//   productApiUrl: process.env.NEXT_PUBLIC_API_PRODUCT_URL,</span>
+<span class="com">//   orderApiUrl:   process.env.NEXT_PUBLIC_API_ORDER_URL,</span>
+<span class="com">//   authApiUrl:    process.env.NEXT_PUBLIC_API_AUTH_URL,</span>
+<span class="com">// };</span>
+<span class="com">//</span>
+<span class="com">// export default function RootLayout({ children }) {</span>
+<span class="com">//   return (</span>
+<span class="com">//     &lt;html lang="en" suppressHydrationWarning&gt;</span>
+<span class="com">//       &lt;body&gt;</span>
+<span class="com">//         &lt;ThemeProvider&gt;</span>
+<span class="com">//           &lt;Providers apiConfig={apiConfig}&gt;    ← one call, all setup done</span>
+<span class="com">//             {children}</span>
+<span class="com">//             &lt;Toaster /&gt;</span>
+<span class="com">//           &lt;/Providers&gt;</span>
+<span class="com">//         &lt;/ThemeProvider&gt;</span>
+<span class="com">//       &lt;/body&gt;</span>
+<span class="com">//     &lt;/html&gt;</span>
+<span class="com">//   );</span>
+<span class="com">// }</span></code></pre></div>
+</div></div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Refresh token in httpOnly cookie — JS cannot read it (XSS safe)</span><span class="concept-pill">✦ Access token in memory — lost on reload, restored by silent refresh on mount</span><span class="concept-pill">✦ credentials: include on all fetches — browser sends httpOnly cookie automatically</span><span class="concept-pill">✦ setAccessTokenGetter() wires the token into every apiRequest&lt;T&gt;() call</span><span class="concept-pill">✦ Discriminated union sign-in response: SUCCESS | NEW_PASSWORD_REQUIRED | MFA_REQUIRED</span><span class="concept-pill">✦ useAuth() is the single source of auth truth — no direct cookie reads</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Storing tokens in <code>localStorage</code>:</strong> localStorage is readable by any JavaScript on the page — one XSS injection and the attacker has the token. Memory-only access tokens expire with the tab.</li><li><strong>Reading auth state outside <code>useAuth()</code>:</strong> never import or call a cookie library directly in a component. If you need the user's ID, use <code>const { userId } = useAuth()</code>.</li><li><strong>Using <code>origin: '*'</code> with <code>credentials: true</code>:</strong> browsers block this combination. The backend must set a specific origin from <code>process.env.FE_BASE_URL</code>.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="08-forms-rhf-zod">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Webapp Domain</div>
+        <h2>Forms with react-hook-form + Zod</h2>
+        <p class="module-desc">Both templates use react-hook-form. The difference is the validation library and where the schema lives. The old template used yup with an inline schema defined per form component — disconnected from the backend. The new template uses Zod with the schema sourced from @old-st/contracts/{domain} — the exact same schema the NestJS ZodValidationPipe validates against on the backend. One schema, two uses, zero duplication.</p>
+      </div>
+      <span class="complexity l3">L3 · Forms</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Forms · Validation Rules</div>
+    <div class="spec-body">
+    <p><strong>Old template — react-hook-form + yup:</strong></p>
+    <ul>
+      <li>Still uses react-hook-form, but with <code>yupResolver</code> from <code>@hookform/resolvers/yup</code>.</li>
+      <li>Yup schema defined <em>inline</em> in the component file (or a co-located <code>.structure.ts</code>) — not shared with the backend.</li>
+      <li>Backend has its own separate validation (class-validator / NestJS pipes) — rules drift over time.</li>
+      <li>Yup's <code>object().shape()</code> API is more verbose; error messages are baked into the schema string literals.</li>
+      <li>TypeScript types inferred via <code>yup.InferType&lt;typeof schema&gt;</code> — less ergonomic than Zod's <code>z.infer&lt;&gt;</code>.</li>
+    </ul>
+    <p><strong>New template — react-hook-form + Zod + shared contracts:</strong></p>
+    <ul>
+      <li>Schema sourced from <code>@old-st/contracts/{domain}</code> — shared with the NestJS <code>ZodValidationPipe</code>.</li>
+      <li>Switch one import: <code>yupResolver</code> → <code>zodResolver</code>. Everything else in the form stays the same.</li>
+      <li>Validation rules are the single source of truth — change the schema once, both frontend and backend update.</li>
+      <li>Error messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> — one place for all copy, never inside the schema.</li>
+      <li><code>aria-invalid</code> and <code>aria-describedby</code> wired automatically by <code>&lt;FormControl&gt;</code> from <code>@old-st/ui</code>.</li>
+      <li>Submit button disabled while submitting (<code>formState.isSubmitting</code>) — no change from the old pattern.</li>
+    </ul>
+    <p><strong>Golden Rule 23a:</strong> all forms use react-hook-form + Zod resolver with schemas from <code>@old-st/contracts/{domain}</code>. Never use <code>yupResolver</code>.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">react-hook-form + yup (libs/frontend in nx-template-v2)</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="kw">import</span> { useForm } <span class="kw">from</span> <span class="str">'react-hook-form'</span>;
+<span class="kw">import</span> { yupResolver } <span class="kw">from</span> <span class="str">'@hookform/resolvers/yup'</span>;   ← yup resolver
+<span class="kw">import</span> * <span class="kw">as</span> yup <span class="kw">from</span> <span class="str">'yup'</span>;
+
+<span class="com">// ❌ Schema defined inline — not shared with the backend.</span>
+<span class="com">//    Backend has its own class-validator rules that drift over time.</span>
+<span class="kw">const</span> schema = yup.object({
+  email:     yup.<span class="ty">string</span>().email(<span class="str">'Please enter a valid email'</span>).required(<span class="str">'Required'</span>),
+  firstName: yup.<span class="ty">string</span>().required(<span class="str">'First name is required'</span>),
+  lastName:  yup.<span class="ty">string</span>().required(<span class="str">'Last name is required'</span>),
+  userRole:  yup.<span class="ty">string</span>().oneOf([<span class="str">'USER'</span>, <span class="str">'ADMIN'</span>]).required(),
+});
+
+<span class="com">// ❌ Type inferred from yup — more verbose than z.infer&lt;&gt;</span>
+<span class="kw">type</span> CreateUserInput = yup.InferType&lt;<span class="kw">typeof</span> schema&gt;;
+
+<span class="kw">export</span> <span class="kw">function</span> CreateUserForm() {
+  <span class="kw">const</span> form = useForm&lt;CreateUserInput&gt;({
+    resolver: yupResolver(schema),   ← yup resolver
+  });
+  <span class="com">// ... rest of form markup is the same</span>
+}</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">react-hook-form + Zod + shared schema</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="str">'use client'</span>;
+
+<span class="kw">import</span> { useForm } <span class="kw">from</span> <span class="str">'react-hook-form'</span>;
+<span class="kw">import</span> { zodResolver } <span class="kw">from</span> <span class="str">'@hookform/resolvers/zod'</span>;
+<span class="kw">import</span> <span class="kw">type</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
+<span class="kw">import</span> { toast } <span class="kw">from</span> <span class="str">'sonner'</span>;
+<span class="kw">import</span> { useQueryClient } <span class="kw">from</span> <span class="str">'@tanstack/react-query'</span>;
+
+<span class="com">// ✅ Schema imported from contracts — the SAME schema the NestJS pipe validates against.</span>
+<span class="kw">import</span> { createUserInputSchema } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+<span class="kw">import</span> { useCreateUser } <span class="kw">from</span> <span class="str">'@old-st/client-common'</span>;
+<span class="kw">import</span> {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+  Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+<span class="kw">import</span> { UserRoleEnum } <span class="kw">from</span> <span class="str">'@old-st/contracts/user'</span>;
+
+<span class="kw">type</span> CreateUserInput = z.infer&lt;<span class="kw">typeof</span> createUserInputSchema&gt;;
+
+<span class="kw">export</span> <span class="kw">function</span> CreateUserForm({ onSuccess }: { onSuccess?: () =&gt; <span class="kw">void</span> }) {
+  <span class="kw">const</span> queryClient = useQueryClient();
+
+  <span class="kw">const</span> form = useForm&lt;CreateUserInput&gt;({
+    resolver: zodResolver(createUserInputSchema),  <span class="com">// ← Zod schema wired in one line</span>
+    defaultValues: {
+      email: <span class="str">''</span>,
+      firstName: <span class="str">''</span>,
+      lastName: <span class="str">''</span>,
+      userRole: UserRoleEnum.USER,
+    },
+  });
+
+  <span class="kw">const</span> { mutateAsync: createUser } = useCreateUser();
+
+  <span class="kw">async</span> <span class="kw">function</span> onSubmit(data: CreateUserInput) {
+    <span class="kw">try</span> {
+      <span class="kw">await</span> createUser(data);
+      <span class="kw">await</span> queryClient.invalidateQueries({ queryKey: [<span class="str">'users'</span>] });
+      toast.success(<span class="str">'User created successfully'</span>);  <span class="com">// ← Golden Rule 23c: always toast</span>
+      form.reset();
+      onSuccess?.();
+    } <span class="kw">catch</span> (err) {
+      <span class="com">// ApiError carries statusCode + message from the backend DomainExceptionFilter</span>
+      toast.error(err <span class="kw">instanceof</span> Error ? err.message : <span class="str">'Failed to create user'</span>);
+    }
+  }
+
+  <span class="kw">return</span> (
+    &lt;Form {...form}&gt;
+      &lt;form onSubmit={form.handleSubmit(onSubmit)} className=<span class="str">"space-y-4"</span> data-testid=<span class="str">"create-user-form"</span>&gt;
+        &lt;FormField
+          control={form.control}
+          name=<span class="str">"email"</span>
+          render={({ field }) =&gt; (
+            &lt;FormItem&gt;
+              &lt;FormLabel&gt;Email&lt;/FormLabel&gt;
+              &lt;FormControl&gt;
+                {<span class="com">/* FormControl sets aria-invalid + aria-describedby automatically */</span>}
+                &lt;Input <span class="kw">type</span>=<span class="str">"email"</span> placeholder=<span class="str">"user@example.com"</span> {...field} /&gt;
+              &lt;/FormControl&gt;
+              &lt;FormMessage /&gt;  {<span class="com">/* renders the Zod error message inline */</span>}
+            &lt;/FormItem&gt;
+          )}
+        /&gt;
+
+        &lt;FormField
+          control={form.control}
+          name=<span class="str">"firstName"</span>
+          render={({ field }) =&gt; (
+            &lt;FormItem&gt;
+              &lt;FormLabel&gt;First name&lt;/FormLabel&gt;
+              &lt;FormControl&gt;
+                &lt;Input placeholder=<span class="str">"Alice"</span> {...field} /&gt;
+              &lt;/FormControl&gt;
+              &lt;FormMessage /&gt;
+            &lt;/FormItem&gt;
+          )}
+        /&gt;
+
+        &lt;FormField
+          control={form.control}
+          name=<span class="str">"lastName"</span>
+          render={({ field }) =&gt; (
+            &lt;FormItem&gt;
+              &lt;FormLabel&gt;Last name&lt;/FormLabel&gt;
+              &lt;FormControl&gt;
+                &lt;Input placeholder=<span class="str">"Smith"</span> {...field} /&gt;
+              &lt;/FormControl&gt;
+              &lt;FormMessage /&gt;
+            &lt;/FormItem&gt;
+          )}
+        /&gt;
+
+        &lt;FormField
+          control={form.control}
+          name=<span class="str">"userRole"</span>
+          render={({ field }) =&gt; (
+            &lt;FormItem&gt;
+              &lt;FormLabel&gt;Role&lt;/FormLabel&gt;
+              &lt;Select onValueChange={field.onChange} defaultValue={field.value}&gt;
+                &lt;FormControl&gt;
+                  &lt;SelectTrigger&gt;
+                    &lt;SelectValue placeholder=<span class="str">"Select role"</span> /&gt;
+                  &lt;/SelectTrigger&gt;
+                &lt;/FormControl&gt;
+                &lt;SelectContent&gt;
+                  {Object.values(UserRoleEnum).map(r =&gt; (
+                    &lt;SelectItem key={r} value={r}&gt;{r}&lt;/SelectItem&gt;
+                  ))}
+                &lt;/SelectContent&gt;
+              &lt;/Select&gt;
+              &lt;FormMessage /&gt;
+            &lt;/FormItem&gt;
+          )}
+        /&gt;
+
+        {<span class="com">/* Disabled while submitting — prevents double-submit */</span>}
+        &lt;Button
+          <span class="kw">type</span>=<span class="str">"submit"</span>
+          disabled={form.formState.isSubmitting}
+          data-testid=<span class="str">"create-user-btn"</span>
+        &gt;
+          {form.formState.isSubmitting ? <span class="str">'Creating…'</span> : <span class="str">'Create user'</span>}
+        &lt;/Button&gt;
+      &lt;/form&gt;
+    &lt;/Form&gt;
+  );
+}</code></pre></div>
+  </div>
+</div>
+    
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Both templates use react-hook-form — only the resolver and schema source change</span><span class="concept-pill">✦ yupResolver → zodResolver: one import swap, everything else stays the same</span><span class="concept-pill">✦ Zod schema lives in @old-st/contracts/{domain} — shared with the NestJS ZodValidationPipe</span><span class="concept-pill">✦ Error messages live in zod-error-map.ts — never inside the schema or the form component</span><span class="concept-pill">✦ FormControl auto-sets aria-invalid + aria-describedby for accessibility</span><span class="concept-pill">✦ FormMessage renders Zod error messages inline — no separate error state</span><span class="concept-pill">✦ toast.success/error (sonner) for action outcomes — never alert()</span><span class="concept-pill">✦ isSubmitting disables the submit button — same pattern as old template</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Using <code>yupResolver</code> in a new form:</strong> the old template used yup — if you copy a form from the old codebase, swap <code>yupResolver</code> for <code>zodResolver</code> and replace the yup schema with the corresponding import from <code>@old-st/contracts/{domain}</code>.</li><li><strong>Defining the Zod schema inside the form file:</strong> never write <code>const schema = z.object({ ... })</code> in a component file. The schema must come from <code>@old-st/contracts/{domain}</code> — the same one the backend validates against.</li><li><strong>Adding error message strings to the contract schema:</strong> <code>z.string().email('Please enter a valid email')</code> is forbidden in contracts. Messages live in <code>apps/webapp/src/lib/zod-error-map.ts</code> only — the global error map handles them.</li><li><strong>Using <code>alert()</code> or <code>console.error()</code> for feedback:</strong> mutation outcomes must surface via <code>toast()</code> from <code>@old-st/ui</code>. The <code>&lt;Toaster&gt;</code> is mounted once in <code>layout.tsx</code>.</li><li><strong>Forgetting <code>form.reset()</code> after success:</strong> without resetting, the form retains the last values when re-opened. Call <code>form.reset()</code> inside the success branch of <code>onSubmit</code>.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="09-component-patterns">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">UI Domain</div>
+        <h2>Component API Patterns &amp; Tailwind v4</h2>
+        <p class="module-desc">The old template styled components with SCSS modules alongside scattered Tailwind classes, and used a flat prop-driven component API. The new template uses inline Tailwind v4 utilities exclusively, configured with a CSS-first approach (no tailwind.config.js), and separates component concerns into two tiers: a flexible compound API for the primitive and a thin convenience wrapper for everyday app usage.</p>
+      </div>
+      <span class="complexity l2">L2 · Component Design</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Component Design · Three Topics</div>
+    <div class="spec-body">
+    <h4 style="margin:0 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">1 · Compound vs Simple API</h4>
+    <p>The old template used a flat prop-driven API — one component, many props (<code>isOpen</code>, <code>title</code>, <code>showClose</code>, <code>footerActions</code>…). This is fast initially but becomes bloated as requirements grow.</p>
+    <p>The new template follows the <strong>compound component pattern</strong> from shadcn/Radix as the <em>base primitive</em>, then adds a thin <strong>convenience wrapper</strong> for common app usage:</p>
+    <ul>
+      <li><strong>Base primitive</strong> — <code>Modal, ModalTrigger, ModalContent, ModalHeader, ModalBody, ModalFooter</code> (full composability, zero layout constraints).</li>
+      <li><strong>Convenience wrapper</strong> — <code>AppModal</code> accepts <code>isOpen</code>, <code>title</code>, <code>onClose</code>, <code>children</code> and optional <code>actions</code>. Used in 80 % of app screens.</li>
+      <li>Feature pages use <code>AppModal</code>; unusual dialogs (multi-step, custom footer) drop down to the compound primitive.</li>
+    </ul>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 14px">
+      <div>
+        <p style="margin:0 0 6px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.6">✅ Simple / prop-driven — pros</p>
+        <ul style="margin:0;padding-left:1.2em;font-size:0.82rem">
+          <li>Minimal boilerplate — one import, one JSX element</li>
+          <li>Easy to discover — all options visible in TypeScript autocomplete</li>
+          <li>Fast for beginners — no knowledge of sub-components needed</li>
+          <li>Controlled state (<code>isOpen</code>) works well out of the box</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin:0 0 6px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.6">❌ Simple / prop-driven — cons</p>
+        <ul style="margin:0;padding-left:1.2em;font-size:0.82rem">
+          <li>Props accumulate — every new layout requirement adds a boolean (<code>hideHeader</code>, <code>showDivider</code>…)</li>
+          <li>Conditional rendering logic leaks into the component internals</li>
+          <li>Impossible to reorder or rearrange sections without new props</li>
+          <li>Testing grows harder as prop combinations multiply</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin:0 0 6px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.6">✅ Compound + wrapper — pros</p>
+        <ul style="margin:0;padding-left:1.2em;font-size:0.82rem">
+          <li>Zero prop explosion — new layouts compose sub-components, never add props</li>
+          <li>Each sub-component is independently testable and styleable</li>
+          <li>Wrapper (<code>AppModal</code>) keeps everyday usage just as simple as the prop-driven pattern</li>
+          <li>Accessible by default — Radix manages focus trap, ARIA roles, keyboard nav</li>
+          <li>Inversion of control — caller owns the layout, not the component</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin:0 0 6px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.6">❌ Compound + wrapper — cons</p>
+        <ul style="margin:0;padding-left:1.2em;font-size:0.82rem">
+          <li>More files — primitive + wrapper + types instead of one component</li>
+          <li>Higher learning curve — caller must understand the sub-component tree</li>
+          <li>Context coupling — sub-components only work inside their parent root (<code>&lt;Modal&gt;</code>)</li>
+          <li>Over-engineering risk for truly simple, never-changing UI elements</li>
+        </ul>
+      </div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:4px">
+      <thead><tr style="background:rgba(255,255,255,.06)">
+        <th style="padding:6px 8px;text-align:left">Dimension</th>
+        <th style="padding:6px 8px;text-align:left">Simple / prop-driven (old)</th>
+        <th style="padding:6px 8px;text-align:left">Compound + wrapper (new)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:5px 8px">Boilerplate per usage</td><td style="padding:5px 8px">Low (1 component)</td><td style="padding:5px 8px">Low via wrapper; full control via primitive</td></tr>
+        <tr><td style="padding:5px 8px">Custom header / footer</td><td style="padding:5px 8px">Extra props, ad-hoc booleans</td><td style="padding:5px 8px">Drop to compound — no prop explosion</td></tr>
+        <tr><td style="padding:5px 8px">Multi-step content</td><td style="padding:5px 8px">Awkward</td><td style="padding:5px 8px">Natural — compose ModalBody children freely</td></tr>
+        <tr><td style="padding:5px 8px">Controlled open state (URL, wizard)</td><td style="padding:5px 8px">Good — <code>isOpen</code> prop works well</td><td style="padding:5px 8px">Good — wrapper exposes <code>isOpen</code> + <code>onClose</code></td></tr>
+        <tr><td style="padding:5px 8px">API bloat over time</td><td style="padding:5px 8px">High — props accumulate</td><td style="padding:5px 8px">Low — new layouts use compound, not new props</td></tr>
+        <tr><td style="padding:5px 8px">Accessibility</td><td style="padding:5px 8px">Manual — must add ARIA attrs by hand</td><td style="padding:5px 8px">Built-in — Radix handles focus trap + ARIA roles</td></tr>
+        <tr><td style="padding:5px 8px">When to use</td><td style="padding:5px 8px">Simple, stable UI that never needs layout variation</td><td style="padding:5px 8px">Any UI that designers will iterate on over time</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="margin:16px 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">2 · Inline Tailwind vs SCSS Modules</h4>
+    <p>The old template co-located a <code>.module.scss</code> for every component, then also added Tailwind utility classes into the SCSS (<code>@apply</code>) — two systems at once, neither owning the truth.</p>
+    <p><strong>Why inline Tailwind wins:</strong></p>
+    <ul>
+      <li><strong>Single source of truth</strong> — style is on the element, not in a separate file you have to open.</li>
+      <li><strong>No context-switch</strong> — designer, reviewer, and AI all see the styling without leaving the component.</li>
+      <li><strong>No dead CSS</strong> — deleting a component deletes its styles; SCSS files linger.</li>
+      <li><strong>Tokens enforced</strong> — Tailwind utility classes map to the design-token layer automatically; ad-hoc colour values are impossible without <code>[]</code> escape hatch, which is immediately visible in review.</li>
+      <li><strong>Dark mode in one place</strong> — <code>dark:bg-card</code> sits next to <code>bg-card</code> on the element; no <code>.dark</code> block in a remote SCSS file.</li>
+      <li><strong>Build output</strong> — Tailwind v4's JIT emits only the classes present in source; <code>@apply</code> in SCSS bypassed the scanner, causing larger CSS output.</li>
+    </ul>
+
+    <h4 style="margin:16px 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">3 · Tailwind v4 Setup — CSS-First (No tailwind.config.js)</h4>
+    <p>Tailwind v4 replaces the JS config file with a <strong>CSS-first</strong> approach. All tokens, source paths, and plugin config live in <code>globals.css</code>.</p>
+    <ul>
+      <li><strong>Old:</strong> <code>tailwind.config.js</code> with <code>content: [...]</code>, <code>theme.extend</code> and <code>plugins</code>.</li>
+      <li><strong>New:</strong> <code>@import "tailwindcss"</code> at the top of <code>globals.css</code>; tokens in <code>@theme { --color-primary: ... }</code>; dark overrides in <code>.dark { --color-primary: ... }</code>; source paths via <code>@source "../../packages/ui/src"</code>.</li>
+    </ul>
+    <p>Result: one file owns all styling configuration — easier to audit, diff, and share with designers.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">flat prop API (libs/frontend/components-web)</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// ❌ One component, every layout concern crammed into props.</span>
+<span class="com">// Growing requirements → prop explosion.</span>
+
+<span class="kw">interface</span> ModalProps {
+  isOpen: <span class="ty">boolean</span>;
+  title: <span class="ty">string</span>;
+  onClose: () =&gt; <span class="kw">void</span>;
+  children: ReactNode;
+  showClose?: <span class="ty">boolean</span>;         <span class="com">// added later</span>
+  footerActions?: ReactNode;   <span class="com">// added later</span>
+  hideHeader?: <span class="ty">boolean</span>;        <span class="com">// added later — now it's getting ugly</span>
+  width?: <span class="str">'sm'</span> | <span class="str">'md'</span> | <span class="str">'lg'</span>; <span class="com">// added later</span>
+}
+<span class="kw">import</span> styles <span class="kw">from</span> <span class="str">'./modal.module.scss'</span>; <span class="com">// separate file required</span></code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">compound primitive + convenience wrapper</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="str">'use client'</span>;
+<span class="kw">import</span> * <span class="kw">as</span> DialogPrimitive <span class="kw">from</span> <span class="str">'@radix-ui/react-dialog'</span>;
+<span class="kw">import</span> { X } <span class="kw">from</span> <span class="str">'lucide-react'</span>;
+<span class="kw">import</span> { cn } <span class="kw">from</span> <span class="str">'../../../lib/utils'</span>;
+
+<span class="com">// ── 1. Compound primitives (full flexibility) ──────────────────────</span>
+<span class="kw">const</span> Modal        = DialogPrimitive.Root;
+<span class="kw">const</span> ModalTrigger = DialogPrimitive.Trigger;
+<span class="kw">const</span> ModalPortal  = DialogPrimitive.Portal;
+<span class="kw">const</span> ModalClose   = DialogPrimitive.Close;
+
+<span class="kw">function</span> ModalOverlay({ className, ...props }: React.ComponentPropsWithoutRef&lt;<span class="kw">typeof</span> DialogPrimitive.Overlay&gt;) {
+  <span class="kw">return</span> (
+    &lt;DialogPrimitive.Overlay
+      className={cn(
+        <span class="str">'fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out'</span>,
+        className,
+      )}
+      {...props}
+    /&gt;
+  );
+}
+
+<span class="kw">function</span> ModalContent({ className, children, ...props }: React.ComponentPropsWithoutRef&lt;<span class="kw">typeof</span> DialogPrimitive.Content&gt;) {
+  <span class="kw">return</span> (
+    &lt;ModalPortal&gt;
+      &lt;ModalOverlay /&gt;
+      &lt;DialogPrimitive.Content
+        className={cn(
+          <span class="str">'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2'</span>,
+          <span class="str">'bg-background rounded-lg border shadow-lg p-6'</span>,
+          <span class="str">'data-[state=open]:animate-in data-[state=closed]:animate-out'</span>,
+          className,
+        )}
+        {...props}
+      &gt;
+        {children}
+        &lt;ModalClose className=<span class="str">"absolute right-4 top-4 opacity-70 hover:opacity-100 transition-opacity"</span>&gt;
+          &lt;X className=<span class="str">"h-4 w-4"</span> /&gt;
+        &lt;/ModalClose&gt;
+      &lt;/DialogPrimitive.Content&gt;
+    &lt;/ModalPortal&gt;
+  );
+}
+
+<span class="kw">function</span> ModalHeader({ className, ...props }: React.HTMLAttributes&lt;HTMLDivElement&gt;) {
+  <span class="kw">return</span> &lt;div className={cn(<span class="str">'flex flex-col gap-1.5 mb-4'</span>, className)} {...props} /&gt;;
+}
+<span class="kw">function</span> ModalTitle({ className, ...props }: React.ComponentPropsWithoutRef&lt;<span class="kw">typeof</span> DialogPrimitive.Title&gt;) {
+  <span class="kw">return</span> &lt;DialogPrimitive.Title className={cn(<span class="str">'text-lg font-semibold'</span>, className)} {...props} /&gt;;
+}
+<span class="kw">function</span> ModalBody({ className, ...props }: React.HTMLAttributes&lt;HTMLDivElement&gt;) {
+  <span class="kw">return</span> &lt;div className={cn(<span class="str">'text-sm text-muted-foreground'</span>, className)} {...props} /&gt;;
+}
+<span class="kw">function</span> ModalFooter({ className, ...props }: React.HTMLAttributes&lt;HTMLDivElement&gt;) {
+  <span class="kw">return</span> &lt;div className={cn(<span class="str">'flex justify-end gap-2 mt-6'</span>, className)} {...props} /&gt;;
+}
+
+<span class="kw">export</span> { Modal, ModalTrigger, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalFooter };
+
+<span class="com">// ── 2. Convenience wrapper for 80 % of app screens ────────────────</span>
+<span class="com">// Use this in feature pages — drop to the compound API only for custom layouts.</span>
+<span class="kw">interface</span> AppModalProps {
+  isOpen: <span class="ty">boolean</span>;
+  title: <span class="ty">string</span>;
+  onClose: () =&gt; <span class="kw">void</span>;
+  children: ReactNode;
+  actions?: ReactNode;   <span class="com">// optional footer row</span>
+}
+
+<span class="kw">export</span> <span class="kw">function</span> AppModal({ isOpen, title, onClose, children, actions }: AppModalProps) {
+  <span class="kw">return</span> (
+    &lt;Modal open={isOpen} onOpenChange={(open) =&gt; !open &amp;&amp; onClose()}&gt;
+      &lt;ModalContent&gt;
+        &lt;ModalHeader&gt;&lt;ModalTitle&gt;{title}&lt;/ModalTitle&gt;&lt;/ModalHeader&gt;
+        &lt;ModalBody&gt;{children}&lt;/ModalBody&gt;
+        {actions &amp;&amp; &lt;ModalFooter&gt;{actions}&lt;/ModalFooter&gt;}
+      &lt;/ModalContent&gt;
+    &lt;/Modal&gt;
+  );
+}</code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">globals.css (Tailwind v4 vs v3)</div>
+    <div class="fade-in"><div class="panel">
+  <div class="panel-header">
+    <span class="icon">✅</span>
+    <span class="title">globals.css (Tailwind v4 vs v3)</span>
+    
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">/* ─────────────────────────────────────────────────────────────────
+   OLD TEMPLATE — Tailwind v3 with tailwind.config.js
+   ─────────────────────────────────────────────────────────────────
+
+   // tailwind.config.js (old)
+   module.exports = {
+     content: ['./src/**/</span>*.{ts,tsx}<span class="str">', '</span>../../packages/ui/src<span class="com">/**/</span>*.{ts,tsx}'],
+     darkMode: <span class="str">'class'</span>,
+     theme: {
+       extend: {
+         colors: {
+           primary: <span class="str">'#4f46e5'</span>,
+           background: <span class="str">'#ffffff'</span>,
+         },
+       },
+     },
+     plugins: [require(<span class="str">'daisyui'</span>), require(<span class="str">'@tailwindcss/typography'</span>)],
+   };
+
+   <span class="com">// globals.scss (old) — mixed SCSS + @apply</span>
+   .modal-overlay {
+     @apply fixed inset-<span class="num">0</span> bg-black/<span class="num">80</span>;  <span class="com">// Tailwind inside SCSS — two systems</span>
+     z-index: <span class="num">50</span>;
+   }
+   .modal-content {
+     background-color: $bg-color;       <span class="com">// SCSS variable — not a design token</span>
+     @apply rounded-lg p-<span class="num">6</span>;
+   }
+
+   Problems:
+   - Two config surfaces (tailwind.config.js + scss vars) drift over time.
+   - @apply inside SCSS bypasses the JIT scanner → larger CSS output.
+   - Dark mode requires a separate .dark { } block <span class="kw">in</span> the SCSS file,
+     far removed <span class="kw">from</span> the light-mode <span class="kw">class</span>.
+*/
+
+<span class="com">/* ─────────────────────────────────────────────────────────────────
+   NEW TEMPLATE — Tailwind v4 CSS-first (no tailwind.config.js)
+   ─────────────────────────────────────────────────────────────────ﾠ*/</span>
+
+<span class="com">/* 1. Import Tailwind v4 engine — replaces the JS config entry point. */</span>
+@<span class="kw">import</span> <span class="str">"tailwindcss"</span>;
+
+<span class="com">/* 2. Tell the JIT scanner where to find class names in workspace packages. */</span>
+@source <span class="str">"../../packages/ui/src"</span>;
+@source <span class="str">"../../packages/mobile-ui/src"</span>;
+
+<span class="com">/* 3. Define design tokens as CSS custom properties inside @theme.
+      Tailwind v4 auto-generates utilities (bg-primary, text-foreground, etc.)
+      from every --color-* variable declared here.               */</span>
+@theme {
+  --color-background:        hsl(<span class="num">0</span> <span class="num">0</span>% <span class="num">100</span>%);
+  --color-foreground:        hsl(<span class="num">222.2</span> <span class="num">84</span>% <span class="num">4.9</span>%);
+  --color-primary:           hsl(<span class="num">221.2</span> <span class="num">83.2</span>% <span class="num">53.3</span>%);
+  --color-primary-foreground:hsl(<span class="num">210</span> <span class="num">40</span>% <span class="num">98</span>%);
+  --color-card:              hsl(<span class="num">0</span> <span class="num">0</span>% <span class="num">100</span>%);
+  --color-muted:             hsl(<span class="num">210</span> <span class="num">40</span>% <span class="num">96.1</span>%);
+  --color-muted-foreground:  hsl(<span class="num">215.4</span> <span class="num">16.3</span>% <span class="num">46.9</span>%);
+  --color-border:            hsl(<span class="num">214.3</span> <span class="num">31.8</span>% <span class="num">91.4</span>%);
+  --radius-lg: <span class="num">0</span>.5rem;
+  --radius-md: calc(<span class="kw">var</span>(--radius-lg) - 2px);
+}
+
+<span class="com">/* 4. Dark mode — override only the tokens that change.
+      No separate SCSS file, no .module.scss, no @apply.          */</span>
+.dark {
+  --color-background:        hsl(<span class="num">222.2</span> <span class="num">84</span>% <span class="num">4.9</span>%);
+  --color-foreground:        hsl(<span class="num">210</span> <span class="num">40</span>% <span class="num">98</span>%);
+  --color-primary:           hsl(<span class="num">217.2</span> <span class="num">91.2</span>% <span class="num">59.8</span>%);
+  --color-card:              hsl(<span class="num">222.2</span> <span class="num">84</span>% <span class="num">4.9</span>%);
+  --color-muted:             hsl(<span class="num">217.2</span> <span class="num">32.6</span>% <span class="num">17.5</span>%);
+  --color-muted-foreground:  hsl(<span class="num">215</span> <span class="num">20.2</span>% <span class="num">65.1</span>%);
+  --color-border:            hsl(<span class="num">217.2</span> <span class="num">32.6</span>% <span class="num">17.5</span>%);
+}
+
+<span class="com">/* ✅ Result: one file — all token definitions, dark overrides,
+   source paths, and plugin config. No tailwind.config.js exists.
+   Components use inline utilities only:
+
+   &lt;div className="bg-background text-foreground rounded-lg p-6 dark:bg-card"&gt;
+
+   Style is on the element. No .scss file. No @apply. No drift.   */</span></code></pre></div>
+</div></div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Compound primitives expose every seam — no layout assumption is baked in</span><span class="concept-pill">✦ Convenience wrappers (AppModal) cover the 80 % case with minimal props</span><span class="concept-pill">✦ Inline Tailwind keeps style co-located — no context-switch to a .scss file</span><span class="concept-pill">✦ Tailwind v4 is CSS-first: @theme, @source, .dark overrides all in globals.css</span><span class="concept-pill">✦ No tailwind.config.js in Tailwind v4 — the config file is gone entirely</span><span class="concept-pill">✦ cva() + cn() handle variants and class merging without any SCSS</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Don't flatten the compound API by adding props to AppModal:</strong> when a new layout requirement appears, drop to the compound primitive. Never add <code>hideHeader</code>, <code>showDivider</code> or similar booleans to the convenience wrapper — that defeats its purpose.</li><li><strong>No <code>@apply</code> in Tailwind v4:</strong> <code>@apply</code> inside CSS files bypasses the JIT class scanner and produces larger output. Write utilities inline on the element or use <code>cva()</code> for variant groups.</li><li><strong>Don't create a <code>tailwind.config.js</code> in a v4 project:</strong> it will silently conflict. All configuration belongs in the CSS file via <code>@theme</code>, <code>@source</code>, and <code>@plugin</code>.</li><li><strong>Template-literal class interpolation still fails in v4:</strong> <code>className={`bg-${color}`}</code> is not statically scannable. Use a <code>cva()</code> variant map — see Module 05.</li></ul>
+      </div>
+  </div>
+</section>
+
+<section class="module" id="10-new-codebase-setup">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Setup Domain</div>
+        <h2>New Codebase Setup: Tokens → Icons → Figma</h2>
+        <p class="module-desc">Starting a new webapp without a plan produces scattered hex values, duplicated SVGs, and Figma components that drift from code. The correct order is: (1) wire the design token pipeline so every colour and spacing value has a named utility, (2) convert all SVG assets into typed React components so icons are statically typed and tree-shaken, (3) implement Figma components top-down — primitives before pages — mapping every visual decision to the tokens already in place.</p>
+      </div>
+      <span class="complexity l2">L2 · Design System Bootstrap</span>
+    </div>
+
+    <div class="fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📋</span>
+    <span class="title">Specification</span>
+    <span class="subtitle">plain English</span>
+  </div>
+  <div class="panel-body">
+    <div class="spec-title">Step-by-Step Bootstrap Checklist</div>
+    <div class="spec-body">
+    <!-- ── Prompt Cheatsheet ─────────────────────────────────────── -->
+    <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.22);border-radius:10px;padding:16px 20px;margin-bottom:22px">
+      <p style="margin:0 0 12px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;opacity:.65">Claude Code Commands — Run in Order</p>
+      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 16px;font-size:0.88rem">
+
+        <!-- Step 1 -->
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);font-weight:700;font-size:.75rem;flex-shrink:0">1</span>
+        <div>
+          <strong>Import Design Tokens</strong>
+          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Export Figma variables → <code>tokens.ts</code> → generate <code>tokens.css</code> → wire <code>globals.css</code></p>
+        </div>
+        <code style="white-space:nowrap;background:rgba(99,102,241,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/figma-import-tokens</code>
+
+        <!-- divider -->
+        <div style="grid-column:1/-1;border-top:1px solid rgba(99,102,241,.12);margin:2px 0"></div>
+
+        <!-- Step 2 -->
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);font-weight:700;font-size:.75rem;flex-shrink:0">2</span>
+        <div>
+          <strong>Convert SVG → Typed Icon Components</strong>
+          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Run SVGR · define <code>IIcon</code> interface · barrel-export from <code>@old-st/ui</code></p>
+        </div>
+        <code style="white-space:nowrap;background:rgba(99,102,241,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/svg-to-icons</code>
+
+        <!-- divider -->
+        <div style="grid-column:1/-1;border-top:1px solid rgba(99,102,241,.12);margin:2px 0"></div>
+
+        <!-- Step 3 -->
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);font-weight:700;font-size:.75rem;flex-shrink:0">3</span>
+        <div>
+          <strong>Implement Figma Components</strong>
+          <p style="margin:2px 0 0;font-size:0.8rem;opacity:.7">Classify primitives vs pages → implement tokens-first → wire <code>IIcon</code> slots → port screens</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <code style="white-space:nowrap;background:rgba(99,102,241,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/figma-component</code>
+          <span style="font-size:0.72rem;opacity:.55;text-align:right">with Figma URL</span>
+          <code style="white-space:nowrap;background:rgba(16,185,129,.12);padding:3px 8px;border-radius:5px;font-size:.8rem">/new-ui-primitive</code>
+          <span style="font-size:0.72rem;opacity:.55;text-align:right">without Figma URL</span>
+        </div>
+      </div>
+    </div>
+    <!-- ── / Prompt Cheatsheet ────────────────────────────────────── -->
+
+    <h4 style="margin:0 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">Step 1 · Import Design Tokens</h4>
+    <p>Tokens are the contract between the designer and the codebase. They must be set up <em>before</em> any component is written — otherwise the first component hard-codes a hex value that you will chase forever.</p>
+    <ol>
+      <li><strong>Export tokens from Figma</strong> — use the Figma Tokens / Variables plugin to export a JSON of all colour, spacing, radius, and typography values. Save as <code>packages/design-tokens/src/lib/tokens.ts</code>.</li>
+      <li><strong>Define <code>lightColors</code> and <code>darkColors</code></strong> — two typed maps (see code panel). Mobile imports them directly; web consumes them via CSS variables.</li>
+      <li><strong>Generate <code>tokens.css</code></strong> — run <code>pnpm tokens:gen</code>. This script writes <code>:root { --color-primary: ... }</code> and <code>.dark { --color-primary: ... }</code> blocks from the TypeScript maps.</li>
+      <li><strong>Import in <code>globals.css</code></strong> — add <code>@import "@old-st/design-tokens/tokens.css"</code> above the <code>@theme {}</code> block. Tailwind v4 reads the CSS variables and exposes them as utilities (<code>bg-primary</code>, <code>text-foreground</code>, etc.).</li>
+      <li><strong>Verify</strong> — open any page; all <code>bg-*</code> and <code>text-*</code> utilities resolve without warnings. Toggle dark mode — colours swap without any JavaScript.</li>
+    </ol>
+    <p style="margin-top:8px"><strong>Rule:</strong> no raw hex or <code>rgb()</code> values anywhere in component files. If a colour is not in the token map, add it to the token map first — then use the utility class.</p>
+
+    <h4 style="margin:16px 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">Step 2 · Convert SVG to Typed Icon Components</h4>
+    <p>Raw SVG files scattered in <code>public/</code> or inlined in components are not tree-shaken, not typed, and cannot be themed. Convert them once into typed React components before any component imports an icon.</p>
+    <ol>
+      <li><strong>Export SVGs from Figma</strong> — select all icons on the icon frame, export at 1× as SVG (no effects, no extra wrappers). Name files in <code>kebab-case</code>: <code>arrow-right.svg</code>, <code>check-circle.svg</code>.</li>
+      <li><strong>Run SVGR</strong> — <code>pnpm svgr --icon --typescript --out-dir packages/ui/src/components/icons/generated src/assets/icons/</code>. Each SVG becomes a <code>ArrowRightIcon.tsx</code> exporting a standard React component that accepts <code>className</code> and <code>size</code>.</li>
+      <li><strong>Define the <code>IIcon</code> interface</strong> — a shared prop contract for all icon components (see code panel). This makes every icon interchangeable — a component that accepts <code>icon: IIcon</code> works with any icon from the set.</li>
+      <li><strong>Barrel-export from <code>packages/ui/src/components/icons/index.ts</code></strong> — one export per icon so consumers import precisely what they use: <code>import { ArrowRightIcon } from '@old-st/ui'</code>.</li>
+      <li><strong>Theme icons with <code>currentColor</code></strong> — SVGR replaces hard-coded fills with <code>fill="currentColor"</code> automatically. Set colour via <code>className="text-primary"</code> on the icon element — it inherits from the parent.</li>
+    </ol>
+    <p style="margin-top:8px"><strong>Rule:</strong> never copy SVG markup into a component. Never use <code>&lt;img src="icon.svg"&gt;</code> for UI icons — images are not themeable and not accessible without extra aria attributes.</p>
+
+    <h4 style="margin:16px 0 6px;font-size:0.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7">Step 3 · Implement Figma Components</h4>
+    <p>With tokens and icons in place, every Figma component can be faithfully implemented. Work primitives-first: shared building blocks before domain-specific pages.</p>
+    <ol>
+      <li><strong>Classify components</strong> — open the Figma file, identify which frames are <em>primitives</em> (Button, Badge, Card, Input, Select, Modal…) and which are <em>page sections</em> (UserTable, CreateOrderForm…). Primitives go in <code>packages/ui/</code>; page sections go in <code>apps/webapp/src/components/{domain}/</code>.</li>
+      <li><strong>Run <code>/figma-component</code> workflow for each primitive</strong> — paste the Figma URL → Claude Code fetches <code>get_design_context</code>, maps visual properties to token utilities, and scaffolds the component file with <code>cva()</code> variants, a Storybook story, and a Jest spec.</li>
+      <li><strong>Map tokens explicitly</strong> — for each fill, stroke, and spacing value the design context returns, confirm it matches a token in <code>tokens.ts</code>. If it does not match, add the token first (Step 1), then use the utility class. Never accept a raw hex value in generated code.</li>
+      <li><strong>Wire the <code>IIcon</code> interface where icons appear</strong> — if a Figma component shows an icon slot, type it as <code>icon?: IIcon</code> and render <code>{icon &amp;&amp; &lt;icon className="..." /&gt;}</code>. This keeps the component decoupled from any specific icon.</li>
+      <li><strong>Run <code>/figma-page</code> workflow for each screen</strong> — after all required primitives exist, port each Figma screen to a Next.js page. The workflow decomposes the screen into sections and maps each section to existing primitives. It will flag any missing primitive and recurse into <code>/figma-component</code> before continuing.</li>
+      <li><strong>Verify tokens round-trip</strong> — inspect the rendered page in the browser and compare against the Figma design. Open the design-preview route (<code>/design-preview</code>) to confirm all token values match the Figma variables export.</li>
+    </ol>
+    <p style="margin-top:8px"><strong>Why this order?</strong> Tokens first means every component created in Steps 2–3 automatically inherits dark mode and theming. Icons second means the Figma component workflow in Step 3 can reference a typed <code>IIcon</code> slot instead of inlining SVG. Primitives before pages means there is never a moment when a page component depends on a primitive that does not yet exist.</p>
+  </div>
+  </div>
+</div>
+    </div>
+
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">colours hard-coded in SCSS variables + component files</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// ❌ No shared token source — values scattered across files.</span>
+<span class="com">// Each SCSS file defines its own variables:</span>
+
+<span class="com">// _variables.scss</span>
+$color-primary: #4f46e5;
+$color-bg:      #ffffff;
+$color-text:    #<span class="num">111827</span>;
+
+<span class="com">// button.module.scss</span>
+.btn-primary { background-color: #4f46e5; } <span class="com">// duplicated raw hex</span>
+
+<span class="com">// card.module.scss</span>
+.card { background: #ffffff; border: 1px solid #e5e7eb; } <span class="com">// duplicated</span>
+
+Problems:
+- Dark mode requires a parallel set <span class="kw">of</span> variables with .dark prefix
+- Mobile cannot consume SCSS variables
+- Changing a colour requires grep across all files
+- Figma tokens and code drift within weeks</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">single token source, consumed by web + mobile</span>
+    </div>
+    <div class="panel-body code-body"><pre><code>
+<span class="com">// 1. Token source of truth (TypeScript — mobile imports this directly)</span>
+<span class="kw">export</span> <span class="kw">const</span> lightColors = {
+  background:           <span class="str">'hsl(0 0% 100%)'</span>,
+  foreground:           <span class="str">'hsl(222.2 84% 4.9%)'</span>,
+  primary:              <span class="str">'hsl(221.2 83.2% 53.3%)'</span>,
+  <span class="str">'primary-foreground'</span>: <span class="str">'hsl(210 40% 98%)'</span>,
+  card:                 <span class="str">'hsl(0 0% 100%)'</span>,
+  <span class="str">'card-foreground'</span>:    <span class="str">'hsl(222.2 84% 4.9%)'</span>,
+  muted:                <span class="str">'hsl(210 40% 96.1%)'</span>,
+  <span class="str">'muted-foreground'</span>:   <span class="str">'hsl(215.4 16.3% 46.9%)'</span>,
+  border:               <span class="str">'hsl(214.3 31.8% 91.4%)'</span>,
+  destructive:          <span class="str">'hsl(0 84.2% 60.2%)'</span>,
+  success:              <span class="str">'hsl(142.1 76.2% 36.3%)'</span>,
+  warning:              <span class="str">'hsl(37.7 92.1% 50.2%)'</span>,
+} <span class="kw">as</span> <span class="kw">const</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> darkColors = {
+  background:           <span class="str">'hsl(222.2 84% 4.9%)'</span>,
+  foreground:           <span class="str">'hsl(210 40% 98%)'</span>,
+  primary:              <span class="str">'hsl(217.2 91.2% 59.8%)'</span>,
+  <span class="str">'primary-foreground'</span>: <span class="str">'hsl(222.2 47.4% 11.2%)'</span>,
+  card:                 <span class="str">'hsl(222.2 84% 4.9%)'</span>,
+  <span class="str">'card-foreground'</span>:    <span class="str">'hsl(210 40% 98%)'</span>,
+  muted:                <span class="str">'hsl(217.2 32.6% 17.5%)'</span>,
+  <span class="str">'muted-foreground'</span>:   <span class="str">'hsl(215 20.2% 65.1%)'</span>,
+  border:               <span class="str">'hsl(217.2 32.6% 17.5%)'</span>,
+  destructive:          <span class="str">'hsl(0 62.8% 30.6%)'</span>,
+  success:              <span class="str">'hsl(142.1 70.6% 45.3%)'</span>,
+  warning:              <span class="str">'hsl(37.7 92.1% 60.2%)'</span>,
+} <span class="kw">as</span> <span class="kw">const</span>;
+
+<span class="kw">export</span> <span class="kw">type</span> ColorToken = keyof <span class="kw">typeof</span> lightColors;
+
+<span class="com">// ── 2. Token generation script (scripts/generate-tokens.ts) ──────</span>
+<span class="com">// Reads lightColors + darkColors and writes tokens.css:</span>
+<span class="com">//</span>
+<span class="com">// :root {</span>
+<span class="com">//   --color-background: hsl(0 0% 100%);</span>
+<span class="com">//   --color-primary:    hsl(221.2 83.2% 53.3%);</span>
+<span class="com">//   ...</span>
+<span class="com">// }</span>
+<span class="com">// .dark {</span>
+<span class="com">//   --color-background: hsl(222.2 84% 4.9%);</span>
+<span class="com">//   ...</span>
+<span class="com">// }</span>
+<span class="com">//</span>
+<span class="com">// Run: pnpm tokens:gen</span>
+
+<span class="com">// ── 3. apps/webapp/src/app/globals.css ───────────────────────────</span>
+<span class="com">//</span>
+<span class="com">// @import "@old-st/design-tokens/tokens.css";  // ← generated CSS vars</span>
+<span class="com">// @import "tailwindcss";</span>
+<span class="com">//</span>
+<span class="com">// @theme {</span>
+<span class="com">//   // Tailwind v4 reads --color-* vars and creates bg-*, text-* utilities</span>
+<span class="com">//   --color-background: var(--color-background);</span>
+<span class="com">//   --color-foreground: var(--color-foreground);</span>
+<span class="com">//   --color-primary:    var(--color-primary);</span>
+<span class="com">//   ...</span>
+<span class="com">// }</span>
+<span class="com">//</span>
+<span class="com">// ✅ Result: &lt;div className="bg-primary text-primary-foreground"&gt;</span>
+<span class="com">//    changes colour in dark mode automatically — zero JS required.</span></code></pre></div>
+  </div>
+</div>
+    
+    <div class="comparison-section-header fade-in">icon.tsx (SVG → typed React component)</div>
+    <div class="comparison-grid fade-in">
+  <div class="panel panel-before">
+    <div class="panel-header">
+      <span class="icon">⚠️</span>
+      <span class="title">Before</span>
+      <span class="subtitle">raw SVG markup inlined in components</span>
+    </div>
+    <div class="panel-body code-body"><pre><code><span class="com">// ❌ SVG copied from Figma directly into the component file.</span>
+<span class="com">// No typing, no theming, no tree-shaking.</span>
+
+<span class="kw">function</span> UserCard({ user }) {
+  <span class="kw">return</span> (
+    &lt;div&gt;
+      {<span class="com">/* Raw SVG pasted inline — not themed, not typed */</span>}
+      &lt;svg width=<span class="str">"16"</span> height=<span class="str">"16"</span> viewBox=<span class="str">"0 0 16 16"</span> fill=<span class="str">"none"</span>&gt;
+        &lt;path d=<span class="str">"M8 0a4 4 0 1 1 0 8A4 4 0 0 1 8 0Z"</span> fill=<span class="str">"#6b7280"</span>/&gt;
+        &lt;path d=<span class="str">"M0 14s1-4 8-4 8 4 8 4"</span> stroke=<span class="str">"#6b7280"</span>/&gt;
+      &lt;/svg&gt;
+      {user.name}
+    &lt;/div&gt;
+  );
+}
+
+Problems:
+- fill=<span class="str">"#6b7280"</span> is hard-coded — dark mode breaks
+- No IDE autocomplete <span class="kw">for</span> icon names
+- Changing one icon means grepping every file it was pasted into
+- Bundle includes every SVG ever pasted, even unused ones</code></pre></div>
+  </div>
+  <div class="panel panel-after">
+    <div class="panel-header">
+      <span class="icon">✅</span>
+      <span class="title">After</span>
+      <span class="subtitle">IIcon interface + SVGR-generated components</span>
+    </div>
+    <div class="panel-body code-body"><pre><code>
+<span class="com">// 1. Shared icon interface (packages/ui/src/components/icons/icon.types.ts)</span>
+<span class="kw">export</span> <span class="kw">interface</span> IIcon {
+  (props: React.SVGProps&lt;SVGSVGElement&gt; &amp; { size?: <span class="ty">number</span> }): React.ReactElement;
+}
+
+<span class="com">// 2. SVGR-generated component (auto-created — do not hand-write)</span>
+<span class="com">//    pnpm svgr --icon --typescript --out-dir packages/ui/src/components/icons/generated \</span>
+<span class="com">//              src/assets/icons/</span>
+<span class="com">//</span>
+<span class="com">// packages/ui/src/components/icons/generated/UserIcon.tsx</span>
+<span class="kw">import</span> <span class="kw">type</span> { IIcon } <span class="kw">from</span> <span class="str">'../icon.types'</span>;
+
+<span class="kw">export</span> <span class="kw">const</span> UserIcon: IIcon = ({ size = <span class="num">16</span>, ...props }) =&gt; (
+  &lt;svg
+    width={size}
+    height={size}
+    viewBox=<span class="str">"0 0 16 16"</span>
+    fill=<span class="str">"currentColor"</span>   <span class="com">// ← SVGR replaces hard-coded fills</span>
+    aria-hidden=<span class="str">"true"</span>
+    {...props}
+  &gt;
+    &lt;path d=<span class="str">"M8 0a4 4 0 1 1 0 8A4 4 0 0 1 8 0Z"</span> /&gt;
+    &lt;path d=<span class="str">"M0 14s1-4 8-4 8 4 8 4"</span> fill=<span class="str">"none"</span> stroke=<span class="str">"currentColor"</span> /&gt;
+  &lt;/svg&gt;
+);
+
+<span class="com">// 3. Barrel export (packages/ui/src/components/icons/index.ts)</span>
+<span class="kw">export</span> { UserIcon }    <span class="kw">from</span> <span class="str">'./generated/UserIcon'</span>;
+<span class="kw">export</span> { ArrowRightIcon } <span class="kw">from</span> <span class="str">'./generated/ArrowRightIcon'</span>;
+<span class="kw">export</span> { CheckCircleIcon } <span class="kw">from</span> <span class="str">'./generated/CheckCircleIcon'</span>;
+<span class="com">// ... one line per icon — tree-shaken automatically</span>
+
+<span class="com">// 4. Usage in a component — themed, typed, tree-shaken</span>
+<span class="kw">import</span> <span class="kw">type</span> { IIcon } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+<span class="kw">import</span> { UserIcon } <span class="kw">from</span> <span class="str">'@old-st/ui'</span>;
+
+<span class="com">// Accept any icon from the set via the shared interface</span>
+<span class="kw">interface</span> AvatarProps { icon?: IIcon; name: <span class="ty">string</span> }
+
+<span class="kw">function</span> Avatar({ icon: Icon = UserIcon, name }: AvatarProps) {
+  <span class="kw">return</span> (
+    &lt;div className=<span class="str">"flex items-center gap-2"</span>&gt;
+      &lt;Icon size={<span class="num">20</span>} className=<span class="str">"text-muted-foreground"</span> /&gt; {<span class="com">/* themed via currentColor */</span>}
+      &lt;span&gt;{name}&lt;/span&gt;
+    &lt;/div&gt;
+  );
+}
+
+<span class="com">// ✅ Changing the colour: className="text-primary" — no SVG edit needed</span>
+<span class="com">// ✅ Dark mode: text-muted-foreground resolves to the dark token automatically</span>
+<span class="com">// ✅ Tree-shaken: only UserIcon lands in the bundle if that's the only import</span></code></pre></div>
+  </div>
+</div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Tokens first — every component written after Step 1 inherits dark mode for free</span><span class="concept-pill">✦ lightColors + darkColors in TypeScript: mobile imports directly, web converts to CSS vars</span><span class="concept-pill">✦ pnpm tokens:gen generates tokens.css from the TypeScript map — one command keeps them in sync</span><span class="concept-pill">✦ Tailwind v4 @theme reads CSS custom properties and generates utilities automatically</span><span class="concept-pill">✦ SVGR converts SVGs to React components with fill="currentColor" — coloured via className</span><span class="concept-pill">✦ IIcon interface makes every icon interchangeable — components stay decoupled from specific icons</span><span class="concept-pill">✦ /figma-component workflow: get_design_context → map to tokens → cva() variants → story + spec</span><span class="concept-pill">✦ /figma-page workflow: decompose screen into sections → map to existing primitives → recurse if missing</span><span class="concept-pill">✦ Primitives before pages: a page can never depend on a primitive that does not yet exist</span></div>
+    <div class="pitfalls">
+        <div class="pitfalls-title">⚠️ Common pitfalls</div>
+        <ul><li><strong>Don't write components before the token pipeline is live.</strong> The first component that uses <code>bg-[#4f46e5]</code> creates a precedent — every component after it will do the same. Tokens first, always.</li><li><strong>Don't regenerate tokens by hand.</strong> Run <code>pnpm tokens:gen</code> after any change to <code>tokens.ts</code>. The CSS file is generated output — it should never be edited directly.</li><li><strong>Don't import <code>darkColors</code> in webapp components.</strong> Web components use Tailwind utilities (<code>dark:bg-card</code>); only mobile imports <code>darkColors</code> directly from <code>@old-st/design-tokens</code>. Importing the TS map in a web component bypasses the CSS variable layer.</li><li><strong>Don't inline SVGR output as JSX in a component file.</strong> Run the CLI once, commit the generated files, then import from the icons barrel. Re-run the CLI whenever icons change — regenerating is idempotent.</li><li><strong>Don't implement Figma pages before all required primitives exist.</strong> The <code>/figma-page</code> workflow will flag missing primitives — complete those first via <code>/figma-component</code>, then continue. Skipping this produces page components that duplicate primitive logic.</li><li><strong>Don't accept raw hex values from <code>get_design_context</code> output.</strong> The design context returns loosely structured code as a reference. Every colour must map to a token utility. If a colour is not in the token map, add it before wiring the component.</li></ul>
+      </div>
+  </div>
+</section>
+<script>
+(function () {
+  const toggle = document.getElementById('themeToggle');
+  const setTheme = (dark) => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('entity-masterclass-theme', dark ? 'dark' : 'light');
+  };
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(!isDark);
+  });
+  const saved = localStorage.getItem('entity-masterclass-theme');
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+
+  const progressBar = document.getElementById('scrollProgress');
+  const topNav = document.getElementById('topNav');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const sections = document.querySelectorAll('.module');
+
+  const update = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = docHeight > 0 ? (scrollTop / docHeight * 100) + '%' : '0%';
+    topNav.classList.toggle('scrolled', scrollTop > 10);
+    let current = '';
+    sections.forEach(s => { if (scrollTop >= s.offsetTop - 120) current = s.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  };
+  window.addEventListener('scroll', update, { passive: true });
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinksEl = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinksEl.classList.toggle('open'));
+  navLinksEl.addEventListener('click', (e) => { if (e.target.tagName === 'A') navLinksEl.classList.remove('open'); });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+})();
+</script>
+</body>
+</html>

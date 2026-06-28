@@ -1,0 +1,18 @@
+{
+    "chat.experimental.useSkillAdherencePrompt": true,
+    "chat.useNestedAgentsMdFiles": true,
+    "workbench.colorCustomizations": {
+        "titleBar.activeForeground": "#000",
+        "titleBar.inactiveForeground": "#000000cc",
+        "titleBar.activeBackground": "#35c8f1",
+        "titleBar.inactiveBackground": "#35c8f188"
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "[typescript][javascript][typescriptreact][scss]": {
+        "editor.formatOnSave": true
+    },
+}

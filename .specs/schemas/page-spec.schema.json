@@ -1,0 +1,397 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/old-st/old-st-template/.specs/schemas/page-spec.schema.json",
+  "title": "Page Spec",
+  "description": "Declarative spec for /webapp-feature when scaffolding a non-trivial page (list, detail, or form). Replaces the inline 10-question interview with a reviewable, autocompleted YAML file. SCOPE — Phase 1: list / detail / form pages that consume EXISTING backend endpoints (Mode A). Phase 1 explicitly does NOT cover: dashboards (multi-widget grids), wizards (multi-step flows), pages that need new backend work (use /full-stack-feature instead), animations / pixel layout (use Figma + @old-st/ui variants).",
+  "type": "object",
+  "required": ["page", "domain", "dataSources"],
+  "additionalProperties": false,
+  "properties": {
+    "page": {
+      "type": "object",
+      "required": ["route", "segment", "layout"],
+      "additionalProperties": false,
+      "properties": {
+        "route": {
+          "type": "string",
+          "pattern": "^/[a-z0-9/_\\[\\]-]*$",
+          "description": "Next.js App Router path. Examples: /payments, /payments/[paymentId], /admin/discounts. Dynamic segments use [paramName]."
+        },
+        "segment": {
+          "type": "string",
+          "enum": ["public", "protected"],
+          "description": "public = lives under apps/webapp/src/app/. protected = lives under apps/webapp/src/app/(protected)/ — adds auth middleware redirect."
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable page title shown in <h1> and document <title>. Optional — defaults to the last route segment in Title Case."
+        },
+        "layout": {
+          "type": "string",
+          "enum": ["list", "detail", "form"],
+          "description": "Phase 1 layouts only. list = table + filter bar + create button. detail = single-record cards + action menu. form = create/edit form. For dashboards / wizards / custom layouts, use the chat-box interview instead."
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional role-gated access. Enforced both client-side (hide UI) and server-side (the API itself must validate).",
+          "properties": {
+            "roles": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+              "description": "User roles permitted to view this page. Values must come from USER_ROLES in @old-st/contracts/user."
+            }
+          }
+        },
+        "navigation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional sidebar navigation entry. Omit for pages that should not appear in the sidebar (detail pages, modals).",
+          "properties": {
+            "sidebar": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "section": { "type": "string", "description": "Sidebar section header. Examples: Operations, Finance, Admin." },
+                "icon": { "type": "string", "description": "lucide-react icon name (kebab-case). Examples: dollar-sign, users, package." },
+                "order": { "type": "integer", "description": "Sort order within the section. Lower = higher in the list." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "domain": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Lowercase, kebab-case domain name. Drives the components/{domain}/ folder, the contract import (@old-st/contracts/{domain}), and the per-domain status formatter (formatXxxStatus from @old-st/client-common)."
+    },
+    "dataSources": {
+      "type": "array",
+      "minItems": 1,
+      "description": "React Query hooks the page consumes. ALL hooks must already exist in @old-st/client-common — if any are missing, /webapp-feature stops in Mode B and redirects to /new-feature. Phase 1 only supports Mode A.",
+      "items": { "$ref": "#/definitions/DataSource" }
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Loading / error / empty states. The orchestrator scaffolds the matching loading.tsx, error.tsx, and empty-state component automatically.",
+      "properties": {
+        "loading": {
+          "type": "string",
+          "enum": ["skeleton-table", "skeleton-detail", "skeleton-form", "spinner"],
+          "description": "Loading state shape. skeleton-* variants render a domain-specific skeleton. spinner is a generic fallback."
+        },
+        "error": {
+          "type": "string",
+          "enum": ["segment-error"],
+          "description": "Error boundary style. segment-error renders the shared <SegmentError> component (always-correct default)."
+        },
+        "empty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "message": { "type": "string", "description": "Empty-state copy. Example: 'No payments yet — record your first one.'" },
+            "cta": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "label": { "type": "string" },
+                "action": { "type": "string", "description": "Action key — must match a form name (e.g. open-form:create-payment) or an action from `actions` (e.g. action:approve)." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Domain components rendered on the page. Phase 1 supports kind=data-table, kind=detail-card, kind=filter-bar. Other shapes (custom rendering, charts, kanban) drop back to the chat-box interview.",
+      "items": { "$ref": "#/definitions/Component" }
+    },
+    "forms": {
+      "type": "array",
+      "description": "react-hook-form + Zod resolver forms on this page. Schemas MUST come from @old-st/contracts/{domain} — never duplicate.",
+      "items": { "$ref": "#/definitions/Form" }
+    },
+    "actions": {
+      "type": "array",
+      "description": "Status-driven action buttons. Each action maps a status (or set of statuses) to a mutation hook + button label. Used for detail-page action menus AND list-row inline actions.",
+      "items": { "$ref": "#/definitions/Action" }
+    },
+    "testIds": {
+      "type": "array",
+      "description": "Required data-testid attributes for Playwright + RTL. The orchestrator emits these into the generated components and references them in apps/webapp-e2e/src/utils/selectors.ts.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-{}.]*$",
+        "description": "Kebab-case selector. Use {param} for dynamic segments (e.g. payment-row-{paymentId})."
+      }
+    },
+    "figma": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL reference to a Figma frame for layout / appearance. The orchestrator queries the Figma Dev MCP server (when configured) to align component slot order, spacing, and colors with the design. Page STRUCTURE remains owned by this YAML — Figma owns appearance only.",
+      "properties": {
+        "frame": {
+          "type": "string",
+          "description": "Figma frame identifier. Convention: '{Project}/{Section}/{ViewName}'. Example: 'Webapp/Finance/PaymentsList'."
+        },
+        "fileKey": {
+          "type": "string",
+          "description": "Optional Figma file key. Defaults to the workspace-wide FIGMA_FILE_KEY env var."
+        }
+      }
+    }
+  },
+  "definitions": {
+    "DataSource": {
+      "type": "object",
+      "required": ["hook"],
+      "additionalProperties": false,
+      "properties": {
+        "hook": {
+          "type": "string",
+          "pattern": "^use[A-Z][A-Za-z0-9]*$",
+          "description": "Hook name from @old-st/client-common. Examples: usePaymentsByStatus, usePayment, useCustomers."
+        },
+        "args": {
+          "type": "string",
+          "description": "Arguments expression as it appears in the call site. Examples: '{ status, cursor }', 'paymentId', 'undefined'."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Optional one-line description of what this hook provides. Used in generated JSDoc."
+        }
+      }
+    },
+    "Component": {
+      "type": "object",
+      "required": ["name", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$",
+          "description": "PascalCase component name. Examples: PaymentsTable, PaymentDetailCard, PaymentFilters."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["data-table", "detail-card", "filter-bar"],
+          "description": "Phase 1 component shapes. data-table → uses <DataTable> primitive (sortable, selectable). detail-card → key/value rows. filter-bar → status select + search input."
+        },
+        "rowKey": {
+          "type": "string",
+          "description": "REQUIRED for kind=data-table. Field name to use as React key for each row. Usually the entity's primary key (e.g. paymentId)."
+        },
+        "rowLink": {
+          "type": "string",
+          "description": "Optional row click target for kind=data-table. Supports {fieldName} interpolation. Example: /payments/{paymentId}."
+        },
+        "columns": {
+          "type": "array",
+          "description": "REQUIRED for kind=data-table. One entry per column.",
+          "items": { "$ref": "#/definitions/Column" }
+        },
+        "rowActions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional inline-row action names for kind=data-table. Each name MUST match an action in `actions` (e.g. ['refund', 'cancel'])."
+        },
+        "fields": {
+          "type": "array",
+          "description": "REQUIRED for kind=detail-card. Key/value pairs to render.",
+          "items": { "$ref": "#/definitions/DetailField" }
+        },
+        "filters": {
+          "type": "array",
+          "description": "REQUIRED for kind=filter-bar. One entry per filter input.",
+          "items": { "$ref": "#/definitions/Filter" }
+        }
+      }
+    },
+    "Column": {
+      "type": "object",
+      "required": ["field", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Property name on the row entity. Examples: paymentId, amount, status."
+        },
+        "label": { "type": "string", "description": "Column header text." },
+        "format": {
+          "type": "string",
+          "enum": ["text", "number", "currency", "date", "datetime", "boolean", "truncate"],
+          "description": "Display format. text = raw string. currency = $X.XX. date = locale date. truncate = first 8 chars + '...'. Default: text."
+        },
+        "badge": {
+          "type": "string",
+          "description": "Optional badge variant function name from apps/webapp/src/lib/status-variants.ts. Example: paymentStatusVariant. Only used when the column renders a status enum."
+        },
+        "formatter": {
+          "type": "string",
+          "description": "Optional format helper from @old-st/client-common. REQUIRED if the column renders a status enum (Golden Rule #22a). Examples: formatPaymentStatus, formatOrderStatus."
+        },
+        "sortable": { "type": "boolean", "description": "Phase 1 default: true for data-table columns." },
+        "align": {
+          "type": "string",
+          "enum": ["left", "right", "center"],
+          "description": "Cell alignment. Default: left (right for numeric / currency)."
+        }
+      }
+    },
+    "DetailField": {
+      "type": "object",
+      "required": ["field", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string", "description": "Property name on the entity." },
+        "label": { "type": "string", "description": "Label shown next to the value." },
+        "format": {
+          "type": "string",
+          "enum": ["text", "number", "currency", "date", "datetime", "boolean", "truncate"],
+          "description": "Display format. Default: text."
+        },
+        "badge": { "type": "string", "description": "Optional badge variant function name (status fields only)." },
+        "formatter": { "type": "string", "description": "Optional format*Status helper from @old-st/client-common (REQUIRED for status fields — Golden Rule #22a)." }
+      }
+    },
+    "Filter": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase URL-search-param name. Becomes ?name=value in the route."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["select", "search", "daterange"],
+          "description": "Phase 1 filter inputs. select = dropdown. search = debounced text input. daterange = two date pickers."
+        },
+        "source": {
+          "type": "string",
+          "description": "REQUIRED for type=select. Enum constant name from @old-st/contracts/{domain}. Example: PaymentStatusEnum."
+        },
+        "label": { "type": "string", "description": "Display label. Defaults to Title Case of `name`." }
+      }
+    },
+    "Form": {
+      "type": "object",
+      "required": ["name", "schema", "submit", "trigger"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "kebab-case form identifier. Used in testIds, file names, and `cta.action` references. Example: create-payment."
+        },
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*Schema$",
+          "description": "Zod schema name from @old-st/contracts/{domain}. MUST already exist — never duplicate. Example: createPaymentSchema."
+        },
+        "submit": {
+          "type": "string",
+          "pattern": "^use[A-Z][A-Za-z0-9]*$",
+          "description": "Mutation hook from @old-st/client-common. Example: useCreatePayment."
+        },
+        "trigger": {
+          "type": "string",
+          "enum": ["button", "modal", "route"],
+          "description": "How the form is presented. button = inline section on the page. modal = opens in a Dialog. route = its own page (only valid when page.layout=form)."
+        },
+        "title": { "type": "string", "description": "Form title shown in modal header or page <h2>." },
+        "fields": {
+          "type": "array",
+          "description": "Form input fields. Each field corresponds to a key in the Zod schema. Phase 1 supports text/number/select/textarea/combobox/checkbox/daterange.",
+          "items": { "$ref": "#/definitions/FormField" }
+        },
+        "onSuccess": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "toast": { "type": "string", "description": "Success toast message. Example: 'Payment recorded.'" },
+            "redirect": { "type": "string", "description": "Optional route to redirect to after submit. Supports {field} interpolation from the response. Example: /payments/{id}." },
+            "closeModal": { "type": "boolean", "description": "If trigger=modal, close the modal on success. Default: true." }
+          }
+        },
+        "onError": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "toast": { "type": "string", "description": "Error toast message. Defaults to 'Something went wrong.' (the API error message is ALSO shown via FormMessage)." }
+          }
+        }
+      }
+    },
+    "FormField": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase field name. MUST match a key in the Zod schema."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "number", "email", "password", "select", "textarea", "checkbox", "combobox", "daterange", "hidden"],
+          "description": "Input shape. select / combobox require `source`. combobox is a searchable async select."
+        },
+        "label": { "type": "string", "description": "Field label. Defaults to Title Case of `name`." },
+        "placeholder": { "type": "string" },
+        "source": {
+          "type": "string",
+          "description": "REQUIRED for type=select | combobox. Either an enum constant name (PaymentStatusEnum) or a hook name (useCustomers — for combobox)."
+        },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "optional": { "type": "boolean", "description": "Marks the field as optional in the UI (must also be optional in the Zod schema)." },
+        "helperText": { "type": "string", "description": "Helper text shown below the input." }
+      }
+    },
+    "Action": {
+      "type": "object",
+      "required": ["name", "label", "from", "hook"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "kebab-case action identifier. Used in components.rowActions and empty.cta.action."
+        },
+        "label": { "type": "string", "description": "Button text. Example: 'Approve', 'Refund', 'Cancel'." },
+        "from": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "description": "Status enum values from which this action is allowed. The button is hidden when the entity status is not in this list. Example: [PENDING, APPROVED]."
+        },
+        "hook": {
+          "type": "string",
+          "pattern": "^use[A-Z][A-Za-z0-9]*$",
+          "description": "Mutation hook from @old-st/client-common. Example: useApprovePayment."
+        },
+        "confirm": {
+          "type": "boolean",
+          "description": "If true, wraps the action in an <AlertDialog> confirmation. Recommended for destructive actions."
+        },
+        "confirmMessage": { "type": "string", "description": "Custom confirmation prompt. Defaults to 'Are you sure?'." },
+        "opensForm": {
+          "type": "string",
+          "description": "Optional form name from `forms`. If set, clicking the action opens that form (in a modal) instead of calling the hook directly. Useful for actions that need extra input (e.g. refund amount)."
+        },
+        "intent": {
+          "type": "string",
+          "enum": ["primary", "secondary", "destructive"],
+          "description": "Button variant. destructive renders red. Default: secondary."
+        }
+      }
+    }
+  }
+}

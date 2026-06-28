@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/packages/design-tokens",
+    "declaration": true
+  },
+  "include": ["src/**/*.ts"]
+}

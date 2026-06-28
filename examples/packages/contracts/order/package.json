@@ -1,0 +1,14 @@
+{
+  "name": "@old-st/contracts-order",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@old-st/order-domain": "link:../../order-domain"
+  },
+  "peerDependencies": {
+    "zod": ">=4.0.0"
+  }
+}

@@ -1,0 +1,129 @@
+# yaml-language-server: $schema=schemas/page-spec.schema.json
+#
+# Worked example — Payments admin list page.
+#
+# Demonstrates:
+#   * layout=list with a data-table component + filter-bar
+#   * status formatter wiring (Golden Rule #22a)
+#   * status badge variant wiring (Golden Rule #22)
+#   * status-driven actions (approve / reject / refund) with from-state matrix
+#   * action that opens a form (refund needs an amount input)
+#   * permissions roles
+#   * sidebar navigation entry
+#   * empty-state CTA that opens a form
+#
+# Copy-paste this file as a starting point for new list pages, or run
+# /new-page-spec to scaffold a tailored template.
+
+page:
+  route: /admin/payments
+  segment: protected
+  title: Payments
+  layout: list
+  permissions:
+    roles: [ADMIN, FINANCE]
+  navigation:
+    sidebar:
+      section: Finance
+      icon: dollar-sign
+      order: 3
+
+domain: payment
+
+dataSources:
+  - hook: usePaymentsByStatus
+    args: "{ status, cursor }"
+    purpose: "Paginated payment list driven by the status filter"
+  - hook: usePaymentSummary
+    args: "undefined"
+    purpose: "Aggregate counts shown in the table header"
+
+states:
+  loading: skeleton-table
+  error: segment-error
+  empty:
+    message: "No payments yet — record your first one."
+    cta:
+      label: "New Payment"
+      action: "open-form:create-payment"
+
+components:
+  - name: PaymentFilters
+    kind: filter-bar
+    filters:
+      - { name: status, type: select, source: PaymentStatusEnum, label: Status }
+      - { name: search, type: search, label: "Search by reference" }
+
+  - name: PaymentsTable
+    kind: data-table
+    rowKey: paymentId
+    rowLink: "/admin/payments/{paymentId}"
+    columns:
+      - { field: paymentId,   label: ID,       format: truncate }
+      - { field: customerId,  label: Customer, format: truncate }
+      - { field: amount,      label: Amount,   format: currency, align: right }
+      - { field: status,      label: Status,   badge: paymentStatusVariant, formatter: formatPaymentStatus }
+      - { field: dateCreated, label: Created,  format: datetime }
+    rowActions: [approve, reject, refund]
+
+forms:
+  - name: create-payment
+    schema: createPaymentSchema
+    submit: useCreatePayment
+    trigger: modal
+    title: "Record Payment"
+    fields:
+      - { name: customerId, type: combobox, source: useCustomers, label: Customer }
+      - { name: amount,     type: number,   min: 0.01 }
+      - { name: notes,      type: textarea, optional: true }
+    onSuccess:
+      toast: "Payment recorded."
+      closeModal: true
+
+  - name: refund-payment
+    schema: refundPaymentSchema
+    submit: useRefundPayment
+    trigger: modal
+    title: "Refund Payment"
+    fields:
+      - { name: paymentId, type: hidden }
+      - { name: amount,    type: number, min: 0.01, helperText: "Cannot exceed original amount." }
+      - { name: reason,    type: textarea }
+    onSuccess:
+      toast: "Refund issued."
+      closeModal: true
+    onError:
+      toast: "Refund failed — check the amount and try again."
+
+actions:
+  - name: approve
+    label: Approve
+    from: [PENDING]
+    hook: useApprovePayment
+    intent: primary
+
+  - name: reject
+    label: Reject
+    from: [PENDING]
+    hook: useRejectPayment
+    confirm: true
+    confirmMessage: "Reject this payment? The customer will be notified."
+    intent: destructive
+
+  - name: refund
+    label: Refund
+    from: [APPROVED]
+    hook: useRefundPayment
+    opensForm: refund-payment
+    intent: secondary
+
+testIds:
+  - payments-table
+  - payment-row-{paymentId}
+  - status-filter
+  - create-payment-btn
+  - payment-status-badge
+
+# Optional Figma reference — uncomment when the design is published.
+# figma:
+#   frame: "Webapp/Finance/PaymentsList"

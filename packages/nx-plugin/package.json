@@ -1,0 +1,9 @@
+{
+  "name": "@old-st/nx-plugin",
+  "version": "1.0.0",
+  "description": "Internal Nx plugin: generators for domain packages, services, and use cases",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "generators": "./generators.json",
+  "private": true
+}

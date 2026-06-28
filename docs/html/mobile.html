@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile (Expo / React Native) — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html" class="active">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Mobile (Expo / React Native)</h1>
+      <p class="subtitle">
+        How the Expo mobile app is structured — from screen orchestrators and domain components
+        down to shared mobile-ui primitives, Expo Router file-based navigation, and the same
+        React Query hooks and API clients shared with the webapp.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Mobile Layer Architecture</h2>
+
+      <p>
+        The mobile app follows the same layered separation as the webapp.
+        The data-access layer (<code>@old-st/client-common</code>) is <strong>shared</strong> — hooks
+        and API clients are written once.
+      </p>
+
+      <div class="mermaid">
+graph TB
+  subgraph "Screens — apps/mobile/src/app/"
+    A["Screen Orchestrators<br/>(thin wiring — hooks + state + components)"]
+  end
+  subgraph "Domain Components — apps/mobile/src/components/"
+    B["Lists · Cards · Detail Views<br/>(domain-scoped RN components)"]
+  end
+  subgraph "Data Access — packages/client-common/"
+    C["React Query Hooks<br/>(query + mutation per domain)"]
+    D["API Clients<br/>(typed fetch + Zod parsing)"]
+  end
+  subgraph "UI Primitives — packages/mobile-ui/"
+    E["Badge · Button · Card · Text<br/>Input · Separator"]
+  end
+  subgraph "Backend"
+    F["REST APIs<br/>(NestJS microservices)"]
+  end
+
+  A --> B
+  A --> C
+  B --> C
+  B --> E
+  C --> D
+  D --> F
+
+  style A fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style B fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style C fill:#dcfce7,stroke:#16a34a,color:#166534
+  style D fill:#dcfce7,stroke:#16a34a,color:#166534
+  style E fill:#fef3c7,stroke:#d97706,color:#92400e
+  style F fill:#f3e8ff,stroke:#7c3aed,color:#5b21b6
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Owns</th>
+            <th>Must NOT</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Screens</strong></td>
+            <td>Route definition, hook wiring, local UI state (filters, modals)</td>
+            <td>Contain list item markup, call <code>fetch</code> directly, hold business logic</td>
+            <td><code>apps/mobile/src/app/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Domain Components</strong></td>
+            <td>Lists (<code>FlatList</code>), cards, detail views — domain-specific UI</td>
+            <td>Call API clients directly, duplicate hooks across components</td>
+            <td><code>apps/mobile/src/components/{domain}/</code></td>
+          </tr>
+          <tr>
+            <td><strong>React Query Hooks</strong></td>
+            <td>Data fetching, caching, mutations, cache invalidation</td>
+            <td>Contain UI logic, render components, import from <code>apps/</code></td>
+            <td><code>packages/client-common/src/hooks/</code></td>
+          </tr>
+          <tr>
+            <td><strong>API Clients</strong></td>
+            <td>HTTP calls (<code>fetch</code>), URL building, Zod response parsing</td>
+            <td>Use React hooks, cache data, know about UI state</td>
+            <td><code>packages/client-common/src/infrastructure/api-clients/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Mobile UI Primitives</strong></td>
+            <td>Reusable, domain-agnostic React Native components</td>
+            <td>Import domain types, call API clients, contain business logic</td>
+            <td><code>packages/mobile-ui/src/components/</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Technology Stack</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Expo</strong> (SDK 53)</td>
+            <td>React Native framework — managed workflow, OTA updates, native API access</td>
+          </tr>
+          <tr>
+            <td><strong>Expo Router</strong></td>
+            <td>File-based routing (<code>apps/mobile/src/app/</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>React Native</strong></td>
+            <td>Cross-platform native components (iOS + Android)</td>
+          </tr>
+          <tr>
+            <td><strong>React Query</strong> (TanStack Query v5)</td>
+            <td>Server state management — shared with webapp via <code>@old-st/client-common</code></td>
+          </tr>
+          <tr>
+            <td><strong>Zod</strong></td>
+            <td>Runtime response validation — shared API clients parse responses with Zod</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Routing (Expo Router)</h2>
+
+      <div class="mermaid">
+graph TB
+  subgraph "apps/mobile/src/app/"
+    L["_layout.tsx<br/>(Root: SafeAreaProvider + QueryClient + configureApi)"]
+    subgraph "(tabs)/"
+      TL["_layout.tsx<br/>(Tab Bar config)"]
+      T1["index.tsx<br/>Dashboard"]
+      T2["users.tsx<br/>Users List"]
+      T3["products.tsx<br/>Products List"]
+      T4["orders.tsx<br/>Orders List"]
+    end
+    subgraph "Detail Screens"
+      D1["users/[userId].tsx"]
+      D2["products/[productId].tsx"]
+      D3["orders/[orderId].tsx"]
+    end
+  end
+
+  L --> TL
+  TL --> T1
+  TL --> T2
+  TL --> T3
+  TL --> T4
+  T2 -.-> D1
+  T3 -.-> D2
+  T4 -.-> D3
+
+  style L fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style TL fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style T1 fill:#fef3c7,stroke:#d97706,color:#92400e
+  style T2 fill:#fef3c7,stroke:#d97706,color:#92400e
+  style T3 fill:#fef3c7,stroke:#d97706,color:#92400e
+  style T4 fill:#fef3c7,stroke:#d97706,color:#92400e
+  style D1 fill:#dcfce7,stroke:#16a34a,color:#166534
+  style D2 fill:#dcfce7,stroke:#16a34a,color:#166534
+  style D3 fill:#dcfce7,stroke:#16a34a,color:#166534
+      </div>
+
+      <ul>
+        <li><strong>Tab screens</strong> (<code>(tabs)/</code>) — bottom tab navigator with Dashboard, Users, Products, Orders.</li>
+        <li><strong>Detail screens</strong> — dynamic route segments (<code>[userId].tsx</code>, etc.) for entity detail views.</li>
+        <li><strong>Root layout</strong> — provides <code>SafeAreaProvider</code>, <code>QueryClientProvider</code>, and calls <code>configureApi()</code> to set backend URLs.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Shared Data Access (<code>@old-st/client-common</code>)</h2>
+
+      <p>
+        The mobile app shares the <strong>exact same hooks and API clients</strong> as the webapp.
+        This is the key architectural decision — write data-access code once, consume it in both web and mobile.
+      </p>
+
+      <div class="mermaid">
+graph LR
+  subgraph "Webapp (Next.js)"
+    W["webapp pages"]
+  end
+  subgraph "Mobile (Expo)"
+    M["mobile screens"]
+  end
+  subgraph "@old-st/client-common"
+    H["React Query Hooks"]
+    A["API Clients"]
+  end
+  subgraph "Backend APIs"
+    B["NestJS Services"]
+  end
+
+  W --> H
+  M --> H
+  H --> A
+  A --> B
+
+  style W fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style M fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style H fill:#dcfce7,stroke:#16a34a,color:#166534
+  style A fill:#dcfce7,stroke:#16a34a,color:#166534
+  style B fill:#f3e8ff,stroke:#7c3aed,color:#5b21b6
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Hook</th>
+            <th>Mobile Usage</th>
+            <th>Webapp Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>useUsers()</code></td>
+            <td>Users tab screen (FlatList)</td>
+            <td>Users page (Table)</td>
+          </tr>
+          <tr>
+            <td><code>useUser(userId)</code></td>
+            <td>Detail screen</td>
+            <td>Detail page</td>
+          </tr>
+          <tr>
+            <td><code>useActivateUser()</code></td>
+            <td>Detail screen action button</td>
+            <td>Table row action menu</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Mobile UI Primitives (<code>@old-st/mobile-ui</code>)</h2>
+
+      <p>
+        The <code>@old-st/mobile-ui</code> package provides React Native building blocks following
+        a <strong>variant record pattern</strong> with shared design tokens.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Pattern</th>
+            <th>Variants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Badge</code></td>
+            <td>Variant record + theme tokens</td>
+            <td><strong>variant:</strong> default, secondary, destructive, outline, success, warning</td>
+          </tr>
+          <tr>
+            <td><code>Button</code></td>
+            <td>Variant record + size map</td>
+            <td><strong>variant:</strong> default, destructive, outline, secondary, ghost ×
+                <strong>size:</strong> default, sm, lg</td>
+          </tr>
+          <tr>
+            <td><code>Card</code></td>
+            <td>Compound component</td>
+            <td>Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter</td>
+          </tr>
+          <tr>
+            <td><code>Text</code></td>
+            <td>Variant record</td>
+            <td><strong>variant:</strong> default, heading, subheading, muted, label</td>
+          </tr>
+          <tr>
+            <td><code>Input</code></td>
+            <td>Themed <code>TextInput</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>Separator</code></td>
+            <td>Themed <code>View</code></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Design Tokens</h3>
+      <pre><code>// packages/mobile-ui/src/lib/theme.ts
+export const colors = {
+  primary:    '#1a1a2e',
+  background: '#ffffff',
+  foreground: '#0f172a',
+  muted:      '#f1f5f9',
+  border:     '#e2e8f0',
+  destructive:'#ef4444',
+  success:    '#22c55e',
+  warning:    '#f59e0b',
+};
+
+export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
+export const radii   = { sm: 4, md: 8, lg: 12, full: 9999 };
+export const fontSizes = { xs: 10, sm: 12, md: 14, lg: 16, xl: 18, xxl: 24 };</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Status Badge Mapping</h2>
+
+      <p>
+        Status-to-badge-variant mapping in mobile uses domain constants from
+        <code>@old-st/contracts/{domain}</code> — never hardcoded strings.
+      </p>
+
+      <pre><code>// apps/mobile/src/lib/status-variants.ts
+import { UserStatusEnum } from '@old-st/contracts/user';
+import { BadgeVariant } from '@old-st/mobile-ui';
+
+export const userStatusVariant: Record&lt;string, BadgeVariant&gt; = {
+  [UserStatusEnum.ACTIVE]:   'success',
+  [UserStatusEnum.PENDING]:  'warning',
+  [UserStatusEnum.INACTIVE]: 'secondary',
+  [UserStatusEnum.DELETED]:  'destructive',
+};</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Component Conventions</h2>
+
+      <ul>
+        <li><strong>Domain-scoped folders:</strong> <code>apps/mobile/src/components/{domain}/</code></li>
+        <li>All components use <code>@old-st/mobile-ui</code> primitives — never raw <code>View</code>/<code>Text</code> for interactive or styled elements.</li>
+        <li>Lists use <code>FlatList</code> (never <code>ScrollView</code> + <code>map()</code>).</li>
+        <li>Styles use <code>StyleSheet.create()</code> at the bottom of the file.</li>
+        <li>Screens are thin orchestrators — they wire hooks and components, nothing more.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>API Configuration</h2>
+
+      <p>
+        The root layout calls <code>configureApi()</code> from <code>@old-st/client-common</code>
+        with <code>EXPO_PUBLIC_API_*_URL</code> environment variables:
+      </p>
+
+      <pre><code>// apps/mobile/src/app/_layout.tsx
+import { configureApi } from '@old-st/client-common/infrastructure';
+
+configureApi({
+  userApiUrl:    process.env.EXPO_PUBLIC_API_USER_URL,
+  productApiUrl: process.env.EXPO_PUBLIC_API_PRODUCT_URL,
+  orderApiUrl:   process.env.EXPO_PUBLIC_API_ORDER_URL,
+});</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>How to Extend the Mobile App</h2>
+
+      <p>Follow the Claude Code skills for step-by-step guidance:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Skill</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Add a new screen / domain list / detail view</td>
+            <td><code>mobile-new-screen</code></td>
+          </tr>
+          <tr>
+            <td>Add a new mobile UI primitive</td>
+            <td><code>mobile-ui-primitive</code></td>
+          </tr>
+          <tr>
+            <td>Surface an existing backend feature in mobile</td>
+            <td><code>mobile-new-domain-feature</code></td>
+          </tr>
+          <tr>
+            <td>Full-stack feature (backend + webapp + mobile)</td>
+            <td><code>add-feature-existing-domain</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "UiPrimitiveGenerator",
+  "title": "Scaffold a new @old-st/ui primitive (4-file pattern)",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Component name in PascalCase or kebab-case (e.g. Switch, ProgressBar, progress-bar).",
+      "x-prompt": "What is the component name? (e.g. Switch, ProgressBar)"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["form-controls", "data-display", "feedback", "navigation", "layout"],
+      "description": "Category subfolder in packages/ui/src/components/.",
+      "x-prompt": {
+        "message": "Which category?",
+        "type": "list",
+        "items": [
+          { "value": "form-controls", "label": "form-controls — buttons, inputs, selects, checkboxes, file-dropzone" },
+          { "value": "data-display", "label": "data-display — badges, cards, tables, lists, skeletons" },
+          { "value": "feedback", "label": "feedback — dialogs, toasts, tooltips, spinners, alerts" },
+          { "value": "navigation", "label": "navigation — tabs, menus, breadcrumbs, command palette" },
+          { "value": "layout", "label": "layout — separators, dividers, containers" }
+        ]
+      }
+    },
+    "pattern": {
+      "type": "string",
+      "enum": ["simple-variants", "simple-no-variants", "compound"],
+      "description": "Component pattern. simple-variants = cva + forwardRef (e.g. Button, Badge). simple-no-variants = forwardRef + cn only (e.g. Input). compound = multiple named sub-components (e.g. Card, Table).",
+      "x-prompt": {
+        "message": "Which component pattern?",
+        "type": "list",
+        "items": [
+          { "value": "simple-variants", "label": "simple-variants — cva variants + forwardRef (e.g. Button, Badge, Skeleton, Avatar)" },
+          { "value": "simple-no-variants", "label": "simple-no-variants — forwardRef + cn, no variants (e.g. Input, Label, Separator)" },
+          { "value": "compound", "label": "compound — multiple named sub-components (e.g. Card, Table, Dialog stub)" }
+        ]
+      }
+    }
+  },
+  "required": ["name", "category", "pattern"]
+}

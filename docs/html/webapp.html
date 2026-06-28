@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webapp (Next.js Frontend) — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html" class="active">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Webapp (Next.js Frontend)</h1>
+      <p class="subtitle">
+        How the Next.js App Router frontend is structured — from page orchestrators and domain components
+        down to shared UI primitives, typed API clients, and React Query hooks. The webapp consumes
+        backend microservices through a layered data-access architecture with Zod-validated responses.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Frontend Layer Architecture</h2>
+
+      <p>
+        The webapp follows layered separation similar to the backend's Clean Architecture.
+        Each layer has a single responsibility and dependencies flow <strong>downward only</strong>.
+      </p>
+
+      <div class="mermaid">
+graph TB
+  subgraph "Pages — apps/webapp/src/app/"
+    A["Page Orchestrators<br/>(thin wiring — hooks + state + components)"]
+  end
+  subgraph "Domain Components — apps/webapp/src/components/"
+    B["Tables · Forms · Actions<br/>(domain-scoped UI)"]
+    B2["Layout Components<br/>(Sidebar · Header)"]
+  end
+  subgraph "Data Access — packages/client-common/"
+    C["React Query Hooks<br/>(query + mutation per domain)"]
+    D["API Clients<br/>(typed fetch + Zod parsing)"]
+  end
+  subgraph "UI Primitives — packages/ui/"
+    E["Badge · Button · Card · Table<br/>Input · Select"]
+  end
+  subgraph "Backend"
+    F["REST APIs<br/>(NestJS microservices)"]
+  end
+
+  A --> B
+  A --> B2
+  A --> C
+  B --> C
+  B --> E
+  B2 --> E
+  C --> D
+  D --> F
+
+  style A fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style B fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style B2 fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style C fill:#dcfce7,stroke:#16a34a,color:#166534
+  style D fill:#dcfce7,stroke:#16a34a,color:#166534
+  style E fill:#fef3c7,stroke:#d97706,color:#92400e
+  style F fill:#f3e8ff,stroke:#7c3aed,color:#5b21b6
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Owns</th>
+            <th>Must NOT</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pages</strong></td>
+            <td>Route definition, hook wiring, local UI state (filters, modals, pagination)</td>
+            <td>Contain table/form markup, call <code>fetch</code> directly, hold business logic</td>
+            <td><code>apps/webapp/src/app/{domain}/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Domain Components</strong></td>
+            <td>Tables, forms, action menus — domain-specific markup and interaction</td>
+            <td>Call API clients directly, duplicate hooks across components</td>
+            <td><code>apps/webapp/src/components/{domain}/</code></td>
+          </tr>
+          <tr>
+            <td><strong>React Query Hooks</strong></td>
+            <td>Data fetching, caching, mutations, cache invalidation</td>
+            <td>Contain UI logic, render components, import from <code>apps/</code></td>
+            <td><code>packages/client-common/src/hooks/</code></td>
+          </tr>
+          <tr>
+            <td><strong>API Clients</strong></td>
+            <td>HTTP calls (<code>fetch</code>), URL building, Zod response parsing, error mapping</td>
+            <td>Use React hooks, cache data, know about UI state</td>
+            <td><code>packages/client-common/src/infrastructure/api-clients/</code></td>
+          </tr>
+          <tr>
+            <td><strong>UI Primitives</strong></td>
+            <td>Reusable, domain-agnostic visual components (shadcn-style)</td>
+            <td>Import domain types, call API clients, contain business logic</td>
+            <td><code>packages/ui/src/components/</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Technology Stack</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Version</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Next.js</strong> (App Router)</td>
+            <td>15</td>
+            <td>Page routing, server/client components, SSR/SSG support</td>
+          </tr>
+          <tr>
+            <td><strong>React</strong></td>
+            <td>19</td>
+            <td>Component model, hooks</td>
+          </tr>
+          <tr>
+            <td><strong>React Query</strong> (TanStack Query)</td>
+            <td>v5</td>
+            <td>Server state management — data fetching, caching, mutations</td>
+          </tr>
+          <tr>
+            <td><strong>Tailwind CSS</strong></td>
+            <td>v4</td>
+            <td>Utility-first CSS — PostCSS plugin (<code>@tailwindcss/postcss</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>Zod</strong></td>
+            <td>v4</td>
+            <td>Runtime response validation in API clients</td>
+          </tr>
+          <tr>
+            <td><strong>class-variance-authority</strong></td>
+            <td>latest</td>
+            <td>Type-safe component variant definitions (CVA)</td>
+          </tr>
+          <tr>
+            <td><strong>clsx + tailwind-merge</strong></td>
+            <td>latest</td>
+            <td>Class composition — <code>cn()</code> utility resolves Tailwind conflicts</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Package Structure</h2>
+
+      <p>The frontend is split across three packages with distinct responsibilities:</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3><code>apps/webapp</code></h3>
+          <p>Next.js App Router shell. Contains page orchestrators, domain-scoped components, layout (Sidebar, Header), status-variant mapping, and global styles.</p>
+        </div>
+        <div class="card">
+          <h3><code>packages/client-common</code></h3>
+          <p>Framework-agnostic data access layer. Typed <code>fetch</code>-based API clients with Zod response parsing, React Query hooks (one file per domain), shared QueryClient config, and Providers bootstrap.</p>
+        </div>
+        <div class="card">
+          <h3><code>packages/ui</code></h3>
+          <p>Shared UI primitives following the shadcn/ui pattern. Domain-agnostic components using <code>class-variance-authority</code> for type-safe variants and <code>cn()</code> for class merging.</p>
+        </div>
+      </div>
+
+      <h3>Directory Layout</h3>
+
+      <pre><code>apps/webapp/
+  src/
+    app/                            ← Next.js App Router routes
+      layout.tsx                    ← Root shell: Providers + Sidebar + content
+      page.tsx                      ← Dashboard (home)
+      users/
+        page.tsx                    ← Users list page
+        [userId]/page.tsx           ← User detail page
+      products/
+        page.tsx                    ← Products list page
+        [productId]/page.tsx        ← Product detail page
+        categories/
+          page.tsx                  ← Categories list page
+          [categoryId]/page.tsx     ← Category detail page
+      orders/
+        page.tsx                    ← Orders list page
+        [orderId]/page.tsx          ← Order detail page
+    components/
+      layout/
+        sidebar.tsx                 ← Navigation sidebar
+        header.tsx                  ← Page header
+      users/
+        users-table.tsx             ← User list table
+        create-user-form.tsx        ← Create user form
+        user-actions.tsx            ← Status action buttons
+      products/
+        products-table.tsx
+        create-product-form.tsx
+        product-actions.tsx
+      orders/
+        orders-table.tsx
+        create-order-form.tsx
+        order-actions.tsx
+    lib/
+      status-variants.ts            ← Badge variant mapping per entity status
+
+packages/client-common/
+  src/
+    infrastructure/
+      config.ts                     ← configureApi() — URL configuration singleton
+      api-clients/
+        base-api.client.ts          ← apiRequest&lt;T&gt;() — generic fetch + Zod wrapper
+        user-api.client.ts          ← 11 methods (CRUD + state actions)
+        product-api.client.ts       ← 18 methods (products + categories)
+        order-api.client.ts         ← 15 methods (CRUD + items + payment + state)
+      errors/
+        api-error.ts                ← Typed ApiError matching backend shape
+    hooks/
+      use-users.ts                  ← 10 hooks (3 query + 7 mutation)
+      use-products.ts               ← 17 hooks (products + categories)
+      use-orders.ts                 ← 14 hooks (3 query + 11 mutation)
+      index.ts                      ← Barrel: 41 total hooks
+    lib/
+      query-client.ts               ← makeQueryClient (staleTime: 30s, retry: 1)
+      providers.tsx                 ← QueryClientProvider + configureApi bootstrap
+
+packages/ui/
+  src/
+    components/
+      badge.tsx                     ← CVA: 6 variants (default, secondary, destructive, outline, success, warning)
+      button.tsx                    ← CVA: 6 variants × 4 sizes, forwardRef
+      card.tsx                      ← Compound: Card, CardHeader, CardTitle, CardDescription, CardContent
+      input.tsx                     ← forwardRef, single style
+      select.tsx                    ← forwardRef, single style
+      table.tsx                     ← Compound: Table, TableHeader, TableBody, TableRow, TableHead, TableCell
+    lib/
+      utils.ts                      ← cn() = twMerge(clsx())</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Page Pattern — Thin Orchestrators</h2>
+
+      <p>
+        Every page follows the same pattern: it is a <strong>thin orchestrator</strong> that wires together
+        React Query hooks, local UI state, and domain components. Pages never contain table markup, form logic,
+        or direct API calls.
+      </p>
+
+      <div class="mermaid">
+graph LR
+  P["Page Component"]
+  H["React Query Hook"]
+  S["useState<br/>(filter, modal)"]
+  T["Domain Table"]
+  F["Domain Form"]
+  A["Domain Actions"]
+
+  P --> H
+  P --> S
+  P --> T
+  P --> F
+  P --> A
+  T --> A
+
+  style P fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style H fill:#dcfce7,stroke:#16a34a,color:#166534
+  style S fill:#fef3c7,stroke:#d97706,color:#92400e
+  style T fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style F fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style A fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+      </div>
+
+      <h3>Anatomy of a Page</h3>
+
+      <pre><code>'use client';
+
+export default function UsersPage() {
+  // 1. Local UI state
+  const [status, setStatus] = useState('ACTIVE');
+  const [showCreate, setShowCreate] = useState(false);
+
+  // 2. React Query hooks for data
+  const { data, isLoading, error } = useUsersByStatus({ userStatus: status });
+
+  // 3. Render: Header → Filters → Form toggle → Domain components
+  return (
+    &lt;&gt;
+      &lt;Header title="Users" /&gt;
+      &lt;Select value={status} onChange={setStatus}&gt;...&lt;/Select&gt;
+      &lt;Button onClick={() =&gt; setShowCreate(!showCreate)}&gt;Create&lt;/Button&gt;
+      {showCreate &amp;&amp; &lt;CreateUserForm onClose={() =&gt; setShowCreate(false)} /&gt;}
+      {isLoading ? &lt;p&gt;Loading...&lt;/p&gt; : &lt;UsersTable users={data.data} /&gt;}
+    &lt;/&gt;
+  );
+}</code></pre>
+
+      <h3>Pages in this Template</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Page</th>
+            <th>Hooks Used</th>
+            <th>Pagination</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/users</code></td>
+            <td>Users list — status filter + create form toggle</td>
+            <td><code>useUsersByStatus</code></td>
+            <td><span class="tag dynamo">Cursor-based</span></td>
+          </tr>
+          <tr>
+            <td><code>/users/[userId]</code></td>
+            <td>User detail</td>
+            <td><code>useUser</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>/products</code></td>
+            <td>Products list — status filter + create form (needs categories)</td>
+            <td><code>useProductsByStatus</code>, <code>useCategories</code></td>
+            <td><span class="tag dynamo">Cursor-based</span></td>
+          </tr>
+          <tr>
+            <td><code>/products/[productId]</code></td>
+            <td>Product detail</td>
+            <td><code>useProduct</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>/products/categories</code></td>
+            <td>Categories list</td>
+            <td><code>useCategories</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>/products/categories/[categoryId]</code></td>
+            <td>Category detail</td>
+            <td><code>useCategory</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>/orders</code></td>
+            <td>Orders list — status filter + create form (fetches users &amp; products)</td>
+            <td><code>useOrdersByStatus</code></td>
+            <td><span class="tag prisma">Offset-based</span></td>
+          </tr>
+          <tr>
+            <td><code>/orders/[orderId]</code></td>
+            <td>Order detail</td>
+            <td><code>useOrder</code></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Pagination follows the backend domain:</strong>
+        User and Product domains use DynamoDB → cursor-based pagination (<code>PaginatedResponse</code>).
+        Order domain uses Prisma + PostgreSQL → offset-based pagination (<code>OffsetPaginatedResponse</code>,
+        showing "Page X of Y, N total").
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Domain Components</h2>
+
+      <p>
+        Each domain has a dedicated folder under <code>apps/webapp/src/components/{domain}/</code> with three standard files:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Responsibility</th>
+            <th>Key Pattern</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>{domain}-table.tsx</code></td>
+            <td>List presentation — columns, badges, links to detail pages, empty state</td>
+            <td>Uses <code>Table</code> + <code>Badge</code> from <code>@old-st/ui</code>, calls status-variant function for badge color</td>
+          </tr>
+          <tr>
+            <td><code>create-{entity}-form.tsx</code></td>
+            <td>Create form — local state matching contract input type, mutation hook</td>
+            <td>Uses <code>Card</code> + <code>Input</code> + <code>Select</code> + <code>Button</code> from <code>@old-st/ui</code>, calls <code>onClose()</code> on success</td>
+          </tr>
+          <tr>
+            <td><code>{entity}-actions.tsx</code></td>
+            <td>Status-dependent action buttons — conditional rendering based on entity status</td>
+            <td>Uses <code>Button</code> from <code>@old-st/ui</code>, one mutation hook per action, checks <code>{Entity}StatusEnum</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Actions by Domain</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Action</th>
+            <th>Shown When</th>
+            <th>Hook</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="4"><strong>User</strong></td>
+            <td>Verify Email</td>
+            <td><code>PENDING</code></td>
+            <td><code>useVerifyUserEmail</code></td>
+          </tr>
+          <tr>
+            <td>Activate</td>
+            <td><code>PENDING</code> or <code>INACTIVE</code></td>
+            <td><code>useActivateUser</code></td>
+          </tr>
+          <tr>
+            <td>Deactivate</td>
+            <td><code>ACTIVE</code></td>
+            <td><code>useDeactivateUser</code></td>
+          </tr>
+          <tr>
+            <td>Delete</td>
+            <td>Not <code>DELETED</code></td>
+            <td><code>useDeleteUser</code></td>
+          </tr>
+          <tr>
+            <td rowspan="4"><strong>Product</strong></td>
+            <td>Activate</td>
+            <td><code>INACTIVE</code></td>
+            <td><code>useActivateProduct</code></td>
+          </tr>
+          <tr>
+            <td>Deactivate</td>
+            <td><code>ACTIVE</code></td>
+            <td><code>useDeactivateProduct</code></td>
+          </tr>
+          <tr>
+            <td>Discontinue</td>
+            <td><code>ACTIVE</code></td>
+            <td><code>useDiscontinueProduct</code></td>
+          </tr>
+          <tr>
+            <td>Delete</td>
+            <td>Not <code>DELETED</code></td>
+            <td><code>useDeleteProduct</code></td>
+          </tr>
+          <tr>
+            <td rowspan="7"><strong>Order</strong></td>
+            <td>Confirm</td>
+            <td><code>PENDING</code></td>
+            <td><code>useConfirmOrder</code></td>
+          </tr>
+          <tr>
+            <td>Process</td>
+            <td><code>CONFIRMED</code></td>
+            <td><code>useProcessOrder</code></td>
+          </tr>
+          <tr>
+            <td>Ship</td>
+            <td><code>PROCESSING</code></td>
+            <td><code>useShipOrder</code></td>
+          </tr>
+          <tr>
+            <td>Deliver</td>
+            <td><code>SHIPPED</code></td>
+            <td><code>useDeliverOrder</code></td>
+          </tr>
+          <tr>
+            <td>Refund</td>
+            <td><code>DELIVERED</code></td>
+            <td><code>useRefundOrder</code></td>
+          </tr>
+          <tr>
+            <td>Cancel</td>
+            <td>Not <code>CANCELLED</code>, <code>REFUNDED</code>, <code>DELIVERED</code>, or <code>VALIDATION_FAILED</code></td>
+            <td><code>useCancelOrder</code></td>
+          </tr>
+          <tr>
+            <td>Delete</td>
+            <td><code>DRAFT</code></td>
+            <td><code>useDeleteOrder</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Data Access Layer (<code>@old-st/client-common</code>)</h2>
+
+      <p>
+        All API communication flows through the <code>@old-st/client-common</code> package,
+        which provides a three-tier data access stack:
+      </p>
+
+      <div class="mermaid">
+graph TB
+  subgraph "React Query Hooks"
+    H1["useUsersByStatus()"]
+    H2["useCreateUser()"]
+  end
+  subgraph "API Clients"
+    A1["userApiClient.listByStatus()"]
+    A2["userApiClient.create()"]
+  end
+  subgraph "Base Client"
+    B["apiRequest&lt;T&gt;(baseUrl, path, { method, body, schema })"]
+  end
+  subgraph "Runtime"
+    F["fetch()"]
+    Z["Zod schema.parse(response)"]
+    E["ApiError (on non-OK)"]
+  end
+
+  H1 --> A1
+  H2 --> A2
+  A1 --> B
+  A2 --> B
+  B --> F
+  F --> Z
+  F --> E
+
+  style H1 fill:#dcfce7,stroke:#16a34a,color:#166534
+  style H2 fill:#dcfce7,stroke:#16a34a,color:#166534
+  style A1 fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style A2 fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style B fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style F fill:#fef3c7,stroke:#d97706,color:#92400e
+  style Z fill:#fef3c7,stroke:#d97706,color:#92400e
+  style E fill:#fee2e2,stroke:#dc2626,color:#991b1b
+      </div>
+
+      <h3>Base API Client</h3>
+
+      <p>
+        The <code>apiRequest&lt;T&gt;</code> function is the single point through which all HTTP calls flow.
+        It wraps <code>fetch</code>, builds URLs with query parameters, and validates responses with Zod.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Returns</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>apiRequest&lt;T&gt;(baseUrl, path, options)</code></td>
+            <td><code>Promise&lt;T&gt;</code></td>
+            <td>All requests that return a body — passes <code>schema</code> option for Zod validation</td>
+          </tr>
+          <tr>
+            <td><code>apiRequestVoid(baseUrl, path, options)</code></td>
+            <td><code>Promise&lt;void&gt;</code></td>
+            <td>DELETE operations and other 204 responses</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <strong>Every API client method must pass a <code>schema</code> option.</strong>
+        This ensures all responses are validated at runtime, catching shape mismatches
+        between frontend expectations and backend changes immediately.
+      </div>
+
+      <h3>Error Handling</h3>
+
+      <p>
+        Non-OK responses throw an <code>ApiError</code> that mirrors the backend's standardized error shape:
+      </p>
+
+      <pre><code>class ApiError extends Error {
+  readonly statusCode: number;    // HTTP status code
+  readonly error: string;         // Exception class name from backend
+  readonly message: string;       // Human-readable message
+
+  get isNotFound(): boolean;      // statusCode === 404
+  get isConflict(): boolean;      // statusCode === 409
+  get isValidationError(): boolean; // statusCode === 400
+  get isServerError(): boolean;   // statusCode >= 500
+}</code></pre>
+
+      <h3>API Clients per Domain</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Methods</th>
+            <th>Backend Service</th>
+            <th>Pagination</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>userApiClient</code></td>
+            <td>11 — CRUD + activate, deactivate, verify-email, update-role</td>
+            <td><code>user-api-service</code> (port 3000)</td>
+            <td><span class="tag dynamo">Cursor</span></td>
+          </tr>
+          <tr>
+            <td><code>productApiClient</code></td>
+            <td>13 — CRUD + search, availability check, activate, deactivate, discontinue</td>
+            <td rowspan="2"><code>product-api-service</code> (port 3001)</td>
+            <td><span class="tag dynamo">Cursor</span></td>
+          </tr>
+          <tr>
+            <td><code>categoryApiClient</code></td>
+            <td>5 — CRUD + list</td>
+            <td><span class="tag dynamo">Cursor</span></td>
+          </tr>
+          <tr>
+            <td><code>orderApiClient</code></td>
+            <td>15 — CRUD + items, payment, confirm, process, ship, deliver, cancel, refund</td>
+            <td><code>order-api-service</code> (port 3002)</td>
+            <td><span class="tag prisma">Offset</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>URL Configuration</h3>
+
+      <p>
+        API base URLs are configured once at app startup via a framework-agnostic singleton:
+      </p>
+
+      <pre><code>// packages/client-common/src/infrastructure/config.ts
+configureApi({
+  userApiUrl:    'http://localhost:3000/api',
+  productApiUrl: 'http://localhost:3001/api',
+  orderApiUrl:   'http://localhost:3002/api',
+});
+
+// Every API client method calls getApiConfig() internally
+const config = getApiConfig();
+return apiRequest(config.userApiUrl, '/users', { schema });</code></pre>
+
+      <p>
+        In production, URLs come from <code>NEXT_PUBLIC_API_{DOMAIN}_URL</code> environment variables,
+        passed from <code>layout.tsx</code> (Server Component) into the <code>&lt;Providers&gt;</code> client component.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>React Query Hooks</h2>
+
+      <p>
+        One file per domain (<code>use-users.ts</code>, <code>use-products.ts</code>, <code>use-orders.ts</code>)
+        exports query and mutation hooks. All 41 hooks are re-exported from a single barrel (<code>hooks/index.ts</code>).
+      </p>
+
+      <h3>Query Key Convention</h3>
+
+      <pre><code>// Base key per domain — used for broad invalidation
+const USERS_KEY = 'users';
+const PRODUCTS_KEY = 'products';
+const ORDERS_KEY = 'orders';
+
+// Specific keys
+queryKey: [USERS_KEY, userId]                    // Single entity
+queryKey: [USERS_KEY, 'by-status', { status }]   // Filtered list
+queryKey: [ORDERS_KEY, 'by-customer', { customerId, page, limit }]</code></pre>
+
+      <h3>Cache Invalidation Strategy</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mutation Type</th>
+            <th>Invalidation Pattern</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Create / Delete</td>
+            <td>Invalidate all domain queries (broad)</td>
+            <td><code>invalidateQueries({ queryKey: [USERS_KEY] })</code></td>
+          </tr>
+          <tr>
+            <td>State change (activate, deactivate)</td>
+            <td>Invalidate entity + filtered lists</td>
+            <td><code>[USERS_KEY, userId]</code> + <code>[USERS_KEY, 'by-status']</code></td>
+          </tr>
+          <tr>
+            <td>Field update</td>
+            <td>Invalidate entity + relevant list</td>
+            <td><code>[USERS_KEY, userId]</code> + <code>[USERS_KEY, 'by-role-and-status']</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>QueryClient Config</h3>
+
+      <pre><code>// packages/client-common/src/lib/query-client.ts
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,           // 30 seconds before refetch
+      retry: 1,                    // Retry once on failure
+      refetchOnWindowFocus: false,  // Don't refetch on tab switch
+    },
+  },
+});</code></pre>
+
+      <p>
+        The <code>getQueryClient()</code> function returns a singleton on the browser and a fresh client per SSR request
+        on the server — preventing cross-request cache pollution.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>UI Primitives (<code>@old-st/ui</code>)</h2>
+
+      <p>
+        The <code>@old-st/ui</code> package provides domain-agnostic building blocks following the
+        <a href="https://ui.shadcn.com/">shadcn/ui</a> pattern — <code>class-variance-authority</code> (CVA)
+        for type-safe variants and <code>cn()</code> (clsx + tailwind-merge) for class composition.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Pattern</th>
+            <th>Variants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Badge</code></td>
+            <td>CVA + variants</td>
+            <td><strong>variant:</strong> default, secondary, destructive, outline, success, warning</td>
+          </tr>
+          <tr>
+            <td><code>Button</code></td>
+            <td>CVA + variants, <code>forwardRef</code></td>
+            <td><strong>variant:</strong> default, destructive, outline, secondary, ghost, link &nbsp;×&nbsp; <strong>size:</strong> default, sm, lg, icon</td>
+          </tr>
+          <tr>
+            <td><code>Card</code></td>
+            <td>Compound (Card, CardHeader, CardTitle, CardDescription, CardContent)</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>Input</code></td>
+            <td><code>forwardRef</code>, single style</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>Select</code></td>
+            <td><code>forwardRef</code>, single style</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>Table</code></td>
+            <td>Compound (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>All components use <code>cn()</code></strong> — the <code>className</code> prop is always passed through
+        <code>cn(baseClasses, className)</code> so consumers can override or extend styles without conflicts.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Status-Variant Mapping</h2>
+
+      <p>
+        Status badges are color-coded using mapper functions in <code>apps/webapp/src/lib/status-variants.ts</code>.
+        Each function maps domain enum constants to <code>Badge</code> variant names — <strong>never hardcoded strings</strong>.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mapper</th>
+            <th>success</th>
+            <th>warning</th>
+            <th>destructive</th>
+            <th>default</th>
+            <th>secondary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>userStatusVariant</code></td>
+            <td>ACTIVE</td>
+            <td>PENDING</td>
+            <td>DELETED</td>
+            <td>—</td>
+            <td>INACTIVE</td>
+          </tr>
+          <tr>
+            <td><code>orderStatusVariant</code></td>
+            <td>DELIVERED</td>
+            <td>PENDING</td>
+            <td>CANCELLED, REFUNDED, VALIDATION_FAILED</td>
+            <td>CONFIRMED, PROCESSING, SHIPPED</td>
+            <td>DRAFT</td>
+          </tr>
+          <tr>
+            <td><code>productStatusVariant</code></td>
+            <td>ACTIVE</td>
+            <td>DISCONTINUED</td>
+            <td>DELETED</td>
+            <td>—</td>
+            <td>INACTIVE</td>
+          </tr>
+          <tr>
+            <td><code>paymentStatusVariant</code></td>
+            <td>CAPTURED</td>
+            <td>PENDING</td>
+            <td>FAILED, CANCELLED, REFUNDED</td>
+            <td>AUTHORIZED</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>categoryStatusVariant</code></td>
+            <td>ACTIVE</td>
+            <td>DISCONTINUED</td>
+            <td>DELETED</td>
+            <td>—</td>
+            <td>INACTIVE</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Providers &amp; Bootstrap</h2>
+
+      <p>
+        The app bootstrap flow connects Next.js environment variables to the framework-agnostic config singleton:
+      </p>
+
+      <div class="mermaid">
+sequenceDiagram
+  participant L as layout.tsx (Server)
+  participant P as Providers (Client)
+  participant C as configureApi()
+  participant Q as QueryClientProvider
+
+  L->>L: Read NEXT_PUBLIC_API_*_URL env vars
+  L->>P: Pass apiConfig prop
+  P->>C: configureApi(apiConfig)
+  P->>Q: Wrap children in QueryClientProvider
+  Note over C: URL singleton set — all API clients<br/>now resolve correct base URLs
+      </div>
+
+      <pre><code>// apps/webapp/src/app/layout.tsx (Server Component)
+const apiConfig = {
+  userApiUrl:    process.env.NEXT_PUBLIC_API_USER_URL,
+  productApiUrl: process.env.NEXT_PUBLIC_API_PRODUCT_URL,
+  orderApiUrl:   process.env.NEXT_PUBLIC_API_ORDER_URL,
+};
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;html&gt;
+      &lt;body className="flex h-screen"&gt;
+        &lt;Providers apiConfig={apiConfig}&gt;
+          &lt;Sidebar /&gt;
+          &lt;main className="flex-1 overflow-auto"&gt;{children}&lt;/main&gt;
+        &lt;/Providers&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>How Contracts Are Consumed</h2>
+
+      <p>
+        The webapp uses the same <code>@old-st/contracts</code> package as the backend, imported via
+        domain-scoped subpaths:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Usage</th>
+            <th>Import From</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Response validation (API client)</td>
+            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>userResponseSchema</code> passed to <code>apiRequest({ schema })</code></td>
+          </tr>
+          <tr>
+            <td>Input types (forms)</td>
+            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>CreateUserInput</code> used for form state typing</td>
+          </tr>
+          <tr>
+            <td>Status enums (actions, badges)</td>
+            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>UserStatusEnum.ACTIVE</code> for conditional rendering</td>
+          </tr>
+          <tr>
+            <td>Status arrays (filter dropdowns)</td>
+            <td><code>@old-st/contracts/{domain}</code></td>
+            <td><code>USER_STATUSES</code> to populate <code>&lt;Select&gt;</code> options</td>
+          </tr>
+          <tr>
+            <td>Pagination wrappers</td>
+            <td><code>@old-st/contracts/common</code></td>
+            <td><code>paginatedResponseSchema()</code>, <code>offsetPaginatedResponseSchema()</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <strong>Never import from the bare <code>@old-st/contracts</code> root</strong> — always use domain-scoped
+        subpath imports (<code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc.).
+        The root barrel creates transitive type coupling between all domains.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>How to Extend the Webapp</h2>
+
+      <p>Follow the Claude Code skills for step-by-step guidance:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Skill</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Add a new page / domain table / form / actions</td>
+            <td><code>webapp-new-page</code></td>
+          </tr>
+          <tr>
+            <td>Add API client methods + React Query hooks</td>
+            <td><code>webapp-api-client-hooks</code></td>
+          </tr>
+          <tr>
+            <td>Add a new shared UI component</td>
+            <td><code>webapp-ui-primitive</code></td>
+          </tr>
+          <tr>
+            <td>Full-stack feature (backend + frontend)</td>
+            <td><code>add-feature-existing-domain</code> (includes "Webapp Touchpoints" step)</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

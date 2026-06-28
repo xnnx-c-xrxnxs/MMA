@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "aws-secrets",
+  "sourceRoot": "packages/aws/aws-secrets/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"]
+}

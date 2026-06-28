@@ -1,0 +1,69 @@
+{
+  "name": "monitoring-api-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/monitoring/monitoring-api-service/src",
+  "projectType": "application",
+  "tags": ["scope:monitoring", "type:service"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"],
+        "cwd": "apps/monitoring/monitoring-api-service"
+      },
+      "configurations": {
+        "development": {
+          "args": ["--node-env=development"]
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "monitoring-api-service:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "monitoring-api-service:build:development"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/monitoring/monitoring-api-service"],
+      "options": {
+        "jestConfig": "apps/monitoring/monitoring-api-service/jest.config.cts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/monitoring/monitoring-api-service/package.json",
+        "{workspaceRoot}/dist/apps/monitoring/monitoring-api-service/pnpm-lock.yaml"
+      ],
+      "options": { "buildTarget": "build" }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/monitoring/monitoring-api-service/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": { "buildTarget": "build" }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    }
+  }
+}

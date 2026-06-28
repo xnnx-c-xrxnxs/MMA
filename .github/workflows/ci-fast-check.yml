@@ -1,0 +1,69 @@
+name: CI - Fast PR Check
+
+# Lint + build gate only. Fast feedback on every PR (~30 seconds, no infrastructure needed).
+# Testing (unit + integration + coverage) is owned exclusively by ci-test-affected.yml
+# to avoid running the same affected tests twice on every PR.
+
+on:
+  pull_request:
+    paths-ignore:
+      - "examples/**"
+    branches: [main, develop]
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  fast-check:
+    name: Quick Validation (Affected Only)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Need history for Nx affected detection
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Check design tokens are in sync
+        # Fails if tokens.ts was edited without running `pnpm tokens:gen`.
+        # Generic across forks — only assumes packages/ui/src/lib/tokens.ts +
+        # apps/webapp/src/app/globals.css with AUTO-GENERATED sentinels.
+        run: pnpm tokens:check
+
+      - name: Derive SHAs for nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Lint affected projects
+        run: pnpm nx affected --target=lint --parallel=3
+
+      - name: Build affected projects
+        run: pnpm nx affected --target=build --parallel=3 --exclude=mobile
+
+      - name: Run coding standards checks
+        run: pnpm ts-node --project scripts/tsconfig.json scripts/lint-standards.ts
+
+      - name: Run template-hygiene scan
+        # Pre-publish gate: blocks PATs, AWS keys, tfstate, real account IDs, etc.
+        run: node scripts/template-hygiene.mjs
+
+      - name: Run init-project smoke test
+        run: node scripts/init-project.spec.mjs

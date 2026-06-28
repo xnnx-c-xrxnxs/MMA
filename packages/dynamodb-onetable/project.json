@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "dynamodb-onetable",
+  "sourceRoot": "packages/dynamodb-onetable/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:infrastructure"]
+}

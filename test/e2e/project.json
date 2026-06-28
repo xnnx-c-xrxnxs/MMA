@@ -1,0 +1,7 @@
+{
+  "name": "e2e-helpers",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "test/e2e",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:e2e-support"]
+}

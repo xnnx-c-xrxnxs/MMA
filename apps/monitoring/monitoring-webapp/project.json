@@ -1,0 +1,14 @@
+{
+  "name": "monitoring-webapp",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/monitoring/monitoring-webapp",
+  "projectType": "application",
+  "tags": ["scope:monitoring", "type:app"],
+  "targets": {
+    "dev": {
+      "options": {
+        "port": 4300
+      }
+    }
+  }
+}

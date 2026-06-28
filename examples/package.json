@@ -1,0 +1,51 @@
+{
+  "name": "@old-st/examples",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "test": "nx run-many --target=test --all",
+    "lint": "nx run-many --target=lint --all",
+    "graph": "nx graph"
+  },
+  "dependencies": {
+    "@old-st/common": "link:../packages/common",
+    "@old-st/dynamodb-onetable": "link:../packages/dynamodb-onetable",
+    "@old-st/telemetry": "link:../packages/telemetry",
+    "@old-st/aws-secrets": "link:../packages/aws/aws-secrets",
+    "@old-st/aws-sqs": "link:../packages/aws/aws-sqs",
+    "@old-st/aws-cognito": "link:../packages/aws/aws-cognito",
+    "@old-st/aws-s3": "link:../packages/aws/aws-s3",
+    "@old-st/contracts-common": "link:../packages/contracts/common",
+    "@old-st/contracts-auth": "link:../packages/contracts/auth",
+    "@old-st/ui": "link:../packages/ui",
+    "@old-st/mobile-ui": "link:../packages/mobile-ui",
+    "@old-st/client-common": "link:../packages/client-common",
+    "@old-st/monitoring-sdk": "link:../packages/monitoring-sdk",
+    "@opentelemetry/api": "^1.9.1"
+  },
+  "devDependencies": {
+    "nx": "22.4.2",
+    "@nx/devkit": "22.4.2",
+    "@nx/eslint": "22.4.2",
+    "@nx/jest": "22.4.2",
+    "@nx/js": "22.4.2",
+    "@nx/nest": "22.4.2",
+    "@nx/next": "22.4.2",
+    "@nx/node": "22.4.2",
+    "@nx/expo": "22.4.2",
+    "@nx/playwright": "22.4.2",
+    "@nx/web": "22.4.2",
+    "@nx/webpack": "22.4.2",
+    "@nx/workspace": "22.4.2",
+    "@nx/eslint-plugin": "22.4.2",
+    "typescript": "~5.9.2",
+    "ts-node": "10.9.2",
+    "tslib": "^2.3.0"
+  }
+}

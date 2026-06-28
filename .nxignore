@@ -1,0 +1,6 @@
+# Prisma generated clients — contain a package.json that confuses Nx project detection
+packages/order-domain/src/infrastructure/generated
+
+# examples/ is a self-contained reference workspace with its own pnpm-workspace.yaml and nx.json.
+# It must NOT participate in the main workspace's project graph.
+examples

@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Layer Masterclass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#fff; --bg-alt:#f7f8fa; --bg-card:#fff;
+  --bg-code:#1e1e2e; --bg-code-text:#cdd6f4;
+  --bg-nav:rgba(255,255,255,0.92); --border:#e4e7ec;
+  --text:#111827; --text-muted:#6b7280; --text-light:#9ca3af;
+  --accent:#6366f1; --accent-hover:#4f46e5; --accent-light:#eef2ff;
+  --accent-gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);
+  --hero-gradient:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 70%,#4c1d95 100%);
+  --success:#10b981; --success-bg:#ecfdf5;
+  --warning:#f59e0b; --warning-bg:#fffbeb;
+  --danger:#ef4444; --danger-bg:#fef2f2;
+  --info:#3b82f6; --info-bg:#eff6ff;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08);
+  --radius:12px; --radius-sm:8px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace;
+  --transition:0.2s ease;
+}
+[data-theme="dark"] {
+  --bg:#0f1117; --bg-alt:#161922; --bg-card:#1a1d28;
+  --bg-nav:rgba(15,17,23,0.92); --border:#2d3148;
+  --text:#e5e7eb; --text-muted:#9ca3af; --text-light:#6b7280;
+  --accent:#818cf8; --accent-hover:#a5b4fc; --accent-light:#1e1b4b;
+  --success-bg:#064e3b; --warning-bg:#451a03;
+  --danger-bg:#450a0a; --info-bg:#172554;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+  --shadow:0 4px 6px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 25px rgba(0,0,0,0.4);
+}
+html { font-size:16px; scroll-behavior:smooth; scroll-padding-top:80px; }
+body { font-family:var(--font); color:var(--text); background:var(--bg); line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+.scroll-progress { position:fixed; top:0; left:0; height:3px; z-index:1001; background:var(--accent-gradient); width:0%; transition:width 0.1s linear; }
+
+.top-nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; transition:box-shadow var(--transition); }
+.top-nav.scrolled { box-shadow:var(--shadow); }
+.nav-brand { font-weight:800; font-size:1rem; color:var(--accent); text-decoration:none; white-space:nowrap; }
+.nav-links { display:flex; gap:4px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.nav-links a { padding:8px 14px; font-size:0.8rem; font-weight:600; color:var(--text-muted); text-decoration:none; border-radius:8px; white-space:nowrap; transition:background var(--transition), color var(--transition); }
+.nav-links a:hover, .nav-links a.active { background:var(--accent-light); color:var(--accent); }
+.nav-controls { display:flex; gap:8px; align-items:center; }
+.theme-toggle { width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition:background var(--transition), border-color var(--transition); }
+.theme-toggle:hover { background:var(--accent-light); border-color:var(--accent); }
+.hamburger { display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-size:1.2rem; align-items:center; justify-content:center; }
+
+.hero { background:var(--hero-gradient); padding:140px 24px 80px; text-align:center; color:#fff; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%), radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.1) 0%, transparent 70%); }
+.hero-content { position:relative; z-index:1; max-width:800px; margin:0 auto; }
+.hero h1 { font-size:3rem; font-weight:900; letter-spacing:-0.04em; line-height:1.1; margin-bottom:16px; }
+.hero .lead { font-size:1.25rem; color:rgba(255,255,255,0.8); margin-bottom:32px; line-height:1.6; }
+.hero-meta { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+.hero-meta span { font-size:0.85rem; color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:6px; }
+.hero-meta span strong { color:rgba(255,255,255,0.9); }
+
+.module { padding:64px 24px; }
+.module:nth-child(even) { background:var(--bg-alt); }
+.module-inner { max-width:1280px; margin:0 auto; }
+.module-header { margin-bottom:32px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.module-header .module-meta { flex:1; min-width:280px; }
+.module-label { display:inline-flex; align-items:center; gap:8px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-bottom:12px; background:var(--accent-light); padding:4px 12px; border-radius:20px; }
+.module-header h2 { font-size:1.85rem; font-weight:800; letter-spacing:-0.03em; margin-bottom:8px; }
+.module-header .module-desc { font-size:1rem; color:var(--text-muted); max-width:680px; }
+.complexity { display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:20px; }
+.complexity.l1 { background:#dcfce7; color:#166534; }
+.complexity.l2 { background:#dbeafe; color:#1e40af; }
+.complexity.l3 { background:#fef3c7; color:#92400e; }
+.complexity.l4 { background:#ffedd5; color:#9a3412; }
+[data-theme="dark"] .complexity.l1 { background:#14532d; color:#bbf7d0; }
+[data-theme="dark"] .complexity.l2 { background:#1e3a5f; color:#93c5fd; }
+[data-theme="dark"] .complexity.l3 { background:#78350f; color:#fef3c7; }
+[data-theme="dark"] .complexity.l4 { background:#7c2d12; color:#fed7aa; }
+
+.split { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; margin:24px 0; align-items:stretch; }
+.split > .panel { display:flex; flex-direction:column; }
+.panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); }
+.panel-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--bg-alt); }
+.panel-header .icon { font-size:1rem; }
+.panel-header .title { font-weight:700; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text); }
+.panel-header .subtitle { font-size:0.75rem; color:var(--text-muted); margin-left:auto; font-family:var(--mono); }
+.panel-body { padding:20px 24px; flex:1; overflow:auto; }
+.panel-body.code-body { padding:0; background:var(--bg-code); }
+.panel-body.code-body pre { margin:0; padding:18px 20px; background:transparent; border-radius:0; font-size:0.78rem; line-height:1.55; max-height:680px; }
+.spec-title { font-size:1.05rem; font-weight:700; margin-bottom:12px; color:var(--text); }
+.spec-body { font-size:0.92rem; }
+.spec-body p { margin-bottom:12px; }
+.spec-body ul, .spec-body ol { padding-left:22px; margin-bottom:12px; }
+.spec-body li { margin-bottom:6px; }
+.spec-body strong { color:var(--text); font-weight:700; }
+.spec-body em { color:var(--accent); font-style:normal; font-weight:600; background:var(--accent-light); padding:1px 6px; border-radius:4px; }
+
+.concepts { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 8px; }
+.concept-pill { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:600; padding:6px 12px; border-radius:20px; background:var(--accent-light); color:var(--accent); border:1px solid var(--accent); }
+
+.pitfalls { background:var(--warning-bg); border-left:4px solid var(--warning); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; margin-top:20px; }
+.pitfalls-title { font-weight:700; font-size:0.85rem; margin-bottom:6px; color:#92400e; display:flex; align-items:center; gap:6px; }
+[data-theme="dark"] .pitfalls-title { color:#fef3c7; }
+.pitfalls ul { padding-left:20px; margin:0; font-size:0.86rem; }
+.pitfalls li { margin-bottom:4px; }
+
+pre code { background:none; padding:0; color:inherit; font-family:var(--mono); }
+pre .kw  { color:#c084fc; }
+pre .str { color:#a7f3d0; }
+pre .com { color:#64748b; font-style:italic; }
+pre .ty  { color:#7dd3fc; }
+pre .fn  { color:#fde68a; }
+pre .num { color:#fda4af; }
+
+code { font-family:var(--mono); font-size:0.85em; background:var(--bg-alt); padding:2px 7px; border-radius:5px; }
+
+.fade-in { opacity:0; transform:translateY(20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+.fade-in.visible { opacity:1; transform:translateY(0); }
+
+.intro-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; margin-top:24px; }
+.intro-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; transition:border-color var(--transition), box-shadow var(--transition); }
+.intro-card:hover { border-color:var(--accent); box-shadow:var(--shadow); }
+.intro-card .num { font-size:0.7rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.intro-card .name { font-weight:700; font-size:0.95rem; margin-bottom:4px; }
+.intro-card .desc { font-size:0.82rem; color:var(--text-muted); }
+
+@media print {
+  .top-nav, .scroll-progress, .theme-toggle, .hamburger { display:none !important; }
+  .hero { padding-top:40px; }
+  .module { padding:32px 0; break-inside:avoid; }
+  .split { grid-template-columns:1fr; }
+}
+@media (max-width:1024px) {
+  .split { grid-template-columns:1fr; }
+}
+@media (max-width:768px) {
+  .nav-links { display:none; }
+  .nav-links.open { display:flex; flex-direction:column; position:absolute; top:60px; left:0; right:0; background:var(--bg-nav); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:12px; z-index:999; }
+  .hamburger { display:flex; }
+  .hero h1 { font-size:2rem; }
+  .hero .lead { font-size:1rem; }
+  .hero-meta { flex-direction:column; gap:8px; }
+  .module { padding:40px 16px; }
+}
+  </style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">Application Layer</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#overview">Overview</a>
+    <a href="#01-iusecase-contract">Foundation</a>
+    <a href="#02-repository-interface">Ports</a>
+    <a href="#03-app-exceptions">Exceptions</a>
+    <a href="#04-create-use-case">Create</a>
+    <a href="#05-get-by-id">Get</a>
+    <a href="#06-update-use-case">Update</a>
+    <a href="#07-delete-use-case">Delete</a>
+    <a href="#08-action-use-case">Action</a>
+    <a href="#09-list-use-case">List</a>
+    <a href="#10-acl-decision-framework">ACL vs Events</a>
+    <a href="#11-create-with-acl">ACL</a>
+    <a href="#12-aggregate-mutation">Aggregate</a>
+    <a href="#13-action-with-revalidation">Revalidate</a>
+    <a href="#14-batch-use-case">Batch</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-content">
+    <h1>Application Layer Masterclass</h1>
+    <p class="lead">Use Cases, Repository Interfaces, and Application Exceptions — the orchestration layer between domain entities and the outside world.</p>
+    <div class="hero-meta">
+      <span>📚 <strong>14 Patterns</strong></span>
+      <span>🎯 <strong>Foundation → Expert</strong></span>
+      <span>🔧 <strong>Clean Architecture</strong></span>
+      <span>⚡ <strong>IUseCase&lt;In, Out&gt;</strong></span>
+    </div>
+  </div>
+</header>
+
+<section class="module" id="overview">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Course Overview</div>
+        <h2>Use Case Patterns: Simple to Complex</h2>
+        <p class="module-desc">From basic CRUD operations to advanced patterns with cross-domain validation, aggregate mutations, and batch processing. Each pattern builds on the previous one.</p>
+      </div>
+    </div>
+    <div class="intro-grid">
+    <a class="intro-card" href="#01-iusecase-contract" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 01</div>
+      <div class="name">The IUseCase Contract & Directory Layout</div>
+      <div class="desc">Every use case implements IUseCase<Input, Output> — a single async execute() method with one input, one output.</div>
+    </a>
+    <a class="intro-card" href="#02-repository-interface" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 02</div>
+      <div class="name">Repository Interface (Port Definition)</div>
+      <div class="desc">Abstract class defining the data-access contract. Lives in application/interfaces — inner layer never knows the database.</div>
+    </a>
+    <a class="intro-card" href="#03-app-exceptions" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 03</div>
+      <div class="name">Application Exceptions</div>
+      <div class="desc">Typed error classes for input validation and "not found" scenarios. Mapped to HTTP status codes by DomainExceptionFilter.</div>
+    </a>
+    <a class="intro-card" href="#04-create-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 04</div>
+      <div class="name">Create Use Case (with Uniqueness Check)</div>
+      <div class="desc">The most common starting point: validate input, check uniqueness, create entity via factory, persist.</div>
+    </a>
+    <a class="intro-card" href="#05-get-by-id" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 05</div>
+      <div class="name">Get By ID Use Case</div>
+      <div class="desc">The simplest retrieval pattern: validate input, query repository, throw if null.</div>
+    </a>
+    <a class="intro-card" href="#06-update-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 06</div>
+      <div class="name">Update Use Case (Partial Patch)</div>
+      <div class="desc">Load entity, invoke domain methods for changed fields, persist. Entity enforces invariants on each change.</div>
+    </a>
+    <a class="intro-card" href="#07-delete-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 07</div>
+      <div class="name">Delete Use Case (Soft & Hard)</div>
+      <div class="desc">Soft delete uses a domain method (markAsDeleted); hard delete calls repository.delete() with a status guard.</div>
+    </a>
+    <a class="intro-card" href="#08-action-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 08</div>
+      <div class="name">Action Use Case (State Transitions)</div>
+      <div class="desc">Load entity, call a single domain method that enforces the state machine, persist. One use case per action.</div>
+    </a>
+    <a class="intro-card" href="#09-list-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 09</div>
+      <div class="name">List Use Case (Filtered + Paginated)</div>
+      <div class="desc">Validates the filter value, delegates to repository with pagination params, returns typed paginated response.</div>
+    </a>
+    <a class="intro-card" href="#10-acl-decision-framework" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 10</div>
+      <div class="name">When to Use ACL (Sync) vs Events (Async)</div>
+      <div class="desc">The critical architectural decision: does this cross-domain dependency need a real-time gate check, or can it be resolved eventually through events?</div>
+    </a>
+    <a class="intro-card" href="#11-create-with-acl" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 11</div>
+      <div class="name">Create with Cross-Domain Validation (ACL)</div>
+      <div class="desc">Use case injects a validator interface (ACL port) alongside the repository. Validates upstream entity before proceeding.</div>
+    </a>
+    <a class="intro-card" href="#12-aggregate-mutation" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 12</div>
+      <div class="name">Aggregate Mutation (Child Entity Operations)</div>
+      <div class="desc">Load the aggregate root, mutate children through root methods, persist entire aggregate in one save().</div>
+    </a>
+    <a class="intro-card" href="#13-action-with-revalidation" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 13</div>
+      <div class="name">Action with ACL Re-Validation</div>
+      <div class="desc">Before confirming an order, re-validate that the customer is still active. Combines action + ACL patterns.</div>
+    </a>
+    <a class="intro-card" href="#14-batch-use-case" style="text-decoration:none; color:inherit;">
+      <div class="num">Module 14</div>
+      <div class="name">Batch Processing Use Case</div>
+      <div class="desc">Iterates through paginated results, applies domain logic to each entity, returns a summary. Used by event handlers.</div>
+    </a>
+    </div>
+  </div>
+</section>
+
+
+<section class="module" id="01-iusecase-contract">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Foundation</div>
+        <h2>The IUseCase Contract & Directory Layout</h2>
+        <p class="module-desc">Every use case implements IUseCase<Input, Output> — a single async execute() method with one input, one output.</p>
+      </div>
+      <span class="complexity l1">● Foundation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">IUseCase<TInput, TOutput> Contract</div><div class="spec-body">
+        <p>The <code>IUseCase</code> interface enforces a uniform shape for all application operations:</p>
+        <ul>
+          <li><strong>Single Responsibility:</strong> One use case = one business operation</li>
+          <li><strong>Typed I/O:</strong> Input and output are explicit generics (no <code>any</code>)</li>
+          <li><strong>Async by design:</strong> All repository calls are async, so <code>execute()</code> returns <code>Promise</code></li>
+          <li><strong>Constructor injection:</strong> Repository + optional collaborators injected via constructor</li>
+        </ul>
+        <p><strong>Directory convention:</strong></p>
+        <ul>
+          <li><code>packages/{domain}-domain/src/application/use-cases/{verb}-{entity}/{verb}-{entity}.use-case.ts</code></li>
+          <li><code>packages/{domain}-domain/src/application/interfaces/{entity}-repository.interface.ts</code></li>
+          <li><code>packages/{domain}-domain/src/application/exceptions/{error-name}.error.ts</code></li>
+        </ul>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">@old-st/common + directory layout</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// packages/common/src/interfaces/use-case.interface.ts</span>
+<span class="kw">export</span> <span class="kw">interface</span> <span class="ty">IUseCase</span>&lt;TInput, TOutput&gt; {
+  execute(input: TInput): <span class="ty">Promise</span>&lt;TOutput&gt;;
+}
+
+<span class="com">// packages/common/src/interfaces/pagination.interface.ts</span>
+<span class="kw">export</span> <span class="kw">interface</span> <span class="ty">IPaginatedResponse</span>&lt;T&gt; {
+  items: T[];
+  nextCursorPointer?: <span class="ty">string</span>;
+  prevCursorPointer?: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">interface</span> <span class="ty">IOffsetPaginatedResponse</span>&lt;T&gt; {
+  data: T[];
+  total: <span class="ty">number</span>;
+  page: <span class="ty">number</span>;
+  limit: <span class="ty">number</span>;
+  totalPages: <span class="ty">number</span>;
+}
+
+<span class="com">// Directory structure:</span>
+<span class="com">// packages/user-domain/src/application/</span>
+<span class="com">//   use-cases/</span>
+<span class="com">//     create-user/create-user.use-case.ts</span>
+<span class="com">//     get-user-by-id/get-user-by-id.use-case.ts</span>
+<span class="com">//     activate-user/activate-user.use-case.ts</span>
+<span class="com">//     list-users-by-status/list-users-by-status.use-case.ts</span>
+<span class="com">//   interfaces/</span>
+<span class="com">//     user-repository.interface.ts</span>
+<span class="com">//   exceptions/</span>
+<span class="com">//     invalid-input.error.ts</span>
+<span class="com">//     user-not-found.error.ts</span>
+<span class="com">//     email-already-exists.error.ts</span></code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ IUseCase<TInput, TOutput> contract</span><span class="concept-pill">✦ One folder per use case</span><span class="concept-pill">✦ Constructor injection for dependencies</span><span class="concept-pill">✦ Promise-based async execute()</span><span class="concept-pill">✦ Barrel export from use-cases/index.ts</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never put HTTP concerns (request, response, status codes) inside a use case.</li>
+    <li>Never import from <code>@nestjs/*</code> inside the application layer.</li>
+    <li>The use case returns a domain entity — not a DTO. The Application Service transforms it later.</li>
+    <li>Do not add multiple <code>execute()</code> methods — split into separate use cases instead.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="02-repository-interface">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Ports</div>
+        <h2>Repository Interface (Port Definition)</h2>
+        <p class="module-desc">Abstract class defining the data-access contract. Lives in application/interfaces — inner layer never knows the database.</p>
+      </div>
+      <span class="complexity l1">● Foundation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Repository Interface as an Abstract Class</div><div class="spec-body">
+        <p>The repository interface is the <strong>port</strong> in hexagonal architecture. It defines <em>what</em> data operations the domain needs without specifying <em>how</em>.</p>
+        <ul>
+          <li><strong>Abstract class</strong> (not TS <code>interface</code>) — enables NestJS DI token usage</li>
+          <li><strong>Domain types only:</strong> Parameters and return types are domain entities/primitives</li>
+          <li><strong>No database types:</strong> Never mention Table, PrismaClient, OneTable, etc.</li>
+          <li><strong>Pagination:</strong> DynamoDB domains use <code>IPaginatedResponse</code>; Prisma domains use <code>IOffsetPaginatedResponse</code></li>
+        </ul>
+        <p><strong>Methods follow naming conventions:</strong></p>
+        <ul>
+          <li><code>save(entity)</code> — create or update (entity state determines which)</li>
+          <li><code>findById(id)</code> — returns <code>Entity | null</code> (never throws)</li>
+          <li><code>findByEmail(email)</code> — uniqueness lookup</li>
+          <li><code>listByStatus(...)</code> — filtered paginated query</li>
+          <li><code>delete(id)</code> — hard delete (rare; soft-delete uses <code>save()</code>)</li>
+        </ul>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">user-repository.interface.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">UserRole</span>, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../domain/constants'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../domain/entities'</span>;
+
+<span class="kw">export</span> <span class="kw">abstract</span> <span class="kw">class</span> <span class="ty">IUserRepository</span> {
+  <span class="com">// Create or update (entity state determines insert vs upsert)</span>
+  <span class="kw">abstract</span> save(user: <span class="ty">User</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt;;
+
+  <span class="com">// Primary key lookup — returns null if not found</span>
+  <span class="kw">abstract</span> findById(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt;;
+
+  <span class="com">// Uniqueness lookup for email</span>
+  <span class="kw">abstract</span> findByEmail(email: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span> | <span class="kw">null</span>&gt;;
+
+  <span class="com">// Cursor-based paginated list</span>
+  <span class="kw">abstract</span> listByStatus(
+    userStatus: <span class="ty">UserStatus</span>,
+    limit?: <span class="ty">number</span>,
+    direction?: <span class="ty">string</span>,
+    nextCursorPointer?: <span class="ty">string</span>,
+    prevCursorPointer?: <span class="ty">string</span>
+  ): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt;;
+
+  <span class="com">// Compound filter</span>
+  <span class="kw">abstract</span> listByRoleAndStatus(
+    userRole: <span class="ty">UserRole</span>,
+    userStatus: <span class="ty">UserStatus</span>,
+    limit?: <span class="ty">number</span>,
+    direction?: <span class="ty">string</span>,
+    nextCursorPointer?: <span class="ty">string</span>,
+    prevCursorPointer?: <span class="ty">string</span>
+  ): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt;;
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Abstract class for DI compatibility</span><span class="concept-pill">✦ Domain types only in signatures</span><span class="concept-pill">✦ save() handles both create and update</span><span class="concept-pill">✦ findById returns null (not throws)</span><span class="concept-pill">✦ Pagination type matches persistence strategy</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Using a TypeScript <code>interface</code> instead of <code>abstract class</code> prevents NestJS from using it as a DI token.</li>
+    <li>Returning database-specific types (e.g. <code>AnyEntity</code> from OneTable) leaks infrastructure into the domain.</li>
+    <li>Adding <code>getTable()</code> or <code>getClient()</code> methods violates the hexagonal port contract.</li>
+    <li>Mixing cursor and offset pagination in the same interface — choose one per domain.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="03-app-exceptions">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Exceptions</div>
+        <h2>Application Exceptions</h2>
+        <p class="module-desc">Typed error classes for input validation and "not found" scenarios. Mapped to HTTP status codes by DomainExceptionFilter.</p>
+      </div>
+      <span class="complexity l1">● Foundation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Application-Level Exception Classes</div><div class="spec-body">
+        <p>Application exceptions are thrown by use cases when:</p>
+        <ul>
+          <li><strong>Input validation fails:</strong> <code>InvalidInputError</code> (missing required field, invalid format)</li>
+          <li><strong>Entity not found:</strong> <code>{Entity}NotFoundError</code> (ID lookup returned null)</li>
+          <li><strong>Uniqueness violated:</strong> <code>EmailAlreadyExistsError</code> (pre-save check failed)</li>
+          <li><strong>External validation failed:</strong> <code>InvalidUserRoleError</code>, <code>InvalidUserStatusError</code></li>
+        </ul>
+        <p><strong>Rules:</strong></p>
+        <ul>
+          <li>Each error class extends <code>Error</code> and sets <code>this.name</code> explicitly</li>
+          <li>Constructor accepts the relevant identifier for debugging</li>
+          <li><code>DomainExceptionFilter</code> maps class names to HTTP status codes</li>
+          <li>Application exceptions map to <strong>400</strong> (input) or <strong>404</strong> (not found) or <strong>409</strong> (conflict)</li>
+        </ul>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">application/exceptions/</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// invalid-input.error.ts</span>
+<span class="kw">export</span> <span class="kw">class</span> InvalidInputError <span class="kw">extends</span> Error {
+  constructor(message: <span class="ty">string</span>) {
+    super(message);
+    <span class="kw">this</span>.name = <span class="str">'InvalidInputError'</span>;
+  }
+}
+
+<span class="com">// user-not-found.error.ts</span>
+<span class="kw">export</span> <span class="kw">class</span> UserNotFoundError <span class="kw">extends</span> Error {
+  constructor(identifier: <span class="ty">string</span>) {
+    super(<span class="str">`User not found: ${identifier}`</span>);
+    <span class="kw">this</span>.name = <span class="str">'UserNotFoundError'</span>;
+  }
+}
+
+<span class="com">// email-already-exists.error.ts</span>
+<span class="kw">export</span> <span class="kw">class</span> EmailAlreadyExistsError <span class="kw">extends</span> Error {
+  constructor(email: <span class="ty">string</span>) {
+    super(<span class="str">`Email already exists: ${email}`</span>);
+    <span class="kw">this</span>.name = <span class="str">'EmailAlreadyExistsError'</span>;
+  }
+}
+
+<span class="com">// invalid-user-role.error.ts</span>
+<span class="kw">export</span> <span class="kw">class</span> InvalidUserRoleError <span class="kw">extends</span> Error {
+  constructor(role: <span class="ty">string</span>) {
+    super(<span class="str">`Invalid user role: ${role}`</span>);
+    <span class="kw">this</span>.name = <span class="str">'InvalidUserRoleError'</span>;
+  }
+}
+
+<span class="com">// Barrel: application/exceptions/index.ts</span>
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./invalid-input.error'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./user-not-found.error'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./email-already-exists.error'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./invalid-user-role.error'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./invalid-user-status.error'</span>;</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ One class per failure mode</span><span class="concept-pill">✦ Extends Error with explicit name</span><span class="concept-pill">✦ Constructor accepts debug identifier</span><span class="concept-pill">✦ Mapped to HTTP by DomainExceptionFilter</span><span class="concept-pill">✦ Barrel export from exceptions/index.ts</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Forgetting <code>this.name = ...</code> makes the filter map fail (it uses <code>constructor.name</code>).</li>
+    <li>Throwing generic <code>new Error("not found")</code> bypasses the exception filter mapping.</li>
+    <li>Application exceptions should NOT contain HTTP status codes — that is the filter responsibility.</li>
+    <li>Do not throw <code>HttpException</code> from <code>@nestjs/common</code> inside the application layer.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="04-create-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Create</div>
+        <h2>Create Use Case (with Uniqueness Check)</h2>
+        <p class="module-desc">The most common starting point: validate input, check uniqueness, create entity via factory, persist.</p>
+      </div>
+      <span class="complexity l2">● Core Pattern</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Create Pattern: Validate → Check Uniqueness → Entity.create() → save()</div><div class="spec-body">
+        <p>The create use case follows a strict sequence:</p>
+        <ol>
+          <li><strong>Define Input interface:</strong> Only primitive types (never DTOs or request objects)</li>
+          <li><strong>Check uniqueness:</strong> Query repository for existing entity by unique field</li>
+          <li><strong>Call Entity.create():</strong> Domain factory enforces invariants (throws domain exceptions)</li>
+          <li><strong>Persist via repository.save():</strong> Returns the entity with generated ID</li>
+        </ol>
+        <p><strong>Key principle:</strong> The use case orchestrates; the entity validates. If <code>User.create()</code> throws <code>InvalidEmailFormatError</code>, the use case does not catch it — it bubbles up to the filter.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">create-user.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { <span class="ty">UserRole</span>, UserRoleEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { EmailAlreadyExistsError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> CreateUserInput {
+  email: <span class="ty">string</span>;
+  firstName: <span class="ty">string</span>;
+  lastName: <span class="ty">string</span>;
+  userRole?: <span class="ty">UserRole</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> CreateUserUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;CreateUserInput, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: CreateUserInput): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="com">// 1. Uniqueness check</span>
+    <span class="kw">const</span> existingUser = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findByEmail(input.email);
+    <span class="kw">if</span> (existingUser) {
+      <span class="kw">throw</span> <span class="kw">new</span> EmailAlreadyExistsError(input.email);
+    }
+
+    <span class="com">// 2. Create via domain factory (validates invariants)</span>
+    <span class="kw">const</span> user = <span class="ty">User</span>.create({
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      userRole: input.userRole || UserRoleEnum.USER,
+    });
+
+    <span class="com">// 3. Persist and return entity with generated ID</span>
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Input interface with primitives only</span><span class="concept-pill">✦ Uniqueness check before creation</span><span class="concept-pill">✦ Delegates validation to Entity.create()</span><span class="concept-pill">✦ Default values for optional fields</span><span class="concept-pill">✦ Returns persisted entity (has ID)</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never validate email format in the use case — that is the entity responsibility.</li>
+    <li>Never generate the ID in the use case — the repository or schema handles auto-generation.</li>
+    <li>The Input interface must not include <code>userId</code> — it does not exist yet.</li>
+    <li>Do not catch domain exceptions (e.g. <code>InvalidEmailFormatError</code>) — let them bubble up.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="05-get-by-id">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Get</div>
+        <h2>Get By ID Use Case</h2>
+        <p class="module-desc">The simplest retrieval pattern: validate input, query repository, throw if null.</p>
+      </div>
+      <span class="complexity l1">● Foundation</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Get Pattern: Validate ID → findById() → throw if null</div><div class="spec-body">
+        <p>The get-by-id use case is the simplest pattern. It has no side effects and returns the entity as-is.</p>
+        <ul>
+          <li><strong>Input:</strong> A single <code>string</code> (the entity ID) — no Input interface needed</li>
+          <li><strong>Guard:</strong> Throw <code>InvalidInputError</code> if the ID is empty/falsy</li>
+          <li><strong>Query:</strong> <code>repository.findById()</code> returns <code>Entity | null</code></li>
+          <li><strong>Not found:</strong> Throw <code>{Entity}NotFoundError</code> — the controller maps this to 404</li>
+        </ul>
+        <p>This pattern is reused as a <em>load step</em> in every mutation use case (update, delete, action).</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">get-user-by-id.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> GetUserByIdUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">string</span>, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="kw">if</span> (!userId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'User ID is required'</span>);
+    }
+
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findById(userId);
+    <span class="kw">if</span> (!user) {
+      <span class="kw">throw</span> <span class="kw">new</span> UserNotFoundError(userId);
+    }
+    <span class="kw">return</span> user;
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Simple string input (no interface needed)</span><span class="concept-pill">✦ Guard clause for empty input</span><span class="concept-pill">✦ Repository returns null (not throws)</span><span class="concept-pill">✦ Use case throws NotFoundError</span><span class="concept-pill">✦ Reusable "load" pattern for mutations</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never let the repository throw NotFound — that decision belongs to the use case.</li>
+    <li>Do not add caching logic here — that belongs in infrastructure.</li>
+    <li>The <code>!userId</code> guard catches empty string, null, and undefined in one check.</li>
+    <li>This use case has no side effects — safe to call multiple times.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="06-update-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Update</div>
+        <h2>Update Use Case (Partial Patch)</h2>
+        <p class="module-desc">Load entity, invoke domain methods for changed fields, persist. Entity enforces invariants on each change.</p>
+      </div>
+      <span class="complexity l2">● Core Pattern</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Update Pattern: Load → Domain Methods → save()</div><div class="spec-body">
+        <p>The update use case follows the <strong>load-modify-save</strong> pattern:</p>
+        <ol>
+          <li><strong>Define Input:</strong> Contains the entity ID + optional fields (partial patch)</li>
+          <li><strong>Load entity:</strong> <code>findById()</code> + throw if not found</li>
+          <li><strong>Invoke domain methods:</strong> Only call methods for fields that changed</li>
+          <li><strong>Persist:</strong> <code>save()</code> the modified entity</li>
+        </ol>
+        <p><strong>Key principle:</strong> Never set entity properties directly. Always call a domain method (<code>updateProfile()</code>, <code>changeRole()</code>) that enforces business rules internally.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">update-user-profile.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> UpdateUserProfileInput {
+  userId: <span class="ty">string</span>;
+  firstName?: <span class="ty">string</span>;
+  lastName?: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> UpdateUserProfileUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;UpdateUserProfileInput, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: UpdateUserProfileInput): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="kw">if</span> (!input.userId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'User ID is required'</span>);
+    }
+
+    <span class="com">// Load existing entity</span>
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findById(input.userId);
+    <span class="kw">if</span> (!user) {
+      <span class="kw">throw</span> <span class="kw">new</span> UserNotFoundError(input.userId);
+    }
+
+    <span class="com">// Apply changes through domain methods (entity enforces rules)</span>
+    <span class="kw">if</span> (input.firstName !== <span class="kw">undefined</span> || input.lastName !== <span class="kw">undefined</span>) {
+      <span class="kw">const</span> firstName = input.firstName ?? user.getFirstName();
+      <span class="kw">const</span> lastName = input.lastName ?? user.getLastName();
+      user.updateProfile(firstName, lastName);
+    }
+
+    <span class="com">// Persist modified entity</span>
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Input has entity ID + optional patch fields</span><span class="concept-pill">✦ Load-modify-save pattern</span><span class="concept-pill">✦ Domain methods enforce invariants</span><span class="concept-pill">✦ Null coalescing for unchanged fields</span><span class="concept-pill">✦ Entity manages its own updatedAt</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never set fields directly: <code>user.firstName = x</code> bypasses validation.</li>
+    <li>Use <code>!== undefined</code> to distinguish "not provided" from "set to empty string".</li>
+    <li>The entity method (<code>updateProfile</code>) calls <code>touch()</code> internally — do not set <code>updatedAt</code> in the use case.</li>
+    <li>If a field depends on another (e.g. role + status), call a single domain method that handles both atomically.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="07-delete-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Delete</div>
+        <h2>Delete Use Case (Soft & Hard)</h2>
+        <p class="module-desc">Soft delete uses a domain method (markAsDeleted); hard delete calls repository.delete() with a status guard.</p>
+      </div>
+      <span class="complexity l2">● Core Pattern</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Delete Patterns: Soft (entity method) vs Hard (repo.delete)</div><div class="spec-body">
+        <p>Two deletion strategies exist:</p>
+        <ul>
+          <li><strong>Soft delete:</strong> Call <code>entity.markAsDeleted()</code> + <code>save()</code>. The entity transitions to DELETED status. Domain method throws if already deleted.</li>
+          <li><strong>Hard delete:</strong> Call <code>repository.delete(id)</code>. Use case enforces a guard: only DRAFT or CANCELLED entities can be hard-deleted.</li>
+        </ul>
+        <p><strong>When to use which:</strong></p>
+        <ul>
+          <li>Soft delete: User, Product — you need audit trail and can "undelete"</li>
+          <li>Hard delete: Order (only drafts/cancelled) — no recovery needed for incomplete orders</li>
+        </ul>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">delete-user.use-case.ts + delete-order.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// ── Soft Delete (User) ────────────────────────────────────────────────────</span>
+<span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> DeleteUserUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">string</span>, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="kw">if</span> (!userId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'User ID is required'</span>);
+    }
+
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findById(userId);
+    <span class="kw">if</span> (!user) {
+      <span class="kw">throw</span> <span class="kw">new</span> UserNotFoundError(userId);
+    }
+
+    <span class="com">// Domain method enforces: cannot delete an already-deleted user</span>
+    user.markAsDeleted();
+
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}
+
+<span class="com">// ── Hard Delete (Order — only DRAFT/CANCELLED) ───────────────────────────</span>
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { InvalidInputError, OrderNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> DeleteOrderUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">string</span>, <span class="kw">void</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>) {}
+
+  <span class="kw">async</span> execute(orderId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt; {
+    <span class="kw">if</span> (!orderId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Order ID is required'</span>);
+    }
+
+    <span class="kw">const</span> order = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.findById(orderId);
+    <span class="kw">if</span> (!order) {
+      <span class="kw">throw</span> <span class="kw">new</span> OrderNotFoundError(orderId);
+    }
+
+    <span class="com">// Guard: only drafts and cancelled orders can be hard-deleted</span>
+    <span class="kw">const</span> status = order.getOrderStatus();
+    <span class="kw">if</span> (status !== OrderStatusEnum.DRAFT &amp;&amp; status !== OrderStatusEnum.CANCELLED) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(
+        <span class="str">'Only draft or cancelled orders can be deleted'</span>,
+      );
+    }
+
+    <span class="kw">await</span> <span class="kw">this</span>.orderRepository.delete(orderId);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Soft delete via domain method + save()</span><span class="concept-pill">✦ Hard delete via repository.delete()</span><span class="concept-pill">✦ Domain method guards (already deleted)</span><span class="concept-pill">✦ Use case guards (status-based)</span><span class="concept-pill">✦ Returns entity for event publishing</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Soft delete MUST call <code>save()</code> — the status change is not persisted otherwise.</li>
+    <li>Hard delete should NOT call <code>markAsDeleted()</code> first — it is a permanent removal.</li>
+    <li>Always check the entity exists before deleting — even for hard delete (to return proper 404).</li>
+    <li>Hard delete use cases return <code>void</code> — there is nothing meaningful to return.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="08-action-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Action</div>
+        <h2>Action Use Case (State Transitions)</h2>
+        <p class="module-desc">Load entity, call a single domain method that enforces the state machine, persist. One use case per action.</p>
+      </div>
+      <span class="complexity l2">● Core Pattern</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Action Pattern: Load → entity.action() → save()</div><div class="spec-body">
+        <p>Action use cases trigger domain state transitions. Each transition is a separate use case.</p>
+        <ul>
+          <li><strong>Input:</strong> Entity ID only (simple string) — the action has no parameters</li>
+          <li><strong>Load:</strong> <code>findById()</code> + throw if not found</li>
+          <li><strong>Act:</strong> Call entity method (e.g. <code>activate()</code>, <code>deactivate()</code>, <code>ship()</code>)</li>
+          <li><strong>Persist:</strong> <code>save()</code> the entity with new status</li>
+        </ul>
+        <p><strong>Key principle:</strong> The use case does NOT check the current status — that is the entity domain method responsibility. The entity throws a typed domain exception if the transition is invalid.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">activate-user.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { InvalidInputError, UserNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> ActivateUserUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">string</span>, <span class="ty">User</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(userId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">User</span>&gt; {
+    <span class="kw">if</span> (!userId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'User ID is required'</span>);
+    }
+
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepository.findById(userId);
+    <span class="kw">if</span> (!user) {
+      <span class="kw">throw</span> <span class="kw">new</span> UserNotFoundError(userId);
+    }
+
+    <span class="com">// Domain method enforces business rules:</span>
+    <span class="com">// - Must be PENDING status</span>
+    <span class="com">// - Email must be verified</span>
+    <span class="com">// Throws CannotActivateNonPendingUserError or CannotActivateUnverifiedEmailError</span>
+    user.activate();
+
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.save(user);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ One use case per state transition</span><span class="concept-pill">✦ Entity ID as sole input</span><span class="concept-pill">✦ Domain method owns the state machine</span><span class="concept-pill">✦ Domain exceptions bubble up naturally</span><span class="concept-pill">✦ No status check in the use case</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never add <code>if (user.getStatus() !== PENDING)</code> in the use case — let the entity enforce.</li>
+    <li>Do not combine multiple actions in one use case (e.g. "activate and verify") — separate concerns.</li>
+    <li>The use case does not know which exceptions the entity might throw — and that is fine.</li>
+    <li>If an action needs extra input (e.g. a reason for cancellation), use an Input interface instead of a bare string.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="09-list-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">List</div>
+        <h2>List Use Case (Filtered + Paginated)</h2>
+        <p class="module-desc">Validates the filter value, delegates to repository with pagination params, returns typed paginated response.</p>
+      </div>
+      <span class="complexity l2">● Core Pattern</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">List Pattern: Validate Filter → repository.listBy{Field}()</div><div class="spec-body">
+        <p>List use cases return paginated collections filtered by a domain field.</p>
+        <ul>
+          <li><strong>Input interface:</strong> Filter field + pagination params (limit, direction, cursors)</li>
+          <li><strong>Validate filter:</strong> Check against domain constants array (e.g. <code>USER_STATUSES.includes()</code>)</li>
+          <li><strong>Delegate to repository:</strong> Pass filter + pagination params directly</li>
+          <li><strong>Return typed response:</strong> <code>IPaginatedResponse&lt;Entity&gt;</code> (DynamoDB) or <code>IOffsetPaginatedResponse&lt;Entity&gt;</code> (Prisma)</li>
+        </ul>
+        <p><strong>Key difference from other types:</strong> No entity load step, no save — it is a pure query.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">list-users-by-status.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IPaginatedResponse</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IUserRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/user-repository.interface'</span>;
+<span class="kw">import</span> { USER_STATUSES, <span class="ty">UserStatus</span> } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { <span class="ty">User</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities'</span>;
+<span class="kw">import</span> { InvalidInputError, InvalidUserStatusError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> ListUsersByStatusInput {
+  status: <span class="ty">UserStatus</span>;
+  limit?: <span class="ty">number</span>;
+  direction?: <span class="ty">string</span>;
+  nextCursorPointer?: <span class="ty">string</span>;
+  prevCursorPointer?: <span class="ty">string</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> ListUsersByStatusUseCase
+  <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;ListUsersByStatusInput, <span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> userRepository: <span class="ty">IUserRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: ListUsersByStatusInput): <span class="ty">Promise</span>&lt;<span class="ty">IPaginatedResponse</span>&lt;<span class="ty">User</span>&gt;&gt; {
+    <span class="kw">if</span> (!input.status) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Status is required'</span>);
+    }
+
+    <span class="com">// Validate against domain constants</span>
+    <span class="kw">if</span> (!USER_STATUSES.includes(input.status)) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidUserStatusError(input.status);
+    }
+
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.userRepository.listByStatus(
+      input.status,
+      input.limit,
+      input.direction,
+      input.nextCursorPointer,
+      input.prevCursorPointer,
+    );
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Input interface with filter + pagination</span><span class="concept-pill">✦ Validate filter against domain constants</span><span class="concept-pill">✦ Direct delegation to repository</span><span class="concept-pill">✦ No entity load/save (pure query)</span><span class="concept-pill">✦ Typed paginated response</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Always validate the filter value — do not pass arbitrary strings to the repository.</li>
+    <li>Never hardcode status strings: use <code>USER_STATUSES.includes()</code> not <code>=== "ACTIVE"</code>.</li>
+    <li>Cursor fields (<code>nextCursorPointer</code>) are opaque strings — never parse them in the use case.</li>
+    <li>If pagination params are missing, pass <code>undefined</code> — the repository uses defaults.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="10-acl-decision-framework">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">ACL vs Events</div>
+        <h2>When to Use ACL (Sync) vs Events (Async)</h2>
+        <p class="module-desc">The critical architectural decision: does this cross-domain dependency need a real-time gate check, or can it be resolved eventually through events?</p>
+      </div>
+      <span class="complexity l3">● Advanced</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Core Domain vs Supporting Domain: The Decision Framework</div><div class="spec-body">
+        <p>When your use case depends on data from another bounded context, you must decide: <strong>synchronous ACL</strong> or <strong>asynchronous events</strong>?
+        This is arguably the most impactful architectural decision in a microservices system. Get it wrong and you either
+        create orphaned data (async where sync was needed) or a brittle chain of HTTP calls that collapses under load
+        (sync where async was appropriate).</p>
+
+        <h3 style="margin-top:20px; font-size:0.95rem;">✅ Use Sync ACL When (Gate Check)</h3>
+        <p style="margin-bottom:6px; font-style:italic; color:var(--text-muted);">
+          "Can the operation <strong>proceed at all</strong> without an answer from the upstream domain?"
+          If the answer is <strong>no</strong>, you need a sync ACL.
+        </p>
+        <ul>
+          <li>The upstream entity is a <strong>core domain dependency</strong> — the operation <em>cannot proceed</em> without its answer</li>
+          <li>The check is a <strong>go/no-go gate</strong>: "Does this customer exist and is it active?"</li>
+          <li>The answer must be <strong>real-time accurate</strong> — stale data causes business harm (e.g. creating an order for a deleted customer)</li>
+          <li>The caller needs an <strong>immediate error response</strong> if the dependency is invalid (HTTP 404/409 back to the user)</li>
+          <li>The validation is <strong>fast and deterministic</strong> — a single lookup, not a multi-step workflow</li>
+        </ul>
+
+        <h3 style="margin-top:20px; font-size:0.95rem;">📨 Use Async Events When (Eventual Consistency)</h3>
+        <p style="margin-bottom:6px; font-style:italic; color:var(--text-muted);">
+          "Can the operation <strong>start</strong> in a provisional state and resolve later?"
+          If the answer is <strong>yes</strong>, you should use events.
+        </p>
+        <ul>
+          <li>The upstream data is <strong>supplementary</strong> — the operation can start without it and resolve later</li>
+          <li>The validation is <strong>complex or slow</strong> (checking stock across warehouses, running fraud checks)</li>
+          <li>The result is <strong>non-blocking</strong>: the entity enters a provisional state (DRAFT) and transitions when the event arrives</li>
+          <li>Multiple services need to react — <strong>fan-out</strong> is more natural than sequential HTTP calls</li>
+          <li>The upstream domain may be <strong>temporarily unavailable</strong> and you want the operation to be resilient</li>
+        </ul>
+
+        <h3 style="margin-top:24px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🎯 Our Codebase Example: CreateOrderUseCase
+        </h3>
+        <p>The Order domain has <strong>two</strong> cross-domain dependencies in a single use case. Each uses a different pattern:</p>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:8px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:8px;">Dependency</th>
+            <th style="text-align:left; padding:8px;">Pattern</th>
+            <th style="text-align:left; padding:8px;">Why</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;"><strong>Customer (User domain)</strong></td>
+            <td style="padding:8px;">🔒 Sync ACL</td>
+            <td style="padding:8px;">Cannot create an order for a non-existent or deleted customer. Immediate 404/409 needed. Fast lookup.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;"><strong>Product availability</strong></td>
+            <td style="padding:8px;">📨 Async Event</td>
+            <td style="padding:8px;">Products may have complex validation (stock, regional availability, pricing rules). Order starts as DRAFT; event resolves to PENDING or VALIDATION_FAILED.</td>
+          </tr>
+        </table>
+
+        <h3 style="margin-top:28px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🌍 Real-World Industry Examples
+        </h3>
+        <p style="margin-bottom:12px;">These patterns appear everywhere in production systems. Here are common real-world scenarios across different industries:</p>
+
+        <h4 style="margin-top:16px; font-size:0.9rem;">🛒 E-Commerce (Amazon/Shopify-style)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:6px;">Scenario</th>
+            <th style="text-align:left; padding:6px;">Pattern</th>
+            <th style="text-align:left; padding:6px;">Reasoning</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Checkout → validate payment method exists</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot start checkout with an expired/invalid payment method. User needs immediate feedback.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Checkout → charge payment</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Payment processing can take seconds (3DS, bank verification). Order enters PAYMENT_PENDING state. Stripe webhook resolves it.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Order placed → reserve inventory</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Inventory checks across multiple warehouses are slow. Order starts as CONFIRMED, inventory service reserves stock or triggers backorder.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Add item to cart → validate product exists</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot add a deleted/non-existent product. Immediate 404 error to the user.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Product price changed → update carts</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Thousands of carts may reference this product. Fan-out via event, carts update lazily. No immediate user action needed.</td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:16px; font-size:0.9rem;">🏦 Banking / FinTech (Stripe/Revolut-style)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:6px;">Scenario</th>
+            <th style="text-align:left; padding:6px;">Pattern</th>
+            <th style="text-align:left; padding:6px;">Reasoning</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Transfer money → validate recipient account</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot transfer to a closed or non-existent account. Immediate rejection required.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Transfer money → AML/fraud check</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Fraud detection involves ML models, risk scoring, sanctions list checks. Transfer enters PENDING_REVIEW, resolved by compliance service.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Loan application → verify KYC status</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot start a loan without verified identity. Immediate 409 if KYC not completed.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Loan application → credit scoring</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Credit bureau calls take seconds, may timeout. Application enters SCORING state, event resolves to APPROVED/REJECTED.</td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:16px; font-size:0.9rem;">✈️ Travel / Booking (Booking.com/Airbnb-style)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:6px;">Scenario</th>
+            <th style="text-align:left; padding:6px;">Pattern</th>
+            <th style="text-align:left; padding:6px;">Reasoning</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Book hotel → validate guest identity</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot create booking without a valid guest account. Immediate feedback needed.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Book hotel → confirm room availability</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Property management system may be external, slow, or offline. Booking enters PENDING_CONFIRMATION, hotel responds via event.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Flight booked → send confirmation email</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Notification is fire-and-forget. Email service failure should never block the booking.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Flight booked → validate passenger passport</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">International flight cannot proceed without valid travel document on file. Immediate 409 if expired.</td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:16px; font-size:0.9rem;">🏥 Healthcare (Epic/Cerner-style)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:6px;">Scenario</th>
+            <th style="text-align:left; padding:6px;">Pattern</th>
+            <th style="text-align:left; padding:6px;">Reasoning</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Schedule appointment → validate patient record exists</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot schedule for unknown patient. Medical records linkage is mandatory.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Prescription created → drug interaction check</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Life-safety gate. Drug interaction check must complete before prescription is saved. No provisional state acceptable.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Prescription created → notify pharmacy</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Pharmacy notification is downstream. Prescription is valid regardless of whether pharmacy received the message yet.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Lab result received → update patient chart</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Lab results arrive from external systems on their own schedule. Patient chart subscribes and updates when event arrives.</td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:16px; font-size:0.9rem;">🚚 Logistics / Delivery (Uber Eats/DoorDash-style)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:6px;">Scenario</th>
+            <th style="text-align:left; padding:6px;">Pattern</th>
+            <th style="text-align:left; padding:6px;">Reasoning</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Create delivery → validate restaurant is open</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Cannot place an order with a closed restaurant. Immediate feedback to user.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Order accepted → assign driver</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Driver matching involves geolocation, availability, surge pricing. Order enters AWAITING_PICKUP, driver service matches asynchronously.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Package shipped → send tracking notification</td>
+            <td style="padding:6px;">📨 Async Event</td>
+            <td style="padding:6px;">Notification fan-out (SMS, push, email). Should never block the shipping operation.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px;">Create shipment → validate sender address</td>
+            <td style="padding:6px;">🔒 Sync ACL</td>
+            <td style="padding:6px;">Invalid address means undeliverable package. Immediate validation via address service.</td>
+          </tr>
+        </table>
+
+        <h3 style="margin-top:28px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🧭 The Decision Flowchart
+        </h3>
+        <p>Ask these three questions in order:</p>
+        <ol style="font-size:0.88rem; line-height:1.7;">
+          <li><strong>Can the entity exist without the upstream answer?</strong><br/>
+            No → <strong>Sync ACL</strong> (order cannot exist without a valid customer)<br/>
+            Yes → Go to question 2</li>
+          <li><strong>Is the validation fast and deterministic?</strong><br/>
+            Yes → Consider <strong>Sync ACL</strong> if it simplifies the flow<br/>
+            No (slow, external, multi-step) → Go to question 3</li>
+          <li><strong>Can the entity start in a provisional state?</strong><br/>
+            Yes → <strong>Async Events</strong> with a saga (DRAFT → resolve later)<br/>
+            No → <strong>Sync ACL</strong> (even if slow, you must block)</li>
+        </ol>
+
+        <h3 style="margin-top:24px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          ⚠️ The Grey Zone: When It Could Go Either Way
+        </h3>
+        <p style="font-size:0.88rem;">Some validations are genuinely ambiguous. In those cases, consider:</p>
+        <ul style="font-size:0.88rem;">
+          <li><strong>Latency tolerance:</strong> If the user is waiting for a response, sync is better UX. If it is a background job, async is fine.</li>
+          <li><strong>Failure tolerance:</strong> If the upstream being down should <em>block</em> the operation, use sync. If you can retry later, use async.</li>
+          <li><strong>Data staleness:</strong> If the data can become stale in milliseconds (seat booking), sync. If it is stable for hours (product catalog), async is safe.</li>
+          <li><strong>Compensability:</strong> If you can easily undo the operation (cancel an order), async with compensation. If undoing is expensive (money transferred), sync gate.</li>
+        </ul>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">create-order.use-case.ts — both patterns in one use case</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="com">// ═══════════════════════════════════════════════════════════════</span>
+<span class="com">// CreateOrderUseCase — demonstrates BOTH patterns side by side</span>
+<span class="com">// ═══════════════════════════════════════════════════════════════</span>
+<span class="com">//</span>
+<span class="com">// SYNC ACL (ICustomerValidator):</span>
+<span class="com">//   Customer is a core dependency. The order literally references</span>
+<span class="com">//   the customer ID — an order for a non-existent customer is</span>
+<span class="com">//   invalid data. This is the same as:</span>
+<span class="com">//   - Stripe refusing a charge for a deleted payment method</span>
+<span class="com">//   - A hospital refusing a prescription for an unknown patient</span>
+<span class="com">//   - Airbnb refusing a booking for a suspended guest</span>
+<span class="com">//</span>
+<span class="com">// ASYNC EVENT (IEventPublisher):</span>
+<span class="com">//   Product validation involves checking stock, pricing rules,</span>
+<span class="com">//   and possibly external supplier APIs. This is the same as:</span>
+<span class="com">//   - Uber matching a driver after the ride is requested</span>
+<span class="com">//   - A bank running fraud checks after a transfer is initiated</span>
+<span class="com">//   - A hotel confirming room availability from an external PMS</span>
+
+<span class="kw">export</span> <span class="kw">class</span> CreateOrderUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;CreateOrderInput, <span class="ty">Order</span>&gt; {
+  constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerValidator: <span class="ty">ICustomerValidator</span>,  <span class="com">// ACL port</span>
+    <span class="kw">private</span> <span class="kw">readonly</span> eventPublisher: <span class="ty">IEventPublisher</span>&lt;unknown&gt;, <span class="com">// Event port</span>
+  ) {}
+
+  <span class="kw">async</span> execute(input: CreateOrderInput): <span class="ty">Promise</span>&lt;<span class="ty">Order</span>&gt; {
+    <span class="com">// ── SYNC ACL GATE ─────────────────────────────────────────</span>
+    <span class="com">// This MUST pass before any entity is created.</span>
+    <span class="com">// If the customer does not exist → CustomerNotFoundError (404)</span>
+    <span class="com">// If the customer is deleted/inactive → CustomerInvalidStatusError (409)</span>
+    <span class="com">// If the User API is down → CustomerServiceUnavailableError (502)</span>
+    <span class="com">//</span>
+    <span class="com">// Real-world parallel: Stripe's "validate payment method"</span>
+    <span class="com">// returns 402 immediately if the card is expired.</span>
+    <span class="kw">await</span> <span class="kw">this</span>.customerValidator.validate(input.customerId);
+
+    <span class="com">// ── ENTITY CREATION ───────────────────────────────────────</span>
+    <span class="com">// Only reached if customer is valid. Order starts in DRAFT status.</span>
+    <span class="kw">const</span> order = <span class="ty">Order</span>.create({ customerId: input.customerId });
+    <span class="kw">for</span> (<span class="kw">const</span> itemInput <span class="kw">of</span> input.items) {
+      order.addItem(<span class="ty">OrderItem</span>.create(itemInput));
+    }
+    <span class="kw">const</span> savedOrder = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+
+    <span class="com">// ── ASYNC EVENT ───────────────────────────────────────────</span>
+    <span class="com">// Product validation happens asynchronously via choreography saga.</span>
+    <span class="com">//</span>
+    <span class="com">// Flow: Order API publishes ORDER_CREATED</span>
+    <span class="com">//   → Product Event Handler validates all items</span>
+    <span class="com">//   → Publishes PRODUCT_VALIDATION_SUCCEEDED or _FAILED</span>
+    <span class="com">//   → Order Event Handler resolves: DRAFT → PENDING or VALIDATION_FAILED</span>
+    <span class="com">//</span>
+    <span class="com">// Real-world parallel: Uber's ride request</span>
+    <span class="com">//   → Driver matching service finds available drivers</span>
+    <span class="com">//   → Publishes DRIVER_ASSIGNED or NO_DRIVERS_AVAILABLE</span>
+    <span class="com">//   → Ride service resolves: REQUESTED → MATCHED or CANCELLED</span>
+    <span class="kw">await</span> <span class="kw">this</span>.eventPublisher.publish({
+      eventType: OrderEventTypeEnum.ORDER_CREATED,
+      orderId: savedOrder.getOrderId(),
+      items: input.items,
+    }, { groupId: savedOrder.getOrderId() });
+
+    <span class="kw">return</span> savedOrder; <span class="com">// Returns DRAFT — not yet validated</span>
+  }
+}
+
+<span class="com">// ── The ACL Port ──────────────────────────────────────────────</span>
+<span class="com">// Defined in application/interfaces/ (same level as repository)</span>
+<span class="com">// Implemented by HTTP adapter in the SERVICE layer (not domain)</span>
+
+<span class="kw">export</span> <span class="kw">abstract</span> <span class="kw">class</span> <span class="ty">ICustomerValidator</span> {
+  <span class="com">// Validates customer exists and is active.</span>
+  <span class="com">// Throws typed exceptions — not HTTP errors.</span>
+  <span class="kw">abstract</span> validate(customerId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">ValidatedCustomer</span>&gt;;
+}
+
+<span class="com">// ── The ACL Exception Hierarchy ───────────────────────────────</span>
+<span class="com">// Each exception maps to a specific upstream failure:</span>
+<span class="com">//   404 from User API → CustomerNotFoundError</span>
+<span class="com">//   409 from User API → CustomerInvalidStatusError</span>
+<span class="com">//   5xx / timeout     → CustomerServiceUnavailableError</span>
+<span class="com">// The use case doesn't know about HTTP — only typed errors.</span></code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Core dependency = sync ACL gate (existence/identity checks)</span><span class="concept-pill">✦ Supporting dependency = async event (complex/slow validation)</span><span class="concept-pill">✦ ACL blocks entity creation; events resolve provisional state later</span><span class="concept-pill">✦ Decision flowchart: existence → speed → provisionality</span><span class="concept-pill">✦ Both patterns coexist in one use case when dependencies differ</span><span class="concept-pill">✦ Grey zone: consider latency, failure tolerance, staleness, compensability</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Do not use async events for core dependencies — you end up with orphaned entities that reference non-existent upstream data. <strong>Example:</strong> If you async-validate a customer and they were deleted, you now have an order pointing to a ghost customer ID.</li>
+    <li>Do not use sync ACL for everything — it creates tight coupling, adds latency, and cascading failures. <strong>Example:</strong> Uber using sync calls to match drivers would block the API for 30+ seconds per ride request.</li>
+    <li>Watch for the <strong>"notification trap"</strong> — sending emails, SMS, or push notifications should <em>always</em> be async events. A slow SMTP server should never block order creation.</li>
+    <li>Async validation requires an <strong>idempotent resolver</strong> — the event handler must check current state before transitioning (order might already be cancelled). Chris Richardson calls this "lack of isolation" in the Saga pattern.</li>
+    <li>If the upstream service is down, the ACL throws <code>ServiceUnavailableError</code> (mapped to 502). This is intentional — better to fail fast than create invalid data. Microsoft’s ACL documentation calls this "maintaining data consistency over availability."</li>
+    <li><strong>The re-validation pattern:</strong> Even after the initial sync ACL gate, you may need to re-validate later. Our <code>ConfirmOrderUseCase</code> re-validates the customer before confirming — because the customer might have been deactivated between order creation and confirmation.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="11-create-with-acl">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">ACL</div>
+        <h2>Create with Cross-Domain Validation (ACL)</h2>
+        <p class="module-desc">Use case injects a validator interface (ACL port) alongside the repository. Validates upstream entity before proceeding.</p>
+      </div>
+      <span class="complexity l3">● Advanced</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">ACL Pattern: Validator Port + Repository</div><div class="spec-body">
+        <p>When a use case needs real-time validation from another bounded context, it uses an <strong>Anti-Corruption Layer (ACL)</strong>:</p>
+        <ul>
+          <li><strong>Abstract validator class:</strong> Defined in <code>application/interfaces/</code> (same level as repository interface)</li>
+          <li><strong>Injected into constructor:</strong> Alongside the repository</li>
+          <li><strong>Called before entity creation:</strong> Throws typed exceptions if validation fails</li>
+          <li><strong>Implementation lives in infrastructure:</strong> HTTP adapter in the service layer (not in the domain package)</li>
+        </ul>
+        <p><strong>The use case never knows about HTTP, URLs, or upstream types.</strong> It only knows the abstract validator contract.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">create-order.use-case.ts (with ACL)</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span>, <span class="ty">IEventPublisher</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
+<span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
+<span class="kw">import</span> { <span class="ty">OrderItem</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order-item.entity'</span>;
+<span class="kw">import</span> { OrderEventTypeEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+<span class="kw">import</span> { InvalidInputError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> CreateOrderInput {
+  customerId: <span class="ty">string</span>;
+  items: Array&lt;{
+    productId: <span class="ty">string</span>;
+    productName: <span class="ty">string</span>;
+    quantity: <span class="ty">number</span>;
+    price: <span class="ty">number</span>;
+  }&gt;;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> CreateOrderUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;CreateOrderInput, <span class="ty">Order</span>&gt; {
+  constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerValidator: <span class="ty">ICustomerValidator</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> eventPublisher: <span class="ty">IEventPublisher</span>&lt;unknown&gt;,
+  ) {}
+
+  <span class="kw">async</span> execute(input: CreateOrderInput): <span class="ty">Promise</span>&lt;<span class="ty">Order</span>&gt; {
+    <span class="kw">if</span> (!input.customerId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Customer ID is required'</span>);
+    }
+    <span class="kw">if</span> (!input.items || input.items.length === <span class="num">0</span>) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'At least one item is required'</span>);
+    }
+
+    <span class="com">// ACL gate check — throws if customer is invalid</span>
+    <span class="kw">await</span> <span class="kw">this</span>.customerValidator.validate(input.customerId);
+
+    <span class="com">// Create domain aggregate</span>
+    <span class="kw">const</span> order = <span class="ty">Order</span>.create({ customerId: input.customerId });
+    <span class="kw">for</span> (<span class="kw">const</span> itemInput <span class="kw">of</span> input.items) {
+      <span class="kw">const</span> item = <span class="ty">OrderItem</span>.create({
+        productId: itemInput.productId,
+        productName: itemInput.productName,
+        quantity: itemInput.quantity,
+        price: itemInput.price,
+      });
+      order.addItem(item);
+    }
+
+    <span class="com">// Persist</span>
+    <span class="kw">const</span> savedOrder = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+
+    <span class="com">// Publish domain event for async downstream processing</span>
+    <span class="kw">const</span> orderId = savedOrder.getOrderId();
+    <span class="kw">if</span> (orderId) {
+      <span class="kw">await</span> <span class="kw">this</span>.eventPublisher.publish({
+        eventType: OrderEventTypeEnum.ORDER_CREATED,
+        orderId,
+        customerId: input.customerId,
+        items: input.items,
+        occurredAt: <span class="kw">new</span> Date().toISOString(),
+      }, { groupId: orderId });
+    }
+
+    <span class="kw">return</span> savedOrder;
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ ICustomerValidator (ACL port)</span><span class="concept-pill">✦ Multiple constructor dependencies</span><span class="concept-pill">✦ ACL validates before entity creation</span><span class="concept-pill">✦ IEventPublisher for domain events</span><span class="concept-pill">✦ Aggregate root creation with children</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never import the upstream domain package — only use the local ACL interface.</li>
+    <li>The ACL validator throws domain-level exceptions — the use case does not wrap them.</li>
+    <li>Event publishing happens AFTER save — never publish before persistence succeeds.</li>
+    <li>The <code>groupId</code> on FIFO events ensures ordering per entity.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="12-aggregate-mutation">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Aggregate</div>
+        <h2>Aggregate Mutation (Child Entity Operations)</h2>
+        <p class="module-desc">Load the aggregate root, mutate children through root methods, persist entire aggregate in one save().</p>
+      </div>
+      <span class="complexity l3">● Advanced</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Aggregate Pattern: Load Root → Root.method(child) → save(root)</div><div class="spec-body">
+        <p>When a use case modifies child entities (e.g. OrderItems inside an Order), it always goes through the aggregate root:</p>
+        <ul>
+          <li><strong>Load aggregate root:</strong> <code>findById()</code> loads root + all children</li>
+          <li><strong>Create child entity:</strong> <code>ChildEntity.create({...})</code></li>
+          <li><strong>Add through root method:</strong> <code>root.addItem(child)</code> — root enforces status guard + duplicates</li>
+          <li><strong>Persist root:</strong> <code>save(root)</code> persists entire aggregate (including new children)</li>
+        </ul>
+        <p><strong>Never</strong> persist children independently — always go through the root.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">add-order-item.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
+<span class="kw">import</span> { <span class="ty">OrderItem</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order-item.entity'</span>;
+<span class="kw">import</span> { InvalidInputError, OrderNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> AddOrderItemInput {
+  orderId: <span class="ty">string</span>;
+  productId: <span class="ty">string</span>;
+  productName: <span class="ty">string</span>;
+  quantity: <span class="ty">number</span>;
+  price: <span class="ty">number</span>;
+}
+
+<span class="kw">export</span> <span class="kw">class</span> AddOrderItemUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;AddOrderItemInput, <span class="ty">Order</span>&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: AddOrderItemInput): <span class="ty">Promise</span>&lt;<span class="ty">Order</span>&gt; {
+    <span class="kw">if</span> (!input.orderId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Order ID is required'</span>);
+    }
+
+    <span class="com">// Load aggregate root (includes all children)</span>
+    <span class="kw">const</span> order = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.findById(input.orderId);
+    <span class="kw">if</span> (!order) {
+      <span class="kw">throw</span> <span class="kw">new</span> OrderNotFoundError(input.orderId);
+    }
+
+    <span class="com">// Create child entity via factory</span>
+    <span class="kw">const</span> item = <span class="ty">OrderItem</span>.create({
+      productId: input.productId,
+      productName: input.productName,
+      quantity: input.quantity,
+      price: input.price,
+    });
+
+    <span class="com">// Add through root method (enforces: must be DRAFT, no duplicates)</span>
+    order.addItem(item);
+
+    <span class="com">// Persist entire aggregate</span>
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Root loaded with children (findById)</span><span class="concept-pill">✦ Child created via own factory</span><span class="concept-pill">✦ Root method enforces add/remove rules</span><span class="concept-pill">✦ Single save() persists entire aggregate</span><span class="concept-pill">✦ Returns root (not child)</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never create a separate <code>IOrderItemRepository</code> — children are accessed through the root.</li>
+    <li>The root enforces status guards (DRAFT only) — the use case does not check status.</li>
+    <li>Always return the root entity so the Application Service can serialize the full aggregate.</li>
+    <li>If a child needs updating, load root → find child in root → call child method → save root.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="13-action-with-revalidation">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Revalidate</div>
+        <h2>Action with ACL Re-Validation</h2>
+        <p class="module-desc">Before confirming an order, re-validate that the customer is still active. Combines action + ACL patterns.</p>
+      </div>
+      <span class="complexity l3">● Advanced</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Re-Validation Pattern: Load → ACL Check → entity.action() → save()</div><div class="spec-body">
+        <p>Some state transitions require re-validating external state before proceeding:</p>
+        <ul>
+          <li><strong>Example:</strong> Confirming an order re-validates that the customer is still active</li>
+          <li><strong>Why:</strong> Time may have passed since creation — customer could have been deactivated</li>
+          <li><strong>Pattern:</strong> Same ACL validator injected + called between load and domain method</li>
+        </ul>
+        <p>The sequence is: <strong>Load entity → Extract upstream ID from entity → ACL validate → Domain action → Save</strong></p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">confirm-order.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { <span class="ty">ICustomerValidator</span> } <span class="kw">from</span> <span class="str">'../../interfaces/customer-validator.interface'</span>;
+<span class="kw">import</span> { <span class="ty">Order</span> } <span class="kw">from</span> <span class="str">'../../../domain/entities/order.entity'</span>;
+<span class="kw">import</span> { InvalidInputError, OrderNotFoundError } <span class="kw">from</span> <span class="str">'../../exceptions'</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> ConfirmOrderUseCase <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;<span class="ty">string</span>, <span class="ty">Order</span>&gt; {
+  constructor(
+    <span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>,
+    <span class="kw">private</span> <span class="kw">readonly</span> customerValidator: <span class="ty">ICustomerValidator</span>,
+  ) {}
+
+  <span class="kw">async</span> execute(orderId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">Order</span>&gt; {
+    <span class="kw">if</span> (!orderId) {
+      <span class="kw">throw</span> <span class="kw">new</span> InvalidInputError(<span class="str">'Order ID is required'</span>);
+    }
+
+    <span class="kw">const</span> order = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.findById(orderId);
+    <span class="kw">if</span> (!order) {
+      <span class="kw">throw</span> <span class="kw">new</span> OrderNotFoundError(orderId);
+    }
+
+    <span class="com">// Re-validate customer is still active before confirming</span>
+    <span class="com">// (time may have passed since order creation)</span>
+    <span class="kw">await</span> <span class="kw">this</span>.customerValidator.validate(order.getCustomerId());
+
+    <span class="com">// Domain entity enforces: must be DRAFT + has items + has payment</span>
+    order.confirmOrder();
+
+    <span class="kw">return</span> <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ ACL re-validation on critical transitions</span><span class="concept-pill">✦ Extract upstream ID from loaded entity</span><span class="concept-pill">✦ Two injected dependencies (repo + validator)</span><span class="concept-pill">✦ Domain method still owns the full rule set</span><span class="concept-pill">✦ Temporal consistency check</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Not all actions need re-validation — only transitions that depend on external state.</li>
+    <li>The ACL call adds latency — only use for critical business gates (not every status change).</li>
+    <li>If the ACL throws, the order stays in its current state (no half-transitions).</li>
+    <li>Ship/deliver/cancel typically do NOT re-validate — customer status is irrelevant at that point.</li></ul>
+</div>
+  </div>
+</section>
+
+<section class="module" id="14-batch-use-case">
+  <div class="module-inner">
+    <div class="module-header fade-in">
+      <div class="module-meta">
+        <div class="module-label">Batch</div>
+        <h2>Batch Processing Use Case</h2>
+        <p class="module-desc">Iterates through paginated results, applies domain logic to each entity, returns a summary. Used by event handlers.</p>
+      </div>
+      <span class="complexity l4">● Expert</span>
+    </div>
+
+    <div class="split fade-in">
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">📐</span>
+    <span class="title">Specification</span>
+    
+  </div>
+  <div class="panel-body "><div class="spec-title">Batch Pattern: Paginate → Filter → Mutate → Save → Summarize</div><div class="spec-body">
+        <p>Batch use cases process multiple entities in response to an event (e.g. product price change). They:</p>
+        <ul>
+          <li><strong>Paginate through results:</strong> Process page-by-page to avoid memory overflow</li>
+          <li><strong>Filter in-memory:</strong> Only mutate entities in the correct state (e.g. DRAFT orders only)</li>
+          <li><strong>Save individually:</strong> Each entity is persisted separately (no bulk transaction)</li>
+          <li><strong>Return summary:</strong> Custom output (e.g. list of affected IDs)</li>
+        </ul>
+        <p><strong>Used by event handlers</strong> when a domain event from another bounded context affects multiple entities in this domain.</p>
+      </div></div>
+</div>
+      <div class="panel">
+  <div class="panel-header">
+    <span class="icon">💻</span>
+    <span class="title">Implementation</span>
+    <span class="subtitle">update-item-latest-price.use-case.ts</span>
+  </div>
+  <div class="panel-body code-body"><pre><code><span class="kw">import</span> { <span class="ty">IUseCase</span> } <span class="kw">from</span> <span class="str">'@old-st/common'</span>;
+<span class="kw">import</span> { <span class="ty">IOrderRepository</span> } <span class="kw">from</span> <span class="str">'../../interfaces/order-repository.interface'</span>;
+<span class="kw">import</span> { OrderStatusEnum } <span class="kw">from</span> <span class="str">'../../../domain/constants'</span>;
+
+<span class="kw">export</span> <span class="kw">interface</span> UpdateItemLatestPriceInput {
+  productId: <span class="ty">string</span>;
+  newPrice: <span class="ty">number</span>;
+}
+
+<span class="kw">export</span> <span class="kw">interface</span> UpdateItemLatestPriceOutput {
+  updatedOrderIds: <span class="ty">string</span>[];
+}
+
+<span class="kw">export</span> <span class="kw">class</span> UpdateItemLatestPriceUseCase
+  <span class="kw">implements</span> <span class="ty">IUseCase</span>&lt;UpdateItemLatestPriceInput, UpdateItemLatestPriceOutput&gt; {
+  constructor(<span class="kw">private</span> <span class="kw">readonly</span> orderRepository: <span class="ty">IOrderRepository</span>) {}
+
+  <span class="kw">async</span> execute(input: UpdateItemLatestPriceInput): <span class="ty">Promise</span>&lt;UpdateItemLatestPriceOutput&gt; {
+    <span class="kw">const</span> updatedOrderIds: <span class="ty">string</span>[] = [];
+    <span class="kw">let</span> currentPage = <span class="num">1</span>;
+    <span class="kw">const</span> pageSize = <span class="num">50</span>;
+    <span class="kw">let</span> hasMore = true;
+
+    while (hasMore) {
+      <span class="kw">const</span> result = <span class="kw">await</span> <span class="kw">this</span>.orderRepository.findByProductId(
+        input.productId, currentPage, pageSize,
+      );
+
+      <span class="kw">for</span> (<span class="kw">const</span> order <span class="kw">of</span> result.data) {
+        <span class="com">// Only update DRAFT orders — confirmed+ orders have frozen prices</span>
+        <span class="kw">if</span> (order.getOrderStatus() !== OrderStatusEnum.DRAFT) {
+          <span class="kw">continue</span>;
+        }
+
+        <span class="kw">let</span> modified = false;
+        <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> order.getItems()) {
+          <span class="kw">if</span> (item.getProductId() === input.productId) {
+            item.updateLatestKnownPrice(input.newPrice);
+            modified = true;
+          }
+        }
+
+        <span class="kw">if</span> (modified) {
+          <span class="kw">await</span> <span class="kw">this</span>.orderRepository.save(order);
+          <span class="kw">const</span> orderId = order.getOrderId();
+          <span class="kw">if</span> (orderId) updatedOrderIds.push(orderId);
+        }
+      }
+
+      hasMore = currentPage &lt; result.totalPages;
+      currentPage++;
+    }
+
+    <span class="kw">return</span> { updatedOrderIds };
+  }
+}</code></pre></div>
+</div>
+    </div>
+
+    <div class="concepts fade-in"><span class="concept-pill">✦ Custom Input + Output interfaces</span><span class="concept-pill">✦ Page-by-page iteration</span><span class="concept-pill">✦ In-memory status filtering</span><span class="concept-pill">✦ Individual save per entity</span><span class="concept-pill">✦ Summary return for logging/auditing</span></div>
+    <div class="pitfalls">
+  <div class="pitfalls-title">⚠️ Common Pitfalls</div>
+  <ul><li>Never load ALL pages into memory — process one page at a time.</li>
+    <li>Use domain constants for status checks: <code>OrderStatusEnum.DRAFT</code> not <code>"DRAFT"</code>.</li>
+    <li>Track which entities were modified for downstream reporting / event emission.</li>
+    <li>Batch use cases can be slow — suitable for async event handlers, not synchronous HTTP.</li></ul>
+</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  // Theme
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  const stored = localStorage.getItem('theme');
+  if (stored) html.setAttribute('data-theme', stored);
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches) html.setAttribute('data-theme', 'dark');
+  toggle.textContent = html.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+  toggle.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    toggle.textContent = next === 'dark' ? '☀️' : '🌙';
+  });
+
+  // Hamburger
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+  // Scroll progress
+  const bar = document.getElementById('scrollProgress');
+  const nav = document.getElementById('topNav');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = h > 0 ? (window.scrollY / h * 100) + '%' : '0%';
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  // Active nav link
+  const sections = document.querySelectorAll('.module[id]');
+  const links = document.querySelectorAll('.nav-links a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+
+  // Fade-in
+  const fadeObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => fadeObs.observe(el));
+})();
+</script>
+</body>
+</html>

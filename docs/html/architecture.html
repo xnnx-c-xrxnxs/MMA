@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Architecture — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html" class="active">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Clean Architecture</h1>
+      <p class="subtitle">
+        How the layers are organized, what each layer owns, and the rules that keep boundaries clean across every service.
+      </p>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Layer Hierarchy</h2>
+
+      <p>
+        Every service in this monorepo follows the same four-layer architecture.
+        Dependencies flow <strong>inward only</strong> — outer layers depend on inner layers, never the reverse.
+      </p>
+
+      <div class="mermaid">
+graph TB
+  subgraph "Presentation Layer"
+    A["NestJS Controllers<br/>Pipes · Filters"]
+  end
+  subgraph "Application Layer"
+    B["Application Services<br/>(orchestration + DTO mapping)"]
+  end
+  subgraph "Domain Layer"
+    C["Use Cases<br/>(single-purpose operations)"]
+    D["Domain Entities<br/>(business rules + invariants)"]
+  end
+  subgraph "Infrastructure Layer"
+    E["Repositories<br/>(DynamoDB / Prisma)"]
+    F["External Clients<br/>(ACL adapters)"]
+  end
+
+  A --> B
+  B --> C
+  C --> D
+  C --> E
+  C --> F
+  E --> D
+
+  style A fill:#dbeafe,stroke:#2563eb,color:#1e40af
+  style B fill:#e0e7ff,stroke:#4f46e5,color:#3730a3
+  style C fill:#dcfce7,stroke:#16a34a,color:#166534
+  style D fill:#dcfce7,stroke:#16a34a,color:#166534
+  style E fill:#fef3c7,stroke:#d97706,color:#92400e
+  style F fill:#fef3c7,stroke:#d97706,color:#92400e
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Layer Responsibilities</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Owns</th>
+            <th>Must NOT</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Presentation</strong></td>
+            <td>HTTP routing, Zod validation (pipes), error-to-HTTP mapping (filters), Swagger decorators</td>
+            <td>Call use cases directly, contain business logic, return domain entities</td>
+            <td><code>apps/{domain}/{service}/src/presentation/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Application</strong></td>
+            <td>Orchestration across use cases, entity → DTO mapping via <code>schema.parse()</code>, event publishing coordination</td>
+            <td>Contain business rules, access the database, know about HTTP or NestJS decorators</td>
+            <td><code>apps/{domain}/{service}/src/application/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Domain (Use Cases)</strong></td>
+            <td>Single-purpose operations — one use case per action (create, activate, cancel…)</td>
+            <td>Know about HTTP, DTOs, contracts, or specific DB technology</td>
+            <td><code>packages/{domain}-domain/src/application/use-cases/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Domain (Entities)</strong></td>
+            <td>Business rules, invariants, state transitions, validation guards</td>
+            <td>Import NestJS, contracts, infrastructure, or any framework code</td>
+            <td><code>packages/{domain}-domain/src/domain/entities/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Infrastructure</strong></td>
+            <td>Repository implementations, DB schemas, ACL HTTP adapters, config</td>
+            <td>Add business logic, expose domain entities to the outside, decide business outcomes</td>
+            <td><code>packages/{domain}-domain/src/infrastructure/</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>The dependency rule</strong>
+        Inner layers define interfaces (e.g., <code>IOrderRepository</code>). Outer layers provide implementations
+        (e.g., <code>PrismaOrderRepository</code>). This is dependency inversion — the domain dictates the contract,
+        infrastructure fulfills it.
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Request Lifecycle</h2>
+
+      <p>
+        Trace a real request through the layers — <code>POST /orders</code> (create an order):
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    A["Client<br/>POST /orders { customerId, items }"] --> B["ZodValidationPipe<br/>createOrderInputSchema.parse(body)"]
+    B -->|"Typed CreateOrderInput"| C["OrderController<br/>(Presentation)"]
+    C --> D["OrderApplicationService<br/>(Application)"]
+    D --> E["CreateOrderUseCase<br/>(Domain)"]
+
+    E --> F["ICustomerValidator.validate(customerId)<br/>(ACL Port)"]
+    F --> G["UserApiClient → GET /users/:id<br/>(Infrastructure — 5s timeout)"]
+    G -->|"ValidatedCustomer"| E
+
+    E --> H["Order.create({ customerId })<br/>→ status: DRAFT"]
+    H --> I["order.addItem(item)<br/>for each item"]
+    I --> J["IOrderRepository.save(order)<br/>(Port)"]
+    J --> K["PrismaOrderRepository<br/>$transaction → INSERT order + items<br/>(Infrastructure → PostgreSQL)"]
+    K -->|"Order entity"| E
+
+    E --> L["IEventPublisher.publish<br/>ORDER_CREATED event → SQS"]
+    L --> M["Use case returns Order entity"]
+    M --> N["AppService: orderResponseSchema.parse()<br/>Entity → DTO"]
+    N --> O["Controller returns<br/>201 { orderId, status: DRAFT }"]
+
+    style A fill:#f3e8ff,stroke:#7c3aed
+    style B fill:#fef3c7,stroke:#d97706
+    style C fill:#fef3c7,stroke:#d97706
+    style D fill:#dbeafe,stroke:#2563eb
+    style E fill:#dcfce7,stroke:#16a34a
+    style F fill:#dcfce7,stroke:#16a34a
+    style G fill:#fef3c7,stroke:#d97706
+    style H fill:#dcfce7,stroke:#16a34a
+    style I fill:#dcfce7,stroke:#16a34a
+    style J fill:#dcfce7,stroke:#16a34a
+    style K fill:#fef3c7,stroke:#d97706
+    style L fill:#dcfce7,stroke:#16a34a
+    style N fill:#dbeafe,stroke:#2563eb
+    style O fill:#fef3c7,stroke:#d97706
+      </div>
+
+      <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted);">
+        <span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border:1px solid #d97706;border-radius:2px;vertical-align:middle;"></span> Presentation / Infrastructure &nbsp;
+        <span style="display:inline-block;width:12px;height:12px;background:#dbeafe;border:1px solid #2563eb;border-radius:2px;vertical-align:middle;"></span> Application &nbsp;
+        <span style="display:inline-block;width:12px;height:12px;background:#dcfce7;border:1px solid #16a34a;border-radius:2px;vertical-align:middle;"></span> Domain &nbsp;
+        <span style="display:inline-block;width:12px;height:12px;background:#f3e8ff;border:1px solid #7c3aed;border-radius:2px;vertical-align:middle;"></span> Client
+      </p>
+
+      <h3>Key observations from this flow</h3>
+
+      <ul>
+        <li><strong>Controller → Application Service → Use Case</strong> — the controller never calls the use case directly.</li>
+        <li><strong>Zod validation happens first</strong> — invalid input is rejected before hitting any business logic.</li>
+        <li><strong>The ACL call is transparent to the use case</strong> — it calls <code>ICustomerValidator.validate()</code>, unaware that an HTTP call is happening under the hood.</li>
+        <li><strong>The entity enforces invariants</strong> — <code>Order.create()</code> throws <code>CustomerIdRequiredError</code> if the customerId is empty.</li>
+        <li><strong>The repository interface is the boundary</strong> — the use case calls <code>save()</code> on <code>IOrderRepository</code>, unaware of Prisma or PostgreSQL.</li>
+        <li><strong>DTO mapping uses Zod</strong> — the application service calls <code>schema.parse()</code> to transform the entity into a type-safe DTO. No <code>toObject()</code> methods on entities.</li>
+        <li><strong>Event publishing happens in the use case</strong> — <code>ORDER_CREATED</code> is published as part of the domain operation, keeping it self-contained.</li>
+      </ul>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Golden Rules</h2>
+
+      <p>These rules are enforced across every service. They exist to prevent architectural drift as the codebase grows.</p>
+
+      <h3>Layer Boundaries</h3>
+      <ol>
+        <li><strong>Controllers never call use cases directly.</strong> Application Services always sit between the controller and the domain.</li>
+        <li><strong>Application Services are always present</strong> — even for simple pass-through operations. This keeps the architecture consistent and provides a stable DTO mapping point.</li>
+        <li><strong>Use Cases return domain entities.</strong> The Application Service transforms them to DTOs.</li>
+        <li><strong>Application Services transform entities to DTOs</strong> using Zod <code>schema.parse()</code> from the contracts package.</li>
+        <li><strong>Domain layer has zero dependencies on contracts or NestJS.</strong> Entities are pure TypeScript classes.</li>
+      </ol>
+
+      <h3>Domain Purity</h3>
+      <ol start="6">
+        <li><strong>Infrastructure implements repository interfaces</strong> and does not add business logic.</li>
+        <li><strong>Zod validation lives in the presentation layer</strong> (pipes, DTO parsing) and the contracts package.</li>
+        <li><strong>Domain constants are the single source of truth</strong> — <code>UserStatusEnum</code>, <code>ProductStatusEnum</code>, <code>OrderStatusEnum</code>. Never hardcode string literals like <code>'PENDING'</code> or <code>'ACTIVE'</code>.</li>
+        <li><strong>Entity timestamps are <code>dateCreated</code> + <code>updatedAt</code> only.</strong> Never add a <code>createdAt</code> field to entities.</li>
+        <li><strong>Never add <code>toObject()</code> to entities.</strong> Serialization is handled by the Application Service → Zod parse pipeline.</li>
+      </ol>
+
+      <h3>Error Handling</h3>
+      <ol start="11">
+        <li><strong>Typed domain exceptions map to HTTP errors</strong> via <code>DomainExceptionFilter</code>. Domain errors → 404/409, application errors → 400, unexpected → 500.</li>
+        <li><strong>Never trust userId from client input.</strong> Authentication context determines the current user.</li>
+      </ol>
+
+      <h3>Cross-Domain</h3>
+      <ol start="13">
+        <li><strong>Never import from the bare <code>@old-st/contracts</code> root.</strong> Always use domain-scoped subpath imports: <code>@old-st/contracts/user</code>, <code>@old-st/contracts/order</code>, etc.</li>
+        <li><strong>Synchronous cross-service calls must use an ACL.</strong> The consuming domain defines an abstract validator interface; the infrastructure layer provides the HTTP adapter.</li>
+        <li><strong>Cross-domain event consumers import from the publishing domain's contracts only</strong> — never from its domain package.</li>
+      </ol>
+
+      <h3>Persistence</h3>
+      <ol start="16">
+        <li><strong>Prisma domains use offset pagination; DynamoDB domains use cursor pagination.</strong> Never mix within a domain.</li>
+        <li><strong>Prisma schema enums must mirror domain constants exactly.</strong> The domain constants are the single source of truth.</li>
+        <li><strong>The Prisma client is infrastructure-only.</strong> Domain and application layers never import from <code>@prisma/client</code>.</li>
+      </ol>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Where Code Lives</h2>
+
+      <p>Every domain follows the same split between the <strong>domain package</strong> (business logic, framework-free) and the <strong>service app</strong> (NestJS, HTTP/SQS handling):</p>
+
+      <h3>Domain Package</h3>
+      <pre><code>packages/{domain}-domain/src/
+  domain/
+    entities/          ← Entity class (business rules + invariants)
+    constants/         ← Status enums, event types
+    exceptions/        ← Domain errors (map to 404/409)
+  application/
+    use-cases/         ← One class per operation
+    interfaces/        ← Repository interface, ACL validators
+    exceptions/        ← Application errors (map to 400)
+  infrastructure/
+    schemas/           ← DynamoDB OneTable schema (DynamoDB domains)
+    prisma/            ← Prisma schema + migrations (Prisma domains)
+    repositories/      ← Repository implementation</code></pre>
+
+      <h3>Service App (HTTP API)</h3>
+      <pre><code>apps/{domain}/{service}/src/
+  presentation/
+    controllers/       ← NestJS controllers (routes + Swagger)
+    pipes/             ← ZodValidationPipe
+    filters/           ← DomainExceptionFilter
+  application/
+    services/          ← Application Service (orchestration + DTO mapping)
+  infrastructure/
+    config/            ← DynamoDBConfig or PrismaConfig
+    clients/           ← ACL HTTP adapters (optional)
+  modules/
+    {domain}.module.ts ← NestJS module wiring</code></pre>
+
+      <h3>Service App (SQS Consumer)</h3>
+      <pre><code>apps/{domain}/{service}/src/
+  application/
+    interfaces/        ← NormalizedSqsRecord
+    services/          ← Event handler service (switch dispatch)
+      handlers/        ← Per-event handler classes
+  infrastructure/
+    config/            ← DynamoDBConfig or PrismaConfig
+    sqs/               ← SqsLocalService (local polling)
+  modules/
+    {domain}.module.ts ← NestJS module wiring (no controllers)</code></pre>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="domains.html">Bounded Contexts</a> — see how each domain models its entity, state machine, and business rules.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

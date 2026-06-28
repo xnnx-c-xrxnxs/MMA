@@ -1,0 +1,10 @@
+{
+  "name": "@old-st/mobile-ui",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "description": "Shared React Native UI component library",
+  "dependencies": {
+    "@old-st/design-tokens": "workspace:*"
+  }
+}

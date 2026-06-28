@@ -1,0 +1,18 @@
+{
+  "name": "@old-st/monitoring-sdk",
+  "version": "1.0.0",
+  "description": "Platform-agnostic monitoring interfaces with AWS CloudWatch + X-Ray implementations. Consumed by monitoring-api-service.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.0.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.0.0",
+    "@aws-sdk/client-lambda": "^3.1032.0",
+    "@aws-sdk/client-sqs": "^3.997.0",
+    "@aws-sdk/client-xray": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

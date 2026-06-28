@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "eslint-plugin",
+  "sourceRoot": "packages/eslint-plugin/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util"]
+}

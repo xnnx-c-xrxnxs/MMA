@@ -1,0 +1,74 @@
+name: CI - Test Affected Services
+
+# Runs unit + integration tests only for projects touched by this PR.
+# Uses `nx affected` — new domains are covered automatically with zero changes here.
+
+on:
+  pull_request:
+    paths-ignore:
+      - "examples/**"
+    branches: [main, develop]
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  test-affected:
+    name: Test Affected (Unit + Integration)
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack:3.8
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb,sqs
+          DYNAMODB_SHARE_DB: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 15s
+
+      # When adding a Prisma-backed domain, add a postgres service container here
+      # and set the corresponding {DOMAIN}_DATABASE_URL env var on the test step below.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients (Linux binaries)
+        run: pnpm prisma:generate:all
+
+      - name: Derive SHAs for nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Run affected tests (unit + integration) with coverage
+        # --coverage enforces each project's jest.config coverageThreshold.
+        # domain packages fail at < 80%; service apps fail at < 70%.
+        run: pnpm nx affected --target=test --coverage --parallel=3
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          # When adding a Prisma-backed domain, add its {DOMAIN}_DATABASE_URL here
+          # and re-enable the postgres service container above.

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event-Driven (SQS) — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html" class="active">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Event-Driven Architecture (SQS)</h1>
+      <p class="subtitle">
+        How SQS event-driven services consume messages from queues, with two runtime modes (local polling
+        and AWS Lambda) sharing a single dispatcher.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Two Runtime Modes, One Codebase</h2>
+
+      <p>
+        Each event handler service ships as <strong>one codebase</strong> that runs in two different environments.
+        The entry point (<code>main.ts</code>) branches on <code>STAGE=local</code>:
+      </p>
+
+      <div class="mermaid">
+flowchart TB
+    subgraph main.ts
+        Check{"STAGE === 'local'?"}
+    end
+
+    subgraph LocalMode["Local Mode (Development)"]
+        Boot1[bootstrap NestJS context]
+        SLS[SqsLocalService]
+        Poll["pollQueue() — long-poll<br/>ReceiveMessage → process → DeleteMessage"]
+    end
+
+    subgraph LambdaMode["Lambda Mode (Production)"]
+        Boot2[bootstrap NestJS context]
+        LH["handler(event) — SQS trigger<br/>normalize Records → dispatch"]
+    end
+
+    Check -->|Yes| Boot1
+    Boot1 --> SLS
+    SLS --> Poll
+    Check -->|No| Boot2
+    Boot2 --> LH
+
+    style Check fill:#fef3c7,stroke:#d97706
+    style LocalMode fill:#dbeafe,stroke:#2563eb
+    style LambdaMode fill:#dcfce7,stroke:#16a34a
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Aspect</th><th>Local (<code>STAGE=local</code>)</th><th>Production (Lambda)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Entry point</td>
+            <td><code>SqsLocalService.pollQueue()</code></td>
+            <td><code>export const handler</code></td>
+          </tr>
+          <tr>
+            <td>SQS client</td>
+            <td>Inline <code>SQSClient</code> → LocalStack</td>
+            <td>AWS-managed Lambda SQS trigger</td>
+          </tr>
+          <tr>
+            <td>Message delivery</td>
+            <td>Long-polling (<code>WaitTimeSeconds: 20</code>)</td>
+            <td>Lambda batched trigger</td>
+          </tr>
+          <tr>
+            <td>Normalization</td>
+            <td><code>Message</code> → <code>NormalizedSqsRecord</code></td>
+            <td><code>SQSRecord</code> → <code>NormalizedSqsRecord</code></td>
+          </tr>
+          <tr>
+            <td>Dispatch</td>
+            <td><code>handleRecords(records)</code></td>
+            <td>Same — identical code path</td>
+          </tr>
+          <tr>
+            <td>Message deletion</td>
+            <td>Explicit <code>DeleteMessageCommand</code> after success</td>
+            <td>Lambda auto-deletes on success</td>
+          </tr>
+          <tr>
+            <td>Error handling</td>
+            <td>Message stays in queue (no delete)</td>
+            <td>Lambda retries / sends to DLQ</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Message Processing Pipeline</h2>
+
+      <p>Once a message is received (regardless of runtime mode), it flows through the same pipeline:</p>
+
+      <div class="mermaid">
+flowchart TD
+    Q["SQS Queue"]:::purple
+    N["Normalizer\n(main.ts or SqsLocalService)"]:::yellow
+    EH["EventHandlerService"]:::blue
+
+    Q -->|"raw message"| N
+    N -->|"extract body, messageId,\nreceiptHandle"| EH
+
+    EH --> LOOP["For each NormalizedSqsRecord"]
+
+    LOOP --> P1["JSON.parse(record.body)"]:::blue
+    P1 --> P2["domainEventSchema.safeParse(payload)"]:::blue
+    P2 --> V{"Valid?"}
+    V -->|"No"| SKIP["Log error, skip record"]:::red
+    V -->|"Yes"| SW["switch(payload.eventType)"]:::blue
+    SW --> H["Route to per-type handler\nhandler.handle(payload, messageId)"]:::green
+
+    H --> DONE["All records processed"]:::green
+    SKIP --> DONE
+    DONE -->|"local only"| DEL["DeleteMessage from queue"]:::green
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Key Components</h2>
+
+      <h3>NormalizedSqsRecord (Type Boundary)</h3>
+
+      <p>
+        The <code>NormalizedSqsRecord</code> interface is the <strong>type boundary</strong> between the
+        infrastructure layer (AWS SDK types) and the application layer (pure TypeScript):
+      </p>
+
+      <pre><code>// application/interfaces/normalized-sqs-record.interface.ts
+export interface NormalizedSqsRecord {
+  body: string;
+  messageId?: string;
+  receiptHandle?: string;
+}</code></pre>
+
+      <p>
+        Both the Lambda handler and <code>SqsLocalService</code> normalize their respective message types
+        into this interface before passing to the event handler service. This means the application layer
+        has <strong>zero AWS SDK dependencies</strong>.
+      </p>
+
+      <h3>IEventHandler (Per-Event Contract)</h3>
+
+      <pre><code>// application/interfaces/event-handler.interface.ts
+export interface IEventHandler&lt;TPayload&gt; {
+  handle(payload: TPayload, messageId?: string): Promise&lt;void&gt;;
+}</code></pre>
+
+      <p>Each event type gets its own handler class implementing this interface.</p>
+
+      <h3>Event Handler Application Service (Dispatcher)</h3>
+
+      <p>The application service owns the dispatch logic — parse, switch, delegate:</p>
+
+      <pre><code>// application/services/user-event-handler.service.ts
+@Injectable()
+export class UserEventHandlerService {
+  constructor(
+    private readonly userDeletedHandler: UserDeletedHandler,
+  ) {}
+
+  async handleRecords(records: NormalizedSqsRecord[]): Promise&lt;void&gt; {
+    for (const record of records) {
+      await this.processRecord(record);
+    }
+  }
+
+  private async processRecord(record: NormalizedSqsRecord): Promise&lt;void&gt; {
+    const parseResult = userDomainEventSchema.safeParse(
+      JSON.parse(record.body)
+    );
+
+    if (!parseResult.success) {
+      this.logger.error('Invalid event shape', parseResult.error.issues);
+      return;  // skip — don't throw, don't requeue
+    }
+
+    switch (parseResult.data.eventType) {
+      case UserEventTypeEnum.USER_DELETED:
+        await this.userDeletedHandler.handle(
+          parseResult.data, record.messageId
+        );
+        break;
+      default:
+        this.logger.warn(`Unhandled event type: ${...}`);
+    }
+  }
+}</code></pre>
+
+      <div class="callout info">
+        <strong>Parse failures skip, handler failures rethrow.</strong>
+        If the Zod parse fails (unknown event shape), the record is logged and skipped — it won't requeue
+        forever. If a handler throws, the error propagates up so the message is <em>not</em> deleted (local) or
+        retried by Lambda (production).
+      </div>
+
+      <h3>SqsLocalService (Local Polling)</h3>
+
+      <p>
+        <code>SqsLocalService</code> is an <code>@Injectable()</code> NestJS service that polls LocalStack SQS
+        in an infinite loop. It only runs when <code>STAGE=local</code>:
+      </p>
+
+      <pre><code>// infrastructure/sqs/sqs-local.service.ts
+@Injectable()
+export class SqsLocalService {
+  private readonly sqsClient = new SQSClient({
+    region: process.env.DEFAULT_REGION || 'us-east-1',
+    endpoint: process.env.LOCALSTACK_ENDPOINT,
+    credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+  });
+
+  constructor(
+    private readonly eventHandler: UserEventHandlerService,
+  ) {}
+
+  async pollQueue(): Promise&lt;void&gt; {
+    const queueUrl = process.env.USERS_SQS_QUEUE_URL;
+    while (true) {
+      const { Messages } = await this.sqsClient.send(
+        new ReceiveMessageCommand({
+          QueueUrl: queueUrl,
+          MaxNumberOfMessages: 10,
+          WaitTimeSeconds: 20,
+        })
+      );
+      for (const msg of Messages ?? []) {
+        await this.processMessage(msg, queueUrl);
+      }
+    }
+  }
+
+  // Normalize → dispatch → delete on success
+  private async processMessage(msg: Message, queueUrl: string) {
+    const normalized: NormalizedSqsRecord = {
+      body: msg.Body ?? '',
+      messageId: msg.MessageId,
+      receiptHandle: msg.ReceiptHandle,
+    };
+    await this.eventHandler.handleRecords([normalized]);
+    await this.sqsClient.send(
+      new DeleteMessageCommand({
+        QueueUrl: queueUrl,
+        ReceiptHandle: msg.ReceiptHandle,
+      })
+    );
+  }
+}</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Publishing Events</h2>
+
+      <p>
+        The publishing side lives in a different service (typically the HTTP API service). It uses
+        the <code>@old-st/aws-sqs</code> library:
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph IFACE ["Interface"]
+        IEP["IEventPublisher&lt;T&gt;\n«interface»\npublish(event: T, options?): Promise&lt;void&gt;"]:::purple
+    end
+
+    IEP -->|"implements"| STD
+    IEP -->|"implements"| FIFO
+
+    subgraph IMPL ["Implementations"]
+        STD["SqsStandardEventPublisher&lt;T&gt;\n• sqsClient: SQSClient\n• queueUrl: string\n• Fire-and-forget, no dedup"]:::blue
+        FIFO["SqsFifoEventPublisher&lt;T&gt;\n• sqsClient: SQSClient\n• queueUrl: string\n• Requires groupId\n• Auto SHA-256 dedup"]:::yellow
+    end
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Publisher</th><th>Queue Type</th><th>Key Requirement</th><th>Deduplication</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>SqsStandardEventPublisher</code></td>
+            <td>Standard</td>
+            <td>None (fire-and-forget)</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td><code>SqsFifoEventPublisher</code></td>
+            <td>FIFO</td>
+            <td><code>options.groupId</code> required</td>
+            <td>SHA-256 of body (auto) or explicit <code>deduplicationId</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Publisher Wiring in NestJS Module</h3>
+
+      <p>
+        The publisher is injected into use cases via a token. The module factory creates the right
+        client based on <code>STAGE</code>:
+      </p>
+
+      <pre><code>// In the NestJS module:
+const EVENT_PUBLISHER = 'EVENT_PUBLISHER';
+
+{
+  provide: EVENT_PUBLISHER,
+  useFactory: () => {
+    const queueUrl = process.env.{DOMAIN}_SQS_QUEUE_URL;
+    const client = process.env.STAGE === 'local'
+      ? createLocalSqsClient()
+      : createAwsSqsClient();
+    return new SqsStandardEventPublisher(client, queueUrl);
+  },
+},
+
+// Use case receives it via factory:
+{
+  provide: CreateOrderUseCase,
+  useFactory: (repo, validator, publisher) =>
+    new CreateOrderUseCase(repo, validator, publisher),
+  inject: [ORDER_REPOSITORY, ICustomerValidator, EVENT_PUBLISHER],
+},</code></pre>
+
+      <div class="callout warning">
+        <strong>Event publishing happens in the use case, not the application service.</strong>
+        This keeps the use case self-contained — it owns the complete operation (persist + publish)
+        rather than splitting responsibility across layers.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Service Layout (Event Handler)</h2>
+
+      <p>Event handler services have no HTTP server, no controllers, no Swagger:</p>
+
+      <pre><code>apps/{domain}/{domain}-event-handler-service/
+  src/
+    main.ts                              ← dual-mode entry (local + Lambda)
+    app/
+      app.module.ts                      ← root module
+    application/
+      interfaces/
+        normalized-sqs-record.interface.ts  ← type boundary
+        event-handler.interface.ts          ← IEventHandler&lt;T&gt;
+      services/
+        {domain}-event-handler.service.ts   ← dispatch: parse → switch → delegate
+        handlers/
+          {event-name}.handler.ts           ← one class per event type
+          index.ts                          ← barrel export
+    infrastructure/
+      config/                            ← optional (DynamoDB/Prisma if domain writes)
+      sqs/
+        sqs-local.service.ts             ← LocalStack polling (STAGE=local only)
+    modules/
+      {domain}.module.ts                 ← providers: handlers + event service + SqsLocalService</code></pre>
+
+      <p>Key differences from HTTP API services:</p>
+
+      <ul>
+        <li>No <code>presentation/</code> folder (no controllers, pipes, or filters).</li>
+        <li>No port registration — event handlers don't listen on HTTP.</li>
+        <li>No Swagger — no <code>@nestjs/swagger</code> dependency.</li>
+        <li><code>main.ts</code> uses <code>NestFactory.createApplicationContext()</code> instead of <code>NestFactory.create()</code>.</li>
+        <li>Module has no <code>controllers:</code> array.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CorrelationId Propagation</h2>
+
+      <p>
+        Every event carries a <code>correlationId</code> that links the originating HTTP request
+        to all downstream processing — including synchronous cross-service HTTP calls (ACL validation)
+        and asynchronous SQS event handlers. This enables end-to-end request tracing across
+        all service boundaries without depending on X-Ray.
+      </p>
+
+      <div class="mermaid">
+sequenceDiagram
+    participant Client
+    participant API as API Service
+    participant MW as correlationMiddleware()
+    participant ACL as ACL Adapter (HTTP)
+    participant Upstream as Upstream API Service
+    participant SQS as SQS Publisher
+    participant Queue as SQS Queue
+    participant EH as Event Handler
+
+    Client->>API: POST /api/orders
+    API->>MW: generates correlationId (UUID)
+    Note over MW: stored in AsyncLocalStorage
+    API->>ACL: customerValidator.validate(id)
+    Note over ACL: getCorrelationHeaders()<br/>→ x-correlation-id header
+    ACL->>Upstream: GET /api/users/:id
+    Note over Upstream: correlationMiddleware()<br/>reuses x-correlation-id
+    Upstream-->>ACL: 200 OK (validated)
+    API->>SQS: publish({ eventType, ... })
+    Note over SQS: auto-injects correlationId<br/>from getCorrelationId()
+    SQS->>Queue: { eventType, correlationId, ... }
+    Queue->>EH: receive message
+    Note over EH: extracts correlationId<br/>from raw JSON body
+    EH->>EH: runWithCorrelationId(id, () => process())
+    Note over EH: all log lines now carry<br/>the same correlationId
+      </div>
+
+      <h3>How It Works</h3>
+      <ol>
+        <li><strong>HTTP request</strong> — <code>correlationMiddleware()</code> generates a UUID and stores it in <code>AsyncLocalStorage</code>. If <code>x-correlation-id</code> header is present, it reuses that value instead.</li>
+        <li><strong>Logger</strong> — <code>createLogger()</code> automatically reads the correlationId from <code>AsyncLocalStorage</code> and includes it in every log line.</li>
+        <li><strong>ACL adapter (cross-service HTTP call)</strong> — <code>getCorrelationHeaders()</code> returns <code>{ 'x-correlation-id': id }</code> which is spread into outbound request headers. The receiving service's <code>correlationMiddleware()</code> reuses the incoming header, so all logs on both sides share the same correlationId.</li>
+        <li><strong>SQS publisher</strong> — <code>SqsStandardEventPublisher</code> / <code>SqsFifoEventPublisher</code> calls <code>getCorrelationId()</code> and merges it into the event body before <code>JSON.stringify</code>. No manual code needed.</li>
+        <li><strong>Event handler</strong> — extracts <code>correlationId</code> from the raw message body (before Zod parsing), then wraps <code>processRecord()</code> in <code>runWithCorrelationId()</code>. All log lines inside the handler carry the same correlationId as the original HTTP request.</li>
+      </ol>
+
+      <h3>Event Schema Requirement</h3>
+      <p>
+        All event schemas must include <code>correlationId: z.string().optional()</code> so the
+        auto-injected field passes Zod validation on the consumer side. The field is optional because
+        events published outside of an HTTP request context (e.g. from a migration script) won't have one.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Adding a New Event Type</h2>
+
+      <ol>
+        <li><strong>Domain constants</strong> — add the event type to the domain's event type enum (e.g., <code>UserEventTypeEnum</code>).</li>
+        <li><strong>Event schema</strong> — add a Zod schema in <code>contracts/src/{domain}/event-schemas.ts</code> and include it in the discriminated union.</li>
+        <li><strong>Handler class</strong> — create <code>handlers/{event-name}.handler.ts</code> implementing <code>IEventHandler&lt;T&gt;</code>.</li>
+        <li><strong>Wire</strong> — inject the handler into the event handler service constructor, add the <code>case</code> to the switch, register in the module.</li>
+        <li><strong>Publisher</strong> — in the API service's use case, call <code>publisher.publish({ eventType, ... })</code>.</li>
+      </ol>
+
+      <h2>Adding a New Event Handler Service</h2>
+
+      <ol>
+        <li>Create the folder structure under <code>apps/{domain}/{domain}-event-handler-service/</code>.</li>
+        <li>Create <code>main.ts</code> with the dual-mode pattern (local polling + Lambda handler).</li>
+        <li>Create <code>NormalizedSqsRecord</code> and <code>IEventHandler</code> interfaces.</li>
+        <li>Create the event handler application service with Zod parse + switch dispatch.</li>
+        <li>Create <code>SqsLocalService</code> for local polling.</li>
+        <li>Wire everything in the domain module — <strong>no controllers array</strong>.</li>
+        <li>Add the SQS queue to <code>scripts/setup-localstack.ts</code>.</li>
+        <li>Add env vars: <code>{DOMAIN}_SQS_QUEUE_URL</code>, <code>{DOMAIN}_SQS_QUEUE_NAME</code>.</li>
+        <li>Add VS Code task: <code>Service: Serve {domain}-event-handler-service</code>.</li>
+      </ol>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="infrastructure.html">Local Infrastructure</a> — Docker, LocalStack, env vars, and the VS Code task chain.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

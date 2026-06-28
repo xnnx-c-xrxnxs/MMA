@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Persistence Patterns — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html" class="active">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Persistence Patterns</h1>
+      <p class="subtitle">
+        The template supports two persistence strategies — DynamoDB OneTable (User, Product) and Prisma + PostgreSQL (Order).
+        The domain and application layers are persistence-agnostic; only the infrastructure layer knows which database is in use.
+      </p>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Choosing a Persistence Layer</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="tag dynamo">DynamoDB OneTable</span></th>
+            <th><span class="tag prisma">Prisma + PostgreSQL</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Best for</strong></td>
+            <td>Single-table design, high-throughput key-value access, serverless-first</td>
+            <td>Relational data, complex joins, aggregates, ACID transactions</td>
+          </tr>
+          <tr>
+            <td><strong>Pagination style</strong></td>
+            <td>Cursor-based (<code>IPaginatedResponse</code>)</td>
+            <td>Offset-based (<code>IOffsetPaginatedResponse</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>Local infrastructure</strong></td>
+            <td>LocalStack (DynamoDB on port 4566)</td>
+            <td>Docker PostgreSQL (port 5432)</td>
+          </tr>
+          <tr>
+            <td><strong>Schema location</strong></td>
+            <td><code>infrastructure/schemas/{Entity}Schema.ts</code></td>
+            <td><code>infrastructure/prisma/schema.prisma</code></td>
+          </tr>
+          <tr>
+            <td><strong>Migration</strong></td>
+            <td>Schema changes → update <code>setup-localstack.ts</code> → <code>pnpm run localstack:setup:force</code></td>
+            <td><code>npx prisma migrate dev --name describe_change</code></td>
+          </tr>
+          <tr>
+            <td><strong>Used by</strong></td>
+            <td>User, Product</td>
+            <td>Order</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <strong>Never mix pagination styles within a domain.</strong>
+        If a domain uses DynamoDB, all its list endpoints return cursor-based results.
+        If it uses Prisma, all endpoints return offset-based results.
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>The Repository Pattern</h2>
+
+      <p>
+        Every domain defines a <strong>repository interface</strong> in the application layer.
+        The infrastructure layer provides the implementation. This is dependency inversion — the domain
+        dictates what operations exist; infrastructure decides how to fulfill them.
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph PRISMA ["Prisma — Order Domain"]
+        IOR["IOrderRepository\n«abstract»"]:::purple
+        POR["PrismaOrderRepository"]:::blue
+        IOR ---|"implements"| POR
+        POR_M["save() • findById()\nfindByCustomerId() • findByStatus()\ndelete() • toDomain() • toPersistence()"]:::blue
+        POR --- POR_M
+    end
+
+    subgraph DYNAMO ["DynamoDB — User Domain"]
+        IUR["IUserRepository\n«abstract»"]:::purple
+        DUR["DynamoUserRepository"]:::yellow
+        IUR ---|"implements"| DUR
+        DUR_M["save() • findById()\nfindByEmail() • findByStatus()\ndelete() • toDomain() • toPersistence()"]:::yellow
+        DUR --- DUR_M
+    end
+
+    IOR -.-|"IOffsetPaginatedResponse\n(offset pagination)"| POR
+    IUR -.-|"IPaginatedResponse\n(cursor pagination)"| DUR
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+      </div>
+
+      <h3>Key patterns in every repository</h3>
+
+      <ul>
+        <li><strong><code>toDomain(record)</code></strong> — Converts a database record (DynamoDB item or Prisma row) into a domain entity using <code>Entity.reconstitute()</code>. This is private to the repository.</li>
+        <li><strong><code>toPersistence(entity)</code></strong> — Converts a domain entity back to the database format using entity getters. Also private.</li>
+        <li><strong>The domain never sees database types.</strong> No Prisma types, no OneTable model types leak out of the repository.</li>
+        <li><strong>Repositories may define local structural interfaces</strong> to avoid OneTable generic type explosions or Prisma generated-type leaking.</li>
+      </ul>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>DynamoDB OneTable Pattern</h2>
+
+      <p class="file-path">packages/user-domain/src/infrastructure/</p>
+
+      <h3>Schema Design</h3>
+
+      <p>OneTable uses a <strong>single-table design</strong> with typed models. Each entity defines its primary key (PK/SK) and Global Secondary Indexes (GSIs) using value templates:</p>
+
+      <pre><code>// Simplified example — UserSchema
+{
+  pk:     { type: String, value: 'USER#\${userId}' },
+  sk:     { type: String, value: 'USER#\${userId}' },
+  GSI1pk: { type: String, value: 'EMAIL#\${email}' },     // Email lookup
+  GSI1sk: { type: String, value: 'USER' },
+  GSI4pk: { type: String, value: 'STATUS#\${userStatus}' }, // List by status
+  GSI4sk: { type: String, value: '\${dateCreated}' },       // Sort by date
+}</code></pre>
+
+      <h3>Access Patterns → GSI Mapping</h3>
+
+      <table>
+        <thead><tr><th>Access Pattern</th><th>GSI</th><th>PK Template</th></tr></thead>
+        <tbody>
+          <tr><td>Get user by ID</td><td>Primary table</td><td><code>USER#\${userId}</code></td></tr>
+          <tr><td>Find user by email</td><td>GSI1</td><td><code>EMAIL#\${email}</code></td></tr>
+          <tr><td>List users by status</td><td>GSI4</td><td><code>STATUS#\${userStatus}</code></td></tr>
+          <tr><td>List users by role + status</td><td>GSI5</td><td><code>ROLE#\${userRole}#STATUS#\${userStatus}</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Cursor-Based Pagination</h3>
+
+      <p>DynamoDB uses <strong>exclusive start keys</strong> for pagination. The repository wraps this in <code>IPaginatedResponse</code>:</p>
+
+      <pre><code>interface IPaginatedResponse&lt;T&gt; {
+  data: T[];
+  nextCursorPointer: CursorPointer; // null = no more pages
+  prevCursorPointer: CursorPointer; // null = first page
+}
+
+// CursorPointer is Record&lt;string, unknown&gt; | null
+// It's opaque to the consumer — only the repository knows the internal key structure</code></pre>
+
+      <p>In the API, clients pass <code>?cursor=...&amp;direction=next</code> or <code>?cursor=...&amp;direction=prev</code>. The application service routes the cursor to the correct pointer based on direction.</p>
+
+      <h3>DynamoDB Config</h3>
+
+      <p>
+        One DynamoDB client per process (singleton). Multiple tables supported via <code>DynamoDBConfig.getTable(name, schema)</code>.
+        Local routing uses <code>STAGE === 'local'</code> as the primary check, with <code>DYNAMODB_ENDPOINT</code> as an explicit override.
+      </p>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Prisma + PostgreSQL Pattern</h2>
+
+      <p class="file-path">packages/order-domain/src/infrastructure/</p>
+
+      <h3>Schema Design</h3>
+
+      <p>Prisma uses a <code>schema.prisma</code> file with models, enums, and relations:</p>
+
+      <pre><code>// Simplified example — Order schema
+model Order {
+  orderId     String       @id @default(uuid())
+  customerId  String
+  orderStatus OrderStatus  @default(DRAFT)
+  totalAmount Float        @default(0)
+  dateCreated DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  items       OrderItem[]
+  payment     OrderPayment?
+
+  @@index([customerId])
+  @@index([orderStatus])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  // ... mirrors domain constants exactly
+}</code></pre>
+
+      <h3>Key Prisma Rules</h3>
+
+      <ul>
+        <li><strong>Enums must mirror domain constants exactly</strong> (Golden Rule #17). The domain constants are the source of truth — the Prisma schema copies them.</li>
+        <li><strong>Use <code>@id @default(uuid())</code></strong> for primary keys.</li>
+        <li><strong>Use <code>@default(now())</code></strong> for <code>dateCreated</code> and <code>@updatedAt</code> for <code>updatedAt</code>.</li>
+        <li><strong>Use <code>@@map("table_name")</code></strong> for snake_case table names.</li>
+        <li><strong>Cascade delete:</strong> set <code>onDelete: Cascade</code> on child models so deleting the parent cleans up children.</li>
+        <li><strong>Add <code>@@index</code></strong> on fields used in <code>WHERE</code> clauses.</li>
+      </ul>
+
+      <h3>Offset-Based Pagination</h3>
+
+      <pre><code>interface IOffsetPaginatedResponse&lt;T&gt; {
+  data: T[];         // Items for the current page
+  total: number;     // Total matching records
+  page: number;      // Current page (1-based)
+  limit: number;     // Items per page
+  totalPages: number; // Calculated ceiling
+}</code></pre>
+
+      <p>The repository implements this with <code>skip</code>/<code>take</code> and a parallel <code>count()</code> query:</p>
+
+      <pre><code>const [records, total] = await Promise.all([
+  this.prisma.order.findMany({
+    where: { orderStatus: status },
+    skip: (page - 1) * limit,
+    take: limit,
+    include: { items: true, payment: true },
+  }),
+  this.prisma.order.count({ where: { orderStatus: status } }),
+]);</code></pre>
+
+      <h3>Aggregate Saves with $transaction</h3>
+
+      <p>
+        Orders are aggregate roots with items and payment. Saving creates/updates all in a single transaction:
+      </p>
+
+      <pre><code>await this.prisma.$transaction(async (tx) => {
+  const orderRecord = await tx.order.upsert({ ... });
+  // Delete removed items, upsert remaining items
+  for (const item of entity.getItems()) {
+    await tx.orderItem.upsert({ ... });
+  }
+  // Upsert payment if present
+  if (entity.getPayment()) {
+    await tx.orderPayment.upsert({ ... });
+  }
+});</code></pre>
+
+      <h3>Prisma Config</h3>
+
+      <p>
+        One Prisma client per process (singleton). <code>PrismaConfig.getClient()</code> reads <code>{DOMAIN}_DATABASE_URL</code> from env.
+        The generated client lives at <code>infrastructure/generated/client/</code> (gitignored) and is re-exported via the domain package's <code>infrastructure</code> barrel.
+      </p>
+
+      <h3>Migration Workflow</h3>
+
+      <pre><code># Create a new migration (dev only)
+npx prisma migrate dev --name describe_change
+
+# Regenerate client after schema changes
+npx prisma generate
+
+# Apply all pending migrations (used by CI and local setup)
+npx prisma migrate deploy</code></pre>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Data Mapping: Domain ↔ Database</h2>
+
+      <p>
+        All data mapping happens in the repository's private methods. The entity and the database format
+        are kept strictly separate:
+      </p>
+
+      <div class="mermaid">
+flowchart LR
+    A["Domain Entity<br/>(getters)"] -->|"toPersistence()"| B["Database Record<br/>(DynamoDB item / Prisma row)"]
+    B -->|"toDomain()"| A
+    C["Entity.reconstitute()"] -.->|"called by toDomain()"| A
+
+    style A fill:#dcfce7,stroke:#16a34a,color:#166534
+    style B fill:#fef3c7,stroke:#d97706,color:#92400e
+    style C fill:#dcfce7,stroke:#16a34a,color:#166534
+      </div>
+
+      <h3>Timestamp Mapping</h3>
+
+      <table>
+        <thead><tr><th>Domain Entity</th><th>DynamoDB</th><th>Prisma</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>dateCreated</code></td>
+            <td>Mapped from OneTable's auto-managed <code>createdAt</code></td>
+            <td>Mapped from <code>@default(now())</code> column</td>
+          </tr>
+          <tr>
+            <td><code>updatedAt</code></td>
+            <td>Mapped from OneTable's auto-managed <code>updatedAt</code></td>
+            <td>Mapped from <code>@updatedAt</code> column</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>No <code>createdAt</code> on entities.</strong>
+        Entities use <code>dateCreated</code> + <code>updatedAt</code>. The database may have a <code>createdAt</code> field
+        (managed by the ORM), but the repository maps it to <code>dateCreated</code> when reconstituting the entity.
+      </div>
+
+      <!-- ────────────────────────────────────────── -->
+      <h2>Wiring in the NestJS Module</h2>
+
+      <p>Both persistence strategies are wired the same way — using provider tokens and factory providers:</p>
+
+      <h3>DynamoDB Wiring</h3>
+      <pre><code>const DYNAMO_TABLE = 'DYNAMO_TABLE';
+const USER_REPOSITORY = 'USER_REPOSITORY';
+
+@Module({
+  providers: [
+    {
+      provide: DYNAMO_TABLE,
+      useFactory: () =>
+        DynamoDBConfig.getTable(
+          process.env.USERS_DYNAMODB_TABLE_NAME || 'OldSTTable',
+          UserSchema,
+        ),
+    },
+    {
+      provide: USER_REPOSITORY,
+      useFactory: (table: Table) => new DynamoUserRepository(table),
+      inject: [DYNAMO_TABLE],
+    },
+    {
+      provide: CreateUserUseCase,
+      useFactory: (repo: IUserRepository) => new CreateUserUseCase(repo),
+      inject: [USER_REPOSITORY],
+    },
+    // ... other use cases
+    UserApplicationService,
+  ],
+})</code></pre>
+
+      <h3>Prisma Wiring</h3>
+      <pre><code>const PRISMA_CLIENT = 'PRISMA_CLIENT';
+const ORDER_REPOSITORY = 'ORDER_REPOSITORY';
+
+@Module({
+  providers: [
+    {
+      provide: PRISMA_CLIENT,
+      useFactory: () => PrismaConfig.getClient(),
+    },
+    {
+      provide: ORDER_REPOSITORY,
+      useFactory: (prisma: PrismaClient) => new PrismaOrderRepository(prisma),
+      inject: [PRISMA_CLIENT],
+    },
+    {
+      provide: CreateOrderUseCase,
+      useFactory: (repo: IOrderRepository, validator: ICustomerValidator, publisher: IEventPublisher) =>
+        new CreateOrderUseCase(repo, validator, publisher),
+      inject: [ORDER_REPOSITORY, ICustomerValidator, EVENT_PUBLISHER],
+    },
+    // ... other use cases
+    OrderApplicationService,
+  ],
+})</code></pre>
+
+      <p>The pattern is identical — only the config class and client type differ. Use cases receive the repository interface, not the implementation.</p>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="contracts.html">Contracts &amp; Types</a> — how Zod schemas provide the shared type system between services.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html" class="active">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Notifications</h1>
+      <p class="subtitle">
+        How CloudWatch alarms reach the team. SNS topics, AWS Chatbot Slack channels, email subscribers,
+        and how to add new channel types (PagerDuty, Opsgenie, Microsoft Teams).
+      </p>
+
+      <hr>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Architecture</h2>
+
+      <p>
+        Every CloudWatch alarm publishes to a <strong>per-environment SNS topic</strong> created by
+        <code>infra/modules/notifications/</code>. The topic fans out to all configured subscribers —
+        adding a new email or Slack channel is a JSON-only change.
+      </p>
+
+      <div class="mermaid">
+graph LR
+  alarms["CloudWatch alarms\n(Lambda errors, DLQ depth)"]
+  sns["SNS topic\nper environment"]
+  emails["Email subscribers\n(SNS native)"]
+  chatbot["AWS Chatbot\nSlack channel(s)"]
+  slack["Slack workspace"]
+
+  alarms -->|publish| sns
+  sns -->|deliver| emails
+  sns -->|deliver| chatbot
+  chatbot --> slack
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Configuration</h2>
+
+      <p>
+        All notification config lives in a single file: <code>infra/notification-config.json</code>.
+        It is environment-aware — you can configure different channels per environment (e.g. only
+        prod pages on-call).
+      </p>
+
+      <pre><code>{
+  "dev": {
+    "emails": ["dev-team@example.com"],
+    "slackChannels": []
+  },
+  "staging": {
+    "emails": ["dev-team@example.com"],
+    "slackChannels": [
+      { "channelId": "C012345", "channelName": "alerts-staging" }
+    ]
+  },
+  "prod": {
+    "emails": ["dev-team@example.com", "ops@example.com"],
+    "slackChannels": [
+      { "channelId": "C067890", "channelName": "alerts-prod" }
+    ]
+  }
+}</code></pre>
+
+      <p>
+        On the next <code>terraform apply</code>, the module:
+      </p>
+      <ul>
+        <li>Creates one SNS subscription per email — recipients get an SNS confirmation email they must click once.</li>
+        <li>Creates one AWS Chatbot Slack channel configuration per Slack channel — the channel must already exist in Slack and the workspace must have completed the AWS Chatbot OAuth handshake (one-time, per workspace).</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>First-Time Setup</h2>
+
+      <h3>Email subscriptions</h3>
+      <p>
+        Add the email to <code>notification-config.json</code> → run
+        <code>terraform apply</code> → recipient receives <em>"AWS Notification — Subscription
+        Confirmation"</em> email → click the confirmation link. Until confirmed, the email
+        subscription is in <code>PendingConfirmation</code> state and receives no alerts.
+      </p>
+
+      <h3>Slack workspace (one-time per workspace)</h3>
+      <p>
+        Before the first Slack channel can be wired:
+      </p>
+      <ol>
+        <li>Open the AWS Chatbot console (in the same AWS account that runs the monitoring tool).</li>
+        <li>Click <strong>Configure new client → Slack</strong>.</li>
+        <li>Authorise the AWS Chatbot Slack app for your workspace (one-time OAuth handshake).</li>
+        <li>Copy the resulting Slack workspace ID.</li>
+        <li>Set the workspace ID as the <code>slack_workspace_id</code> Terraform variable
+            in each environment root that uses Slack notifications.</li>
+      </ol>
+
+      <h3>Per-channel setup</h3>
+      <p>
+        For each Slack channel:
+      </p>
+      <ol>
+        <li>Create the channel in Slack (or pick an existing one).</li>
+        <li>In Slack, invite the AWS Chatbot bot user to the channel.</li>
+        <li>Copy the channel ID (Slack → channel name → <em>View channel details</em> → bottom of dialog).</li>
+        <li>Add the entry to <code>notification-config.json</code> for the target environment.</li>
+        <li>Run <code>terraform apply</code>.</li>
+      </ol>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Smoke Test</h2>
+
+      <p>
+        After applying, manually publish a test message to the SNS topic:
+      </p>
+
+      <pre><code>aws sns publish \
+  --topic-arn arn:aws:sns:eu-west-2:&lt;account&gt;:&lt;project&gt;-&lt;env&gt;-alerts \
+  --subject "Smoke test" \
+  --message "Notifications are working."</code></pre>
+
+      <p>
+        Confirm the message arrives in:
+      </p>
+      <ul>
+        <li>Each confirmed email inbox (within ~30 seconds)</li>
+        <li>Each configured Slack channel (via AWS Chatbot — formatted message)</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Adding a New Channel Type</h2>
+
+      <p>
+        SNS supports a number of subscription protocols beyond email. Use the
+        <code>add-notifications</code> skill (or <code>/add-alerting</code> prompt) to wire a new
+        type. Common patterns:
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Channel</th><th>SNS protocol</th><th>Required config</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PagerDuty</td>
+            <td><code>https</code></td>
+            <td>PagerDuty SNS Events API integration URL</td>
+          </tr>
+          <tr>
+            <td>Opsgenie</td>
+            <td><code>https</code></td>
+            <td>Opsgenie SNS integration webhook URL</td>
+          </tr>
+          <tr>
+            <td>SMS</td>
+            <td><code>sms</code></td>
+            <td>Phone number (E.164 format)</td>
+          </tr>
+          <tr>
+            <td>HTTP webhook (custom)</td>
+            <td><code>https</code></td>
+            <td>Endpoint that returns 200 on the SNS subscription confirmation request</td>
+          </tr>
+          <tr>
+            <td>Microsoft Teams / Discord</td>
+            <td><code>lambda</code></td>
+            <td>Lambda relay (their webhook formats are not SNS-native)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        For custom HTTPS endpoints (PagerDuty, Opsgenie, custom webhooks), SNS sends a one-time
+        subscription confirmation HTTPS request — your endpoint must respond <code>200 OK</code> to
+        complete the handshake. Most third-party services handle this automatically when you use
+        their official SNS integration URL.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Cost</h2>
+
+      <ul>
+        <li><strong>SNS:</strong> $0.50 per million publishes; first 1,000 emails per month free, then $0.000002 each.</li>
+        <li><strong>AWS Chatbot:</strong> Free.</li>
+        <li><strong>Typical monthly cost:</strong> &lt; $1 for a system with thousands of alarms per month.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Related Documentation</h2>
+      <ul>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a> — alarm definitions and CloudWatch wiring</li>
+        <li><a href="../notifications.md">docs/notifications.md</a> — full markdown reference</li>
+        <li><code>.claude/skills/add-notifications/SKILL.md</code> — step-by-step skill for adding a new channel</li>
+        <li><code>.claude/commands/add-alerting.md</code> — guided workflow for alerting changes</li>
+      </ul>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

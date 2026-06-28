@@ -1,0 +1,81 @@
+name: "CD: Preview — Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_name:
+        description: "Preview name to destroy"
+        required: true
+        type: string
+      aws_account_id:
+        description: "AWS Account ID"
+        required: true
+        type: string
+      aws_region:
+        description: "AWS Region"
+        required: false
+        type: string
+        default: "eu-west-2"
+      tfstate_bucket:
+        description: "S3 bucket for Terraform state (default: {PROJECT_NAME}-tfstate)"
+        required: false
+        type: string
+      tfstate_lock_table:
+        description: "DynamoDB table for Terraform state locking (default: {PROJECT_NAME}-tflock)"
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  AWS_REGION: ${{ github.event.inputs.aws_region }}
+  PREVIEW_NAME: ${{ github.event.inputs.preview_name }}
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws_account_id }}:role/${{ env.PROJECT_NAME }}-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infra/environments/preview
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ github.event.inputs.tfstate_bucket || vars.TFSTATE_BUCKET || format('{0}-tfstate', env.PROJECT_NAME) }}" \
+            -backend-config="key=preview/${{ env.PREVIEW_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ github.event.inputs.tfstate_lock_table || vars.TFSTATE_LOCK_TABLE || format('{0}-tflock', env.PROJECT_NAME) }}"
+
+      - name: Terraform Destroy
+        working-directory: infra/environments/preview
+        run: |
+          terraform destroy -auto-approve \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="preview_name=${{ env.PREVIEW_NAME }}" \
+            -var="artifact_bucket=${{ vars.ARTIFACT_BUCKET }}" \
+            -var="deploy_sha=destroy" \
+            -var="ecr_repo_url=${{ vars.ECR_REPO_URL }}" \
+            -var="enable_webapp=false"
+
+      - name: Post destruction summary
+        run: |
+          echo "## Preview Destroyed: ${{ env.PREVIEW_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "All resources for preview \`${{ env.PREVIEW_NAME }}\` have been removed." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "State file remains in S3 at \`preview/${{ env.PREVIEW_NAME }}/terraform.tfstate\` (empty, ~0 cost)." >> "$GITHUB_STEP_SUMMARY"

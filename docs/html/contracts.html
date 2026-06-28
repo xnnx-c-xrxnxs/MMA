@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contracts &amp; Types — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html" class="active">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Contracts &amp; Types</h1>
+      <p class="subtitle">
+        How Zod schemas enforce runtime validation, provide TypeScript types, and isolate domains
+        through per-domain packages. The contracts packages are the <strong>published language</strong> shared
+        between services.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Why Shared Contracts Packages?</h2>
+
+      <p>
+        Domain entities are internal to each domain package — they never cross service boundaries.
+        The contracts packages define the <strong>public API surface</strong>: input validation schemas,
+        response shapes, and event payloads. This gives us:
+      </p>
+
+      <ul>
+        <li><strong>Runtime validation</strong> — Zod schemas parse every API input (via <code>ZodValidationPipe</code>) and every API output (via <code>schema.parse()</code> in the Application Service).</li>
+        <li><strong>TypeScript types for free</strong> — <code>z.infer&lt;typeof schema&gt;</code> generates types directly from schemas. No manual interface files.</li>
+        <li><strong>Domain isolation</strong> — per-domain packages ensure a type error in the order domain doesn't break the user service at compile time.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Package Structure</h2>
+
+      <pre><code>packages/contracts/
+  common/
+    package.json        ← @old-st/contracts-common
+    project.json        ← tags: scope:common, type:contracts
+    tsconfig.json
+    src/
+      index.ts          ← shared pagination schemas
+      pagination.ts     ← cursor-based + offset-based helpers
+  user/
+    package.json        ← @old-st/contracts-user (depends on @old-st/user-domain)
+    project.json        ← tags: scope:user, type:contracts
+    tsconfig.json
+    src/
+      index.ts          ← domain barrel: re-exports schemas + event-schemas
+      schemas.ts        ← Zod schemas + TypeScript types
+      event-schemas.ts  ← discriminated union for USER_DELETED
+  order/
+    package.json        ← @old-st/contracts-order (depends on @old-st/order-domain)
+    project.json        ← tags: scope:order, type:contracts
+    tsconfig.json
+    src/
+      index.ts
+      schemas.ts        ← Order, OrderItem, OrderPayment schemas
+      event-schemas.ts  ← discriminated union for ORDER_CREATED
+  product/
+    package.json        ← @old-st/contracts-product (depends on @old-st/product-domain)
+    project.json        ← tags: scope:product, type:contracts
+    tsconfig.json
+    src/
+      index.ts
+      schemas.ts        ← Product, Category schemas
+      event-schemas.ts  ← discriminated union for 6 product events</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Domain-Scoped Imports (Domain Isolation)</h2>
+
+      <p>
+        Each domain has its own independent package with its own <code>package.json</code> and dependencies.
+        There is no root <code>@old-st/contracts</code> package — only per-domain packages.
+      </p>
+
+      <p>
+        <code>tsconfig.base.json</code> defines path aliases so TypeScript resolves <code>@old-st/contracts/{domain}</code> to the correct per-domain package:
+      </p>
+
+      <pre><code>// tsconfig.base.json (paths)
+"@old-st/contracts/common":  ["packages/contracts/common/src/index.ts"],
+"@old-st/contracts/user":    ["packages/contracts/user/src/index.ts"],
+"@old-st/contracts/order":   ["packages/contracts/order/src/index.ts"],
+"@old-st/contracts/product": ["packages/contracts/product/src/index.ts"],
+"@old-st/contracts/auth":    ["packages/contracts/auth/src/index.ts"]</code></pre>
+
+      <div class="callout warning">
+        <strong>Golden Rule #11 — Never import from the bare <code>@old-st/contracts</code> root.</strong>
+        Always use domain-scoped subpath imports. The root barrel creates transitive type coupling —
+        a type error in <em>any</em> domain will break <em>every</em> consumer.
+      </div>
+
+      <h3>Correct vs Incorrect Import</h3>
+
+      <pre><code>// ✅ Correct — domain-scoped, isolated
+import { createUserSchema, UserResponse } from '@old-st/contracts/user';
+import { orderResponseSchema } from '@old-st/contracts/order';
+import { PaginatedResponse } from '@old-st/contracts/common';
+
+// ❌ Wrong — transitive coupling
+import { createUserSchema, orderResponseSchema } from '@old-st/contracts';</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>The Zod → TypeScript Pipeline</h2>
+
+      <div class="mermaid">
+flowchart LR
+    DC["Domain Constants<br/>(single source of truth)"] --> ZS["Zod Schema<br/>(contracts)"]
+    ZS --> TS["TypeScript Type<br/>(z.infer)"]
+    ZS --> RV["Runtime Validation<br/>(ZodValidationPipe)"]
+    ZS --> OV["Output Validation<br/>(schema.parse)"]
+
+    style DC fill:#dbeafe,stroke:#2563eb
+    style ZS fill:#dcfce7,stroke:#16a34a
+    style TS fill:#fef3c7,stroke:#d97706
+    style RV fill:#f3e8ff,stroke:#7c3aed
+    style OV fill:#f3e8ff,stroke:#7c3aed
+      </div>
+
+      <h3>Step 1 — Domain Constants (Source of Truth)</h3>
+
+      <p>Enums and allowed values are defined once in the domain package:</p>
+
+      <pre><code>// packages/user-domain/src/domain/constants/user-status.constant.ts
+export const USER_STATUSES = ['PENDING', 'ACTIVE', 'INACTIVE', 'DELETED'] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
+export const UserStatusEnum = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  DELETED: 'DELETED',
+} as const;</code></pre>
+
+      <h3>Step 2 — Zod Schema (Contracts Package)</h3>
+
+      <p>Contracts re-export the domain constants and build Zod schemas from them:</p>
+
+      <pre><code>// packages/contracts/user/src/schemas.ts
+import { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum } from '@old-st/user-domain';
+
+// Re-export for consumers
+export { USER_ROLES, USER_STATUSES, UserRoleEnum, UserStatusEnum };
+
+// Build Zod enum from domain constant
+export const userStatusSchema = z.enum(USER_STATUSES);
+
+// Compose into larger schemas
+export const userResponseSchema = z.object({
+  userId: z.string(),
+  email: z.string().email(),
+  firstName: z.string(),
+  lastName: z.string(),
+  userRole: userRoleSchema,
+  userStatus: userStatusSchema,
+  data: userDataSchema,
+  dateCreated: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});</code></pre>
+
+      <h3>Step 3 — TypeScript Types (Inferred)</h3>
+
+      <p>Types are <strong>never written manually</strong> — they're inferred from Zod schemas:</p>
+
+      <pre><code>export type UserResponse = z.infer&lt;typeof userResponseSchema&gt;;
+// Equivalent to:
+// {
+//   userId: string;
+//   email: string;
+//   firstName: string;
+//   lastName: string;
+//   userRole: 'USER' | 'ADMIN';
+//   userStatus: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
+//   data: { country?: string };
+//   dateCreated: string;
+//   updatedAt: string;
+// }</code></pre>
+
+      <h3>Step 4 — Validation at Both Ends</h3>
+
+      <div class="mermaid">
+flowchart TD
+    subgraph INPUT ["Input Validation — Presentation Layer"]
+        CL["Client: POST /users { ... }"]:::purple
+        ZP["ZodValidationPipe\ncreateUserSchema.parse(body)"]:::yellow
+        ZP_OK["CreateUserInput\n(typed, validated)"]:::green
+        ZP_FAIL["400 Bad Request\n{ issues: [...] }"]:::red
+        CL --> ZP
+        ZP -->|"valid"| ZP_OK
+        ZP -->|"invalid"| ZP_FAIL
+    end
+
+    subgraph CORE ["Processing — Application + Domain"]
+        CTRL["Controller"]:::blue
+        APP["Application Service\ncreateUser(input)"]:::blue
+        UC["Use Case\nexecute(input)"]:::blue
+        ENT["Domain Entity\nUser.create(...)"]:::blue
+        ZP_OK --> CTRL --> APP --> UC --> ENT
+    end
+
+    subgraph OUTPUT ["Output Validation — Application Service"]
+        ENT -->|"returns User entity"| PARSE["userResponseSchema.parse({\n  userId, email, ... })"]:::yellow
+        PARSE --> DTO["UserResponse\n(validated DTO)"]:::green
+        DTO --> RES["201 Created\nReturn to client"]:::green
+    end
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+      </div>
+
+      <ul>
+        <li><strong>Input validation</strong>: <code>ZodValidationPipe</code> in the presentation layer parses and validates request bodies, query parameters, and route parameters.</li>
+        <li><strong>Output validation</strong>: The Application Service calls <code>schema.parse()</code> to transform domain entities into DTOs. This ensures the response shape matches the contract, and strips any unintended properties.</li>
+        <li><strong>No <code>toObject()</code></strong> (Golden Rule #13): Entities never serialize themselves. The Application Service manually reads getters and passes them to <code>schema.parse()</code>.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Schema Categories</h2>
+
+      <p>Each domain defines several schema types. Here's what each is for:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Schema Type</th>
+            <th>Convention</th>
+            <th>Used For</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Create</strong></td>
+            <td><code>create{Entity}Schema</code></td>
+            <td>POST body validation</td>
+            <td><code>createUserSchema</code>, <code>createOrderSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>Update</strong></td>
+            <td><code>update{Entity}Schema</code></td>
+            <td>PATCH body validation</td>
+            <td><code>updateUserSchema</code>, <code>updateProductDetailsSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>Response</strong></td>
+            <td><code>{entity}ResponseSchema</code></td>
+            <td>API output shape + <code>.parse()</code></td>
+            <td><code>userResponseSchema</code>, <code>orderResponseSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>Query/Get</strong></td>
+            <td><code>get{Entity}ByIdSchema</code></td>
+            <td>Route param validation</td>
+            <td><code>getUserByIdSchema</code>, <code>getProductByIdSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>List/Filter</strong></td>
+            <td><code>list{Entities}By{Filter}Schema</code></td>
+            <td>Query string validation</td>
+            <td><code>listUsersByStatusSchema</code>, <code>listOrdersByCustomerSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>Action</strong></td>
+            <td><code>{action}{Entity}Schema</code></td>
+            <td>State-change endpoint body</td>
+            <td><code>confirmOrderSchema</code>, <code>updateUserRoleSchema</code></td>
+          </tr>
+          <tr>
+            <td><strong>Enum</strong></td>
+            <td><code>{entity}{Field}Schema</code></td>
+            <td>Enum field validation</td>
+            <td><code>userStatusSchema</code>, <code>orderStatusSchema</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Event Schemas (Discriminated Unions)</h2>
+
+      <p>
+        Each domain's <code>event-schemas.ts</code> defines a <strong>Zod discriminated union</strong> keyed on
+        <code>eventType</code>. This enables type-safe event dispatch in SQS consumers.
+      </p>
+
+      <div class="mermaid">
+flowchart TD
+    UNION["productDomainEventSchema\n«discriminatedUnion»\ndiscriminator: eventType"]:::purple
+
+    UNION --> E1["PRODUCT_DEACTIVATED\nproductId • occurredAt"]:::blue
+    UNION --> E2["PRODUCT_DISCONTINUED\nproductId • occurredAt"]:::blue
+    UNION --> E3["PRODUCT_DELETED\nproductId • occurredAt"]:::blue
+    UNION --> E4["PRODUCT_PRICE_CHANGED\nproductId • oldPrice\nnewPrice • occurredAt"]:::yellow
+    UNION --> E5["PRODUCT_VALIDATION_SUCCEEDED\norderId • occurredAt"]:::green
+    UNION --> E6["PRODUCT_VALIDATION_FAILED\norderId • reason\nfailedProducts[] • occurredAt"]:::red
+
+    classDef purple fill:#f3e8ff,stroke:#7c3aed,color:#000
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#000
+    classDef green fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef red fill:#fee2e2,stroke:#dc2626,color:#000
+      </div>
+
+      <h3>How Discriminated Unions Work</h3>
+
+      <pre><code>// packages/contracts/product/src/event-schemas.ts
+export const productDomainEventSchema = z.discriminatedUnion('eventType', [
+  productDeactivatedSchema,     // { eventType: 'PRODUCT_DEACTIVATED', productId, occurredAt }
+  productDiscontinuedSchema,    // { eventType: 'PRODUCT_DISCONTINUED', ... }
+  productDeletedSchema,         // { eventType: 'PRODUCT_DELETED', ... }
+  productPriceChangedSchema,    // { eventType: 'PRODUCT_PRICE_CHANGED', productId, oldPrice, newPrice, ... }
+  productValidationSucceededSchema, // { eventType: 'PRODUCT_VALIDATION_SUCCEEDED', orderId, ... }
+  productValidationFailedSchema,    // { eventType: 'PRODUCT_VALIDATION_FAILED', orderId, reason, failedProducts, ... }
+]);
+
+// In the event handler service:
+const parsed = productDomainEventSchema.parse(rawPayload);
+switch (parsed.eventType) {
+  case 'PRODUCT_PRICE_CHANGED':
+    // TypeScript knows: parsed.oldPrice, parsed.newPrice exist
+    break;
+  case 'PRODUCT_VALIDATION_FAILED':
+    // TypeScript knows: parsed.reason, parsed.failedProducts exist
+    break;
+}</code></pre>
+
+      <h3>All Event Schemas</h3>
+
+      <table>
+        <thead>
+          <tr><th>Domain</th><th>Discriminated Union</th><th>Event Types</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag dynamo">User</span></td>
+            <td><code>userDomainEventSchema</code></td>
+            <td><code>USER_DELETED</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag prisma">Order</span></td>
+            <td><code>orderDomainEventSchema</code></td>
+            <td><code>ORDER_CREATED</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag dynamo">Product</span></td>
+            <td><code>productDomainEventSchema</code></td>
+            <td><code>PRODUCT_DEACTIVATED</code>, <code>PRODUCT_DISCONTINUED</code>, <code>PRODUCT_DELETED</code>,
+                <code>PRODUCT_PRICE_CHANGED</code>, <code>PRODUCT_VALIDATION_SUCCEEDED</code>, <code>PRODUCT_VALIDATION_FAILED</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Pagination Schemas</h2>
+
+      <p>
+        The <code>@old-st/contracts/common</code> subpath provides two pagination helpers, matching each
+        persistence strategy:
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Strategy</th><th>Used By</th><th>Response Type</th><th>Key Fields</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag dynamo">Cursor-based</span></td>
+            <td>User, Product (DynamoDB)</td>
+            <td><code>PaginatedResponse&lt;T&gt;</code></td>
+            <td><code>data</code>, <code>nextCursorPointer</code>, <code>prevCursorPointer</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag prisma">Offset-based</span></td>
+            <td>Order (Prisma)</td>
+            <td><code>OffsetPaginatedResponse&lt;T&gt;</code></td>
+            <td><code>data</code>, <code>total</code>, <code>page</code>, <code>limit</code>, <code>totalPages</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code>// Cursor-based (DynamoDB)
+import { PaginatedResponse, createPaginatedResponse } from '@old-st/contracts/common';
+
+const result: PaginatedResponse&lt;UserResponse&gt; = createPaginatedResponse(
+  users, nextCursor, prevCursor
+);
+
+// Offset-based (Prisma)
+import { OffsetPaginatedResponse, createOffsetPaginatedResponse } from '@old-st/contracts/common';
+
+const result: OffsetPaginatedResponse&lt;OrderResponse&gt; = createOffsetPaginatedResponse(
+  orders, totalCount, page, limit
+);</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Adding Contracts for a New Domain</h2>
+
+      <ol>
+        <li>Create <code>packages/contracts/{domain}/</code> directory with <code>package.json</code>, <code>project.json</code>, and <code>tsconfig.json</code>.</li>
+        <li>Create <code>packages/contracts/{domain}/src/schemas.ts</code> — import domain constants, create Zod schemas, infer types.</li>
+        <li>Create <code>packages/contracts/{domain}/src/event-schemas.ts</code> — import event type enum, create per-event Zod schemas, build discriminated union.</li>
+        <li>Create <code>packages/contracts/{domain}/src/index.ts</code> — re-export both files.</li>
+        <li>Add path alias to <code>tsconfig.base.json</code>: <code>"@old-st/contracts/{domain}": ["packages/contracts/{domain}/src/index.ts"]</code></li>
+        <li>Run <code>pnpm install</code> from the workspace root to link the new package.</li>
+      </ol>
+
+      <div class="callout info">
+        <strong>Each domain is an independent package.</strong>
+        There is no root barrel to update. New domains are fully isolated — they cannot introduce transitive type coupling.
+      </div>
+
+      <hr>
+
+      <p>
+        <strong>Next:</strong> <a href="event-driven.html">Event-Driven (SQS)</a> — how SQS consumers work locally and in production.
+      </p>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

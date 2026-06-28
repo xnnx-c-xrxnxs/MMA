@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testing Strategy — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html" class="active">Testing Strategy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Testing Strategy</h1>
+      <p class="subtitle">
+        How we test the backend, frontend, and shared packages — test pyramid, per-layer
+        conventions, coverage thresholds, and how to run tests with Nx.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Testing Pyramid</h2>
+
+      <div class="mermaid">
+graph TB
+  subgraph "Testing Pyramid"
+    E2E["E2E / API Tests<br/>(few, slow, expensive)"]
+    APP["Application / Use-Case Tests<br/>(moderate, mocked repos)"]
+    DOM["Domain Entity Tests<br/>(many, fast, pure)"]
+    FE["Frontend Component Tests<br/>(moderate, mocked hooks)"]
+  end
+
+  E2E -.-> APP
+  APP -.-> DOM
+  FE -.-> DOM
+
+  style E2E fill:#fecaca,stroke:#dc2626,color:#991b1b
+  style APP fill:#fef3c7,stroke:#d97706,color:#92400e
+  style DOM fill:#dcfce7,stroke:#16a34a,color:#166534
+  style FE fill:#dbeafe,stroke:#2563eb,color:#1e40af
+      </div>
+
+      <p>
+        <strong>Ratio:</strong> ~70% domain / 20% application &amp; frontend / 10% E2E.
+        Most tests live where the logic is — pure domain entities and use cases.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Coverage Thresholds</h2>
+
+      <p>
+        Every project has <code>coverageThreshold</code> in its Jest config.
+        These thresholds are enforced per-project.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Project Type</th>
+            <th>Threshold</th>
+            <th>Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Domain packages</strong></td>
+            <td>80% (branches, functions, lines, statements)</td>
+            <td><code>user-domain</code>, <code>order-domain</code>, <code>product-domain</code></td>
+          </tr>
+          <tr>
+            <td><strong>Service apps</strong></td>
+            <td>70%</td>
+            <td><code>user-api-service</code>, <code>order-event-handler-service</code></td>
+          </tr>
+          <tr>
+            <td><strong>Frontend apps</strong></td>
+            <td>70%</td>
+            <td><code>webapp</code>, <code>mobile</code></td>
+          </tr>
+          <tr>
+            <td><strong>Shared packages</strong></td>
+            <td>70%</td>
+            <td><code>client-common</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Backend Testing by Layer</h2>
+
+      <h3>Domain Layer (Highest Priority)</h3>
+
+      <p>
+        Pure unit tests with <strong>zero mocks and zero dependencies</strong>.
+        Tests live co-located next to the source file: <code>*.spec.ts</code>.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>What to Test</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Entity <code>create()</code> and <code>reconstitute()</code></td>
+            <td>Defaults, required fields, generated IDs</td>
+          </tr>
+          <tr>
+            <td>Business methods</td>
+            <td><code>user.activate()</code>, <code>product.discontinue()</code></td>
+          </tr>
+          <tr>
+            <td>State transitions</td>
+            <td>PENDING → ACTIVE, ACTIVE → INACTIVE</td>
+          </tr>
+          <tr>
+            <td>Invariants &amp; guards</td>
+            <td>"Cannot activate without verified email"</td>
+          </tr>
+          <tr>
+            <td>Domain exceptions</td>
+            <td>Throws typed errors, not generic <code>Error</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code>// packages/user-domain/src/domain/entities/user.entity.spec.ts
+describe('User Entity', () => {
+  it('should create with PENDING status', () => {
+    const user = User.create({ email: 'test@example.com', ... });
+    expect(user.getUserStatus()).toBe(UserStatusEnum.PENDING);
+  });
+
+  it('should throw when activating without verified email', () => {
+    const user = User.create({ ... });
+    expect(() => user.activate()).toThrow(EmailNotVerifiedError);
+  });
+});</code></pre>
+
+      <h3>Use-Case Layer</h3>
+
+      <p>
+        Unit tests with <strong>mocked repository interfaces</strong> and mocked ACL validators.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>What to Test</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orchestration logic</td>
+            <td>Calls repository in correct order</td>
+          </tr>
+          <tr>
+            <td>Error propagation</td>
+            <td>Domain error flows up unchanged</td>
+          </tr>
+          <tr>
+            <td>Event publishing</td>
+            <td><code>eventPublisher.publish()</code> called with correct payload</td>
+          </tr>
+          <tr>
+            <td>ACL validation</td>
+            <td>Cross-service validator called before proceeding</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code>describe('CreateUserUseCase', () => {
+  let useCase: CreateUserUseCase;
+  let mockRepo: jest.Mocked&lt;IUserRepository&gt;;
+
+  beforeEach(() => {
+    mockRepo = { save: jest.fn(), findByEmail: jest.fn() } as any;
+    useCase = new CreateUserUseCase(mockRepo);
+  });
+
+  it('should throw if email taken', async () => {
+    mockRepo.findByEmail.mockResolvedValue(existingUser);
+    await expect(useCase.execute(input)).rejects.toThrow(EmailAlreadyExistsError);
+  });
+});</code></pre>
+
+      <h3>Application Service Layer</h3>
+
+      <p>
+        Unit tests with <strong>mocked use cases</strong> and mocked <code>IEventPublisher</code>.
+        Tests cursor routing (DynamoDB), DTO transformation, and event publishing orchestration.
+      </p>
+
+      <h3>Event Handler Service Layer</h3>
+
+      <p>
+        Unit tests for dispatcher logic (event type routing, Zod <code>safeParse</code>) and
+        individual handler functions (delegation to use cases, idempotency guards for saga events).
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Frontend Testing</h2>
+
+      <h3>Webapp (Next.js)</h3>
+
+      <p>
+        Component tests using <strong>Jest + React Testing Library</strong>.
+        Tests live co-located: <code>*.spec.tsx</code> next to source file.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>What to Test</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Domain tables</td>
+            <td>Rows render, badge variants correct, empty state shown</td>
+          </tr>
+          <tr>
+            <td>Action components</td>
+            <td>Conditional buttons by entity status</td>
+          </tr>
+          <tr>
+            <td>Status-variant mapping</td>
+            <td>Pure function returns correct badge variant per status</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code>// apps/webapp/src/components/users/users-table.spec.tsx
+describe('UsersTable', () => {
+  it('should render user rows', () => {
+    render(&lt;UsersTable users={mockUsers} /&gt;);
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  });
+
+  it('should show empty state', () => {
+    render(&lt;UsersTable users={[]} /&gt;);
+    expect(screen.getByText('No users found')).toBeInTheDocument();
+  });
+});</code></pre>
+
+      <h3>Mobile (Expo / React Native)</h3>
+
+      <p>
+        Component tests using <strong>Jest + React Native Testing Library</strong>.
+        Tests live co-located: <code>*.spec.tsx</code> next to source file.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>What to Test</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Domain lists (FlatList)</td>
+            <td>Items render, navigation on press, loading &amp; empty states</td>
+          </tr>
+          <tr>
+            <td>Detail screens</td>
+            <td>Conditional action buttons by status, mutation calls</td>
+          </tr>
+          <tr>
+            <td>Status-variant mapping</td>
+            <td>Pure function returns correct badge variant per status</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Shared Package Testing (<code>@old-st/client-common</code>)</h2>
+
+      <p>
+        The shared data-access layer has its own test suite covering API clients and React Query hooks.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>What to Test</th>
+            <th>How</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API clients</td>
+            <td>Mock <code>globalThis.fetch</code>, verify URL construction, HTTP method, body, and Zod schema parsing</td>
+          </tr>
+          <tr>
+            <td>React Query hooks</td>
+            <td><code>renderHook()</code> + <code>QueryClientProvider</code> wrapper, verify query keys, enabled flags, mutation calls</td>
+          </tr>
+          <tr>
+            <td>Error classes</td>
+            <td>Verify <code>ApiError</code> shape matches backend error response</td>
+          </tr>
+          <tr>
+            <td>Config</td>
+            <td>Verify <code>configureApi()</code> sets base URLs correctly</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Test File Location</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Convention</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Backend</td>
+            <td>Co-located <code>.spec.ts</code> next to source</td>
+            <td><code>user.entity.spec.ts</code></td>
+          </tr>
+          <tr>
+            <td>Webapp</td>
+            <td>Co-located <code>.spec.tsx</code> next to source</td>
+            <td><code>users-table.spec.tsx</code></td>
+          </tr>
+          <tr>
+            <td>Mobile</td>
+            <td>Co-located <code>.spec.tsx</code> next to source</td>
+            <td><code>user-list.spec.tsx</code></td>
+          </tr>
+          <tr>
+            <td>client-common</td>
+            <td>Co-located <code>.spec.ts</code> / <code>.spec.tsx</code></td>
+            <td><code>user-api.client.spec.ts</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Example file structure
+packages/user-domain/src/
+  domain/entities/
+    user.entity.ts
+    user.entity.spec.ts          ← domain test
+  application/use-cases/
+    create-user/
+      create-user.use-case.ts
+      create-user.use-case.spec.ts  ← use case test
+
+apps/webapp/src/components/users/
+  users-table.tsx
+  users-table.spec.tsx            ← component test
+
+packages/client-common/src/hooks/
+  use-users.ts
+  use-users.spec.tsx              ← hook test</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Running Tests</h2>
+
+      <pre><code># Test a single project
+pnpm nx test user-domain
+pnpm nx test webapp
+pnpm nx test mobile
+pnpm nx test client-common
+
+# Test all domain packages
+pnpm nx run-many --target=test --projects=*-domain
+
+# Test all service apps
+pnpm nx run-many --target=test --projects=*-service
+
+# Test everything
+pnpm nx run-many --target=test
+
+# With coverage report
+pnpm nx test user-domain --coverage
+
+# Watch mode (useful for TDD)
+pnpm nx test user-domain --watch
+
+# Run a specific test file
+pnpm nx test user-domain --testPathPattern=user.entity
+
+# Skip Nx cache for verification
+pnpm nx test user-domain --skip-nx-cache</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Jest Configuration</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Config</th>
+            <th>Location</th>
+            <th>Environment</th>
+            <th>Transform</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Root</td>
+            <td><code>jest.config.ts</code></td>
+            <td>—</td>
+            <td>Multi-project (automatic via Nx)</td>
+          </tr>
+          <tr>
+            <td>Domain packages</td>
+            <td><code>packages/{domain}-domain/jest.config.ts</code></td>
+            <td><code>node</code></td>
+            <td><code>ts-jest</code></td>
+          </tr>
+          <tr>
+            <td>Service apps</td>
+            <td><code>apps/{domain}/{service}/jest.config.cts</code></td>
+            <td><code>node</code></td>
+            <td><code>ts-jest</code></td>
+          </tr>
+          <tr>
+            <td>Webapp</td>
+            <td><code>apps/webapp/jest.config.cts</code></td>
+            <td><code>jsdom</code></td>
+            <td><code>next/jest</code></td>
+          </tr>
+          <tr>
+            <td>Mobile</td>
+            <td><code>apps/mobile/jest.config.cts</code></td>
+            <td><code>jsdom</code> (jest-expo)</td>
+            <td><code>babel-jest</code></td>
+          </tr>
+          <tr>
+            <td>client-common</td>
+            <td><code>packages/client-common/jest.config.ts</code></td>
+            <td><code>jsdom</code></td>
+            <td><code>ts-jest</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Test Best Practices</h2>
+
+      <ul>
+        <li><strong>AAA pattern:</strong> Arrange, Act, Assert — every test follows this structure.</li>
+        <li><strong>One assertion group per test:</strong> Each <code>it()</code> tests one behavior.</li>
+        <li><strong>Descriptive names:</strong> <code>"should throw when activating user without verified email"</code></li>
+        <li><strong>Independent tests:</strong> No shared mutable state between tests. Use <code>beforeEach</code> to reset.</li>
+        <li><strong>Test edge cases:</strong> Zero values, empty arrays, null/undefined inputs, boundary conditions.</li>
+        <li><strong>Mock at boundaries:</strong> Mock repository interfaces, not internal methods.</li>
+        <li><strong>No testing implementation details:</strong> Test behavior, not how the code works internally.</li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Claude Code Testing Skills</h2>
+
+      <p>Use the relevant Claude Code skill for step-by-step test writing guidance:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Test Type</th>
+            <th>Skill</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Domain entity, use case, or application service tests</td>
+            <td><code>write-domain-tests</code></td>
+          </tr>
+          <tr>
+            <td>Event handler or ACL client tests</td>
+            <td><code>write-domain-tests</code></td>
+          </tr>
+          <tr>
+            <td>Webapp component or utility tests</td>
+            <td><code>write-webapp-tests</code></td>
+          </tr>
+          <tr>
+            <td>Mobile screen or component tests</td>
+            <td><code>write-mobile-tests</code></td>
+          </tr>
+          <tr>
+            <td>API client, hook, or config tests</td>
+            <td><code>write-client-common-tests</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

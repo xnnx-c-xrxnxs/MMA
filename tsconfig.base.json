@@ -1,0 +1,41 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2022",
+    "module": "esnext",
+    "lib": ["es2022"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@old-st/common": ["packages/common/src/index.ts"],
+      "@old-st/dynamodb-onetable": ["packages/dynamodb-onetable/src/index.ts"],
+      "@old-st/aws-secrets": ["packages/aws/aws-secrets/src/index.ts"],
+      "@old-st/aws-sqs": ["packages/aws/aws-sqs/src/index.ts"],
+      "@old-st/aws-cognito": ["packages/aws/aws-cognito/src/index.ts"],
+      "@old-st/aws-s3": ["packages/aws/aws-s3/src/index.ts"],
+      "@old-st/contracts/common": ["packages/contracts/common/src/index.ts"],
+      "@old-st/contracts/auth": ["packages/contracts/auth/src/index.ts"],
+      "@old-st/ui": ["packages/ui/src/index.ts"],
+      "@old-st/design-tokens": ["packages/design-tokens/src/index.ts"],
+      "@old-st/mobile-ui": ["packages/mobile-ui/src/index.ts"],
+      "@old-st/client-common": ["packages/client-common/src/index.ts"],
+      "@old-st/client-common/infrastructure": ["packages/client-common/src/infrastructure/index.ts"],
+      "@old-st/client-common/hooks": ["packages/client-common/src/hooks/index.ts"],
+      "@old-st/telemetry": ["packages/telemetry/src/index.ts"],
+      "@old-st/monitoring-sdk": ["packages/monitoring-sdk/src/index.ts"],
+      "@old-st/eslint-plugin": ["packages/eslint-plugin/src/index.js"],
+      "@old-st/nx-plugin": ["packages/nx-plugin/src/index.ts"],
+      "@old-st/e2e-helpers": ["test/e2e/api-helpers.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

@@ -1,0 +1,17 @@
+# Examples-local artifacts. The repo root .gitignore also excludes
+# examples/node_modules, examples/dist, examples/coverage, examples/.next
+# to provide defense-in-depth.
+
+dist
+tmp
+out-tsc
+node_modules
+coverage
+.next
+.nx/cache
+.nx/workspace-data
+
+# Local environment variables — never commit
+.env.local
+.env
+.env.e2e

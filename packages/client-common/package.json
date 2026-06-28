@@ -1,0 +1,20 @@
+{
+  "name": "@old-st/client-common",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./infrastructure": "./src/infrastructure/index.ts",
+    "./hooks": "./src/hooks/index.ts"
+  },
+  "description": "Shared data-access layer: API clients, React Query hooks, providers",
+  "peerDependencies": {
+    "react": ">=19",
+    "zod": ">=3",
+    "@tanstack/react-query": ">=5"
+  },
+  "dependencies": {
+    "@old-st/contracts-common": "workspace:*"
+  }
+}

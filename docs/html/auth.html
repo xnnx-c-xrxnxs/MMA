@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication — Old ST Template</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Old ST Template</h2>
+      <small>Architecture Documentation</small>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <div class="nav-section">Architecture</div>
+        <li><a href="architecture.html">Clean Architecture</a></li>
+        <li><a href="domains.html">Bounded Contexts</a></li>
+        <li><a href="domain-interactions.html">Domain Interactions</a></li>
+        <div class="nav-section">Frontend</div>
+        <li><a href="webapp.html">Webapp (Next.js)</a></li>
+        <li><a href="mobile.html">Mobile (Expo)</a></li>
+        <div class="nav-section">Infrastructure</div>
+        <li><a href="persistence.html">Persistence Patterns</a></li>
+        <li><a href="contracts.html">Contracts &amp; Types</a></li>
+        <li><a href="event-driven.html">Event-Driven (SQS)</a></li>
+        <li><a href="infrastructure.html">Local Infrastructure</a></li>
+        <li><a href="auth.html" class="active">Authentication</a></li>
+        <li><a href="monitoring.html">Monitoring &amp; Observability</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
+        <li><a href="deployment.html">Deployment &amp; CD</a></li>
+        <div class="nav-section">Quality</div>
+        <li><a href="testing.html">Testing Strategy</a></li>
+        <div class="nav-section">AI &amp; Automation</div>
+        <li><a href="ai-workflows.html">Workflow Orchestrators</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+
+      <h1>Authentication</h1>
+      <p class="subtitle">
+        How authentication works end-to-end — from the <code>auth-api-service</code> through
+        the JWT auth guard on every API service to the <code>AuthProvider</code> on the frontend.
+        Covers both local development (no Cognito) and deployed environments (AWS Cognito).
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Architecture Overview</h2>
+
+      <div class="mermaid">
+graph LR
+  Client["Browser / Mobile"]
+  AuthSvc["auth-api-service\nport 3003"]
+  ApiSvc["user / product / order\nAPI services"]
+  IAuth["IAuthProvider\n&lt;abstract&gt;"]
+  Cognito["CognitoAuthProvider\n(deployed)"]
+  Local["LocalAuthProvider\n(STAGE=local)"]
+  Guard["JwtAuthGuard\n(per service)"]
+
+  Client -->|POST /auth/sign-in| AuthSvc
+  AuthSvc --> IAuth
+  IAuth --> Cognito
+  IAuth --> Local
+  Client -->|Bearer token| ApiSvc
+  ApiSvc --> Guard
+      </div>
+
+      <p>
+        The <code>auth-api-service</code> is the single auth boundary. It delegates to an
+        <code>IAuthProvider</code> abstraction — <code>CognitoAuthProvider</code> in deployed
+        environments and <code>LocalAuthProvider</code> locally (<code>STAGE=local</code>).
+        No other service talks to Cognito directly.
+      </p>
+
+      <p>
+        Every other API service (<code>user-api-service</code>, <code>order-api-service</code>, etc.)
+        has its own copy of <code>JwtAuthGuard</code> that verifies the JWT on each request.
+        The guard is provider-agnostic — it reads env vars, not Cognito SDK calls.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Token Flow</h2>
+
+      <div class="mermaid">
+sequenceDiagram
+  participant Browser
+  participant AuthSvc as auth-api-service
+  participant OtherSvc as user-api-service
+  participant S3 as "AWS Cognito / LocalAuth"
+
+  Browser->>AuthSvc: POST /auth/sign-in {email, password}
+  AuthSvc->>S3: authenticate
+  S3-->>AuthSvc: accessToken + refreshToken
+  AuthSvc-->>Browser: {accessToken, idToken} + Set-Cookie: refresh_token (httpOnly)
+
+  Note over Browser: accessToken stored in memory only
+
+  Browser->>OtherSvc: GET /users/me (Authorization: Bearer {accessToken})
+  OtherSvc->>OtherSvc: JwtAuthGuard verifies token
+  OtherSvc-->>Browser: {user}
+
+  Note over Browser: Page refresh — accessToken lost
+  Browser->>AuthSvc: POST /auth/refresh-session (cookie sent automatically)
+  AuthSvc-->>Browser: {accessToken, idToken} (new tokens)
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Local Development</h2>
+
+      <p>
+        When <code>STAGE=local</code>, the <code>LocalAuthProvider</code> is used. No Cognito setup
+        is required. The local provider accepts a single hardcoded credential:
+      </p>
+
+      <table>
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Email</td><td><code>admin@test.com</code></td></tr>
+          <tr><td>Password</td><td><code>Password123!</code></td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        The local provider issues unsigned JWT tokens. The <code>JwtAuthGuard</code> on all services
+        bypasses JWKS verification when <code>STAGE=local</code> — it decodes the token payload
+        without signature verification.
+      </p>
+
+      <p>
+        The refresh token format locally is: <code>local-refresh-{userId}-{timestamp}</code>
+        (stateless — no database lookup needed).
+      </p>
+
+      <div class="callout info">
+        <strong>No Cognito needed locally.</strong> Start <code>auth-api-service</code> with
+        <code>STAGE=local</code> and sign in immediately with the credentials above.
+        All other services will accept the unsigned tokens automatically.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Auth API Endpoints</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/sign-in</code></td>
+            <td>❌</td>
+            <td>Sign in with email + password. Returns access + id tokens. Sets httpOnly refresh cookie.</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/new-password</code></td>
+            <td>❌</td>
+            <td>Set new password after first sign-in challenge (Cognito NEW_PASSWORD_REQUIRED flow).</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/refresh-session</code></td>
+            <td>❌ (cookie)</td>
+            <td>Silent token refresh. Reads the httpOnly refresh cookie. Returns new access + id tokens.</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/forgot-password</code></td>
+            <td>❌</td>
+            <td>Send a password reset code to the user's email.</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/confirm-forgot-password</code></td>
+            <td>❌</td>
+            <td>Confirm password reset with code + new password.</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/change-password</code></td>
+            <td>✅</td>
+            <td>Change password (authenticated user).</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/auth/sign-out</code></td>
+            <td>✅</td>
+            <td>Sign out. Revokes tokens, clears the httpOnly cookie.</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/auth/me</code></td>
+            <td>✅</td>
+            <td>Get current user details from Cognito (or local mock).</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/health</code></td>
+            <td>❌</td>
+            <td>Health check — returns <code>{ status: 'ok', service: 'auth-api-service' }</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>httpOnly Cookie — Critical Details</h2>
+
+      <p>Refresh tokens are stored as httpOnly cookies. The cookie parameters differ by environment:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Local (<code>STAGE=local</code>)</th>
+            <th>Deployed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>httpOnly</code></td>
+            <td>true</td>
+            <td>true</td>
+          </tr>
+          <tr>
+            <td><code>secure</code></td>
+            <td>false</td>
+            <td>true</td>
+          </tr>
+          <tr>
+            <td><code>sameSite</code></td>
+            <td><code>Lax</code></td>
+            <td><code>None</code></td>
+          </tr>
+          <tr>
+            <td><code>path</code></td>
+            <td>/</td>
+            <td>/</td>
+          </tr>
+          <tr>
+            <td><code>maxAge</code></td>
+            <td>30 days</td>
+            <td>30 days</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <strong>Why <code>SameSite=None</code> in deployed mode?</strong>
+        The frontend (ALB, e.g. <code>app.example.com</code>) and the API Gateway
+        (<code>api.execute-api.eu-west-2.amazonaws.com</code>) are on different origins.
+        <code>SameSite=None</code> with <code>Secure=true</code> is the only combination
+        that allows cross-origin cookie sending.
+        <strong>Never use <code>SameSite=Strict</code> in deployed mode</strong> — the browser
+        will not send the cookie on cross-origin requests.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>JWT Auth Guard (Per-Service)</h2>
+
+      <p>
+        Every HTTP API service has its own copy of <code>JwtAuthGuard</code> in
+        <code>presentation/guards/jwt-auth.guard.ts</code>. The guard is <strong>not</strong> a
+        shared package — each service owns its copy.
+      </p>
+
+      <p>The guard reads three environment variables:</p>
+
+      <table>
+        <thead>
+          <tr><th>Env Var</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>JWT_JWKS_URI</code></td>
+            <td>JWKS endpoint for token verification (e.g., Cognito JWKS URL). Ignored locally.</td>
+          </tr>
+          <tr>
+            <td><code>JWT_ISSUER</code></td>
+            <td>Expected <code>iss</code> claim. Tokens with wrong issuer are rejected. Ignored locally.</td>
+          </tr>
+          <tr>
+            <td><code>JWT_USER_ID_CLAIM</code></td>
+            <td>Name of the claim holding the user ID (default: <code>sub</code>). Configurable for Auth0 / Keycloak.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        This design makes the guard provider-agnostic: it works with AWS Cognito, Auth0, Keycloak,
+        or any OIDC-compatible provider without code changes.
+      </p>
+
+      <p>
+        Use the <code>@Public()</code> decorator to exempt an endpoint from auth:
+      </p>
+
+      <pre><code>@Get('health')
+@Public()
+health() {
+  return { status: 'ok', service: 'user-api-service' };
+}</code></pre>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Two-Tier Auth: API Gateway + NestJS</h2>
+
+      <p>
+        In every deployed environment, an inbound API request is authenticated
+        <strong>twice</strong> — once at the API Gateway edge (using a JWT authorizer wired to
+        the Cognito User Pool's JWKS), and once inside the Lambda by NestJS's
+        <code>JwtAuthGuard</code>. Both must pass.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Where it runs</th><th>What it validates</th><th>Reject behavior</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Edge (gateway)</strong></td>
+            <td>API Gateway HTTP API v2 JWT authorizer</td>
+            <td>Token signature (JWKS), <code>iss</code>, <code>aud</code>, <code>exp</code></td>
+            <td><code>401</code> returned <em>before</em> Lambda is invoked — no cold start, no log entry</td>
+          </tr>
+          <tr>
+            <td><strong>NestJS</strong></td>
+            <td><code>JwtAuthGuard</code> (per-service)</td>
+            <td>Same as above + populates <code>request.user</code> for <code>@CurrentUser()</code></td>
+            <td><code>401</code> from inside Lambda (you'll see the request log)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Why two tiers?</strong> The gateway-side check is a hard perimeter: invalid
+        traffic never reaches Lambda, so there's no cold-start cost and no DDoS amplification.
+        The NestJS guard is what populates <code>request.user</code>, so application code can
+        use <code>@CurrentUser()</code> without re-parsing the token.
+      </p>
+
+      <h3>Public Routes</h3>
+
+      <p>
+        Endpoints that must be reachable without a token (sign-in, password reset,
+        <code>/health</code>, <code>/swagger</code>) are declared in two places, and the two
+        MUST agree:
+      </p>
+
+      <ol>
+        <li>The controller method has <code>@Public()</code> — bypasses the NestJS guard.</li>
+        <li>The path is listed in <code>.github/service-registry.json</code> →
+            <code>gatewayAuth.publicRoutes</code> for that service — bypasses the gateway authorizer.</li>
+      </ol>
+
+      <p>
+        Drift is detected by the <code>gateway-public-routes-sync</code> structural lint check
+        (run by <code>pnpm lint:standards</code>). If the counts don't match, CI fails before
+        the PR can merge. See the <code>gateway-jwt-auth</code> skill for the full registry
+        schema and Terraform wiring.
+      </p>
+
+      <h3>Standard public routes for every new HTTP API service</h3>
+
+      <p>When you scaffold a new service, the registry must include:</p>
+
+      <pre><code>{ "service": "{name}", "method": "GET", "path": "/api/health" },
+{ "service": "{name}", "method": "GET", "path": "/api/swagger" },
+{ "service": "{name}", "method": "GET", "path": "/api/swagger-json" }</code></pre>
+
+      <p>
+        <code>/api/health</code> is required because the CD smoke test hits it after deployment
+        and only accepts <code>200</code>. <code>/api/swagger*</code> are listed even though
+        Swagger itself is gated by <code>SWAGGER_ENABLED=true</code> — the gateway has no way
+        to know whether the service serves the route, and unused gateway routes return harmless
+        <code>404</code>s rather than confusing <code>401</code>s.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Reading the Authenticated Actor — <code>@CurrentUser()</code></h2>
+
+      <p>
+        Every API service ships a <strong>per-service</strong> param decorator at
+        <code>presentation/decorators/current-user.decorator.ts</code> alongside an
+        <code>express.d.ts</code> type augmentation. The decorator extracts the
+        <code>AuthenticatedUser = { userId, email, userRole? }</code> object that
+        <code>JwtAuthGuard</code> populates on <code>request.user</code> after JWT verification.
+      </p>
+
+      <p>
+        <strong>Golden Rule #45</strong> — controllers MUST read the actor identity via
+        <code>@CurrentUser()</code>. Never accept <code>userId</code>, <code>actorId</code>,
+        <code>performedBy</code>, or <code>requesterId</code> from <code>@Body()</code> or
+        <code>@Query()</code> — that is the canonical broken-access-control vulnerability.
+        Path params like <code>:userId</code> are allowed when they identify the
+        <em>subject</em> of an admin action; the actor still comes from the JWT.
+      </p>
+
+      <pre><code>@Post()
+async createOrder(
+  @CurrentUser() user: AuthenticatedUser,
+  @Body(new ZodValidationPipe(createOrderSchema)) body: CreateOrderInput,
+) {
+  return this.orderService.create({ ...body, customerId: user.userId });
+}
+
+// Single-field extraction:
+@Get('me')
+async me(@CurrentUser('userId') userId: string) { /* ... */ }</code></pre>
+
+      <p>
+        Enforced by the <code>no-userId-in-controller-input</code> structural lint check
+        in <code>scripts/lint-standards.ts</code> (run by <code>ci-fast-check.yml</code>).
+        See the <code>current-user-decorator</code> skill for full patterns.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Cross-Service Actor Propagation</h2>
+
+      <p>
+        When an API service calls another bounded context synchronously (Pattern 1 — Sync ACL),
+        the outbound HTTP request must carry BOTH the originating <code>Authorization</code>
+        header and the <code>x-correlation-id</code>. This is handled by
+        <code>getOutboundHeaders()</code> from <code>@old-st/telemetry</code>:
+      </p>
+
+      <pre><code>import { getOutboundHeaders } from '@old-st/telemetry';
+
+await fetch(url, {
+  headers: {
+    'Content-Type': 'application/json',
+    ...getOutboundHeaders(),   // forwards Authorization + x-correlation-id
+  },
+});</code></pre>
+
+      <p>
+        <code>correlationMiddleware()</code> captures both values from the inbound request
+        and stores them in <code>AsyncLocalStorage</code>;
+        <code>getOutboundHeaders()</code> reads them back. The downstream service's
+        <code>@CurrentUser()</code> resolves to the <strong>same actor end-to-end</strong>,
+        and the trace chain stays intact across the entire call graph.
+      </p>
+
+      <p>
+        <strong>Golden Rule #46.</strong> The legacy <code>getCorrelationHeaders()</code> sends
+        only the correlationId and is kept for backward compatibility — prefer
+        <code>getOutboundHeaders()</code> for any cross-service call to an authenticated endpoint.
+      </p>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Frontend — AuthProvider</h2>
+
+      <p>
+        The <code>AuthProvider</code> in <code>packages/client-common</code> handles the
+        client-side auth lifecycle:
+      </p>
+
+      <ul>
+        <li><strong>Silent refresh on mount</strong> — calls <code>POST /auth/refresh-session</code>
+          with <code>credentials: 'include'</code> to restore the session from the httpOnly cookie.
+          This runs on every page load.
+        </li>
+        <li><strong>Access token memory-only</strong> — stored in React state, never in
+          <code>localStorage</code> or <code>sessionStorage</code>. Lost on page refresh;
+          restored via silent refresh.
+        </li>
+        <li><strong>401 auto-retry</strong> — when any API call returns 401, the base API client
+          calls refresh once and retries. If refresh fails, the user is redirected to login.
+        </li>
+        <li><strong>Re-entrancy guard</strong> — multiple concurrent 401s trigger only one refresh call.
+        </li>
+      </ul>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>CORS Configuration</h2>
+
+      <p>Every API service enables CORS with credentials:</p>
+
+      <pre><code>// main.ts (every API service)
+app.enableCors({
+  origin: process.env.FE_BASE_URL,
+  credentials: true,
+});</code></pre>
+
+      <div class="callout warning">
+        <strong>Never use <code>origin: '*'</code> with <code>credentials: true</code>.</strong>
+        The W3C spec forbids it — browsers reject it. Always use a specific origin.
+      </div>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Required Env Vars</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Local Value</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>AUTH_SERVICE_PORT</code></td>
+            <td><code>3003</code></td>
+            <td>HTTP listen port for <code>auth-api-service</code>.</td>
+          </tr>
+          <tr>
+            <td><code>API_AUTH_URL</code></td>
+            <td><code>http://localhost:3003/api</code></td>
+            <td>Base URL consumed by backend services that call auth.</td>
+          </tr>
+          <tr>
+            <td><code>NEXT_PUBLIC_API_AUTH_URL</code></td>
+            <td><code>http://localhost:3003/api</code></td>
+            <td>Exposed to Next.js webapp via <code>configureApi()</code>.</td>
+          </tr>
+          <tr>
+            <td><code>COGNITO_USER_POOL_ID</code></td>
+            <td>(empty — not needed locally)</td>
+            <td>AWS Cognito User Pool ID. Used by <code>CognitoAuthProvider</code>.</td>
+          </tr>
+          <tr>
+            <td><code>COGNITO_CLIENT_ID</code></td>
+            <td>(empty — not needed locally)</td>
+            <td>AWS Cognito App Client ID. Used by <code>CognitoAuthProvider</code>.</td>
+          </tr>
+          <tr>
+            <td><code>COGNITO_REGION</code></td>
+            <td><code>eu-west-2</code></td>
+            <td>AWS region for the Cognito User Pool.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════ -->
+      <h2>Contracts</h2>
+
+      <p>
+        Auth schemas live in <code>@old-st/contracts/auth</code>
+        (<code>packages/contracts/auth/src/schemas.ts</code>):
+      </p>
+
+      <ul>
+        <li><code>signInSchema</code> / <code>SignInInput</code></li>
+        <li><code>signInResponseSchema</code> / <code>SignInResponse</code> (discriminated union:
+          <code>SUCCESS</code> | <code>NEW_PASSWORD_REQUIRED</code>)</li>
+        <li><code>refreshSessionResponseSchema</code> / <code>RefreshSessionResponse</code></li>
+        <li><code>forgotPasswordSchema</code> / <code>ForgotPasswordInput</code></li>
+        <li><code>confirmForgotPasswordSchema</code> / <code>ConfirmForgotPasswordInput</code></li>
+        <li><code>changePasswordSchema</code> / <code>ChangePasswordInput</code></li>
+        <li><code>meResponseSchema</code> / <code>MeResponse</code></li>
+      </ul>
+
+      <div class="callout info">
+        Import from the domain subpath: <code>import { signInSchema } from '@old-st/contracts/auth'</code>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>
