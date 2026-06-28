@@ -53,7 +53,7 @@ Three quick questions:
 
 2. GitHub repository (owner/repo)?
 
-3. Ticket prefix? (e.g. OST, ORDER, AUTH — used as PREFIX-01, PREFIX-02 …)
+3. Ticket prefix? (this project: **HLP** — used zero-padded as HLP-01, HLP-02 …)
 ```
 
 **Routing:**
@@ -207,7 +207,7 @@ PREVIEW: GitHub Issue
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Title: [PREFIX]-NN [Feature Name] - [Story Type or PARENT]
-Ticket Number: [PREFIX]-NN
+Ticket Number: [PREFIX]-NN   ← NN is a ZERO-PADDED two-digit sequence (01, 02, 03 …). With ticketPrefix "HLP" this is HLP-01, HLP-02, HLP-03 …
 Story Type: [exact dropdown value]
 Domain: [domain]
 Priority: [Critical / High / Medium / Low]
