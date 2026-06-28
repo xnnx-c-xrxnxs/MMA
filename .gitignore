@@ -137,3 +137,6 @@ infra/bootstrap/github-secrets
 infra/bootstrap/github-secrets.*
 !infra/bootstrap/github-secrets.example
 
+# Local-only helpdesk documentation (not for the repo)
+/HELPDESK_DOCUMENTATION/
+
