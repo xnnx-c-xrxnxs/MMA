@@ -44,7 +44,7 @@
     },
     {
       "name": "customer-api-service",
-      "distPath": "dist/apps/customer/customer-api-service",
+      "distPath": "dist/apps/customer/customer-api-service/main.js",
       "domain": "customer",
       "type": "api",
       "handler": "run.sh",
