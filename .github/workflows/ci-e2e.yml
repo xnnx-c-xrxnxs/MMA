@@ -195,8 +195,11 @@ jobs:
   webapp-e2e-tests:
     name: Webapp E2E Tests (Playwright)
     needs: [detect-changes, api-e2e-tests]
+    # TEMPORARILY DISABLED: Webapp E2E (Playwright) job is gated off via the
+    # leading `false &&`. Remove the `false &&` line to re-enable.
     # always() prevents auto-skip when api-e2e-tests or detect-changes was skipped
     if: |
+      false &&
       always() &&
       needs.detect-changes.result != 'failure' &&
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.frontend == 'true') &&

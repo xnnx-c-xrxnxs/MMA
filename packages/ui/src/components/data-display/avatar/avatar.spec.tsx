@@ -26,4 +26,9 @@ describe('Avatar', () => {
     render(<Avatar name="   " data-testid="empty" />);
     expect(screen.getByTestId('empty')).toHaveTextContent('');
   });
+
+  it('renders nothing when neither name nor children are provided', () => {
+    render(<Avatar data-testid="bare" />);
+    expect(screen.getByTestId('bare')).toHaveTextContent('');
+  });
 });

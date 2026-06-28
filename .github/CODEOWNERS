@@ -9,28 +9,28 @@
 # ── Default owner for everything not matched below ────────────────────────────
 # This catch-all ensures every file — including any NEW domain added in future —
 # always has at least one required reviewer. No update needed when adding domains.
-*                                   @code-maca/placeholder-owner
+*                                   @code-maca
 
 # ── Contracts (shared across layers) ─────────────────────────────────────────
-packages/contracts/                 @code-maca/placeholder-owner
+packages/contracts/                 @code-maca
 
 # ── Frontend shared packages ──────────────────────────────────────────────────
-packages/ui/                        @code-maca/placeholder-owner
-packages/mobile-ui/                 @code-maca/placeholder-owner
-packages/client-common/             @code-maca/placeholder-owner
+packages/ui/                        @code-maca
+packages/mobile-ui/                 @code-maca
+packages/client-common/             @code-maca
 
 # ── Webapp + mobile ────────────────────────────────────────────────────────────
-apps/webapp/                        @code-maca/placeholder-owner
-apps/webapp-e2e/                    @code-maca/placeholder-owner
-apps/mobile/                        @code-maca/placeholder-owner
+apps/webapp/                        @code-maca
+apps/webapp-e2e/                    @code-maca
+apps/mobile/                        @code-maca
 
 # ── CI / Infrastructure ────────────────────────────────────────────────────────
-.github/                            @code-maca/placeholder-owner
-.github/workflows/                  @code-maca/placeholder-owner
-scripts/                            @code-maca/placeholder-owner
-docker-compose.yml                  @code-maca/placeholder-owner
-nx.json                             @code-maca/placeholder-owner
-tsconfig.base.json                  @code-maca/placeholder-owner
+.github/                            @code-maca
+.github/workflows/                  @code-maca
+scripts/                            @code-maca
+docker-compose.yml                  @code-maca
+nx.json                             @code-maca
+tsconfig.base.json                  @code-maca
 
 # ── Optional: per-domain backend ownership ────────────────────────────────────
 # Uncomment and extend these if you want a backend team specifically requested
@@ -41,4 +41,4 @@ tsconfig.base.json                  @code-maca/placeholder-owner
 #
 # ── For new projects created from this template ─────────────────────────────
 # Run `node scripts/task-helpers/setup-branch-protection.mjs --rename-codeowners`
-# to replace `@code-maca/placeholder-owner` with your org/team across this file.
+# to replace `@code-maca` with your org/team across this file.

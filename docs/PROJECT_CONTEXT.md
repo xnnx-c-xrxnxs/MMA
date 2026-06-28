@@ -8,13 +8,16 @@
 
 ## 1. What This Project Is
 
-`mma` is a **full-stack Clean Architecture template** for AWS-deployed products. It ships:
+`helpdesk` is a **support ticketing platform** built on a full-stack Clean Architecture monorepo (Nx) deployed to AWS. Customers raise tickets; each new ticket is **auto-routed to an available agent** via an asynchronous choreography saga; **SLA targets are derived per customer tier** and tickets **escalate automatically on breach**. It ships:
 
-- **Backend microservices** — NestJS on Lambda (HTTP API services + SQS event-handler services).
-- **Webapp** — Next.js 15 App Router (Tailwind v4, shadcn-style UI primitives, React Query).
-- **Mobile app** — Expo / React Native (shared data-access layer with the webapp via `@mma/client-common`).
+- **Backend microservices** — NestJS on Lambda. HTTP API services (`ticket`, `agent`, `customer`, `team`, `auth`) plus SQS event-handler services that run the auto-routing saga, maintain agent load, and process SLA breaches.
+- **Webapp** — Next.js App Router (Tailwind v4, shadcn-style UI primitives, React Query): the agent ticket workspace, agent roster, teams page, and a customer self-service portal.
 - **CD pipeline** — Terraform child modules driven by `.github/service-registry.json` (zero-edit deploys for new services).
 - **Workflow prompts + skills** — `.claude/commands/` and `.claude/skills/` automate Clean Architecture-compliant feature development.
+
+> **Persistence:** every business domain (`ticket`, `agent`, `customer`, `team`) uses **DynamoDB (OneTable, single-table design) with cursor pagination** — not Prisma. Access patterns are enumerated as GSIs up front (see §11). `auth` is Cognito-backed.
+>
+> **Scope:** the ACTIVE backlog is [`HELPDESK_DOCUMENTATION/user-stories.active.csv`](../HELPDESK_DOCUMENTATION/user-stories.active.csv) (21 stories). `knowledge-base` (article suggestions on ticket creation) is a documented **STRETCH** domain — deferred, not built, and intentionally absent from `issue-config.json`.
 
 ---
 
@@ -25,27 +28,30 @@
 
 | Domain | Persistence | Service(s) |
 |---|---|---|
-| `user` | DynamoDB OneTable | `user-api-service`, `user-event-handler-service` |
-| `product` | DynamoDB OneTable | `product-api-service`, `product-event-handler-service` |
-| `order` | Prisma + PostgreSQL | `order-api-service`, `order-event-handler-service` |
+| `ticket` | DynamoDB OneTable | `ticket-api-service`, `ticket-event-handler-service` |
+| `agent` | DynamoDB OneTable | `agent-api-service`, `agent-event-handler-service` |
+| `customer` | DynamoDB OneTable | `customer-api-service` |
+| `team` | DynamoDB OneTable | `team-api-service` |
 | `auth` | Cognito (deployed) / `LocalAuthProvider` (local) | `auth-api-service` |
-| `files` | S3 (presigned URLs) | `file-api-service` |
-| `monitoring` | CloudWatch / X-Ray | `monitoring-api-service`, `monitoring-webapp` (internal tool) |
 
 **Cross-cutting surfaces** (not bounded contexts, but valid `domain-*` labels):
-`webapp`, `mobile`, `infra`, `cross-domain`, `new-domain`.
+`webapp`, `infra`, `cross-domain`, `new-domain`.
 
-Add new domains via the `/new-domain` workflow prompt — and remember the `issue-config.json` + dropdown sync.
+> **STRETCH (documented, not built):** `knowledge-base` — suggested articles on ticket creation; a parallel, non-blocking consumer of `TICKET_CREATED`. Lives in [`HELPDESK_DOCUMENTATION/`](../HELPDESK_DOCUMENTATION/) only and is deliberately excluded from `issue-config.json` until promoted.
+
+Add new domains via the `/new-domain` (or `/new-domain-dynamo`) workflow prompt — and remember the `issue-config.json` + dropdown sync.
 
 ---
 
 ## 3. User Roles
 
-- `ADMIN` — full access, manages users.
-- `USER` — standard authenticated end user.
-- `GUEST` — pre-auth public flows only (sign-in, sign-up, public catalogue).
+Identity is owned by `auth` (Cognito). `agent` and `customer` records link to it via `userId` (the Cognito sub). The actor is always resolved at runtime from the JWT via `@CurrentUser()` (Golden Rules #23/#24) — never trusted from the request body or params (#10).
 
-Role enums live in `packages/{auth-domain}-domain/src/domain/constants/{auth-domain}-roles.ts` — never hardcode role strings.
+- `ADMIN` — registers customers, agents and teams; provisions agent/customer logins via email invite; assigns / reassigns tickets through the ACL gate; may author `PUBLIC` and `INTERNAL` comments.
+- `AGENT` — works the queue; starts / resolves / escalates assigned tickets; toggles own availability (`AVAILABLE ↔ BUSY ↔ OFFLINE`, which drives routing); may author `PUBLIC` and `INTERNAL` comments.
+- `CUSTOMER` — raises tickets and tracks the status of their own; may author only `PUBLIC` comments, and only on a ticket whose `customerId` matches their own identity.
+
+A comment's `authorRole` (`AGENT | CUSTOMER | ADMIN`) snapshots who wrote it. Role enums live in the domain constants — never hardcode role strings (#8).
 
 ---
 
@@ -170,3 +176,135 @@ Use these when filling the **Effort** field on issues:
 | Per-service env vars | [.github/service-registry.env](../.github/service-registry.env) |
 | Documentation | [docs/](./) |
 | Local dev getting started | [docs/getting-started.md](getting-started.md) |
+| Helpdesk domain docs (behaviour contract) | [HELPDESK_DOCUMENTATION/domains/](../HELPDESK_DOCUMENTATION/domains/) |
+| Active backlog (21 stories) | [HELPDESK_DOCUMENTATION/user-stories.active.csv](../HELPDESK_DOCUMENTATION/user-stories.active.csv) |
+
+---
+
+## 11. Domain Entities (Active Scope)
+
+> Source of truth: [`HELPDESK_DOCUMENTATION/domains/`](../HELPDESK_DOCUMENTATION/domains/). All business domains are DynamoDB (OneTable). IDs are ULIDs. Every entity carries `dateCreated` + `updatedAt` (Golden Rule #12 — never a domain-level `createdAt`). Enums use domain constant objects, never string literals (#8).
+
+### `ticket` domain
+
+**`Ticket`** — the spine (origin of the ACL, the routing saga, and SLA).
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | ulid | PK |
+| `customerId` | ulid | requester (→ customer); GSI |
+| `subject` | string (1–200) | |
+| `description` | string (1–5000) | |
+| `priority` | enum `LOW \| MEDIUM \| HIGH \| URGENT` | drives SLA |
+| `status` | enum `OPEN \| ASSIGNED \| IN_PROGRESS \| RESOLVED \| CLOSED \| ESCALATED` | GSI |
+| `assignedAgentId` | ulid? | set by saga / reassignment; GSI |
+| `teamId` | ulid? | optional routing scope |
+| `slaDueAt` | datetime | derived from `priority` × customer `tier` at creation; immutable thereafter |
+| `firstResponseAt` / `resolvedAt` / `closedAt` | datetime? | lifecycle stamps |
+| `escalationReason` | string? | set on entering `ESCALATED` |
+
+**`TicketComment`** — a **separate DynamoDB item type** (not a join), same `ticket` domain/package.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | ulid | PK |
+| `ticketId` | ulid | GSI partition — list a ticket's comments |
+| `authorId` | ulid | from `@CurrentUser()`, never from body (#10/#23) |
+| `authorRole` | enum `AGENT \| CUSTOMER \| ADMIN` | snapshot of who wrote it |
+| `body` | string (1–5000) | |
+| `visibility` | enum `PUBLIC` (customer-visible) \| `INTERNAL` (agent-only) | |
+
+### `agent` domain — **`Agent`** (ACL target + saga picker)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | ulid | PK |
+| `name` | string (1–120) | |
+| `email` | string (email) | unique (GSI + conditional write) |
+| `userId` | ulid? | Cognito sub; set on invite provisioning; GSI |
+| `teamId` | ulid? | → team; GSI |
+| `status` | enum `AVAILABLE \| BUSY \| OFFLINE` | GSI (picker queries AVAILABLE) |
+| `openTicketCount` | integer ≥ 0 | **event-maintained** by `agent-event-handler-service`, not written by the ticket context |
+| `maxCapacity` | integer (default 5, ≥ 1) | `hasCapacity` = `openTicketCount < maxCapacity` (derived getter) |
+
+### `customer` domain — **`Customer`** (leaf context; tier feeds SLA)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | ulid | PK |
+| `name` | string (1–120) | |
+| `email` | string (email) | unique (GSI); **immutable** after creation (auth link) |
+| `userId` | ulid? | Cognito sub; GSI |
+| `company` | string? | optional |
+| `tier` | enum `FREE \| PRO \| ENTERPRISE` | drives SLA targets |
+| `status` | enum `ACTIVE \| INACTIVE` | soft-disable; keeps ticket history |
+
+### `team` domain — **`Team`** (routing scope)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | ulid | PK |
+| `name` | string (1–80) | unique (GSI) |
+| `description` | string? | optional |
+| `routingStrategy` | enum `LOWEST_LOAD` (default) \| `ROUND_ROBIN` | how the picker orders candidates |
+| `status` | enum `ACTIVE \| ARCHIVED` | |
+
+> Team membership lives on the agent (`agent.teamId`) — one agent in at most one team. "List a team's agents" is an `agent` GSI query, not a join.
+
+---
+
+## 12. Business Rules, Lifecycle & Events
+
+### Ticket lifecycle
+
+```
+OPEN → ASSIGNED → IN_PROGRESS → RESOLVED → CLOSED        (any non-terminal state → ESCALATED)
+```
+
+- `OPEN → ASSIGNED`: saga reply `TICKET_ASSIGNED` sets `assignedAgentId` (agent load ++). `OPEN → ESCALATED`: saga reply `NO_AGENT_AVAILABLE`.
+- `ASSIGNED → IN_PROGRESS` stamps `firstResponseAt`; `IN_PROGRESS → RESOLVED` stamps `resolvedAt` + publishes `TICKET_RESOLVED`; `RESOLVED → CLOSED` stamps `closedAt`. `CLOSED` is terminal; `ESCALATED` is re-routable by an admin.
+- Manual `* → ASSIGNED` (admin assign/reassign) must pass the **agent-validator ACL** before persisting.
+
+### Key invariants
+
+- **Capacity:** an agent's `openTicketCount` never exceeds `maxCapacity`. Both the saga picker and the ACL reject unless `status == AVAILABLE && openTicketCount < maxCapacity` (`AgentUnavailableError` / `AgentAtCapacityError`).
+- **Load ownership:** the ticket context never writes the agent table. `agent-event-handler-service` maintains `openTicketCount` by consuming `TICKET_ASSIGNED`/reassign-in (`++`) and `TICKET_RESOLVED`/reassign-out (`--`, floored at 0), deduped by `ticketId` + event id.
+- **SLA freeze:** `slaDueAt = f(priority, tier)` at creation and is immutable; changing a customer's tier does **not** retro-update existing tickets.
+- **Comment visibility:** a `CUSTOMER` may create only `PUBLIC` comments, and only on a ticket whose `customerId` matches their identity; `INTERNAL` comments are agent/admin only.
+- **Uniqueness without SQL:** agent email, customer email, and team name are enforced via dedicated GSIs + conditional writes.
+- **No silent fallback:** a ticket scoped to a `teamId` with no AVAILABLE agents yields `NO_AGENT_AVAILABLE → ESCALATED` — it deliberately does **not** fall back to the global pool, so leads see the gap.
+
+### Events (SQS FIFO; all handlers idempotent)
+
+| Event | Published by | Consumed by |
+|---|---|---|
+| `TICKET_CREATED` | `ticket` | `agent-event-handler` (picker) |
+| `TICKET_ASSIGNED` / `NO_AGENT_AVAILABLE` | `agent` (saga reply) | `ticket-event-handler` |
+| `TICKET_RESOLVED` / `TICKET_REASSIGNED` | `ticket` | `agent-event-handler` (load adjust) |
+| `TICKET_SLA_BREACHED` | SLA-breach timer (`ticket`) | `ticket-event-handler` (→ ESCALATED) |
+
+### Cross-domain seams
+
+- **Agent-validator ACL (sync):** `AssignTicketUseCase → IAgentValidator` (port in `ticket` `application/interfaces/`) → HTTP adapter in `infrastructure/clients/` → `agent-api-service`. Forwards auth + correlation via `getOutboundHeaders()` (#24). Golden Rule #14. Skill: `sync-cross-service-call`.
+- **Auto-routing saga (async):** `ticket` publishes `TICKET_CREATED`; `agent-event-handler` runs `PickAvailableAgentUseCase` (lowest-load AVAILABLE agent, team-scoped if `teamId` set) and replies `TICKET_ASSIGNED` | `NO_AGENT_AVAILABLE`; `ticket-event-handler` resolves the ticket state. Skill: `choreography-saga`.
+- **Agent provisioning (sync → auth):** `CreateAgentUseCase → IAuthProvisioner` → auth admin-create/invite with the `AGENT` role; stores the returned `userId`. If auth fails, no agent persists.
+- **Bounded-context isolation:** cross-domain consumers import only the publisher's **contracts** (`@mma/contracts/{domain}`), never its domain package (#15).
+
+---
+
+## 13. Non-Functional Requirements
+
+- **SLA targets** — `slaDueAt` derived at creation from `priority` × customer `tier`:
+
+  | | FREE | PRO | ENTERPRISE |
+  |---|---|---|---|
+  | URGENT | 2h | 1h | 30m |
+  | HIGH | 8h | 4h | 2h |
+  | MEDIUM | 2 business days | 1 business day | 4h |
+  | LOW | 4 business days | 3 business days | 1 business day |
+
+  A breach timer compares `now > slaDueAt` for any non-terminal ticket and publishes `TICKET_SLA_BREACHED`. (Admin-configurable SLA policy is a deferred enhancement; the active build uses this constant matrix.)
+- **Idempotent event handlers** — every SQS consumer must be idempotent: saga replies are no-ops once the ticket has left `OPEN`; load adjustments dedupe by `ticketId` + event id. Events ride **SQS FIFO**.
+- **Cursor pagination everywhere** (Golden Rule #16) — every list endpoint returns `IPaginatedResponse { items, nextCursorPointer, prevCursorPointer }`. No offset, no `total`. **No full-table scans** — every list is by a declared PK/GSI partition.
+- **Auth model** — Cognito identity; two-tier auth (API Gateway JWT authorizer + NestJS guard). Actor resolved per request from the JWT via `@CurrentUser()`; never from client input (#10/#23). Provisioning is a sync cross-service call to `auth` via an ACL adapter forwarding `Authorization` + `x-correlation-id` (#24).
+- **End-to-end correlation** — `correlationMiddleware()` first in the chain; `correlationId` on every event payload, auto-injected by SQS publishers and propagated by ACL adapters.

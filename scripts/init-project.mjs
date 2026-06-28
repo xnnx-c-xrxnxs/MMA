@@ -202,11 +202,15 @@ function rewriteCodeowners(args) {
   const path = join(ROOT, '.github', 'CODEOWNERS');
   if (!existsSync(path) || !args.owner) return null;
   const before = readFileSync(path, 'utf-8');
-  // Match either the original "@xnnx-c-xrxnxs/senior-devs" OR the post-org-rewrite
-  // "@<org>/senior-devs" form (in case --org has already been applied).
+  // The template ships a catch-all owner placeholder. Historically this was
+  // "@xnnx-c-xrxnxs/senior-devs"; the current template uses "@code-maca"
+  // (optionally "@code-maca/<team>"). Rewrite whichever form is present to the
+  // caller-supplied --owner. The "@<org>/senior-devs" variant also covers the
+  // case where --org has already been applied.
   const orgPart = args.org ? `(?:xnnx-c-xrxnxs|${args.org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})` : 'xnnx-c-xrxnxs';
-  const re = new RegExp(`@${orgPart}\\/senior-devs`, 'g');
-  const after = before.replace(re, args.owner);
+  const after = before
+    .replace(new RegExp(`@${orgPart}\\/senior-devs`, 'g'), args.owner)
+    .replace(/@code-maca(?:\/[A-Za-z0-9._-]+)?/g, args.owner);
   if (after === before) return null;
   if (!args.dryRun) writeFileSync(path, after, 'utf-8');
   return path;
