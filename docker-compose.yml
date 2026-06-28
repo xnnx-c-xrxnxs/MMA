@@ -22,18 +22,18 @@ version: '3.8'
 services:
   localstack:
     image: localstack/localstack
-    container_name: localstack_old_st
+    container_name: localstack_mma
     ports:
-      - "4566:4566"            # LocalStack Gateway — all AWS services (DynamoDB, S3, SQS, etc.)
+      - '4566:4566' # LocalStack Gateway — all AWS services (DynamoDB, S3, SQS, etc.)
     environment:
       - DEBUG=1
-      - SERVICES=dynamodb,sqs,s3  # Activate only the services we use — keeps startup fast
+      - SERVICES=dynamodb,sqs,s3 # Activate only the services we use — keeps startup fast
       - DATA_DIR=/var/lib/localstack
-      - DYNAMODB_SHARE_DB=1    # Share a single DynamoDB store across all regions
+      - DYNAMODB_SHARE_DB=1 # Share a single DynamoDB store across all regions
     volumes:
       - localstack_data:/var/lib/localstack
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
   # ── PostgreSQL (uncomment when adding a Prisma-backed domain) ──────────────
   # postgres:
   #   image: postgres:16-alpine
-  #   container_name: postgres_old_st
+  #   container_name: postgres_mma
   #   ports:
   #     - "5432:5432"
   #   environment:
@@ -63,4 +63,4 @@ volumes:
     # Named volume — DynamoDB data persists across `docker compose down / up` restarts.
     # Use `docker compose down -v` to wipe all local data and start fresh.
   # postgres_data:
-    # Uncomment alongside the postgres service above when adding a Prisma-backed domain.
+  # Uncomment alongside the postgres service above when adding a Prisma-backed domain.
