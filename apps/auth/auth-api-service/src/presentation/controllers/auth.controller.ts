@@ -29,6 +29,10 @@ import {
 } from '@mma/contracts/auth';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import { Public } from '../decorators/public.decorator';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../decorators/current-user.decorator';
 import { AuthApplicationService } from '../../application/services/auth-application.service';
 
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
@@ -335,17 +339,11 @@ export class AuthController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Not authenticated.' })
-  async me(@Req() req: Request) {
-    // In a full implementation, the JWT auth guard would decode the token
-    // and attach user info to req.user. For now, decode from Authorization header.
-    const user = (req as any).user;
-    if (!user) {
-      return {
-        statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Not authenticated',
-      };
-    }
+  async me(@CurrentUser() user: AuthenticatedUser) {
+    // JwtAuthGuard (APP_GUARD) populates request.user from the verified token
+    // and throws 401 before this handler runs when no valid token is present.
+    // Always read the actor via @CurrentUser() — never reach into request.user
+    // directly (Golden Rule #23).
     return {
       userId: user.userId,
       email: user.email,
